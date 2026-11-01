@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Seher · Kaza</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#E8BE74}a:hover{color:#F3D49B}
+.halka{transition:stroke-dasharray .7s cubic-bezier(.2,.8,.2,1)}
+@keyframes sayi{0%{transform:scale(1.25);color:#E8BE74}100%{transform:scale(1)}}
+.sayi{display:inline-block;animation:sayi .45s ease-out}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; background: #0B1322; color: #F3EEE3; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 56px 24px 0">
+    <div style="font-family: 'Cormorant Garamond', serif; font-size: 36px; line-height: 40px; font-weight: 600">Kaza</div>
+    <div style="font-size: 13px; color: #C9D1DC">Vaktinde kılınmayan namazlar buraya kendiliğinden eklenir</div>
+  </header>
+
+  <section style="display: flex; align-items: center; gap: 20px; margin: 20px 24px 0">
+    <div style="position: relative; width: 150px; height: 150px; flex-shrink: 0">
+      <svg width="150" height="150" viewBox="0 0 150 150" fill="none" role="img" aria-label="{{ringLabel}}">
+        <circle cx="75" cy="75" r="64" stroke="#1C2943" stroke-width="10"></circle>
+        <circle class="halka" cx="75" cy="75" r="64" stroke="#E8BE74" stroke-width="10" stroke-linecap="round" pathLength="100" stroke-dasharray="{{ringDash}}" transform="rotate(-90 75 75)"></circle>
+      </svg>
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+        <sc-for list="{{totalKey}}" as="k" hint-placeholder-count="1">
+          <span class="sayi" style="font-family: 'Cormorant Garamond', serif; font-size: 48px; line-height: 50px; font-weight: 600">{{k.v}}</span>
+        </sc-for>
+        <span style="font-size: 12px; color: #C9D1DC">kaldı</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 13px; color: #C9D1DC">Bu ay kılınan</div>
+      <div style="font-family: 'Cormorant Garamond', serif; font-size: 30px; line-height: 32px; font-weight: 600; color: #E8BE74">{{paid}}</div>
+      <div style="font-size: 12px; line-height: 17px; color: #C9D1DC">Dün yatsı vaktinde kılınmadı, kazaya eklendi.</div>
+    </div>
+  </section>
+
+  <section style="margin: 20px 24px 0; border-radius: 18px; background: #121D33; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-size: 13px; font-weight: 600">Kaza planı</span>
+      <div style="display: flex; gap: 6px" role="group" aria-label="Günlük kaza hedefi">
+        <sc-for list="{{rates}}" as="r" hint-placeholder-count="4">
+          <button type="button" aria-pressed="{{r.pressed}}" onClick="{{r.pick}}" style="min-width: 44px; height: 32px; border-radius: 16px; border: 1px solid {{r.border}}; background: {{r.bg}}; color: {{r.fg}}; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600">{{r.n}}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="font-size: 14px; line-height: 20px">Günde <strong style="color: #E8BE74">{{rate}}</strong> kaza kılarsan <strong style="color: #E8BE74">{{days}}</strong> bitirirsin.</div>
+  </section>
+
+  <section style="flex: 1; min-height: 0; overflow-y: auto; margin: 14px 24px 0">
+    <sc-for list="{{rows}}" as="row" hint-placeholder-count="6">
+      <div style="display: flex; align-items: center; gap: 10px; min-height: 56px; border-bottom: 1px solid rgba(243, 238, 227, 0.08)">
+        <span style="flex: 1; font-size: 16px">{{row.name}}</span>
+        <span style="min-width: 32px; text-align: right; font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums">{{row.count}}</span>
+        <button type="button" onClick="{{row.done}}" aria-label="{{row.doneLabel}}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 18px; background: #E8BE74; color: #0B1322; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600">Kıldım</button>
+        <button type="button" onClick="{{row.add}}" aria-label="{{row.addLabel}}" style="width: 36px; height: 36px; border: 1px solid #2A3A52; border-radius: 18px; background: transparent; color: #F3EEE3; font-size: 18px; line-height: 18px; padding: 0">+</button>
+      </div>
+    </sc-for>
+  </section>
+
+  <nav aria-label="Ana menü" style="display: flex; justify-content: space-around; padding: 10px 8px 26px; background: #091020">
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Namaz</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg>Kıble</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #E8BE74">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Kaza</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11"></path></svg>Okuma</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>Muhasebe</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var NAMES = [['SABAH', 'Sabah'], ['OGLE', 'Öğle'], ['IKINDI', 'İkindi'], ['AKSAM', 'Akşam'], ['YATSI', 'Yatsı'], ['VITIR', 'Vitir']];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { c: { SABAH: 4, OGLE: 2, IKINDI: 3, AKSAM: 1, YATSI: 2, VITIR: 2 }, paid: 6, rate: 2, bump: 0 };
+  }
+  renderVals() {
+    var s = this.state, self = this;
+    var total = NAMES.reduce(function (a, n) { return a + s.c[n[0]]; }, 0);
+    var frac = (s.paid / Math.max(1, s.paid + total)) * 100;
+    function change(key, d) {
+      if (d < 0 && s.c[key] === 0) return;
+      var c = Object.assign({}, s.c); c[key] += d;
+      self.setState({ c: c, paid: s.paid + (d < 0 ? 1 : 0), bump: s.bump + 1 });
+    }
+    var days = Math.ceil(total / s.rate);
+    return {
+      // keyed by a bump counter so the number re-mounts and plays its pop animation
+      totalKey: [{ v: total, key: s.bump }],
+      ringDash: frac.toFixed(1) + ' 100',
+      ringLabel: total + ' kaza namazı kaldı, bu ay ' + s.paid + ' tane kılındı',
+      paid: s.paid,
+      rate: s.rate,
+      days: total === 0 ? 'hemen' : days + ' günde',
+      rates: [1, 2, 3, 5].map(function (n) {
+        var on = n === s.rate;
+        return { n: n, pressed: on ? 'true' : 'false', pick: function () { self.setState({ rate: n }); },
+          bg: on ? '#E8BE74' : 'transparent', fg: on ? '#0B1322' : '#F3EEE3', border: on ? '#E8BE74' : '#2A3A52' };
+      }),
+      rows: NAMES.map(function (n) {
+        return { name: n[1], count: s.c[n[0]], done: function () { change(n[0], -1); }, add: function () { change(n[0], 1); },
+          doneLabel: n[1] + ' kazası kıldım', addLabel: n[1] + ' kazası ekle' };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

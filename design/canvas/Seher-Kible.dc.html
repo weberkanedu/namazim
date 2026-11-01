@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Seher · Kıble</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#E8BE74}a:hover{color:#F3D49B}</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; background: #0B1322; color: #F3EEE3; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 56px 24px 0; display: flex; justify-content: space-between; align-items: flex-end">
+    <div>
+      <div style="font-family: 'Cormorant Garamond', serif; font-size: 36px; line-height: 40px; font-weight: 600">Kıble</div>
+      <div style="font-size: 13px; color: #C9D1DC">Altındağ, Ankara</div>
+    </div>
+    <div style="font-size: 12px; color: #C9D1DC; text-align: right">Telefonu yere<br>paralel tut</div>
+  </header>
+
+  <section style="position: relative; height: 380px; display: flex; align-items: center; justify-content: center; margin-top: 8px">
+    <span style="position: absolute; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, rgba(232, 190, 116, 0.32) 0%, rgba(232, 190, 116, 0) 62%); opacity: {{glowOp}}; transition: opacity 0.4s"></span>
+    <svg width="300" height="300" viewBox="0 0 300 300" fill="none" role="img" aria-label="{{dialLabel}}" style="position: relative">
+      <circle cx="150" cy="150" r="146" fill="#101B30" stroke="rgba(243,238,227,0.12)" stroke-width="1"></circle>
+      <g transform="rotate({{dialRot}} 150 150)">
+        <circle cx="150" cy="150" r="136" stroke="rgba(243,238,227,0.35)" stroke-width="8" pathLength="360" stroke-dasharray="0.5 4.5" transform="rotate(-90.25 150 150)"></circle>
+        <circle cx="150" cy="150" r="136" stroke="rgba(243,238,227,0.8)" stroke-width="12" pathLength="360" stroke-dasharray="1 29" transform="rotate(-90.5 150 150)"></circle>
+        <text x="150" y="44" text-anchor="middle" fill="#F4B08F" font-size="15" font-weight="600" font-family="Inter, sans-serif">K</text>
+        <text x="258" y="155" text-anchor="middle" fill="#C9D1DC" font-size="13" font-family="Inter, sans-serif">D</text>
+        <text x="150" y="266" text-anchor="middle" fill="#C9D1DC" font-size="13" font-family="Inter, sans-serif">G</text>
+        <text x="42" y="155" text-anchor="middle" fill="#C9D1DC" font-size="13" font-family="Inter, sans-serif">B</text>
+        <g transform="rotate(155 150 150)">
+          <rect x="139" y="20" width="22" height="22" rx="3" fill="#141414" stroke="#E8BE74" stroke-width="1.5"></rect>
+          <rect x="139" y="25" width="22" height="3.5" fill="#E8BE74"></rect>
+        </g>
+      </g>
+      <path d="{{arcPath}}" stroke="#E8BE74" stroke-width="3" stroke-linecap="round" opacity="0.85"></path>
+      <path d="M150 34 L160 62 L150 56 L140 62Z" fill="{{needleColor}}"></path>
+      <circle cx="150" cy="150" r="54" fill="#0B1322" stroke="rgba(243,238,227,0.1)"></circle>
+    </svg>
+    <div style="position: absolute; display: flex; flex-direction: column; align-items: center">
+      <span style="font-family: 'Cormorant Garamond', serif; font-size: 38px; line-height: 40px; font-weight: 600; font-variant-numeric: tabular-nums">{{headingText}}</span>
+      <span style="font-size: 11px; color: #C9D1DC">yönün</span>
+    </div>
+  </section>
+
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 2px">
+    <div style="font-size: 22px; font-weight: 600; color: {{statusColor}}">{{status}}</div>
+    <div style="font-size: 13px; color: #C9D1DC">{{statusSub}}</div>
+  </div>
+
+  <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 24px 24px 0">
+    <div style="border-radius: 16px; background: #121D33; padding: 12px 14px">
+      <div style="font-size: 12px; color: #C9D1DC">Kıble açısı</div>
+      <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600">155°</div>
+    </div>
+    <div style="border-radius: 16px; background: #121D33; padding: 12px 14px">
+      <div style="font-size: 12px; color: #C9D1DC">Kâbe'ye uzaklık</div>
+      <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600">≈ 2.160 km</div>
+    </div>
+    <div style="grid-column: span 2; border-radius: 16px; background: #121D33; padding: 12px 14px; display: flex; gap: 12px; align-items: center">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8BE74" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      <div style="font-size: 13px; line-height: 19px"><strong style="color: #E8BE74">Kıble saati 11:24</strong><br><span style="color: #C9D1DC">Bugün bu saatte güneş tam kıble yönünde. Pusulasız da bulabilirsin.</span></div>
+    </div>
+  </section>
+
+  <nav aria-label="Ana menü" style="margin-top: auto; display: flex; justify-content: space-around; padding: 10px 8px 26px; background: #091020">
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Namaz</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #E8BE74">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg>Kıble</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Kaza</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11"></path></svg>Okuma</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>Muhasebe</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var QIBLA = 155;
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { heading: 100 };
+  }
+  componentDidMount() {
+    // Simulates someone slowly turning the phone toward the qibla and overshooting.
+    var t0 = performance.now();
+    this.timer = setInterval(() => {
+      var s = (performance.now() - t0) / 1000;
+      var h = QIBLA + 55 * Math.cos(s * 0.45) * Math.exp(-((s % 14) / 6)) + 3 * Math.sin(s * 2.1);
+      this.setState({ heading: (h + 360) % 360 });
+    }, 40);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+
+  renderVals() {
+    var h = this.state.heading;
+    var diff = ((QIBLA - h + 540) % 360) - 180; // + means turn right
+    var aligned = Math.abs(diff) < 4;
+    var r = 124, a = diff * Math.PI / 180;
+    var ex = 150 + r * Math.sin(a), ey = 150 - r * Math.cos(a);
+    return {
+      dialRot: (-h).toFixed(1),
+      dialLabel: 'Pusula: yönün ' + Math.round(h) + ' derece, kıble ' + QIBLA + ' derece',
+      headingText: Math.round(h) + '°',
+      arcPath: aligned ? 'M150 26' : 'M150 ' + (150 - r) + ' A' + r + ' ' + r + ' 0 0 ' + (diff > 0 ? 1 : 0) + ' ' + ex.toFixed(1) + ' ' + ey.toFixed(1),
+      needleColor: aligned ? '#E8BE74' : '#F3EEE3',
+      glowOp: aligned ? '1' : '0.15',
+      status: aligned ? 'Kıbleye döndün' : (diff > 0 ? 'Sağa ' + Math.round(diff) + '° dön' : 'Sola ' + Math.round(-diff) + '° dön'),
+      statusColor: aligned ? '#E8BE74' : '#F3EEE3',
+      statusSub: aligned ? 'Telefon hafifçe titreşir' : 'Altın çizgi kıbleye kalan açıyı gösterir'
+    };
+  }
+}
+</script>
+</body>
+</html>

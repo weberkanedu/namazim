@@ -1,0 +1,29 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-01T12:20:00Z"},
+  "title": "Namazım Tasarım Yönleri",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 390, "h": 844, "title": "Seher · Ana ekran (canlı gökyüzü)", "is_interactive": true},
+    "Seher-Hatirlatma.dc.html": {"x": 470, "y": 0, "w": 390, "h": 844, "title": "Seher · Kıldın mı?"},
+    "Seher-Kible.dc.html": {"x": 940, "y": 0, "w": 390, "h": 844, "title": "Seher · Kıble", "is_interactive": true},
+    "Seher-Kaza.dc.html": {"x": 1410, "y": 0, "w": 390, "h": 844, "title": "Seher · Kaza", "is_interactive": true},
+    "Seher-Okuma.dc.html": {"x": 1880, "y": 0, "w": 390, "h": 844, "title": "Seher · Okuma", "is_interactive": true},
+    "Seher-Muhasebe.dc.html": {"x": 2350, "y": 0, "w": 390, "h": 844, "title": "Seher · Muhasebe"},
+    "Odak-Ana.dc.html": {"x": 0, "y": 1300, "w": 390, "h": 844, "title": "Odak · Ana ekran", "is_interactive": true},
+    "Odak-Hatirlatma.dc.html": {"x": 470, "y": 1300, "w": 390, "h": 844, "title": "Odak · Kıldın mı?"},
+    "Logo-Mihrap.dc.html": {"x": 0, "y": 2500, "w": 440, "h": 320, "title": "Logo A · Mihrap ufku"},
+    "Logo-Minare.dc.html": {"x": 520, "y": 2500, "w": 440, "h": 320, "title": "Logo B · Minare ve şafak"},
+    "Logo-HilalSaat.dc.html": {"x": 1040, "y": 2500, "w": 440, "h": 320, "title": "Logo C · Hilal saat (seçildi)"},
+    "Canli-Ikon.dc.html": {"x": 0, "y": 3200, "w": 390, "h": 600, "title": "Ana ekranda canlı ikon (widget)"}
+  },
+  "order": ["Main.dc.html", "Seher-Hatirlatma.dc.html", "Seher-Kible.dc.html", "Seher-Kaza.dc.html", "Seher-Okuma.dc.html", "Seher-Muhasebe.dc.html", "Odak-Ana.dc.html", "Odak-Hatirlatma.dc.html", "Logo-Mihrap.dc.html", "Logo-Minare.dc.html", "Logo-HilalSaat.dc.html", "Canli-Ikon.dc.html"],
+  "notes": {
+    "seher": {"x": 0, "y": -260, "text": "Tema 1 · Seher — canlı gökyüzü", "kind": "title1", "maxW": 2740},
+    "odak": {"x": 0, "y": 1040, "text": "Tema 2 · Odak — siyah ve canlı yeşil", "kind": "title1", "maxW": 860},
+    "logo": {"x": 0, "y": 2240, "text": "Logo seçenekleri", "kind": "title1", "maxW": 1480},
+    "canli": {"x": 0, "y": 2940, "text": "Canlı ikon", "kind": "title1", "maxW": 860}
+  },
+  "designSystems": []
+}

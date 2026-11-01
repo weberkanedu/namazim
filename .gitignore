@@ -1,0 +1,11 @@
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+
+.kotlin/
+*.apk
+# screenshots of this and other apps, and Diyanet's own documents: kept local
+vakit-ekran/
+diyanet-basvuru/

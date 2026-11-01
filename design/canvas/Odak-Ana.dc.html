@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Odak · Ana ekran</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C6F45E}a:hover{color:#DDFB95}
+@keyframes nabiz{0%,100%{opacity:.3}50%{opacity:1}}
+.nabiz{animation:nabiz 1.6s ease-in-out infinite}
+.halka{transition:stroke-dasharray .9s cubic-bezier(.2,.8,.2,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .45s ease-out both}
+@keyframes acil{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.acil{animation:acil .35s ease-out both}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #0B0C0E; color: #F5F5F2; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="display: flex; justify-content: space-between; align-items: flex-end; padding: 52px 20px 0">
+    <div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; line-height: 38px; font-weight: 700">Bugün</div>
+      <div style="font-size: 13px; color: #A0A4AB">1 Kasım · 21 Cemaziyelevvel 1448</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: #16181C; font-size: 13px; font-weight: 500">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C6F45E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+      Altındağ
+    </div>
+  </header>
+
+  <section style="position: relative; width: 232px; height: 232px; margin: 20px auto 0; flex-shrink: 0">
+    <svg width="232" height="232" viewBox="0 0 232 232" fill="none" role="img" aria-label="{{ringLabel}}" style="position: absolute; inset: 0">
+      <circle cx="116" cy="116" r="100" stroke="#24272D" stroke-width="14" stroke-linecap="round" pathLength="360" stroke-dasharray="62 298" transform="rotate(-85 116 116)"></circle>
+      <circle class="halka" cx="116" cy="116" r="100" stroke="#C6F45E" stroke-width="14" stroke-linecap="round" pathLength="360" stroke-dasharray="{{sabahDash}}" transform="rotate(-85 116 116)"></circle>
+      <circle class="nabiz" cx="116" cy="116" r="100" stroke="#F5F5F2" stroke-opacity="{{ogleOwedOp}}" stroke-width="14" stroke-linecap="round" pathLength="360" stroke-dasharray="62 298" transform="rotate(-13 116 116)"></circle>
+      <circle class="halka" cx="116" cy="116" r="100" stroke="#C6F45E" stroke-width="14" stroke-linecap="round" pathLength="360" stroke-dasharray="{{ogleDash}}" transform="rotate(-13 116 116)"></circle>
+      <circle cx="116" cy="116" r="100" stroke="#24272D" stroke-width="14" stroke-linecap="round" pathLength="360" stroke-dasharray="62 298" transform="rotate(59 116 116)"></circle>
+      <circle class="{{ikindiClass}}" cx="116" cy="116" r="100" stroke="#F5F5F2" stroke-opacity="{{ikindiOp}}" stroke-width="14" stroke-linecap="round" pathLength="360" stroke-dasharray="62 298" transform="rotate(59 116 116)"></circle>
+      <circle cx="116" cy="116" r="100" stroke="#24272D" stroke-width="14" stroke-linecap="round" pathLength="360" stroke-dasharray="62 298" transform="rotate(131 116 116)"></circle>
+      <circle cx="116" cy="116" r="100" stroke="#24272D" stroke-width="14" stroke-linecap="round" pathLength="360" stroke-dasharray="62 298" transform="rotate(203 116 116)"></circle>
+    </svg>
+    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+      <span style="font-size: 13px; font-weight: 600; color: #C6F45E">{{centerTop}}</span>
+      <span style="font-family: 'Space Grotesk', sans-serif; font-size: 46px; line-height: 52px; font-weight: 600; font-variant-numeric: tabular-nums">{{centerTime}}</span>
+      <span style="font-size: 13px; color: #A0A4AB">{{centerSub}}</span>
+    </div>
+  </section>
+
+  <div style="padding: 20px 20px 0; height: 56px; flex-shrink: 0">
+    <sc-if value="{{owed}}" hint-placeholder-val="{{ true }}">
+      <button type="button" onClick="{{pray}}" style="width: 100%; height: 56px; border: 0; border-radius: 16px; background: #C6F45E; color: #0B0C0E; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        Öğle'yi kıldım
+      </button>
+    </sc-if>
+    <sc-if value="{{prayed}}" hint-placeholder-val="{{ false }}">
+      <div class="pop" style="width: 100%; height: 56px; box-sizing: border-box; border-radius: 16px; background: #16181C; color: #C6F45E; font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        Kılındı · Allah kabul etsin
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 18px 20px 12px; display: flex; flex-direction: column; gap: 12px">
+    <section style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 12px 4px; border-radius: 16px; background: #16181C; text-align: center">
+      <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #A0A4AB">İmsak</span><span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; color: #C6F45E">05:46</span></div>
+      <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #A0A4AB">Güneş</span><span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; color: #A0A4AB">07:10</span></div>
+      <div style="display: flex; flex-direction: column; gap: 4px; border-radius: 10px; background: #24272D; padding: 4px 0; margin: -4px 2px"><span style="font-size: 11px; color: #F5F5F2; font-weight: 600">Öğle</span><span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: {{ogleTimeColor}}">12:37</span></div>
+      <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #A0A4AB">İkindi</span><span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600">15:27</span></div>
+      <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #A0A4AB">Akşam</span><span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600">17:54</span></div>
+      <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; color: #A0A4AB">Yatsı</span><span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600">19:14</span></div>
+    </section>
+
+    <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div style="border-radius: 16px; background: #16181C; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 12px; color: #A0A4AB">Seri · bugün {{todayCount}}/5</span>
+        <span style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; line-height: 30px; font-weight: 700">6 gün</span>
+        <div style="display: flex; gap: 5px; align-items: flex-end; height: 22px">
+          <span style="flex: 1; height: 22px; border-radius: 3px; background: #C6F45E"></span>
+          <span style="flex: 1; height: 22px; border-radius: 3px; background: #C6F45E"></span>
+          <span style="flex: 1; height: 22px; border-radius: 3px; background: #C6F45E"></span>
+          <span style="flex: 1; height: 22px; border-radius: 3px; background: #C6F45E"></span>
+          <span style="flex: 1; height: 22px; border-radius: 3px; background: #C6F45E"></span>
+          <span style="flex: 1; height: 22px; border-radius: 3px; background: #C6F45E"></span>
+          <span style="flex: 1; height: {{todayBar}}; border-radius: 3px; background: #F5F5F2; opacity: 0.6; transition: height 0.6s ease-out"></span>
+        </div>
+      </div>
+      <div style="border-radius: 16px; background: #16181C; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 12px; color: #A0A4AB">Kaza borcu</span>
+        <span style="font-family: 'Space Grotesk', sans-serif; font-size: 28px; line-height: 30px; font-weight: 700; color: #FF8A4C">12</span>
+        <span style="font-size: 12px; color: #A0A4AB">Bu hafta 3 tane kıldın</span>
+      </div>
+    </section>
+
+    <button type="button" aria-pressed="{{extrasPressed}}" onClick="{{toggleExtras}}" style="display: flex; align-items: center; justify-content: space-between; min-height: 44px; border: 0; border-radius: 14px; background: #16181C; color: #F5F5F2; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; padding: 0 14px">
+      Gün çizelgesi ve ek vakitler
+      <span style="position: relative; width: 36px; height: 20px; border-radius: 10px; background: {{switchTrack}}; transition: background 0.2s">
+        <span style="position: absolute; top: 2px; left: {{switchKnob}}; width: 16px; height: 16px; border-radius: 8px; background: #0B0C0E; transition: left 0.2s"></span>
+      </span>
+    </button>
+
+    <sc-if value="{{extras}}" hint-placeholder-val="{{ false }}">
+      <section class="acil" style="border-radius: 16px; background: #16181C; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+        <div style="position: relative; height: 26px; border-radius: 8px; background: #24272D; overflow: hidden">
+          <span style="position: absolute; top: 0; bottom: 0; left: 7.57%; width: 16.46%; background: rgba(198, 244, 94, 0.28)"></span>
+          <span style="position: absolute; top: 0; bottom: 0; left: 29.86%; width: 3.13%; background: #FF8A4C"></span>
+          <span style="position: absolute; top: 0; bottom: 0; left: 32.99%; width: 18.89%; background: rgba(198, 244, 94, 0.28)"></span>
+          <span style="position: absolute; top: 0; bottom: 0; left: 51.88%; width: 3px; background: #FF8A4C"></span>
+          <span style="position: absolute; top: 0; bottom: 0; left: 71.46%; width: 3.13%; background: #FF8A4C"></span>
+          <span style="position: absolute; top: 0; bottom: 0; left: 74.58%; width: 5.56%; background: rgba(198, 244, 94, 0.28)"></span>
+          <span style="position: absolute; top: 6px; bottom: 6px; left: 24.03%; width: 2px; background: #F5F5F2"></span>
+          <span style="position: absolute; top: 6px; bottom: 6px; left: 52.57%; width: 2px; background: #F5F5F2"></span>
+          <span style="position: absolute; top: 6px; bottom: 6px; left: 64.38%; width: 2px; background: #F5F5F2"></span>
+          <span style="position: absolute; top: 6px; bottom: 6px; left: 74.58%; width: 2px; background: #F5F5F2"></span>
+          <span style="position: absolute; top: 6px; bottom: 6px; left: 80.14%; width: 2px; background: #F5F5F2"></span>
+          <span style="position: absolute; top: 0; bottom: 0; left: {{nowLeft}}; width: 3px; border-radius: 2px; background: #C6F45E; box-shadow: 0 0 8px #C6F45E"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #A0A4AB"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px">
+          <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #FF8A4C"></span>Kerahat</span>
+          <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: rgba(198, 244, 94, 0.5)"></span>Nafile (duha, evvâbin, teheccüd)</span>
+          <span style="display: flex; align-items: center; gap: 6px"><span style="width: 2px; height: 10px; background: #F5F5F2"></span>Farz vakitleri</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; font-size: 12px; color: #C9CCD1">
+          <span>İşrak kerahati <b style="color: #F5F5F2">07:10–07:55</b></span>
+          <span>Kuşluk <b style="color: #F5F5F2">07:55–12:27</b></span>
+          <span>İstiva kerahati <b style="color: #F5F5F2">12:27–12:37</b></span>
+          <span>Sarı kerahat <b style="color: #F5F5F2">17:09–17:54</b></span>
+          <span>Evvâbin <b style="color: #F5F5F2">17:54–19:14</b></span>
+          <span>Teheccüd <b style="color: #F5F5F2">01:49–05:46</b></span>
+        </div>
+      </section>
+    </sc-if>
+  </div>
+
+  <nav aria-label="Ana menü" style="display: flex; justify-content: space-around; padding: 10px 8px 26px; border-top: 1px solid #1C1E23; flex-shrink: 0">
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; font-weight: 600; text-decoration: none; color: #C6F45E">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Namaz</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #A0A4AB">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg>Kıble</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #A0A4AB">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Kaza</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #A0A4AB">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11"></path></svg>Okuma</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #A0A4AB">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>Muhasebe</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var START = 12 * 3600 + 37 * 60 + 48; // demo clock: 12:37:48
+var IKINDI = 15 * 3600 + 27 * 60;
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function cd(s) { s = Math.max(0, s); return Math.floor(s / 3600) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { loaded: false, prayed: false, elapsed: 0, extras: false };
+  }
+  componentDidMount() {
+    this.loadTimer = setTimeout(() => this.setState({ loaded: true }), 150); // ring draws itself in
+    this.tick = setInterval(() => this.setState((s) => ({ elapsed: s.elapsed + 1 })), 1000);
+  }
+  componentWillUnmount() { clearTimeout(this.loadTimer); clearInterval(this.tick); }
+
+  renderVals() {
+    var s = this.state, self = this;
+    var now = START + s.elapsed;
+    var left = IKINDI - now;
+    var full = '62 298', empty = '0 360';
+    return {
+      ringLabel: s.prayed ? 'Bugün 2 vakit kılındı' : 'Bugün 1 vakit kılındı, öğle bekliyor',
+      sabahDash: s.loaded ? full : empty,
+      ogleDash: s.loaded && s.prayed ? full : empty,
+      ogleOwedOp: s.prayed ? '0' : '0.85',
+      ikindiClass: s.prayed ? 'nabiz' : '',
+      ikindiOp: s.prayed ? '0.45' : '0',
+      centerTop: s.prayed ? 'Allah kabul etsin' : 'Öğle · kılmadın',
+      centerTime: cd(left),
+      centerSub: s.prayed ? 'İkindi vaktine' : 'vaktin çıkmasına',
+      owed: !s.prayed, prayed: s.prayed,
+      pray: function () { self.setState({ prayed: true }); },
+      ogleTimeColor: s.prayed ? '#C6F45E' : '#F5F5F2',
+      todayCount: s.prayed ? 2 : 1,
+      todayBar: s.prayed ? '9px' : '4px',
+      extras: s.extras,
+      extrasPressed: s.extras ? 'true' : 'false',
+      toggleExtras: function () { self.setState({ extras: !s.extras }); },
+      switchTrack: s.extras ? '#C6F45E' : '#3A3D44',
+      switchKnob: s.extras ? '18px' : '2px',
+      nowLeft: (now / 86400 * 100).toFixed(2) + '%'
+    };
+  }
+}
+</script>
+</body>
+</html>

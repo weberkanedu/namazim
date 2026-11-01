@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Seher · Okuma</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#E8BE74}a:hover{color:#F3D49B}
+.dolum{transition:stroke-dasharray .6s cubic-bezier(.2,.8,.2,1)}
+.cubuk{transition:width .5s ease-out, height .5s ease-out}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; background: #0B1322; color: #F3EEE3; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 56px 24px 0; display: flex; justify-content: space-between; align-items: flex-end">
+    <div style="font-family: 'Cormorant Garamond', serif; font-size: 36px; line-height: 40px; font-weight: 600">Okuma</div>
+    <div style="padding: 6px 12px; border-radius: 999px; background: rgba(232, 190, 116, 0.14); color: #E8BE74; font-size: 12px; font-weight: 600">1 hatim tamamlandı</div>
+  </header>
+
+  <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 0 24px 16px">
+    <section style="margin-top: 18px; border-radius: 22px; background: #121D33; padding: 18px 18px 16px; display: flex; flex-direction: column; align-items: center">
+      <div style="align-self: stretch; font-size: 13px; font-weight: 600; color: #E8BE74">Kur'an-ı Kerîm</div>
+      <div style="position: relative; width: 240px; height: 132px; margin-top: 6px">
+        <svg width="240" height="132" viewBox="0 0 240 132" fill="none" role="img" aria-label="{{gaugeLabel}}">
+          <path d="M20 120 A100 100 0 0 1 220 120" stroke="#1C2943" stroke-width="12" stroke-linecap="round"></path>
+          <path class="dolum" d="M20 120 A100 100 0 0 1 220 120" stroke="#E8BE74" stroke-width="12" stroke-linecap="round" pathLength="100" stroke-dasharray="{{gaugeDash}}"></path>
+        </svg>
+        <div style="position: absolute; left: 0; right: 0; bottom: 4px; display: flex; flex-direction: column; align-items: center">
+          <span style="font-family: 'Cormorant Garamond', serif; font-size: 44px; line-height: 46px; font-weight: 600; font-variant-numeric: tabular-nums">{{page}}</span>
+          <span style="font-size: 12px; color: #C9D1DC">/ 604 sayfa</span>
+        </div>
+      </div>
+      <div style="margin-top: 8px; font-size: 14px">{{cuz}}. cüz · {{sure}} Sûresi</div>
+      <div style="margin-top: 14px; display: flex; gap: 8px; align-self: stretch">
+        <button type="button" onClick="{{back}}" aria-label="Bir sayfa geri" style="width: 48px; height: 48px; border: 1px solid #2A3A52; border-radius: 24px; background: transparent; color: #F3EEE3; font-size: 20px; padding: 0">−</button>
+        <button type="button" onClick="{{plusPage}}" style="flex: 1; height: 48px; border: 0; border-radius: 24px; background: #E8BE74; color: #0B1322; font-family: Inter, sans-serif; font-size: 15px; font-weight: 600">+1 sayfa okudum</button>
+        <button type="button" onClick="{{plusCuz}}" style="height: 48px; padding: 0 16px; border: 1px solid #E8BE74; border-radius: 24px; background: transparent; color: #E8BE74; font-family: Inter, sans-serif; font-size: 14px; font-weight: 600">+1 cüz</button>
+      </div>
+    </section>
+
+    <section style="margin-top: 14px; border-radius: 18px; background: #121D33; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; font-size: 13px">
+        <span style="font-weight: 600">{{todayText}}</span>
+        <span style="color: #C9D1DC">Hedef {{goal}} sayfa</span>
+      </div>
+      <div style="height: 8px; border-radius: 4px; background: #1C2943; overflow: hidden">
+        <div class="cubuk" style="width: {{todayPct}}; height: 8px; border-radius: 4px; background: #E8BE74"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 76px; gap: 8px; margin-top: 4px">
+        <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+            <div class="cubuk" style="width: 100%; height: {{d.h}}; border-radius: 4px; background: {{d.color}}"></div>
+            <span style="font-size: 10px; color: #C9D1DC">{{d.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px">
+      <span style="font-size: 15px; font-weight: 600">Kitaplarım</span>
+      <button type="button" style="min-height: 44px; border: 0; background: transparent; color: #E8BE74; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600; padding: 0">+ Kitap ekle</button>
+    </div>
+    <sc-for list="{{books}}" as="b" hint-placeholder-count="2">
+      <section style="margin-top: 8px; border-radius: 16px; background: #121D33; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-size: 14px">{{b.name}}</span>
+          <span style="font-size: 12px; color: #C9D1DC; font-variant-numeric: tabular-nums">{{b.page}} / {{b.total}}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <div style="flex: 1; height: 6px; border-radius: 3px; background: #1C2943; overflow: hidden"><div class="cubuk" style="width: {{b.pct}}; height: 6px; background: #C9D1DC"></div></div>
+          <button type="button" onClick="{{b.plus}}" aria-label="{{b.plusLabel}}" style="height: 32px; padding: 0 12px; border: 1px solid #2A3A52; border-radius: 16px; background: transparent; color: #F3EEE3; font-family: Inter, sans-serif; font-size: 12px">+10</button>
+        </div>
+      </section>
+    </sc-for>
+  </div>
+
+  <nav aria-label="Ana menü" style="display: flex; justify-content: space-around; padding: 10px 8px 26px; background: #091020">
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Namaz</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg>Kıble</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path><path d="M12 8v4l3 2"></path></svg>Kaza</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #E8BE74">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11"></path></svg>Okuma</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; font-size: 11px; text-decoration: none; color: #C9D1DC">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>Muhasebe</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+// Start pages of a few sûres around the sample page (standard 604-page mushaf).
+var SURES = [[255, "Ra'd"], [262, 'İbrâhîm'], [267, 'Hicr'], [267, 'Nahl'], [282, 'İsrâ'], [293, 'Kehf'], [305, 'Meryem'], [312, 'Tâhâ'], [322, 'Enbiyâ']];
+var WEEK = [['Pzt', 8], ['Sal', 12], ['Çar', 4], ['Per', 10], ['Cum', 0], ['Cmt', 15]];
+
+function cuz(p) { return p < 22 ? 1 : Math.min(30, Math.floor((p - 2) / 20) + 1); }
+function sure(p) { var s = SURES[0][1]; SURES.forEach(function (x) { if (p >= x[0]) s = x[1]; }); return s; }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { page: 284, today: 6, goal: 10, books: [['Riyâzü\'s-Sâlihîn', 212, 680], ['Hayâtü\'s-Sahâbe', 95, 420]] };
+  }
+  renderVals() {
+    var s = this.state, self = this;
+    function read(n) {
+      var p = Math.max(1, Math.min(604, s.page + n));
+      self.setState({ page: p, today: Math.max(0, s.today + (p - s.page)) });
+    }
+    var max = 15;
+    var week = WEEK.concat([['Bugün', s.today]]).map(function (d, i) {
+      return { label: d[0], h: Math.max(3, Math.round(Math.min(d[1], max) / max * 56)) + 'px', color: i === 6 ? '#E8BE74' : '#3A4A66' };
+    });
+    var done = s.today >= s.goal;
+    return {
+      page: s.page,
+      gaugeDash: (s.page / 604 * 100).toFixed(1) + ' 100',
+      gaugeLabel: 'Kur\'an: 604 sayfanın ' + s.page + '. sayfasındasın',
+      cuz: cuz(s.page), sure: sure(s.page),
+      back: function () { read(-1); }, plusPage: function () { read(1); }, plusCuz: function () { read(20); },
+      goal: s.goal,
+      todayText: done ? 'Bugünkü hedef tamam ✓' : 'Bugün ' + s.today + ' sayfa',
+      todayPct: Math.min(100, s.today / s.goal * 100).toFixed(0) + '%',
+      week: week,
+      books: s.books.map(function (b, i) {
+        return { name: b[0], page: b[1], total: b[2], pct: (b[1] / b[2] * 100).toFixed(0) + '%', plusLabel: b[0] + ' için 10 sayfa ekle',
+          plus: function () { var bs = s.books.slice(); bs[i] = [b[0], Math.min(b[2], b[1] + 10), b[2]]; self.setState({ books: bs }); } };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
