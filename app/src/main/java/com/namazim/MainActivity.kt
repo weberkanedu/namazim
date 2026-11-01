@@ -657,7 +657,7 @@ fun ReminderScreen(key: String, onClose: () -> Unit) {
     val progress = ((now - slot.start).toFloat() / (slot.end - slot.start)).coerceIn(0f, 1f)
 
     Column(
-        Modifier.fillMaxSize().background(Color(0xFF0A1220)).statusBarsPadding().navigationBarsPadding().padding(horizontal = 28.dp),
+        Modifier.fillMaxSize().background(Pal.Ground).statusBarsPadding().navigationBarsPadding().padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -666,7 +666,7 @@ fun ReminderScreen(key: String, onClose: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         androidx.compose.foundation.Canvas(Modifier.size(200.dp)) {
             val r = size.minDimension / 2
-            drawCircle(Color(0xFF1E2B40), r - 2, style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+            drawCircle(Pal.Track, r - 2, style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
             drawArc(Pal.Gold, -90f, 360f * progress, false, topLeft = androidx.compose.ui.geometry.Offset(2f, 2f),
                 size = androidx.compose.ui.geometry.Size(size.width - 4, size.height - 4),
                 style = androidx.compose.ui.graphics.drawscope.Stroke(4f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
@@ -681,7 +681,7 @@ fun ReminderScreen(key: String, onClose: () -> Unit) {
         Spacer(Modifier.height(32.dp))
         Text("${slot.vakit.ad} vakti girdi".uppercase(Locale("tr")), color = Pal.Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
         Text("Kıldın mı?", style = NumStyle, fontSize = 60.sp, color = Pal.Text)
-        Text(NAGS[((now / 60_000) % NAGS.size).toInt()], color = Color(0xFFC9D1DC), fontSize = 17.sp, lineHeight = 26.sp, textAlign = TextAlign.Center)
+        Text(NAGS[((now / 60_000) % NAGS.size).toInt()], color = Pal.Muted, fontSize = 17.sp, lineHeight = 26.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(24.dp))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(countdown(slot.end - now), style = NumStyle, fontSize = 34.sp, color = Pal.Text)
@@ -759,6 +759,7 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
 
 
 

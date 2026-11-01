@@ -866,7 +866,7 @@ private fun MuhasebeGidisat() {
         endOfRange.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", tr))
     val heatRamp = listOf(Pal.Track, Color(0xFF4A3D27), Color(0xFF6E5A35), Color(0xFF977A45), Color(0xFFC29B5A), Pal.Gold)
     val futureCell = Pal.Track.copy(alpha = .45f)
-    val emptyCell = Color(0xFF39465F)
+    val emptyCell = Color(0xFF55657F) // "hiç" ile karışmasın ama 3:1 kontrastı geçsin
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Segmented(
@@ -1207,6 +1207,7 @@ fun Modifier.pressable(onClick: () -> Unit): Modifier {
     return this.graphicsLayer { scaleX = scale; scaleY = scale }
         .clickable(interactionSource = src, indication = null, onClick = onClick)
 }
+
 
 
 
