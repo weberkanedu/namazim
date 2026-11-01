@@ -82,7 +82,7 @@ private fun StatusRow(text: String, ok: Boolean, action: String, onClick: () -> 
 
 /** Small theme preview: a strip of the theme's look. */
 @Composable
-private fun ThemeCard(p: Palette, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun ThemeCard(p: Palette, selected: Boolean, subtitle: String, modifier: Modifier, onClick: () -> Unit) {
     Column(modifier.clip(RoundedCornerShape(16.dp)).border(2.dp, if (selected) Pal.Gold else Pal.Border, RoundedCornerShape(16.dp))
         .clickable(onClick = onClick)) {
         Box(Modifier.fillMaxWidth().height(90.dp).background(
@@ -99,7 +99,7 @@ private fun ThemeCard(p: Palette, selected: Boolean, modifier: Modifier, onClick
         }
         Column(Modifier.background(p.card).fillMaxWidth().padding(10.dp)) {
             Text(p.name, color = p.text, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFamily = p.display)
-            Text(if (p.id == SeherPalette.id) "Canlı gökyüzü" else "Halka, sade ve sportif", color = p.muted, fontSize = 11.sp)
+            Text(subtitle, color = p.muted, fontSize = Type.label)
         }
     }
 }
@@ -135,13 +135,19 @@ fun AyarlarScreen(onBack: () -> Unit) {
         Section("Görünüm") {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf(SeherPalette, OdakPalette).forEach { p ->
-                    ThemeCard(p, Pal.current.id == p.id, Modifier.weight(1f)) {
+                    ThemeCard(
+                        p, Pal.current.id == p.id,
+                        if (p.id == SeherPalette.id) when (store.skyMode) { "shader" -> "Canlı gökyüzü"; "video" -> "Video gökyüzü"; else -> "Fotoğraf gökyüzü" }
+                        else "Halka, sade ve sportif",
+                        Modifier.weight(1f),
+                    ) {
                         store.theme = p.id; Pal.current = p; NamazimWidget.refresh(ctx); v++
                     }
                 }
             }
             // Which sky the Seher header draws: the live shader, layed photo plates, or a looping clip.
-            Text("Gökyüzü", color = Pal.Text, fontSize = 14.sp)
+            if (store.theme != OdakPalette.id) {
+            Text("Gökyüzü", color = Pal.Text, fontSize = Type.body)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("shader" to "Canlı", "photo" to "Fotoğraf", "video" to "Video").forEach { (id, label) ->
                     val on = store.skyMode == id
@@ -151,6 +157,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         Text(label, color = if (on) Pal.Ground else Pal.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
+            }
             }
         }
 
@@ -269,5 +276,7 @@ private fun ValueRow(label: String, value: String, onEdit: () -> Unit) {
         Text("Değiştir", color = Pal.Muted, fontSize = 12.sp)
     }
 }
+
+
 
 

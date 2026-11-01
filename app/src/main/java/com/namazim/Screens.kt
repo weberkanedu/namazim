@@ -451,15 +451,21 @@ fun OkumaScreen() {
                     drawArc(Pal.Gold, 180f, 180f * gauge, false, Offset(w / 2, w / 2), Size(d, d), style = Stroke(w, cap = StrokeCap.Round))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (page == 0) "—" else "$page", style = NumStyle, fontSize = 44.sp, color = Pal.Text)
-                    Text("/ $QURAN_PAGES sayfa", color = Pal.Muted, fontSize = 12.sp)
+                    Text("$page", style = NumStyle, fontSize = Type.display, color = Pal.Text)
+                    Text(
+                        if (page == 0) "henüz başlamadın" else "$QURAN_PAGES sayfada",
+                        color = Pal.Muted, fontSize = Type.label,
+                    )
                 }
             }
-            Text(if (page == 0) "Henüz başlamadın" else "${cuz(page)}. cüz · ${sureOf(page)} Sûresi",
-                Modifier.fillMaxWidth().padding(top = 8.dp), color = Pal.Text, fontSize = 14.sp, textAlign = TextAlign.Center)
-            Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                GhostButton("−", Modifier.width(52.dp)) { if (store.quranPage > 0) readQuran(-1) }
-                GoldButton("+1 sayfa okudum", Modifier.weight(1f)) { readQuran(1) }
+            Text(
+                if (page == 0) "İlk sayfayı okuyunca burada birikmeye başlar" else "${cuz(page)}. cüz · ${sureOf(page)} Sûresi",
+                Modifier.fillMaxWidth().padding(top = 8.dp), color = if (page == 0) Pal.Muted else Pal.Text,
+                fontSize = Type.body2, textAlign = TextAlign.Center,
+            )
+            Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                GhostButton("−1", Modifier.width(64.dp)) { if (store.quranPage > 0) readQuran(-1) }
+                GoldButton("+1 sayfa", Modifier.weight(1f)) { readQuran(1) }
                 GhostButton("+1 cüz", color = Pal.Gold) { readQuran(20) }
             }
         }
@@ -485,7 +491,7 @@ fun OkumaScreen() {
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(Modifier.fillMaxWidth().height((56 * h).dp.coerceAtLeast(3.dp)).clip(RoundedCornerShape(4.dp))
                             .background(if (d == todayDate) Pal.Gold else Color(0xFF3A4A66)))
-                        Text(if (d == todayDate) "Bugün" else TR_DAYS[d.dayOfWeek.value - 1], color = Pal.Muted, fontSize = 10.sp)
+                        Text(if (d == todayDate) "Bugün" else TR_DAYS[d.dayOfWeek.value - 1], color = Pal.Muted, fontSize = Type.label)
                     }
                 }
             }
@@ -494,6 +500,15 @@ fun OkumaScreen() {
         Row(Modifier.padding(start = 24.dp, end = 12.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Kitaplarım", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
             TextButton(onClick = { adding = true }) { Text("+ Kitap ekle", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
+        }
+        if (v.let { store.books() }.isEmpty()) {
+            EmptyState(
+                title = "Henüz kitap yok",
+                text = "Okuduğun kitabı ekle, sayfa sayısını yaz; ilerlemesini buradan takip et.",
+                actionLabel = "Kitap ekle",
+                onAction = { adding = true },
+                modifier = Modifier.padding(horizontal = 24.dp),
+            )
         }
         v.let { store.books() }.forEachIndexed { i, b ->
             InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp).fillMaxWidth()) {
@@ -1192,6 +1207,8 @@ fun Modifier.pressable(onClick: () -> Unit): Modifier {
     return this.graphicsLayer { scaleX = scale; scaleY = scale }
         .clickable(interactionSource = src, indication = null, onClick = onClick)
 }
+
+
 
 
 

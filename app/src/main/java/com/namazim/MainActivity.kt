@@ -123,7 +123,8 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
         Scaffold(
             containerColor = Pal.Ground,
             contentWindowInsets = WindowInsets(0),
-            bottomBar = { SeherNav(tab) { tab = it } },
+            // Ayarlar bir sekme değil: açıkken dock gizlenir, geri oku tek çıkış olur
+            bottomBar = { if (tab != 4) SeherNav(tab) { tab = it } },
         ) { pad ->
             Box(Modifier.padding(pad).fillMaxSize()) {
                 // sekmeler arası yumuşak geçiş: hafif kayma + solma
@@ -758,6 +759,7 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
 
 
 
