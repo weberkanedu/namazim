@@ -46,6 +46,7 @@ object Reminders {
     /** Re-arm the single alarm for the next pending reminder. Call after anything changes. */
     fun scheduleNext(ctx: Context) {
         val s = Store(ctx)
+        NamazimWidget.refresh(ctx) // the live icon follows the same state
         if (!s.hasLocation) return
         s.settleKaza()
         val now = System.currentTimeMillis()

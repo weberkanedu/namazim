@@ -19,6 +19,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -101,7 +103,7 @@ private fun ThemeCard(p: Palette, selected: Boolean, modifier: Modifier, onClick
 }
 
 @Composable
-fun AyarlarScreen() {
+fun AyarlarScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     var v by remember { mutableIntStateOf(0) }
@@ -119,13 +121,17 @@ fun AyarlarScreen() {
     rememberNow() // re-check permission states after coming back from system settings
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        ScreenTitle("Ayarlar")
+        ScreenTitle("Ayarlar", trailing = {
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = Pal.Text) }
+        })
         v.let { }
 
         Section("Görünüm") {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf(SeherPalette, OdakPalette).forEach { p ->
-                    ThemeCard(p, Pal.current.id == p.id, Modifier.weight(1f)) { store.theme = p.id; Pal.current = p }
+                    ThemeCard(p, Pal.current.id == p.id, Modifier.weight(1f)) {
+                        store.theme = p.id; Pal.current = p; NamazimWidget.refresh(ctx)
+                    }
                 }
             }
         }

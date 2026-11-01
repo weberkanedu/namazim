@@ -29,6 +29,7 @@ import java.util.Locale
 fun OdakHeader(
     city: String, today: LocalDate, holy: Pair<HolyDay, String>, slots: List<Slot>, now: Long, store: Store,
     label: String, time: String, sub: String,
+    locating: Boolean, onRefreshLocation: () -> Unit, onOpenSettings: () -> Unit,
 ) {
     val pulse by rememberInfiniteTransition(label = "pulse").animateFloat(
         0.3f, 1f, infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "pulse",
@@ -37,17 +38,15 @@ fun OdakHeader(
     val fills = slots.map { s -> animateFloatAsState(if (store.isPrayed(s.key)) 1f else 0f, tween(900, easing = FastOutSlowInEasing), label = "seg").value }
 
     Column(Modifier.fillMaxWidth().statusBarsPadding()) {
-        Row(Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp), verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f)) {
-                Text("Bugün", style = NumStyle, fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Pal.Text)
-                Text("${today.format(DateTimeFormatter.ofPattern("d MMMM", Locale("tr")))} · ${hijri(today)}", color = Pal.Muted, fontSize = 13.sp)
-                Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            }
-            Row(Modifier.clip(CircleShape).background(Pal.Card).padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Place, null, tint = Pal.Gold, modifier = Modifier.size(15.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(city.ifEmpty { "Konumum" }, color = Pal.Text, fontSize = 13.sp)
-            }
+        Row(Modifier.padding(start = 12.dp, end = 8.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            LocationChip(city, locating, onRefreshLocation)
+            Spacer(Modifier.weight(1f))
+            GearButton(onOpenSettings)
+        }
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp)) {
+            Text("Bugün", style = NumStyle, fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Pal.Text)
+            Text("${today.format(DateTimeFormatter.ofPattern("d MMMM", Locale("tr")))} · ${hijri(today)}", color = Pal.Muted, fontSize = 13.sp)
+            Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
         Box(Modifier.padding(top = 16.dp).size(232.dp).align(Alignment.CenterHorizontally), contentAlignment = Alignment.Center) {
             Canvas(Modifier.fillMaxSize()) {

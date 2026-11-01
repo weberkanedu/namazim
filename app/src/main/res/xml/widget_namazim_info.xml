@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1×1 canlı ikon: hilal saat, ibre sıradaki vakte döner, noktalar kıldıkça dolar. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="40dp"
+    android:minHeight="40dp"
+    android:targetCellWidth="1"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="0"
+    android:resizeMode="none"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_desc"
+    android:initialLayout="@layout/widget_namazim"
+    android:previewLayout="@layout/widget_namazim" />

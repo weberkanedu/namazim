@@ -17,7 +17,8 @@ const float HZ = 0.17;     // horizon height in uv
 const float EL_SCALE = 1.05;
 const float AZ_SCALE = 1.365;
 
-float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+// Dave Hoskins' hash: small intermediates, so it survives half-precision GPUs.
+float hash(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 float hash3(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float noise(vec2 p){
   vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
@@ -26,6 +27,11 @@ float noise(vec2 p){
 float fbm(vec2 p){
   float v = 0.0, a = 0.5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
   for (int i = 0; i < 6; i++) { v += a * noise(p); p = m * p; a *= 0.5; }
+  return v;
+}
+float fbm3(vec2 p){
+  float v = 0.0, a = 0.5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+  for (int i = 0; i < 3; i++) { v += a * noise(p); p = m * p; a *= 0.5; }
   return v;
 }
 
@@ -136,20 +142,25 @@ void main(){
   }
   col = mix(col, col * 0.15 + moonC.rgb, moonC.a * moonUp);
 
-  // Clouds on a flat layer, drifting with the wind
+  // Clouds: one soft cumulus deck. Low contrast on purpose — at this size a real sky is mostly haze
+  // with a few sunlit tops, and heavy domain warping tears into sharp shards.
   float cloudA = 0.0;
-  if (el > 0.0) {
-    vec2 cp = rdSky.xz / rdSky.y * 0.9 + vec2(uTime * 0.0045, uTime * 0.0012);
-    float n1 = fbm(cp * 1.4);
-    float dens = smoothstep(0.50, 0.80, n1);
-    if (dens > 0.0) {
-      float n2 = fbm(cp * 1.4 + normalize(uSun.xz + 1e-4) * 0.06);
-      float light = clamp(0.55 + (n1 - n2) * 7.0, 0.12, 1.0);
+  if (el > 0.002) {
+    vec2 cp = rdSky.xz / (max(rdSky.y, 0.02) + 0.16) * 0.62 + vec2(uTime * 0.0020, uTime * 0.0007);
+    vec2 w = vec2(fbm3(cp * 0.30 + 11.3), fbm3(cp * 0.30 + 27.1)) - 0.5;
+    vec2 q = cp + w * 0.45;
+    float n1 = fbm(q * 1.8);
+    float dens = smoothstep(0.47, 0.76, n1);
+    dens *= smoothstep(0.0, 0.030, el) * (0.60 + 0.40 * smoothstep(0.0, 0.25, el));
+    if (dens > 0.002) {
+      float n2 = fbm(q * 1.8 + normalize(uSun.xz + 1e-4) * 0.16);
+      float light = clamp(0.62 + (n1 - n2) * 3.2, 0.12, 1.0);
       float mu = dot(rdSky, uSun);
-      float silver = pow(max(mu, 0.0), 12.0) * 2.5;
-      vec3 amb = mix(vec3(0.0008, 0.001, 0.0018), vec3(0.18, 0.22, 0.30), dayF);
-      vec3 cc = amb + sl * (1.25 * light + silver) * dayF + vec3(0.7, 0.8, 1.0) * 0.006 * illum * moonUp;
-      cloudA = dens * smoothstep(0.0, 0.18, el) * 0.95;
+      float silver = pow(max(mu, 0.0), 16.0) * 2.2;
+      vec3 amb = mix(vec3(0.0012, 0.0015, 0.0022), vec3(0.20, 0.24, 0.32), dayF);
+      vec3 cc = amb + sl * (1.25 * light + silver) * dayF + vec3(0.7, 0.8, 1.0) * 0.008 * illum * moonUp;
+      cc = mix(cc, col, (1.0 - smoothstep(0.02, 0.28, el)) * 0.6); // haze swallows the far clouds
+      cloudA = dens * 0.92;
       col = mix(col, cc, cloudA);
     }
   }
@@ -182,41 +193,59 @@ void main(){
     starCol += vec3(0.9, 0.95, 1.0) * exp(-dd * dd * 0.8) * along * along * fade * 1.4 * starVis;
   }
 
-  // Distant hills, faint in the haze, with a mosque on the far ridge
-  float far = 0.012 + 0.024 * fbm(vec2(az * 4.0, 7.0));
-  float near = -0.006 + 0.034 * fbm(vec2(az * 2.1 + 3.0, 1.0));
-  vec3 haze = col;
-  vec3 farCol = mix(haze, vec3(0.012, 0.016, 0.026) * (0.4 + dayF * 3.0), 0.32);
-  vec3 nearCol = mix(haze, vec3(0.006, 0.008, 0.012) * (0.4 + dayF * 4.0), 0.72);
+  // Horizon: rolling hazy ridges, the mosque silhouette sitting on the far one
+  float farRidge = 0.013 + 0.026 * fbm(vec2(az * 3.4 + 2.0, 5.0)) + 0.005 * fbm(vec2(az * 11.0, 13.0));
+  vec3 hazeCol = col;
+  vec3 farCol = mix(hazeCol, vec3(0.010, 0.014, 0.022) * (0.35 + dayF * 3.0), 0.45);
+  vec3 nearCol = mix(hazeCol, vec3(0.004, 0.006, 0.010) * (0.35 + dayF * 3.0), 0.92);
+  // a wide, soft transition: distance haze, not a drawn line
+  col = mix(col, farCol, smoothstep(farRidge + 7.0 * pix, farRidge - 3.0 * pix, el));
 
-  // mosque silhouette (az/el units)
-  float mx = 0.27;
-  float base = 0.012 + 0.024 * fbm(vec2(mx * 4.0, 7.0)) - 0.002;
-  vec2 mp = vec2(az - mx, el - base);
-  float dome = length(mp - vec2(0.0, 0.016)) - 0.024;
-  dome = max(dome, -(mp.y - 0.016));
-  float drum = max(abs(mp.x) - 0.034, abs(mp.y - 0.008) - 0.010);
-  float fin = max(abs(mp.x) - 0.0012, abs(mp.y - 0.047) - 0.006);
-  float body = min(min(dome, drum), fin);
+  // Mosque: walls, a drum, a dome widest at its base, two half domes, two pencil minarets.
+  // Soft edges + haze at the base keep it from looking like an icon pasted on the horizon.
+  const float MX = 0.243;
+  float ridgeAt = 0.013 + 0.026 * fbm(vec2(MX * 3.4 + 2.0, 5.0)) + 0.005 * fbm(vec2(MX * 11.0, 13.0));
+  vec2 mp = vec2(az - MX, el - ridgeAt);
+  float hall = max(abs(mp.x) - 0.050, abs(mp.y - 0.0055) - 0.0055);
+  float drum = max(abs(mp.x) - 0.023, abs(mp.y - 0.0125) - 0.0015);
+  float dome = max(length(vec2(mp.x, mp.y - 0.014)) - 0.026, -(mp.y - 0.014));
+  float body = min(hall, min(drum, dome));
   for (int k = 0; k < 2; k++) {
-    float sx = k == 0 ? -0.05 : 0.05;
-    vec2 q = mp - vec2(sx, 0.0);
-    float shaft = max(abs(q.x) - 0.0032, abs(q.y - 0.04) - 0.04);
-    float cone = max(abs(q.x) - 0.0032 * clamp((0.098 - q.y) / 0.018, 0.0, 1.0), abs(q.y - 0.089) - 0.009);
-    float bal = max(abs(q.x) - 0.0055, abs(q.y - 0.066) - 0.0018);
-    body = min(body, min(min(shaft, cone), bal));
+    float sx = k == 0 ? -0.040 : 0.040;
+    vec2 q = mp - vec2(sx, 0.011);
+    body = min(body, max(length(q) - 0.013, -q.y));
   }
-  float mosque = smoothstep(pix, -pix, body);
-  float farMask = max(smoothstep(far + pix, far - pix, el), mosque);
-  col = mix(col, farCol, farMask);
-  // lit windows at night
-  float win = step(abs(mp.y - 0.006), 0.0028) * step(abs(mp.x), 0.028) * step(0.5, fract((mp.x + 0.028) / 0.008));
-  col += vec3(1.0, 0.75, 0.4) * 0.03 * win * mosque * nightF;
-  float nearMask = smoothstep(near + pix, near - pix, el);
-  col = mix(col, nearCol, nearMask);
-  // foreground ground darkens quickly below the horizon
-  vec3 groundCol = vec3(0.0025, 0.003, 0.0045) * (0.5 + dayF * 6.0);
-  col = mix(col, groundCol, smoothstep(-0.005, -0.06, el) * nearMask);
+  for (int k = 0; k < 2; k++) {
+    float sx = k == 0 ? -0.062 : 0.062;
+    vec2 q = mp - vec2(sx, 0.0);
+    float shaft = max(abs(q.x) - 0.0019, abs(q.y - 0.035) - 0.035);
+    float bal = max(abs(q.x) - 0.0030, abs(q.y - 0.038) - 0.0010);
+    float cone = max(abs(q.x) - 0.0022 * clamp((0.080 - q.y) / 0.010, 0.0, 1.0), abs(q.y - 0.075) - 0.005);
+    float fin = max(abs(q.x) - 0.0006, abs(q.y - 0.082) - 0.002);
+    body = min(body, min(shaft, min(bal, min(cone, fin))));
+  }
+  vec2 m2 = mp - vec2(-0.150, 0.0);
+  float d2 = max(length(vec2(m2.x, m2.y - 0.007)) - 0.011, -(m2.y - 0.007));
+  float s2 = max(abs(m2.x - 0.021) - 0.0013, abs(m2.y - 0.020) - 0.020);
+  float c2 = max(abs(m2.x - 0.021) - 0.0016 * clamp((0.044 - m2.y) / 0.007, 0.0, 1.0), abs(m2.y - 0.041) - 0.003);
+  body = min(body, min(d2, min(s2, c2)));
+
+  float mosq = smoothstep(1.2 * pix, -0.3 * pix, body) * step(-0.004, mp.y);
+  vec3 dark = vec3(0.0045, 0.006, 0.011) * (0.6 + dayF * 2.2);
+  vec3 mosqCol = mix(mix(hazeCol, dark, 0.62), dark, smoothstep(0.0, 0.045, mp.y));
+  col = mix(col, mosqCol, mosq);
+  float win = step(abs(mp.y - 0.004), 0.0016) * step(abs(mp.x), 0.030) * step(0.55, fract((mp.x + 0.030) / 0.008));
+  col += vec3(1.0, 0.72, 0.4) * 0.022 * win * mosq * nightF;
+
+  float treeTop = ridgeAt + 0.003 + 0.010 * fbm(vec2(az * 8.0 + 4.0, 2.0));
+  col = mix(col, mix(hazeCol, dark, 0.78), smoothstep(2.0 * pix, -1.0 * pix, el - treeTop) * 0.75);
+
+  float nearRidge = -0.004 + 0.008 * fbm(vec2(az * 3.0 + 9.0, 3.0));
+  float nearMask = smoothstep(nearRidge + 5.0 * pix, nearRidge - 3.0 * pix, el);
+  col = mix(col, mix(farCol, nearCol, smoothstep(0.020, -0.030, el)), nearMask);
+  // foreground ground darkens quickly below the horizon (the app fades it into the page anyway)
+  vec3 groundCol = vec3(0.0025, 0.003, 0.0045) * (0.5 + dayF * 5.0);
+  col = mix(col, groundCol, smoothstep(-0.010, -0.05, el) * nearMask);
 
   // Airplane with contrail (daytime)
   if (uPlane.z > 0.0) {
@@ -314,3 +343,12 @@ function createSky(canvas) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
 }
+
+
+
+
+
+
+
+
+

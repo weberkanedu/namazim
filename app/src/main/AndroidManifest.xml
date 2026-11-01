@@ -26,6 +26,12 @@
         <receiver android:name=".AlarmReceiver" android:exported="false" />
         <receiver android:name=".PrayedReceiver" android:exported="false" />
         <receiver android:name=".SnoozeReceiver" android:exported="false" />
+        <receiver android:name=".NamazimWidget" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_namazim_info" />
+        </receiver>
         <receiver android:name=".RescheduleReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

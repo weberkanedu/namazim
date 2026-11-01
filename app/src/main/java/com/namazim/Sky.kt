@@ -86,7 +86,14 @@ const float HZ = 0.17;
 const float EL_SCALE = 1.05;
 const float AZ_SCALE = 1.365;
 
-float hash(float2 p) { p = fract(p * float2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float hash(float2 p) {
+  // Dave Hoskins' hash: no large intermediate values, so it still works when the GPU runs the
+  // shader in half precision. The old fract(p*123.34) hash collapsed there — every noise cell
+  // became a flat value and the clouds turned into straight-edged shards.
+  float3 p3 = fract(float3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
 float hash3(float3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float noise(float2 p) {
   // quintic fade: no visible grid creases in the clouds
@@ -204,22 +211,24 @@ half4 main(float2 fc) {
   col = col * (1.0 - moonC.a * moonUp * 0.85 * nightF) + moonC.rgb * moonC.a * moonUp * (1.0 + 2.0 * dayF);
 
   float cloudA = 0.0;
-  if (el > 0.0) {
-    // +0.12 keeps the cloud layer from stretching into streaks near the horizon;
-    // the warp bends the noise into soft, billowy shapes instead of straight shards.
-    float2 cp = rdSky.xz / (rdSky.y + 0.12) * 0.55 + float2(uTime * 0.003, uTime * 0.0009);
-    float2 w = float2(fbm3(cp * 0.7 + 3.1), fbm3(cp * 0.7 + 7.7));
-    float2 q = cp * 1.2 + w * 0.9;
-    float n1 = fbm(q);
-    float dens = smoothstep(0.50, 0.86, n1);
-    if (dens > 0.0) {
-      float n2 = fbm(q + normalize(uSun.xz + 1e-4) * 0.15);
-      float light = clamp(0.8 + (n1 - n2) * 2.5, 0.35, 1.05);
+  if (el > 0.002) {
+    // One soft cumulus deck. Low contrast on purpose: at this size a real sky is mostly haze with a
+    // few sunlit tops, and heavy domain warping is what tore the old clouds into sharp shards.
+    float2 cp = rdSky.xz / (max(rdSky.y, 0.02) + 0.16) * 0.62 + float2(uTime * 0.0020, uTime * 0.0007);
+    float2 w = float2(fbm3(cp * 0.30 + 11.3), fbm3(cp * 0.30 + 27.1)) - 0.5;
+    float2 q = cp + w * 0.45;
+    float n1 = fbm(q * 1.8);
+    float dens = smoothstep(0.47, 0.76, n1);
+    dens *= smoothstep(0.0, 0.030, el) * (0.60 + 0.40 * smoothstep(0.0, 0.25, el));
+    if (dens > 0.002) {
+      float n2 = fbm(q * 1.8 + normalize(uSun.xz + 1e-4) * 0.16);
+      float light = clamp(0.48 + (n1 - n2) * 4.6, 0.10, 1.0);
       float mu = dot(rdSky, uSun);
-      float silver = pow(max(mu, 0.0), 12.0) * 2.5;
-      float3 amb = mix(float3(0.0008, 0.001, 0.0018), float3(0.18, 0.22, 0.30), dayF);
-      float3 cc = amb + sl * (1.25 * light + silver) * dayF + float3(0.7, 0.8, 1.0) * 0.006 * illum * moonUp;
-      cloudA = dens * smoothstep(0.02, 0.3, el) * 0.9;
+      float silver = pow(max(mu, 0.0), 16.0) * 2.2;
+      float3 amb = mix(float3(0.0012, 0.0015, 0.0022), float3(0.20, 0.24, 0.32), dayF);
+      float3 cc = amb + sl * (1.25 * light + silver) * dayF + float3(0.7, 0.8, 1.0) * 0.008 * illum * moonUp;
+      cc = mix(cc, col, (1.0 - smoothstep(0.02, 0.28, el)) * 0.6); // haze swallows the far clouds
+      cloudA = dens * 0.92;
       col = mix(col, cc, cloudA);
     }
   }
@@ -249,38 +258,68 @@ half4 main(float2 fc) {
     starCol += float3(0.9, 0.95, 1.0) * exp(-dd * dd * 0.8) * along * along * fade * 1.4 * starVis;
   }
 
-  // Hills and the mosque only exist near the horizon; skip the noise work everywhere else.
+  // Horizon: rolling hazy ridges, the mosque silhouette sitting on the far one.
+  // Only pixels near the horizon need this; skipping the rest keeps the GPU cool.
   if (el < 0.12) {
-  float far = 0.012 + 0.024 * fbm(float2(az * 4.0, 7.0));
-  float near = -0.006 + 0.034 * fbm(float2(az * 2.1 + 3.0, 1.0));
-  float3 haze = col;
-  float3 farCol = mix(haze, float3(0.012, 0.016, 0.026) * (0.4 + dayF * 3.0), 0.32);
-  float3 nearCol = mix(haze, float3(0.006, 0.008, 0.012) * (0.4 + dayF * 4.0), 0.72);
-  float mx = 0.27;
-  float base = 0.012 + 0.024 * fbm(float2(mx * 4.0, 7.0)) - 0.002;
-  float2 mp = float2(az - mx, el - base);
-  float dome = length(mp - float2(0.0, 0.016)) - 0.024;
-  dome = max(dome, -(mp.y - 0.016));
-  float drum = max(abs(mp.x) - 0.034, abs(mp.y - 0.008) - 0.010);
-  float fin = max(abs(mp.x) - 0.0012, abs(mp.y - 0.047) - 0.006);
-  float body = min(min(dome, drum), fin);
-  for (int k = 0; k < 2; k++) {
-    float sx = k == 0 ? -0.05 : 0.05;
-    float2 q = mp - float2(sx, 0.0);
-    float shaft = max(abs(q.x) - 0.0032, abs(q.y - 0.04) - 0.04);
-    float cone = max(abs(q.x) - 0.0032 * clamp((0.098 - q.y) / 0.018, 0.0, 1.0), abs(q.y - 0.089) - 0.009);
-    float bal = max(abs(q.x) - 0.0055, abs(q.y - 0.066) - 0.0018);
-    body = min(body, min(min(shaft, cone), bal));
+  float farRidge = 0.013 + 0.026 * fbm(float2(az * 3.4 + 2.0, 5.0)) + 0.005 * fbm(float2(az * 11.0, 13.0));
+  float3 hazeCol = col;
+  float3 farCol = mix(hazeCol, float3(0.010, 0.014, 0.022) * (0.35 + dayF * 3.0), 0.45);
+  float3 nearCol = mix(hazeCol, float3(0.004, 0.006, 0.010) * (0.35 + dayF * 3.0), 0.92);
+  // a wide, soft transition: distance haze, not a drawn line
+  col = mix(col, farCol, smoothstep(farRidge + 7.0 * pix, farRidge - 3.0 * pix, el));
+
+  // Mosque: a wide, slightly flattened dome on a drum, two half domes, two balconied minarets.
+  // Edges are softened by a couple of pixels of haze, the way distance blurs a real skyline, and
+  // the base dissolves into the ridge so it does not look pasted on.
+  const float MX = 0.243;
+  float ridgeAt = 0.013 + 0.026 * fbm(float2(MX * 3.4 + 2.0, 5.0)) + 0.005 * fbm(float2(MX * 11.0, 13.0));
+  float2 mp = float2(az - MX, el - ridgeAt);
+  float hall = max(abs(mp.x) - 0.050, abs(mp.y - 0.0055) - 0.0055);          // walls, 0 .. 0.011
+  float drum = max(abs(mp.x) - 0.023, abs(mp.y - 0.0125) - 0.0015);          // drum under the dome
+  float dome = max(length(float2(mp.x, mp.y - 0.014)) - 0.026, -(mp.y - 0.014)); // dome, widest at its base
+  float body = min(hall, min(drum, dome));
+  for (int k = 0; k < 2; k++) {                       // half domes over the side aisles
+    float sx = k == 0 ? -0.040 : 0.040;
+    float2 q = mp - float2(sx, 0.011);
+    body = min(body, max(length(q) - 0.013, -q.y));
   }
-  float mosque = smoothstep(pix, -pix, body);
-  float farMask = max(smoothstep(far + pix, far - pix, el), mosque);
-  col = mix(col, farCol, farMask);
-  float win = step(abs(mp.y - 0.006), 0.0028) * step(abs(mp.x), 0.028) * step(0.5, fract((mp.x + 0.028) / 0.008));
-  col += float3(1.0, 0.75, 0.4) * 0.03 * win * mosque * nightF;
-  float nearMask = smoothstep(near + pix, near - pix, el);
-  col = mix(col, nearCol, nearMask);
-  float3 groundCol = float3(0.0025, 0.003, 0.0045) * (0.5 + dayF * 6.0) * (0.55 + 0.6 * fbm(float2(az * 18.0, el * 60.0)));
-  col = mix(col, groundCol, smoothstep(-0.005, -0.06, el) * nearMask);
+  for (int k = 0; k < 2; k++) {                       // pencil minarets: shaft, balcony, needle cap
+    float sx = k == 0 ? -0.062 : 0.062;
+    float2 q = mp - float2(sx, 0.0);
+    float shaft = max(abs(q.x) - 0.0019, abs(q.y - 0.035) - 0.035);
+    float bal = max(abs(q.x) - 0.0030, abs(q.y - 0.038) - 0.0010);
+    float cone = max(abs(q.x) - 0.0022 * clamp((0.080 - q.y) / 0.010, 0.0, 1.0), abs(q.y - 0.075) - 0.005);
+    float fin = max(abs(q.x) - 0.0006, abs(q.y - 0.082) - 0.002);
+    body = min(body, min(shaft, min(bal, min(cone, fin))));
+  }
+  // a second, smaller mosque further along the ridge, so the skyline is not one lone symbol
+  float2 m2 = mp - float2(-0.150, 0.0);
+  float d2 = max(length(float2(m2.x, m2.y - 0.007)) - 0.011, -(m2.y - 0.007));
+  float s2 = max(abs(m2.x - 0.021) - 0.0013, abs(m2.y - 0.020) - 0.020);
+  float c2 = max(abs(m2.x - 0.021) - 0.0016 * clamp((0.044 - m2.y) / 0.007, 0.0, 1.0), abs(m2.y - 0.041) - 0.003);
+  body = min(body, min(d2, min(s2, c2)));
+
+  float mosq = smoothstep(1.2 * pix, -0.3 * pix, body) * step(-0.004, mp.y);
+  float3 dark = float3(0.0045, 0.006, 0.011) * (0.6 + dayF * 2.2);
+  float3 mosqCol = mix(mix(hazeCol, dark, 0.62), dark, smoothstep(0.0, 0.045, mp.y));
+  col = mix(col, mosqCol, mosq);
+  // lit windows at night: a faint row under the dome
+  float win = step(abs(mp.y - 0.004), 0.0016) * step(abs(mp.x), 0.030) * step(0.55, fract((mp.x + 0.030) / 0.008));
+  col += float3(1.0, 0.72, 0.4) * 0.022 * win * mosq * nightF;
+
+  // Trees in front of the mosque: they swallow its base, which is what keeps a distant silhouette
+  // from looking like an icon standing on a line.
+  float treeTop = ridgeAt + 0.003 + 0.010 * fbm(float2(az * 8.0 + 4.0, 2.0));
+  float treeMask = smoothstep(2.0 * pix, -1.0 * pix, el - treeTop);
+  col = mix(col, mix(hazeCol, dark, 0.78), treeMask * 0.75);
+
+  float nearRidge = -0.004 + 0.008 * fbm(float2(az * 3.0 + 9.0, 3.0));
+  float nearMask = smoothstep(nearRidge + 5.0 * pix, nearRidge - 3.0 * pix, el);
+  // the land darkens from the hazy ridge down to the foreground, so it never reads as one grey band
+  col = mix(col, mix(farCol, nearCol, smoothstep(0.020, -0.030, el)), nearMask);
+  // foreground ground darkens quickly below the horizon (the app fades it into the page anyway)
+  float3 groundCol = float3(0.0025, 0.003, 0.0045) * (0.5 + dayF * 5.0);
+  col = mix(col, groundCol, smoothstep(-0.010, -0.05, el) * nearMask);
   }
 
   if (uPlane.z > 0.0) {
@@ -346,6 +385,9 @@ private class SkyEvents {
         else floatArrayOf(((now / 1000.0) % 26 / 26 * 1.4 - 0.15).toFloat(), (0.42 + 0.04 * sin(now / 3000.0)).toFloat(), 1f, 0f)
 }
 
+/** Testing aid: `adb shell am start -n com.namazim/.MainActivity --el skytime 43200000` shifts the sky clock. */
+object SkyDebug { var offsetMs = 0L }
+
 /**
  * Live sky for the Seher theme. Long-press runs the day fast (a day per minute) to preview it.
  * Rendered at a third of the screen resolution and scaled up: the sky is soft, the GPU stays cool.
@@ -399,7 +441,7 @@ private fun SkyShaderView(shader: RuntimeShader, lat: Double, lng: Double, modif
                 }
                 .drawBehind {
                     val now = frame
-                    val skyTime = if (fastFrom >= 0) fastFrom + (now - fastFrom) * 1440 else now
+                    val skyTime = if (fastFrom >= 0) fastFrom + (now - fastFrom) * 1440 else now + SkyDebug.offsetMs
                     val b = skyBodies(lat, lng, skyTime)
                     val sunAlt = b.sun.alt / D2R
                     shader.setFloatUniform("uRes", size.width, size.height)

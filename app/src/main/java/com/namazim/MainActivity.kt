@@ -18,8 +18,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,11 +34,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,11 +59,15 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 class MainActivity : ComponentActivity() {
     companion object { const val EXTRA_SLOT = "slot" }
 
     private var reminderKey by mutableStateOf<String?>(null)
+    private var startTab by mutableIntStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,13 +75,20 @@ class MainActivity : ComponentActivity() {
         Reminders.createChannels(this)
         Pal.current = Pal.byId(Store(this).theme)
         reminderKey = intent.getStringExtra(EXTRA_SLOT)
-        val startTab = intent.getIntExtra("tab", 0) // lets `adb shell am start -e tab N` open a tab for testing
+        startTab = intent.getIntExtra("tab", 0) // lets `adb shell am start -e tab N` open a tab for testing
+        SkyDebug.offsetMs = intent.getLongExtra("skytime", 0L) // `--el skytime` previews another hour of the sky
+        if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (intent.getBooleanExtra("widgetpreview", false)) {
+            setContent { AppTheme { WidgetPreview() } }
+            return
+        }
         setContent { AppTheme { App(reminderKey, startTab) { reminderKey = null } } }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.getStringExtra(EXTRA_SLOT)?.let { reminderKey = it }
+        if (intent.hasExtra("tab")) startTab = intent.getIntExtra("tab", startTab)
     }
 
     override fun onResume() {
@@ -84,6 +100,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
     var tab by remember { mutableIntStateOf(startTab) }
+    // `am start --ei tab N` on a running instance moves to that tab (useful for screenshots)
+    LaunchedEffect(startTab) { tab = startTab }
     Box(Modifier.fillMaxSize().background(Pal.Ground)) {
         Scaffold(
             containerColor = Pal.Ground,
@@ -92,11 +110,11 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
         ) { pad ->
             Box(Modifier.padding(pad).fillMaxSize()) {
                 when (tab) {
-                    0 -> NamazScreen()
+                    0 -> NamazScreen { tab = 4 }
                     1 -> KibleScreen()
                     2 -> OkumaScreen()
                     3 -> MuhasebeScreen()
-                    else -> AyarlarScreen()
+                    else -> AyarlarScreen { tab = 0 }
                 }
             }
         }
@@ -106,9 +124,10 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
 
 @Composable
 fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
+    // Ayarlar is not a tab any more: it opens from the gear on the home header (tab 4), so back returns here.
     val tabs = listOf<Pair<String, ImageVector>>(
         "Namaz" to Icons.Default.Home, "Kıble" to Icons.Default.LocationOn, "Okuma" to Icons.Default.Edit,
-        "Muhasebe" to Icons.Default.DateRange, "Ayarlar" to Icons.Default.Settings,
+        "Muhasebe" to Icons.Default.DateRange,
     )
     NavigationBar(containerColor = Pal.Nav, tonalElevation = 0.dp) {
         tabs.forEachIndexed { i, (name, icon) ->
@@ -121,6 +140,89 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
                 ),
             )
         }
+    }
+}
+
+@Composable
+fun LocationChip(city: String, locating: Boolean, onRefresh: () -> Unit) {
+    val ctx = LocalContext.current
+    var open by remember { mutableStateOf(false) }
+    val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 12f))
+    Box {
+        Row(
+            Modifier.clip(CircleShape).clickable(enabled = !locating) { open = true }.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Default.Place, null, tint = Pal.Gold, modifier = Modifier.size(12.dp))
+            Spacer(Modifier.width(4.dp))
+            Text(
+                if (locating) "Konum alınıyor…" else city.ifEmpty { "Konumum" },
+                color = Pal.Text, fontSize = 12.5.sp, fontWeight = FontWeight.Medium, style = shadow, maxLines = 1,
+            )
+            Spacer(Modifier.width(1.dp))
+            Icon(Icons.Default.KeyboardArrowDown, null, tint = Pal.Text.copy(alpha = .55f), modifier = Modifier.size(14.dp))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }, containerColor = Pal.Card, shape = RoundedCornerShape(16.dp)) {
+            Text(
+                if (city.isEmpty()) "Konum belirlenmedi" else city,
+                Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 8.dp), color = Pal.Muted, fontSize = 12.sp,
+            )
+            HorizontalDivider(color = Pal.Line)
+            DropdownMenuItem(
+                text = { Text("Konumu güncelle", color = Pal.Text, fontSize = 14.sp) },
+                leadingIcon = { Icon(Icons.Default.Refresh, null, tint = Pal.Gold, modifier = Modifier.size(18.dp)) },
+                onClick = { open = false; onRefresh() },
+            )
+            DropdownMenuItem(
+                text = { Text("Uygulama izinleri", color = Pal.Text, fontSize = 14.sp) },
+                leadingIcon = { Icon(Icons.Default.Settings, null, tint = Pal.Muted, modifier = Modifier.size(18.dp)) },
+                onClick = {
+                    open = false
+                    ctx.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${ctx.packageName}")))
+                },
+            )
+        }
+    }
+}
+
+/** Thin-line gear: eight teeth on a ring, more elegant than the filled Material icon. */
+@Composable
+fun GearButton(onClick: () -> Unit) {
+    Box(
+        Modifier.size(34.dp).clip(CircleShape).background(Color(0x26000000)).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        androidx.compose.foundation.Canvas(Modifier.size(18.dp)) {
+            val c = center
+            val r = size.minDimension * 0.29f
+            val w = size.minDimension * 0.085f
+            drawCircle(Pal.Text, r, c, style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+            for (i in 0 until 8) {
+                val a = (i * 45f) * (PI / 180).toFloat()
+                val p0 = Offset(c.x + cos(a) * r * 1.12f, c.y + sin(a) * r * 1.12f)
+                val p1 = Offset(c.x + cos(a) * r * 1.55f, c.y + sin(a) * r * 1.55f)
+                drawLine(Pal.Text, p0, p1, strokeWidth = w, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+            drawCircle(Pal.Text, r * 0.28f, c, style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.9f))
+        }
+    }
+}
+
+/** Debug-only: the widget art at 144 dp, so the live icon can be checked without adding it to the launcher. */
+@Composable
+fun WidgetPreview() {
+    val ctx = LocalContext.current
+    val bmp = remember { NamazimWidget.art(ctx, 288).asImageBitmap() }
+    Column(
+        Modifier.fillMaxSize().background(Pal.Ground), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+            Image(painterResource(R.drawable.ic_logo), "Logo", Modifier.size(108.dp))
+            Image(bmp, "Canlı ikon", Modifier.size(144.dp))
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(NamazimWidget.label(ctx), color = Pal.Text, fontSize = 11.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -177,7 +279,7 @@ private val TR_DATE = DateTimeFormatter.ofPattern("d MMMM EEEE", Locale("tr"))
 // ---------------------------------------------------------------- Namaz (home)
 
 @Composable
-fun NamazScreen() {
+fun NamazScreen(onOpenSettings: () -> Unit) {
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     val now = rememberNow()
@@ -238,26 +340,29 @@ fun NamazScreen() {
         Column(Modifier.fillMaxSize()) {
             if (Pal.current.id == OdakPalette.id) {
                 val todaySlotsList = slots(store.lat, store.lng, today)
-                OdakHeader(store.city, today, holy, todaySlotsList, now, store, heroLabel, heroTime, heroSub)
+                OdakHeader(store.city, today, holy, todaySlotsList, now, store, heroLabel, heroTime, heroSub,
+                    locating, { if (!locating) locate() }, onOpenSettings)
             } else {
             Box(Modifier.fillMaxWidth().height(300.dp)) {
                 SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
-                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(48.dp)
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(56.dp)
                     .background(Brush.verticalGradient(listOf(Color.Transparent, Pal.Ground))))
-                val shadow = TextStyle(shadow = Shadow(Color(0x88000000), blurRadius = 12f))
-                Row(Modifier.statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.Top) {
-                    Row(Modifier.weight(1f).clip(CircleShape), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Place, null, tint = Pal.Gold, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text(if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Konumum" }, color = Pal.Text,
-                            fontSize = 15.sp, fontWeight = FontWeight.Medium, style = shadow)
-                        TextButton(onClick = { if (!locating) locate() }) { Text("Güncelle", color = Pal.Gold, fontSize = 12.sp, style = shadow) }
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("${today.format(TR_DATE)}\n${hijri(today)}", color = Pal.Text, fontSize = 12.sp, lineHeight = 17.sp,
-                            textAlign = TextAlign.End, style = shadow)
-                        Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, style = shadow)
-                    }
+                val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 14f))
+                Row(
+                    Modifier.statusBarsPadding().fillMaxWidth().padding(start = 14.dp, end = 8.dp, top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    LocationChip(store.city, locating) { if (!locating) locate() }
+                    Spacer(Modifier.weight(1f))
+                    GearButton(onOpenSettings)
+                }
+                // Date, hijri and the next mübarek gün live at the bottom left, over the horizon.
+                Column(Modifier.align(Alignment.BottomStart).padding(start = 22.dp, end = 96.dp, bottom = 14.dp)) {
+                    Text(today.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = 12.sp, style = shadow)
+                    Text(hijri(today), color = Pal.Text.copy(alpha = .68f), fontSize = 11.5.sp, style = shadow)
+                    Spacer(Modifier.height(3.dp))
+                    Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 11.5.sp,
+                        fontWeight = FontWeight.SemiBold, style = shadow)
                 }
                 if (fastSky) {
                     Text("Hızlı önizleme · bitirmek için basılı tut", Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)

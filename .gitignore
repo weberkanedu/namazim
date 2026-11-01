@@ -9,3 +9,5 @@ local.properties
 # screenshots of this and other apps, and Diyanet's own documents: kept local
 vakit-ekran/
 diyanet-basvuru/
+
+.chrometmp*/
