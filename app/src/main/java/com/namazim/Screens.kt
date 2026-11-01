@@ -33,6 +33,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -529,7 +530,7 @@ fun MuhasebeScreen() {
         ScreenTitle("Muhasebe")
         Segmented(listOf("Özet", "Gidişat", "Kaza"), section,
             Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth(), stretch = true) { section = it }
-        Box(Modifier.weight(1f)) {
+        Box(Modifier.weight(1f).clipToBounds()) {
             when (section) {
                 0 -> MuhasebeOzet()
                 1 -> MuhasebeGidisat()
@@ -738,6 +739,7 @@ private fun MuhasebeGidisat() {
         val any: Int, val full: Int, val total: Int, val prevAny: Int,
         val fracs: Map<String, List<Float>>, val mins: Map<String, List<Int>>,
         val allNamaz: Int, val allSayfa: Int, val allHatim: Int, val allKaza: Int, val fullYear: Boolean,
+        val kazaDaily: IntArray,
     )
 
     // bir yıllık vakit hesabı birkaç yüz ms sürüyor: arka planda hesapla, bu arada spinner göster
@@ -792,8 +794,10 @@ private fun MuhasebeGidisat() {
                 d0 = d0.plusDays(1)
             }
             val allKaza = Vakit.entries.sumOf { store.kaza(it) } + store.kaza("VITIR")
+            val kLog = store.kazaLog()
+            val kazaDaily = IntArray(n) { i -> kLog[start.plusDays(i.toLong()).toString()] ?: 0 }
             Bucket(start, n, elapsed, counts, pages, any, full, total, prevAny, fracs, mins,
-                allNamaz, allSayfa, store.hatim, allKaza, fullYear)
+                allNamaz, allSayfa, store.hatim, allKaza, fullYear, kazaDaily)
         } }
     }
     val data = bucket
@@ -1008,12 +1012,18 @@ private fun MuhasebeGidisat() {
                     // mini grafik: son 21 günün 3 günlük ortalaması
                     Canvas(Modifier.size(64.dp, 24.dp)) {
                         val n = minOf(21, data.elapsed)
-                        if (n > 1 && name != "Hatim" && name != "Kaza") {
+                        if (n > 1) {
                             val raw = when (name) {
                                 "Namaz" -> IntArray(n) { data.counts[data.elapsed - n + it] }
-                                else -> IntArray(n) { data.pages[data.elapsed - n + it] }
+                                "Okuma" -> IntArray(n) { data.pages[data.elapsed - n + it] }
+                                // hatim: son 21 günün kümülatif okuma eğrisi
+                                "Hatim" -> {
+                                    var acc = 0
+                                    IntArray(n) { acc += data.pages[data.elapsed - n + it]; acc }
+                                }
+                                else -> IntArray(n) { data.kazaDaily[data.elapsed - n + it] }
                             }
-                            val vals = FloatArray(n) { i ->
+                            val vals = if (name == "Hatim") FloatArray(n) { raw[it].toFloat() } else FloatArray(n) { i ->
                                 val a = raw[max(0, i - 1)]; val b = raw[i]; val c = raw[min(n - 1, i + 1)]
                                 (a + b + c) / 3f
                             }
@@ -1134,6 +1144,8 @@ private fun RadarChart(axes: List<Pair<String, Float>>, colors: List<Color>, ani
         }
     }
 }
+
+
 
 
 

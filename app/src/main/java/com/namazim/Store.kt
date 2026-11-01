@@ -60,11 +60,27 @@ class Store(context: Context) {
         if (kaza(key) == 0) return
         addKaza(key, -1)
         p.edit().putInt(paidKey(), kazaPaidThisMonth() + 1).apply()
+        logKaza(1) // günlük grafik için: bugün kaç kaza kılındı
+    }
+
+    /** Gün → o gün kılınan kaza sayısı (türlere göre grafikte kullanılır). */
+    fun kazaLog(): Map<String, Int> {
+        val o = JSONObject(p.getString("kazaLog", "{}")!!)
+        return o.keys().asSequence().associateWith { o.getInt(it) }
+    }
+
+    fun logKaza(n: Int) {
+        val o = JSONObject(p.getString("kazaLog", "{}")!!)
+        val today = LocalDate.now().toString()
+        o.put(today, (o.optInt(today) + n).coerceAtLeast(0))
+        p.edit().putString("kazaLog", o.toString()).apply()
+        StoreRev.n++
     }
     /** Undo a mis-tapped "Kıldım": one more owed, one less on this month's tally. */
     fun unpayKaza(key: String) {
         addKaza(key, 1)
         StoreRev.n++
+        logKaza(-1)
         p.edit().putInt(paidKey(), (kazaPaidThisMonth() - 1).coerceAtLeast(0)).apply()
     }
     fun kazaPaidThisMonth() = p.getInt(paidKey(), 0)
@@ -162,6 +178,7 @@ class Store(context: Context) {
         p.edit().putString("readLog", o.toString()).apply()
     }
 }
+
 
 
 
