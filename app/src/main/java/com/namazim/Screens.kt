@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -477,29 +478,223 @@ fun OkumaScreen() {
 // ---------------------------------------------------------------- Muhasebe
 
 @Composable
-fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
-    Row(Modifier.clip(CircleShape).background(Pal.Card).padding(3.dp)) {
+fun Segmented(options: List<String>, selected: Int, modifier: Modifier = Modifier, onSelect: (Int) -> Unit) {
+    Row(modifier.clip(RoundedCornerShape(24.dp)).background(Pal.Card).padding(3.dp)) {
         options.forEachIndexed { i, label ->
-            Box(Modifier.clip(CircleShape).background(if (selected == i) Pal.Gold else Color.Transparent)
-                .clickable { onSelect(i) }.padding(horizontal = 14.dp, vertical = 7.dp)) {
+            Box(Modifier.weight(1f).clip(RoundedCornerShape(20.dp)).background(if (selected == i) Pal.Gold else Color.Transparent)
+                .clickable { onSelect(i) }.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
                 Text(label, color = if (selected == i) Pal.Ground else Pal.Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
-
-/** Muhasebe holds the overview and, like Vakit, the kaza list. */
+/** Muhasebe holds the overview (like Vakit's "Özet"), the history and the kaza list. */
 @Composable
 fun MuhasebeScreen() {
     var section by remember { mutableIntStateOf(0) }
     Column(Modifier.fillMaxSize()) {
-        ScreenTitle("Muhasebe") { Segmented(listOf("Özet", "Kaza"), section) { section = it } }
-        Box(Modifier.weight(1f)) { if (section == 0) MuhasebeOzet() else KazaScreen(embedded = true) }
+        ScreenTitle("Muhasebe")
+        Segmented(listOf("Özet", "Gidişat", "Kaza"), section,
+            Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth()) { section = it }
+        Box(Modifier.weight(1f)) {
+            when (section) {
+                0 -> MuhasebeOzet()
+                1 -> MuhasebeGidisat()
+                else -> KazaScreen(embedded = true)
+            }
+        }
     }
 }
 
+/** "Bugün ne durumdayım": dört halka (namaz, okuma, hatim, kaza) + tek cümlelik değerlendirme. */
 @Composable
 private fun MuhasebeOzet() {
+    val ctx = LocalContext.current
+    val store = remember { Store(ctx) }
+    if (!store.hasLocation) return NeedLocation()
+    val today = LocalDate.now()
+    val now = System.currentTimeMillis()
+    val first = store.firstDay
+    val log = store.readLog()
+    val prayed = store.prayed()
+    val todaySlots = slots(store.lat, store.lng, today)
+    val prayedToday = todaySlots.count { it.key in prayed }
+    val pagesToday = log[today.toString()] ?: 0
+    val page = store.quranPage
+    val totalKaza = Vakit.entries.sumOf { store.kaza(it) } + store.kaza("VITIR")
+
+    val slotCache = remember { mutableMapOf<LocalDate, List<Slot>>() }
+    fun daySlots(d: LocalDate) = slotCache.getOrPut(d) { slots(store.lat, store.lng, d) }
+
+    // son 30 gün ve tüm zamanlar: kaç vakit geldi, kaçı kılındı, kaç gün tamdı
+    fun stats(days: Int): Triple<Int, Int, Int> {
+        var due = 0; var kept = 0; var full = 0
+        for (i in 0 until days) {
+            val d = today.minusDays(i.toLong())
+            if (d.isBefore(first)) break
+            val list = daySlots(d)
+            due += list.count { it.end <= now }
+            kept += list.count { it.key in prayed }
+            if (list.all { it.key in prayed || it.end > now }) full++
+        }
+        return Triple(due, kept, full)
+    }
+    val (due30, kept30, full30) = stats(30)
+    val totalDays = (today.toEpochDay() - first.toEpochDay()).toInt() + 1
+    val (dueAll, keptAll, _) = stats(totalDays.coerceAtMost(400))
+    val rate30 = if (due30 == 0) 0f else kept30.toFloat() / due30
+    val rateAll = if (dueAll == 0) 0f else keptAll.toFloat() / dueAll
+
+    // ne zaman kılıyorsun: vaktin başı / ortası / sonu
+    var sumPos = 0f; var nPos = 0
+    for (d in listOf(today, today.minusDays(1), today.minusDays(2))) {
+        for (s in daySlots(d)) {
+            val at = store.prayedAt(s.key) ?: continue
+            if (s.end <= s.start) continue
+            sumPos += ((at - s.start).toFloat() / (s.end - s.start)).coerceIn(0f, 1f); nPos++
+        }
+    }
+    val insight = when {
+        nPos == 0 -> "Birkaç vakit işaretledikçe burada nasıl kıldığını göreceksin."
+        sumPos / nPos < 0.34f -> "Namazlarını çoğunlukla vaktin başında kılıyorsun."
+        sumPos / nPos < 0.67f -> "Namazlarını çoğunlukla vaktin ortasında kılıyorsun."
+        else -> "Namazlarını çoğunlukla vaktin sonuna doğru kılıyorsun."
+    }
+
+    // okuma hızı → mushaf ne zaman biter
+    val perDay = (0 until 7).sumOf { log[today.minusDays(it.toLong()).toString()] ?: 0 } / 7f
+    val eta = if (perDay <= 0.05f || page == 0) null else today.plusDays(((604 - page) / perDay).toLong().coerceAtLeast(1))
+    val monthsLeft = if (store.kazaRate <= 0 || totalKaza == 0) null else totalKaza / (store.kazaRate * 30f)
+
+    val rings = listOf(
+        Triple((prayedToday / 5f), Pal.Gold, 1.00f),
+        Triple(if (store.readGoal == 0) 0f else (pagesToday.toFloat() / store.readGoal).coerceIn(0f, 1f), Color(0xFF6BC5B0), 0.80f),
+        Triple((page / 604f).coerceIn(0f, 1f), Color(0xFF8AA6D8), 0.60f),
+        Triple(if (store.kazaRate == 0) 0f else (store.kazaPaidThisMonth().toFloat() / (store.kazaRate * 30)).coerceIn(0f, 1f), Pal.Warn, 0.40f),
+    )
+    var shown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { shown = true }
+    val anim by animateFloatAsState(if (shown) 1f else 0f, tween(900), label = "rings")
+
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth()) {
+            Box(Modifier.fillMaxWidth().height(196.dp).padding(top = 4.dp), contentAlignment = Alignment.Center) {
+                Canvas(Modifier.size(188.dp)) {
+                    val c = center
+                    val base = size.minDimension / 2 - 8.dp.toPx()
+                    rings.forEachIndexed { i, (p, color, frac) ->
+                        val r = base * (1f - i * 0.19f)
+                        val w = 9.dp.toPx()
+                        drawCircle(Pal.Track.copy(alpha = .7f), r - w / 2, c, style = Stroke(w))
+                        drawArc(color, -90f, 360f * (p * anim), false,
+                            Offset(c.x - r + w / 2, c.y - r + w / 2), Size((r - w / 2) * 2, (r - w / 2) * 2),
+                            style = Stroke(w, cap = StrokeCap.Round))
+                    }
+                    drawCircle(Pal.Card, base * 0.14f, c)
+                    drawCircle(Pal.Text.copy(alpha = .25f), base * 0.14f, c, style = Stroke(2f))
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                listOf(
+                    "$prayedToday/5 namaz" to Pal.Gold,
+                    "$pagesToday/${store.readGoal} sayfa" to Color(0xFF6BC5B0),
+                    "${page}/604 hatim" to Color(0xFF8AA6D8),
+                    "$totalKaza kaza" to Pal.Warn,
+                ).forEach { (label, color) ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(5.dp).clip(CircleShape).background(color))
+                        Spacer(Modifier.width(4.dp))
+                        Text(label, color = Pal.Muted, fontSize = 10.5.sp)
+                    }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Text("Hedefe ulaşılan gün: $full30/30", color = Pal.Muted, fontSize = 12.sp)
+        }
+
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(22.dp).clip(CircleShape).background(Pal.Gold.copy(alpha = .15f)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Person, null, tint = Pal.Gold, modifier = Modifier.size(13.dp))
+                }
+                Spacer(Modifier.width(10.dp))
+                Text(insight, Modifier.weight(1f), color = Pal.Text, fontSize = 13.5.sp, lineHeight = 19.sp)
+            }
+            Spacer(Modifier.height(12.dp))
+            Row {
+                Column(Modifier.weight(1f)) {
+                    Text("%${(rate30 * 100).roundToInt()}", style = NumStyle, fontSize = 30.sp, color = Pal.Text)
+                    Text("Son 30 gün", color = Pal.Muted, fontSize = 11.sp)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text("%${(rateAll * 100).roundToInt()}", style = NumStyle, fontSize = 30.sp, color = Pal.Text)
+                    Text("Tüm zamanlar", color = Pal.Muted, fontSize = 11.sp)
+                }
+            }
+        }
+
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("HATIM TAKİBİ", Modifier.weight(1f), color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
+                Text(if (page >= 604) "BİTTİ" else "DEVAM EDİYOR", color = Color(0xFF6BC5B0), fontSize = 11.sp, letterSpacing = 1.sp)
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        val w = 6.dp.toPx()
+                        drawArc(Pal.Track, 0f, 360f, false, Offset(w / 2, w / 2), Size(size.width - w, size.height - w), style = Stroke(w))
+                        drawArc(Color(0xFF8AA6D8), -90f, 360f * (page / 604f) * anim, false, Offset(w / 2, w / 2),
+                            Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                    }
+                    Text("%${(page * 100 / 604)}", color = Pal.Text, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("$page / 604 sayfa · ${sureOf(page)}", color = Pal.Text, fontSize = 13.sp)
+                    Text("${store.hatim} hatim tamam", color = Pal.Muted, fontSize = 12.sp)
+                    Text(
+                        if (eta != null) "Bu hızla ~${eta.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale("tr")))}"
+                        else "Günde birkaç sayfa okuyunca tarih burada görünecek",
+                        color = Pal.Muted, fontSize = 11.5.sp,
+                    )
+                }
+            }
+        }
+
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
+            Text("KAZA NAMAZI", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        val w = 6.dp.toPx()
+                        drawArc(Pal.Track, 0f, 360f, false, Offset(w / 2, w / 2), Size(size.width - w, size.height - w), style = Stroke(w))
+                        val prog = if (totalKaza == 0) 1f else (store.kazaPaidThisMonth().toFloat() / (store.kazaPaidThisMonth() + totalKaza)).coerceIn(0f, 1f)
+                        drawArc(Pal.Warn, -90f, 360f * prog * anim, false, Offset(w / 2, w / 2),
+                            Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                    }
+                    Text("${totalKaza}", color = Pal.Text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("$totalKaza vakit kaldı", style = NumStyle, fontSize = 26.sp, color = Pal.Text)
+                    Text("Bu ay ${store.kazaPaidThisMonth()} kaza kıldın", color = Pal.Muted, fontSize = 12.sp)
+                    Text(
+                        if (monthsLeft != null) "Bu hızla ~${monthsLeft.roundToInt()} ay içinde tamamlanır, inşallah"
+                        else "Kaza kalmadı, elhamdülillah",
+                        color = Pal.Muted, fontSize = 11.5.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Günlük gidişat: oran, seri, ısı haritası ve vakit vakit dağılım. */
+@Composable
+private fun MuhasebeGidisat() {
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     if (!store.hasLocation) return NeedLocation()
@@ -511,12 +706,11 @@ private fun MuhasebeOzet() {
     val first = store.firstDay
     val days = if (month) 30L else 7L
 
-    // Per-day prayer slots are needed several times; compute each day once.
     val slotCache = remember { mutableMapOf<LocalDate, List<Slot>>() }
     fun daySlots(d: LocalDate) = slotCache.getOrPut(d) { slots(store.lat, store.lng, d) }
     fun counted(s: Slot) = s.key in prayed || (s.end <= now && store.tracked(s))
 
-    val perVakit = Vakit.entries.associateWith { intArrayOf(0, 0) } // [due, kept]
+    val perVakit = Vakit.entries.associateWith { intArrayOf(0, 0) }
     for (i in 0 until days) {
         val d = today.minusDays(i)
         if (d.isBefore(first)) break
@@ -528,7 +722,6 @@ private fun MuhasebeOzet() {
     val due = perVakit.values.sumOf { it[0] }; val kept = perVakit.values.sumOf { it[1] }
     fun fullDay(d: LocalDate) = daySlots(d).all { it.key in prayed || !store.tracked(it) }
     var streak = 0
-    // today counts once all five are prayed; until then the streak runs up to yesterday
     var day = if (fullDay(today)) today else today.minusDays(1)
     while (!day.isBefore(first) && fullDay(day)) { streak++; day = day.minusDays(1) }
     var longest = 0; var run = 0; var d0 = first
@@ -580,7 +773,6 @@ private fun MuhasebeOzet() {
                         val d = start.plusDays((w * 7 + dow).toLong())
                         val color = if (d.isAfter(today) || d.isBefore(first)) Pal.Track.copy(alpha = .4f) else {
                             val n = daySlots(d).count { it.key in prayed }
-                            // bronze to gold: mixing navy with gold directly gives grey
                             listOf(Pal.Track, Color(0xFF4A3D27), Color(0xFF6E5A35), Color(0xFF977A45), Color(0xFFC29B5A), Pal.Gold)[n]
                         }
                         Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(6.dp)).background(color))
@@ -623,4 +815,7 @@ private fun MuhasebeOzet() {
         }
     }
 }
+
+
+
 
