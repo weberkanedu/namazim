@@ -728,7 +728,7 @@ private fun MuhasebeGidisat() {
     StoreRev.n.let { }
     val store = remember { Store(ctx) }
     if (!store.hasLocation) return NeedLocation()
-    var period by remember { mutableIntStateOf(2) } // 0 hafta, 1 ay, 2 yıl, 3 tümü
+    var period by remember { mutableIntStateOf(SkyDebug.gPeriod) } // 0 hafta, 1 ay, 2 yıl, 3 tümü
     val today = LocalDate.now()
     val first = store.firstDay
     val prayed = store.prayed()
@@ -818,22 +818,24 @@ private fun MuhasebeGidisat() {
         ) { period = it }
         Text(range, Modifier.padding(start = 24.dp, top = 10.dp), color = Pal.Muted, fontSize = 12.sp)
 
-        // ---- Bugüne kadar: tüm zamanların toplamı (Vakit'in "BUGÜNE KADAR" kutusu)
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth()) {
-            Text("BUGÜNE KADAR", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
-            Spacer(Modifier.height(10.dp))
-            Row(Modifier.fillMaxWidth()) {
-                listOf(
-                    "${data.allNamaz}" to "namaz" to Color(0xFF6BC5B0),
-                    "${data.allSayfa}" to "sayfa" to Color(0xFF8AA6D8),
-                    "${data.allHatim}" to "hatim" to Pal.Gold,
-                    "${data.allKaza}" to "kaza" to Pal.Warn,
-                ).forEach { spec ->
-                    val (pair, color) = spec
-                    val (value, unit) = pair
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(value, style = NumStyle, fontSize = 26.sp, color = color)
-                        Text(unit, color = Pal.Muted, fontSize = 10.sp, letterSpacing = .5.sp)
+        // ---- Bugüne kadar: yalnızca "Tümü"de (tüm zamanların toplamı)
+        if (period == 3) {
+            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth()) {
+                Text("BUGÜNE KADAR", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
+                Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth()) {
+                    listOf(
+                        "${data.allNamaz}" to "namaz" to Color(0xFF6BC5B0),
+                        "${data.allSayfa}" to "sayfa" to Color(0xFF8AA6D8),
+                        "${data.allHatim}" to "hatim" to Pal.Gold,
+                        "${data.allKaza}" to "kaza" to Pal.Warn,
+                    ).forEach { spec ->
+                        val (pair, color) = spec
+                        val (value, unit) = pair
+                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(value, style = NumStyle, fontSize = 26.sp, color = color)
+                            Text(unit, color = Pal.Muted, fontSize = 10.sp, letterSpacing = .5.sp)
+                        }
                     }
                 }
             }
@@ -858,71 +860,123 @@ private fun MuhasebeGidisat() {
             )
         }
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp).fillMaxWidth()) {
-            Text("NAMAZ HARİTASI", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
-            Spacer(Modifier.height(10.dp))
-            BoxWithConstraints {
-                val gap = 2.dp
-                val cols = (data.days + 6) / 7
-                val cell = minOf(22.dp, (maxWidth - gap * (cols - 1).coerceAtLeast(0)) / cols.coerceAtLeast(1))
-                val firstDow = data.start.dayOfWeek.value - 1
-                // ay adları: her ayın ilk sütununun üstünde
-                Row(Modifier.fillMaxWidth().height(13.dp)) {
-                    for (w in 0 until cols) {
-                        val d = data.start.plusDays((w * 7 - firstDow).toLong())
-                        val prev = data.start.plusDays(((w - 1) * 7 - firstDow).toLong())
-                        Box(Modifier.weight(1f)) {
-                            if (d.monthValue != prev.monthValue && (d.monthValue % 2 == 1)) {
-                                Text(
-                                    d.format(monthFmt),
-                                    Modifier.wrapContentWidth(Alignment.Start, unbounded = true),
-                                    color = Pal.Muted, fontSize = 8.sp, maxLines = 1, softWrap = false,
-                                )
-                            }
-                        }
-                    }
-                }
-                Spacer(Modifier.height(3.dp))
-                Column {
-                    for (row in 0 until 7) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(top = if (row == 0) 0.dp else gap),
-                            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
-                        ) {
+        // ---- harita: Hafta/Ay takvim ızgarası, Yıl tam takvim. Tümü'de harita yok.
+        if (period != 3) {
+            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp).fillMaxWidth()) {
+                Text(
+                    if (period == 2) "NAMAZ HARİTASI · ${today.year}" else "NAMAZ HARİTASI",
+                    color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp,
+                )
+                Spacer(Modifier.height(10.dp))
+                if (period == 2) {
+                    // yıl: 53 hafta × 7 gün, ay etiketleriyle
+                    BoxWithConstraints {
+                        val gap = 2.dp
+                        val cols = (data.days + 6) / 7
+                        val cell = minOf(22.dp, (maxWidth - gap * (cols - 1).coerceAtLeast(0)) / cols.coerceAtLeast(1))
+                        val firstDow = data.start.dayOfWeek.value - 1
+                        Row(Modifier.fillMaxWidth().height(13.dp)) {
                             for (w in 0 until cols) {
-                                val idx = w * 7 - firstDow + row
-                                val c = if (idx in data.counts.indices) data.counts[idx] else -1
-                                val future = idx >= data.elapsed || idx < 0
-                                val todayCell = idx == data.elapsed - 1
-                                Box(
-                                    Modifier.size(cell).clip(RoundedCornerShape(2.dp))
-                                        .background(
-                                            when {
-                                                future -> futureCell
-                                                else -> heatRamp[c.coerceIn(0, 5)]
-                                            },
+                                val d = data.start.plusDays((w * 7 - firstDow).toLong())
+                                val prev = data.start.plusDays(((w - 1) * 7 - firstDow).toLong())
+                                Box(Modifier.weight(1f)) {
+                                    if (d.monthValue != prev.monthValue && (d.monthValue % 2 == 1)) {
+                                        Text(
+                                            d.format(monthFmt),
+                                            Modifier.wrapContentWidth(Alignment.Start, unbounded = true),
+                                            color = Pal.Muted, fontSize = 8.sp, maxLines = 1, softWrap = false,
                                         )
-                                        .then(
-                                            if (todayCell) Modifier.border(1.dp, Pal.Text.copy(alpha = .7f), RoundedCornerShape(2.dp))
-                                            else Modifier,
-                                        ),
-                                )
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(3.dp))
+                        Column {
+                            for (row in 0 until 7) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(top = if (row == 0) 0.dp else gap),
+                                    horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
+                                ) {
+                                    for (w in 0 until cols) {
+                                        val idx = w * 7 - firstDow + row
+                                        val c = if (idx in data.counts.indices) data.counts[idx] else -1
+                                        val future = idx >= data.elapsed || idx < 0
+                                        val todayCell = idx == data.elapsed - 1
+                                        Box(
+                                            Modifier.size(cell).clip(RoundedCornerShape(2.dp))
+                                                .background(if (future) futureCell else heatRamp[c.coerceIn(0, 5)])
+                                                .then(
+                                                    if (todayCell) Modifier.border(1.dp, Pal.Text.copy(alpha = .7f), RoundedCornerShape(2.dp))
+                                                    else Modifier,
+                                                ),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // hafta / ay: gerçek takvim ızgarası (7 sütun), gün numaralarıyla
+                    BoxWithConstraints {
+                        val gap = 4.dp
+                        val cell = (maxWidth - gap * 6) / 7
+                        val offset = data.start.dayOfWeek.value - 1
+                        val rows = (offset + data.days + 6) / 7
+                        Column(Modifier.fillMaxWidth()) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                                TR_DAYS.forEach {
+                                    Text(it, Modifier.weight(1f), color = Pal.Muted, fontSize = 9.sp, textAlign = TextAlign.Center)
+                                }
+                            }
+                            for (r in 0 until rows) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(top = gap),
+                                    horizontalArrangement = Arrangement.spacedBy(gap),
+                                ) {
+                                    for (c in 0 until 7) {
+                                        val idx = r * 7 + c - offset
+                                        val inRange = idx in 0 until data.days
+                                        val n = if (inRange && idx < data.elapsed) data.counts[idx] else -1
+                                        val todayCell = inRange && idx == data.elapsed - 1
+                                        Box(
+                                            Modifier.size(cell).clip(RoundedCornerShape(8.dp))
+                                                .background(
+                                                    when {
+                                                        !inRange -> Color.Transparent
+                                                        idx >= data.elapsed -> futureCell
+                                                        else -> heatRamp[n.coerceIn(0, 5)]
+                                                    },
+                                                )
+                                                .then(
+                                                    if (todayCell) Modifier.border(1.dp, Pal.Text.copy(alpha = .7f), RoundedCornerShape(8.dp))
+                                                    else Modifier,
+                                                ),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            if (inRange) Text(
+                                                "${data.start.plusDays(idx.toLong()).dayOfMonth}",
+                                                color = if (n >= 3) Pal.Ground else Pal.Muted,
+                                                fontSize = 10.sp,
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("hiç", color = Pal.Muted, fontSize = 10.sp)
+                    heatRamp.forEach { Box(Modifier.size(9.dp).clip(CircleShape).background(it)) }
+                    Text("beş vakit", color = Pal.Muted, fontSize = 10.sp)
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    if (data.full == 0) "${data.elapsed} günün hiçbirinde beş vaktin tamamını işaretlemedin." else "${data.elapsed} günün ${data.full}'inde beş vaktin tamamını işaretledin.",
+                    color = Pal.Muted, fontSize = 12.sp,
+                )
             }
-            Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("hiç", color = Pal.Muted, fontSize = 10.sp)
-                heatRamp.forEach { Box(Modifier.size(9.dp).clip(CircleShape).background(it)) }
-                Text("beş vakit", color = Pal.Muted, fontSize = 10.sp)
-            }
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "${data.elapsed} günün ${data.full}'inde beş vaktin tamamını işaretledin.",
-                color = Pal.Muted, fontSize = 12.sp,
-            )
         }
 
         InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = if (period == 3) 12.dp else 20.dp).fillMaxWidth()) {
@@ -972,7 +1026,7 @@ private fun MuhasebeGidisat() {
 
         // ---- Namazları ne zaman kılıyoruz: yalnızca "Tümü"de (kısa dönemde ortalama yanıltır)
         if (period == 3) {
-            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 0.dp, bottom = 20.dp).fillMaxWidth()) {
+            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
                 Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = 11.sp, letterSpacing = .8.sp)
                 Spacer(Modifier.height(10.dp))
                 val vakitColors = mapOf(
@@ -1028,6 +1082,10 @@ private fun MuhasebeGidisat() {
         }
     }
 }
+
+
+
+
 
 
 

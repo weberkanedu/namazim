@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
         SkyDebug.mode = intent.getStringExtra("skymode") // `--es skymode photo|video` switches the header renderer
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
         SkyDebug.mSection = intent.getIntExtra("msection", 0) // `--ei msection 1` opens Muhasebe > Gidişat
+        SkyDebug.gPeriod = intent.getIntExtra("gperiod", 2) // `--ei gperiod 0..3` opens Gidişat on Hafta/Ay/Yıl/Tümü
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
             setContent { AppTheme { WidgetPreview() } }
@@ -706,6 +707,7 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
 
 
 
