@@ -21,6 +21,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -146,10 +153,11 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
 @Composable
 fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
     // Ayarlar is not a tab any more: it opens from the gear on the home header (tab 4), so back returns here.
-    val tabs = listOf<Pair<String, ImageVector>>(
-        "Namaz" to Icons.Default.Home, "Kıble" to Icons.Default.LocationOn, "Okuma" to Icons.Default.Edit,
-        "Muhasebe" to Icons.Default.DateRange,
+    val tabs = listOf<Pair<String, Int>>(
+        "Namaz" to R.drawable.ic_nav_namaz, "Kıble" to R.drawable.ic_nav_kible,
+        "Okuma" to R.drawable.ic_nav_okuma, "Muhasebe" to R.drawable.ic_nav_muhasebe,
     )
+    val haptic = LocalHapticFeedback.current
     // floating dock instead of a full-width bar: the photo keeps running underneath it
     Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp, vertical = 10.dp)) {
         Row(
@@ -167,19 +175,30 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            tabs.forEachIndexed { i, (name, icon) ->
+            // seçili sekme genişleyip adını gösterir; diğerleri yalnızca ikon
+            tabs.forEachIndexed { i, (name, res) ->
                 val on = selected == i
-                Column(
-                    Modifier.weight(1f).padding(horizontal = 2.dp).clip(RoundedCornerShape(26.dp))
+                Row(
+                    Modifier.weight(if (on) 1.9f else 1f).height(46.dp)
+                        .padding(horizontal = 2.dp).clip(CircleShape)
                         .background(if (on) Pal.Track else Color.Transparent)
-                        .clickable { onSelect(i) }
-                        .padding(vertical = 6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                        .pressable {
+                            if (!on) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onSelect(i)
+                        },
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(icon, name, tint = if (on) Pal.Gold else Pal.Muted, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.height(2.dp))
-                    Text(name, color = if (on) Pal.Gold else Pal.Muted, fontSize = 9.5.sp,
-                        fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                    Icon(
+                        painterResource(res), name, tint = if (on) Pal.Gold else Pal.Muted,
+                        modifier = Modifier.size(if (on) 21.dp else 22.dp),
+                    )
+                    AnimatedVisibility(on, enter = fadeIn(tween(180)) + expandHorizontally(tween(180)), exit = fadeOut(tween(120))) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Spacer(Modifier.width(7.dp))
+                            Text(name, color = Pal.Gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
                 }
             }
         }
@@ -739,6 +758,7 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
 
 
 
