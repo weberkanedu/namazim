@@ -133,8 +133,8 @@ class Store(context: Context) {
     fun settleKaza(now: Long = System.currentTimeMillis()) {
         if (!hasLocation) return
         if (settledUntil == 0L) { settledUntil = now; return } // nothing before first use counts
-        var day = LocalDate.now().minusDays(2)
-        // shortcut: only looks 2 days back, so a phone off for longer misses kaza; widen if that matters.
+        // settledUntil'den bu yana kaçan vakitler: 30 güne kadar geriye bak (telefon kapalı kalmış olabilir)
+        var day = LocalDate.now().minusDays(30)
         while (!day.isAfter(LocalDate.now())) {
             for (s in slots(lat, lng, day)) {
                 if (s.end in (settledUntil + 1)..now && !isPrayed(s.key)) {
@@ -178,6 +178,7 @@ class Store(context: Context) {
         p.edit().putString("readLog", o.toString()).apply()
     }
 }
+
 
 
 

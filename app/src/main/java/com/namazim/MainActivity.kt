@@ -87,6 +87,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         Reminders.createChannels(this)
         Pal.current = Pal.byId(Store(this).theme)
+    // Uygulama açılır açılmaz kaçan vakitleri kazaya yaz (Kaza sekmesini açmayı bekleme)
+    Thread {
+        runCatching { Store(this).settleKaza() }
+        runCatching { Reminders.scheduleNext(this) }
+    }.apply { isDaemon = true }.start()
         reminderKey = intent.getStringExtra(EXTRA_SLOT)
         startTab = intent.getIntExtra("tab", 0) // lets `adb shell am start -e tab N` open a tab for testing
         SkyDebug.offsetMs = intent.getLongExtra("skytime", 0L) // `--el skytime` previews another hour of the sky
@@ -759,6 +764,7 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
 
 
 
