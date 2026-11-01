@@ -721,7 +721,7 @@ private fun MuhasebeOzet() {
         }
     }
 }
-/** Gidişat: dönem seçmeli ısı haritası ve türlere göre özet — Vakit'in yapısı, bizim verimizle. */
+/** Gidişat: dönem seçmeli ısı haritası, bugüne kadarki toplamlar ve türlere göre özet. */
 @Composable
 private fun MuhasebeGidisat() {
     val ctx = LocalContext.current
@@ -730,57 +730,73 @@ private fun MuhasebeGidisat() {
     if (!store.hasLocation) return NeedLocation()
     var period by remember { mutableIntStateOf(2) } // 0 hafta, 1 ay, 2 yıl, 3 tümü
     val today = LocalDate.now()
-    val now = System.currentTimeMillis()
     val first = store.firstDay
     val prayed = store.prayed()
     val log = store.readLog()
     val tr = java.util.Locale("tr")
 
     data class Bucket(
-        val start: LocalDate, val days: Int, val counts: IntArray, val pages: IntArray,
+        val start: LocalDate, val days: Int, val elapsed: Int, val counts: IntArray, val pages: IntArray,
         val any: Int, val full: Int, val total: Int, val prevAny: Int,
-        // vakit → işaretlemenin pencere içindeki yeri (0..1) ve vakit girdikten sonraki dakika
         val fracs: Map<String, List<Float>>, val mins: Map<String, List<Int>>,
+        val allNamaz: Int, val allSayfa: Int, val allHatim: Int, val allKaza: Int, val fullYear: Boolean,
     )
-    // a whole year of slots takes a moment: compute it off the main thread and show a spinner
+
+    // bir yıllık vakit hesabı birkaç yüz ms sürüyor: arka planda hesapla, bu arada spinner göster
     var bucket by remember(period) { mutableStateOf<Bucket?>(null) }
     LaunchedEffect(period, prayed.size, log.size) {
         bucket = withContext(Dispatchers.Default) { run {
-        val len = when (period) { 0 -> 7; 1 -> 30; 2 -> 365; else -> (today.toEpochDay() - first.toEpochDay()).toInt() + 1 }
-        val start = today.minusDays((len - 1).toLong()).let { if (it.isBefore(first)) first else it }
-        val n = (today.toEpochDay() - start.toEpochDay()).toInt() + 1
-        val counts = IntArray(n); val pages = IntArray(n)
-        var any = 0; var full = 0; var total = 0
-        for (i in 0 until n) {
-            val d = start.plusDays(i.toLong())
-            val c = slots(store.lat, store.lng, d).count { it.key in prayed }
-            counts[i] = c; pages[i] = log[d.toString()] ?: 0
-            if (c > 0) any++
-            if (c >= 5) full++
-            total += c
-        }
-        // aynı uzunluktaki önceki dönem
-        var prevAny = 0
-        for (i in 0 until n) {
-            val d = start.minusDays((n - i).toLong())
-            if (d.isBefore(first)) break
-            if (slots(store.lat, store.lng, d).any { it.key in prayed }) prevAny++
-        }
-        // namazları ne zaman kılıyoruz: her işaretin vakit penceresindeki yeri
-        val fracs = mutableMapOf<String, MutableList<Float>>()
-        val mins = mutableMapOf<String, MutableList<Int>>()
-        for (i in 0 until n) {
-            val d = start.plusDays(i.toLong())
-            for (sl in slots(store.lat, store.lng, d)) {
-                val at = store.prayedAt(sl.key) ?: continue
-                if (at < sl.start || sl.end <= sl.start) continue
-                val f = ((at - sl.start).toFloat() / (sl.end - sl.start)).coerceIn(0f, 1f)
-                fracs.getOrPut(sl.vakit.name) { mutableListOf() }.add(f)
-                mins.getOrPut(sl.vakit.name) { mutableListOf() }.add(((at - sl.start) / 60_000L).toInt())
+            val fullYear = period == 2
+            val start = if (fullYear) LocalDate.of(today.year, 1, 1) else {
+                val len = when (period) { 0 -> 7; 1 -> 30; else -> (today.toEpochDay() - first.toEpochDay()).toInt() + 1 }
+                today.minusDays((len - 1).toLong()).let { if (it.isBefore(first)) first else it }
             }
-        }
-        Bucket(start, n, counts, pages, any, full, total, prevAny, fracs, mins)
-    } }
+            val lastDay = if (fullYear) LocalDate.of(today.year, 12, 31) else today
+            val n = (lastDay.toEpochDay() - start.toEpochDay()).toInt() + 1
+            val elapsed = ((today.toEpochDay() - start.toEpochDay()).toInt() + 1).coerceAtMost(n)
+
+            val counts = IntArray(n); val pages = IntArray(n)
+            var any = 0; var full = 0; var total = 0
+            for (i in 0 until elapsed) {
+                val d = start.plusDays(i.toLong())
+                val c = slots(store.lat, store.lng, d).count { it.key in prayed }
+                counts[i] = c; pages[i] = log[d.toString()] ?: 0
+                if (c > 0) any++
+                if (c >= 5) full++
+                total += c
+            }
+            // önceki dönem: aynı sayıda gün, bu dönemin hemen öncesi
+            var prevAny = 0
+            for (i in 0 until elapsed) {
+                val d = start.minusDays((elapsed - i).toLong())
+                if (d.isBefore(first)) break
+                if (slots(store.lat, store.lng, d).any { it.key in prayed }) prevAny++
+            }
+            // namazları ne zaman kılıyoruz: her işaretin vakit penceresindeki yeri
+            val fracs = mutableMapOf<String, MutableList<Float>>()
+            val mins = mutableMapOf<String, MutableList<Int>>()
+            for (i in 0 until elapsed) {
+                val d = start.plusDays(i.toLong())
+                for (sl in slots(store.lat, store.lng, d)) {
+                    val at = store.prayedAt(sl.key) ?: continue
+                    if (at < sl.start || sl.end <= sl.start) continue
+                    fracs.getOrPut(sl.vakit.name) { mutableListOf() }
+                        .add(((at - sl.start).toFloat() / (sl.end - sl.start)).coerceIn(0f, 1f))
+                    mins.getOrPut(sl.vakit.name) { mutableListOf() }.add(((at - sl.start) / 60_000L).toInt())
+                }
+            }
+            // bugüne kadar (tüm zamanlar) toplamlar
+            var allNamaz = 0; var allSayfa = 0
+            var d0 = first
+            while (!d0.isAfter(today)) {
+                allNamaz += slots(store.lat, store.lng, d0).count { it.key in prayed }
+                allSayfa += log[d0.toString()] ?: 0
+                d0 = d0.plusDays(1)
+            }
+            val allKaza = Vakit.entries.sumOf { store.kaza(it) } + store.kaza("VITIR")
+            Bucket(start, n, elapsed, counts, pages, any, full, total, prevAny, fracs, mins,
+                allNamaz, allSayfa, store.hatim, allKaza, fullYear)
+        } }
     }
     val data = bucket
     if (data == null) {
@@ -788,11 +804,12 @@ private fun MuhasebeGidisat() {
         return
     }
 
+    val monthFmt = java.time.format.DateTimeFormatter.ofPattern("MMM", tr)
+    val endOfRange = if (data.fullYear) LocalDate.of(today.year, 12, 31) else today
     val range = "${data.start.format(java.time.format.DateTimeFormatter.ofPattern("d MMM", tr))} – " +
-        today.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", tr))
-    val pagesTotal = data.pages.sum()
-    val totalKaza = Vakit.entries.sumOf { store.kaza(it) } + store.kaza("VITIR")
+        endOfRange.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", tr))
     val heatRamp = listOf(Pal.Track, Color(0xFF4A3D27), Color(0xFF6E5A35), Color(0xFF977A45), Color(0xFFC29B5A), Pal.Gold)
+    val futureCell = Pal.Track.copy(alpha = .45f)
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Segmented(
@@ -801,9 +818,30 @@ private fun MuhasebeGidisat() {
         ) { period = it }
         Text(range, Modifier.padding(start = 24.dp, top = 10.dp), color = Pal.Muted, fontSize = 12.sp)
 
+        // ---- Bugüne kadar: tüm zamanların toplamı (Vakit'in "BUGÜNE KADAR" kutusu)
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth()) {
+            Text("BUGÜNE KADAR", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
+            Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth()) {
+                listOf(
+                    "${data.allNamaz}" to "namaz" to Color(0xFF6BC5B0),
+                    "${data.allSayfa}" to "sayfa" to Color(0xFF8AA6D8),
+                    "${data.allHatim}" to "hatim" to Pal.Gold,
+                    "${data.allKaza}" to "kaza" to Pal.Warn,
+                ).forEach { spec ->
+                    val (pair, color) = spec
+                    val (value, unit) = pair
+                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(value, style = NumStyle, fontSize = 26.sp, color = color)
+                        Text(unit, color = Pal.Muted, fontSize = 10.sp, letterSpacing = .5.sp)
+                    }
+                }
+            }
+        }
+
         Column(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp)) {
             Text(
-                "${data.days} günün ${data.any}'inde ibadet işaretledin",
+                "${data.elapsed} günün ${data.any}'inde ibadet işaretledin",
                 style = NumStyle, fontSize = 26.sp, lineHeight = 30.sp, color = Pal.Text,
             )
             Spacer(Modifier.height(4.dp))
@@ -823,25 +861,55 @@ private fun MuhasebeGidisat() {
         InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp).fillMaxWidth()) {
             Text("NAMAZ HARİTASI", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
             Spacer(Modifier.height(10.dp))
-            // weeks across, Mon..Sun down; cell size shrinks so a whole year still fits the width
             BoxWithConstraints {
-                val cols = (data.days + 6) / 7
                 val gap = 2.dp
+                val cols = (data.days + 6) / 7
                 val cell = minOf(22.dp, (maxWidth - gap * (cols - 1).coerceAtLeast(0)) / cols.coerceAtLeast(1))
                 val firstDow = data.start.dayOfWeek.value - 1
-                Column {
-                for (row in 0 until 7) {
-                    Row(Modifier.fillMaxWidth().padding(top = if (row == 0) 0.dp else gap), horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally)) {
-                        for (w in 0 until cols) {
-                            val idx = w * 7 - firstDow + row
-                            val c = if (idx in data.counts.indices) data.counts[idx] else -1
-                            Box(
-                                Modifier.size(cell).clip(RoundedCornerShape(2.dp))
-                                    .background(if (c < 0) Color.Transparent else heatRamp[c.coerceIn(0, 5)]),
-                            )
+                // ay adları: her ayın ilk sütununun üstünde
+                Row(Modifier.fillMaxWidth().height(13.dp)) {
+                    for (w in 0 until cols) {
+                        val d = data.start.plusDays((w * 7 - firstDow).toLong())
+                        val prev = data.start.plusDays(((w - 1) * 7 - firstDow).toLong())
+                        Box(Modifier.weight(1f)) {
+                            if (d.monthValue != prev.monthValue && (d.monthValue % 2 == 1)) {
+                                Text(
+                                    d.format(monthFmt),
+                                    Modifier.wrapContentWidth(Alignment.Start, unbounded = true),
+                                    color = Pal.Muted, fontSize = 8.sp, maxLines = 1, softWrap = false,
+                                )
+                            }
                         }
                     }
                 }
+                Spacer(Modifier.height(3.dp))
+                Column {
+                    for (row in 0 until 7) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(top = if (row == 0) 0.dp else gap),
+                            horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally),
+                        ) {
+                            for (w in 0 until cols) {
+                                val idx = w * 7 - firstDow + row
+                                val c = if (idx in data.counts.indices) data.counts[idx] else -1
+                                val future = idx >= data.elapsed || idx < 0
+                                val todayCell = idx == data.elapsed - 1
+                                Box(
+                                    Modifier.size(cell).clip(RoundedCornerShape(2.dp))
+                                        .background(
+                                            when {
+                                                future -> futureCell
+                                                else -> heatRamp[c.coerceIn(0, 5)]
+                                            },
+                                        )
+                                        .then(
+                                            if (todayCell) Modifier.border(1.dp, Pal.Text.copy(alpha = .7f), RoundedCornerShape(2.dp))
+                                            else Modifier,
+                                        ),
+                                )
+                            }
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -852,19 +920,19 @@ private fun MuhasebeGidisat() {
             }
             Spacer(Modifier.height(6.dp))
             Text(
-                "${data.days} günün ${data.full}'inde beş vaktin tamamını işaretledin.",
+                "${data.elapsed} günün ${data.full}'inde beş vaktin tamamını işaretledin.",
                 color = Pal.Muted, fontSize = 12.sp,
             )
         }
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = if (period == 3) 12.dp else 20.dp).fillMaxWidth()) {
             Text("TÜRLERE GÖRE", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
             Spacer(Modifier.height(8.dp))
             val types = listOf(
                 Triple("Namaz", data.total to "vakit", Color(0xFF6BC5B0)),
-                Triple("Okuma", pagesTotal to "sayfa", Color(0xFF8AA6D8)),
+                Triple("Okuma", data.pages.sum() to "sayfa", Color(0xFF8AA6D8)),
                 Triple("Hatim", store.hatim to "hatim", Pal.Gold),
-                Triple("Kaza", totalKaza to "vakit", Pal.Warn),
+                Triple("Kaza", data.allKaza to "vakit", Pal.Warn),
             )
             types.forEach { (name, pair, color) ->
                 val (value, unit) = pair
@@ -872,13 +940,13 @@ private fun MuhasebeGidisat() {
                     Box(Modifier.size(6.dp).clip(CircleShape).background(color))
                     Spacer(Modifier.width(10.dp))
                     Text(name, Modifier.weight(1f), color = Pal.Text, fontSize = 15.sp)
-                    // sparkline: son 21 günün 3 günlük ortalaması (pürüzleri yumuşatır)
+                    // mini grafik: son 21 günün 3 günlük ortalaması
                     Canvas(Modifier.size(64.dp, 24.dp)) {
-                        val n = minOf(21, data.counts.size)
+                        val n = minOf(21, data.elapsed)
                         if (n > 1 && name != "Hatim" && name != "Kaza") {
                             val raw = when (name) {
-                                "Namaz" -> IntArray(n) { data.counts[data.counts.size - n + it] }
-                                else -> IntArray(n) { data.pages[data.pages.size - n + it] }
+                                "Namaz" -> IntArray(n) { data.counts[data.elapsed - n + it] }
+                                else -> IntArray(n) { data.pages[data.elapsed - n + it] }
                             }
                             val vals = FloatArray(n) { i ->
                                 val a = raw[max(0, i - 1)]; val b = raw[i]; val c = raw[min(n - 1, i + 1)]
@@ -902,80 +970,64 @@ private fun MuhasebeGidisat() {
             }
         }
 
-        // ---- Namazları ne zaman kılıyoruz (Vakit'in "vakit girdikten kaç dakika sonra" bölümü).
-        // Yalnızca "Tümü"de gösterilir: kısa dönemlerde birkaç işaret ortalamayı yanıltıyor.
+        // ---- Namazları ne zaman kılıyoruz: yalnızca "Tümü"de (kısa dönemde ortalama yanıltır)
         if (period == 3) {
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
-            Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = 11.sp, letterSpacing = .8.sp)
-            Spacer(Modifier.height(10.dp))
-            val vakitColors = mapOf(
-                "SABAH" to Color(0xFF8E7CC3), "OGLE" to Color(0xFF5B9BD5), "IKINDI" to Color(0xFF9AA5B1),
-                "AKSAM" to Color(0xFFE07A4F), "YATSI" to Color(0xFF5B9BD5),
-            )
-            Vakit.entries.forEach { vk ->
-                val fs = data.fracs[vk.name].orEmpty()
-                val avg = if (fs.isEmpty()) null else fs.average().toFloat()
-                Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = 13.sp)
-                    Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Pal.Track)) {
-                        if (avg != null) Box(
-                            Modifier.fillMaxWidth(avg).fillMaxHeight().clip(CircleShape)
-                                .background(vakitColors[vk.name] ?: Pal.Gold),
+            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 0.dp, bottom = 20.dp).fillMaxWidth()) {
+                Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = 11.sp, letterSpacing = .8.sp)
+                Spacer(Modifier.height(10.dp))
+                val vakitColors = mapOf(
+                    "SABAH" to Color(0xFF8E7CC3), "OGLE" to Color(0xFF5B9BD5), "IKINDI" to Color(0xFF9AA5B1),
+                    "AKSAM" to Color(0xFFE07A4F), "YATSI" to Color(0xFF5B9BD5),
+                )
+                Vakit.entries.forEach { vk ->
+                    val fs = data.fracs[vk.name].orEmpty()
+                    val avg = if (fs.isEmpty()) null else fs.average().toFloat()
+                    Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = 13.sp)
+                        Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Pal.Track)) {
+                            if (avg != null) Box(
+                                Modifier.fillMaxWidth(avg).fillMaxHeight().clip(CircleShape)
+                                    .background(vakitColors[vk.name] ?: Pal.Gold),
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            if (avg == null) "—" else "${(avg * 7).coerceIn(1f, 7f).roundToInt()}/7",
+                            color = if (avg == null) Pal.Muted else Pal.Text, fontSize = 12.sp,
                         )
                     }
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        if (avg == null) "—" else "${(avg * 7).coerceIn(1f, 7f).roundToInt()}/7",
-                        color = if (avg == null) Pal.Muted else Pal.Text, fontSize = 12.sp,
-                    )
                 }
-            }
-            Spacer(Modifier.height(6.dp))
-            Text("vaktin başı → sonraki vakit", color = Pal.Muted, fontSize = 10.sp)
+                Spacer(Modifier.height(6.dp))
+                Text("vaktin başı → sonraki vakit", color = Pal.Muted, fontSize = 10.sp)
 
-            HorizontalDivider(Modifier.padding(vertical = 12.dp), color = Pal.Line)
-            Text("Vakit girdikten kaç dakika sonra işaretliyorsun", color = Pal.Text, fontSize = 13.sp)
-            Vakit.entries.forEach { vk ->
-                val ms = data.mins[vk.name].orEmpty()
-                Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = 13.sp)
-                    val avgMin = if (ms.isEmpty()) null else ms.average().toInt()
-                    Text(
-                        when {
-                            avgMin == null -> "—"
-                            avgMin >= 60 -> "${avgMin / 60}sa ${avgMin % 60}dk"
-                            else -> "${avgMin}dk"
-                        },
-                        Modifier.weight(1f), color = if (avgMin == null) Pal.Muted else Pal.Gold, fontSize = 15.sp,
-                    )
-                    Text(if (ms.isEmpty()) "" else "${ms.size} namaz", color = Pal.Muted, fontSize = 11.sp)
+                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = Pal.Line)
+                Text("Vakit girdikten kaç dakika sonra işaretliyorsun", color = Pal.Text, fontSize = 13.sp)
+                Vakit.entries.forEach { vk ->
+                    val ms = data.mins[vk.name].orEmpty()
+                    Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = 13.sp)
+                        val avgMin = if (ms.isEmpty()) null else ms.average().toInt()
+                        Text(
+                            when {
+                                avgMin == null -> "—"
+                                avgMin >= 60 -> "${avgMin / 60}sa ${avgMin % 60}dk"
+                                else -> "${avgMin}dk"
+                            },
+                            Modifier.weight(1f), color = if (avgMin == null) Pal.Muted else Pal.Gold, fontSize = 15.sp,
+                        )
+                        Text(if (ms.isEmpty()) "" else "${ms.size} namaz", color = Pal.Muted, fontSize = 11.sp)
+                    }
                 }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "Not: Bu sayı bir fazilet ölçüsü değil; kendi düzenini görmen için. " +
+                        "Hanefi'de her vakitte erken kılmak daha faziletli sayılsa da, niyet ve istikrar öndedir.",
+                    color = Pal.Muted, fontSize = 11.sp, lineHeight = 16.sp,
+                )
             }
-            Spacer(Modifier.height(10.dp))
-            Text(
-                "Not: Bu sayı bir fazilet ölçüsü değil; kendi düzenini görmen için. " +
-                    "Hanefi'de her vakitte erken kılmak daha faziletli sayılsa da, niyet ve istikrar öndedir.",
-                color = Pal.Muted, fontSize = 11.sp, lineHeight = 16.sp,
-            )
-        }
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
