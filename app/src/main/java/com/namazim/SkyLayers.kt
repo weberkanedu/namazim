@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.viewinterop.AndroidView
@@ -44,10 +45,13 @@ enum class SkyMode { Shader, Photo, Video }
 object SkyAssets {
     fun has(ctx: Context, name: String) = runCatching { ctx.assets.open("sky/$name").use { } }.isSuccess
 
-    fun mode(ctx: Context): SkyMode = when (SkyDebug.mode ?: Store(ctx).skyMode) {
-        "photo" -> SkyMode.Photo
-        "video" -> SkyMode.Video
-        else -> SkyMode.Shader
+    fun mode(ctx: Context): SkyMode {
+        val requested = SkyDebug.mode ?: Store(ctx).skyMode
+        return when {
+            requested == "video" && has(ctx, "scene.mp4") -> SkyMode.Video
+            requested == "photo" && has(ctx, "day.webp") -> SkyMode.Photo
+            else -> SkyMode.Shader
+        }
     }
 }
 
@@ -118,14 +122,16 @@ private fun DrawScope.drawPlate(img: ImageBitmap, alpha: Float) {
 private fun DrawScope.drawCelestial(b: SkyBodies) {
     val w = size.width
     val h = size.height
-    // the path
+    // the path, clipped to the sky so it does not run across the wheat
     val arc = Path()
     val n = 64
     for (i in 0..n) {
         val p = arcPoint(i / n.toFloat(), w, h)
         if (i == 0) arc.moveTo(p.x, p.y) else arc.lineTo(p.x, p.y)
     }
-    drawPath(arc, Color(0x44FFFFFF), style = Stroke(width = 1.2f * density))
+    clipRect(0f, 0f, w, (1f - HZ_UV) * h) {
+        drawPath(arc, Color(0x44FFFFFF), style = Stroke(width = 1.2f * density))
+    }
 
     // the sun
     val sunUp = b.sun.alt > 0
@@ -138,7 +144,7 @@ private fun DrawScope.drawCelestial(b: SkyBodies) {
             radius = 0.28f * h, center = sunPos)
         drawCircle(Brush.radialGradient(listOf(Color.White, warm.copy(alpha = 0.85f), Color.Transparent), center = sunPos, radius = 0.09f * h),
             radius = 0.09f * h, center = sunPos)
-        drawCircle(Color(0xFFFFF3DC), radius = 0.028f * h, center = sunPos)
+        drawCircle(Color(0xFFFFF6E4), radius = 0.021f * h, center = sunPos)
     }
 
     // the moon, with the real phase
@@ -166,6 +172,31 @@ private fun DrawScope.drawCelestial(b: SkyBodies) {
     }
 }
 
+/** Just the sun/moon path, drawn over the video (the video carries its own sun and light). */
+@Composable
+fun SkyArc(lat: Double, lng: Double, modifier: Modifier = Modifier) {
+    val now = rememberNow()
+    val minute = now / 60_000
+    val bodies = remember(minute, lat, lng) { skyBodies(lat, lng, now + SkyDebug.offsetMs) }
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val arc = Path()
+        for (i in 0..64) {
+            val p = arcPoint(i / 64f, w, h)
+            if (i == 0) arc.moveTo(p.x, p.y) else arc.lineTo(p.x, p.y)
+        }
+        clipRect(0f, 0f, w, (1f - HZ_UV) * h) {
+            drawPath(arc, Color(0x3DFFFFFF), style = Stroke(width = 1.2f * density))
+        }
+        // a small bright dot for the sun/moon so the arc has something riding it
+        if (bodies.sun.alt > 0) {
+            val p = arcPoint(sToUv(bodies.sun.az), w, h)
+            drawCircle(Color(0x66FFF3DC), radius = 3.5f * density, center = p)
+        }
+    }
+}
+
 private fun smoothstep(a: Float, b: Float, x: Float): Float {
     val t = ((x - a) / (b - a)).coerceIn(0f, 1f)
     return t * t * (3f - 2f * t)
@@ -184,9 +215,10 @@ fun SkyVideo(name: String, modifier: Modifier = Modifier) {
     DisposableEffect(Unit) {
         val mp = MediaPlayer()
         var surface: Surface? = null
-        // assets are compressed in the APK, so MediaPlayer needs a real file
+        // assets are compressed in the APK, so MediaPlayer needs a real file. Always re-copy: the asset
+        // changes whenever the sky is replaced, and a cached file would silently keep playing the old clip.
         val file = File(ctx.cacheDir, name.replace('/', '_'))
-        if (!file.exists()) runCatching { ctx.assets.open(name).use { i -> file.outputStream().use { i.copyTo(it) } } }
+        runCatching { ctx.assets.open(name).use { i -> file.outputStream().use { i.copyTo(it) } } }
         view.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(st: SurfaceTexture, w: Int, h: Int) {
                 surface = Surface(st)
@@ -216,3 +248,4 @@ fun SkyVideo(name: String, modifier: Modifier = Modifier) {
     }
     AndroidView(factory = { view }, modifier = modifier)
 }
+

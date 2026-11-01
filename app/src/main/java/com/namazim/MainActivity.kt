@@ -346,12 +346,17 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
             } else {
             Box(Modifier.fillMaxWidth().height(380.dp)) {
                 when (SkyAssets.mode(ctx)) {
-                    SkyMode.Video -> SkyVideo("sky/scene.mp4", Modifier.fillMaxSize())
+                    SkyMode.Video -> {
+                        SkyVideo("sky/scene.mp4", Modifier.fillMaxSize())
+                        SkyArc(store.lat, store.lng, Modifier.fillMaxSize())
+                    }
                     SkyMode.Photo -> SkyPhoto(store.lat, store.lng, Modifier.fillMaxSize())
                     else -> SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
                 }
-                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(96.dp)
-                    .background(Brush.verticalGradient(listOf(Color.Transparent, Pal.Ground))))
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(150.dp)
+                    .background(Brush.verticalGradient(
+                        0f to Color.Transparent, 0.45f to Pal.Ground.copy(alpha = .72f), 1f to Pal.Ground,
+                    )))
                 val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 14f))
                 Row(
                     Modifier.statusBarsPadding().fillMaxWidth().padding(start = 14.dp, end = 8.dp, top = 8.dp),

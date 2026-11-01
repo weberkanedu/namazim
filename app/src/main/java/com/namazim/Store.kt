@@ -56,9 +56,9 @@ class Store(context: Context) {
     var theme: String
         get() = p.getString("theme", SeherPalette.id)!!
         set(v) = p.edit().putString("theme", v).apply()
-    /** Which renderer the Seher header uses: "shader" (live), "photo" (plates) or "video" (looping clip). */
+    /** Which renderer the Seher header uses: "photo" (plates), "video" (looping clip) or "shader" (live). */
     var skyMode: String
-        get() = p.getString("skyMode", "shader")!!
+        get() = p.getString("skyMode", "photo")!!
         set(v) = p.edit().putString("skyMode", v).apply()
     /** Minutes before a prayer time for the "hazırlan" notifications. */
     var prepOffsets: Set<Int>
