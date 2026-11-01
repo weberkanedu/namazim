@@ -739,6 +739,8 @@ private fun MuhasebeGidisat() {
     data class Bucket(
         val start: LocalDate, val days: Int, val counts: IntArray, val pages: IntArray,
         val any: Int, val full: Int, val total: Int, val prevAny: Int,
+        // vakit → işaretlemenin pencere içindeki yeri (0..1) ve vakit girdikten sonraki dakika
+        val fracs: Map<String, List<Float>>, val mins: Map<String, List<Int>>,
     )
     // a whole year of slots takes a moment: compute it off the main thread and show a spinner
     var bucket by remember(period) { mutableStateOf<Bucket?>(null) }
@@ -764,7 +766,20 @@ private fun MuhasebeGidisat() {
             if (d.isBefore(first)) break
             if (slots(store.lat, store.lng, d).any { it.key in prayed }) prevAny++
         }
-        Bucket(start, n, counts, pages, any, full, total, prevAny)
+        // namazları ne zaman kılıyoruz: her işaretin vakit penceresindeki yeri
+        val fracs = mutableMapOf<String, MutableList<Float>>()
+        val mins = mutableMapOf<String, MutableList<Int>>()
+        for (i in 0 until n) {
+            val d = start.plusDays(i.toLong())
+            for (sl in slots(store.lat, store.lng, d)) {
+                val at = store.prayedAt(sl.key) ?: continue
+                if (at < sl.start || sl.end <= sl.start) continue
+                val f = ((at - sl.start).toFloat() / (sl.end - sl.start)).coerceIn(0f, 1f)
+                fracs.getOrPut(sl.vakit.name) { mutableListOf() }.add(f)
+                mins.getOrPut(sl.vakit.name) { mutableListOf() }.add(((at - sl.start) / 60_000L).toInt())
+            }
+        }
+        Bucket(start, n, counts, pages, any, full, total, prevAny, fracs, mins)
     } }
     }
     val data = bucket
@@ -881,8 +896,67 @@ private fun MuhasebeGidisat() {
                 }
             }
         }
+
+        // ---- Namazları ne zaman kılıyoruz (Vakit'in "vakit girdikten kaç dakika sonra" bölümü)
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
+            Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = 11.sp, letterSpacing = .8.sp)
+            Spacer(Modifier.height(10.dp))
+            val vakitColors = mapOf(
+                "SABAH" to Color(0xFF8E7CC3), "OGLE" to Color(0xFF5B9BD5), "IKINDI" to Color(0xFF9AA5B1),
+                "AKSAM" to Color(0xFFE07A4F), "YATSI" to Color(0xFF5B9BD5),
+            )
+            Vakit.entries.forEach { vk ->
+                val fs = data.fracs[vk.name].orEmpty()
+                val avg = if (fs.isEmpty()) null else fs.average().toFloat()
+                Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = 13.sp)
+                    Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Pal.Track)) {
+                        if (avg != null) Box(
+                            Modifier.fillMaxWidth(avg).fillMaxHeight().clip(CircleShape)
+                                .background(vakitColors[vk.name] ?: Pal.Gold),
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        if (avg == null) "—" else "${(avg * 7).coerceIn(1f, 7f).roundToInt()}/7",
+                        color = if (avg == null) Pal.Muted else Pal.Text, fontSize = 12.sp,
+                    )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Text("vaktin başı → sonraki vakit", color = Pal.Muted, fontSize = 10.sp)
+
+            HorizontalDivider(Modifier.padding(vertical = 12.dp), color = Pal.Line)
+            Text("Vakit girdikten kaç dakika sonra işaretliyorsun", color = Pal.Text, fontSize = 13.sp)
+            Vakit.entries.forEach { vk ->
+                val ms = data.mins[vk.name].orEmpty()
+                Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = 13.sp)
+                    val avgMin = if (ms.isEmpty()) null else ms.average().toInt()
+                    Text(
+                        when {
+                            avgMin == null -> "—"
+                            avgMin >= 60 -> "${avgMin / 60}sa ${avgMin % 60}dk"
+                            else -> "${avgMin}dk"
+                        },
+                        Modifier.weight(1f), color = if (avgMin == null) Pal.Muted else Pal.Gold, fontSize = 15.sp,
+                    )
+                    Text(if (ms.isEmpty()) "" else "${ms.size} namaz", color = Pal.Muted, fontSize = 11.sp)
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "Not: Bu sayı bir fazilet ölçüsü değil; kendi düzenini görmen için. " +
+                    "Hanefi'de her vakitte erken kılmak daha faziletli sayılsa da, niyet ve istikrar öndedir.",
+                color = Pal.Muted, fontSize = 11.sp, lineHeight = 16.sp,
+            )
+        }
     }
 }
+
+
+
+
 
 
 
