@@ -49,6 +49,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.*
@@ -697,133 +699,168 @@ private fun MuhasebeOzet() {
         }
     }
 }
-
-/** Günlük gidişat: oran, seri, ısı haritası ve vakit vakit dağılım. */
+/** Gidişat: dönem seçmeli ısı haritası ve türlere göre özet — Vakit'in yapısı, bizim verimizle. */
 @Composable
 private fun MuhasebeGidisat() {
-    StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
+    StoreRev.n.let { }
     val store = remember { Store(ctx) }
     if (!store.hasLocation) return NeedLocation()
-    var month by remember { mutableStateOf(true) }
-    val now = System.currentTimeMillis()
+    var period by remember { mutableIntStateOf(2) } // 0 hafta, 1 ay, 2 yıl, 3 tümü
     val today = LocalDate.now()
+    val now = System.currentTimeMillis()
+    val first = store.firstDay
     val prayed = store.prayed()
     val log = store.readLog()
-    val first = store.firstDay
-    val days = if (month) 30L else 7L
+    val tr = java.util.Locale("tr")
 
-    val slotCache = remember { mutableMapOf<LocalDate, List<Slot>>() }
-    fun daySlots(d: LocalDate) = slotCache.getOrPut(d) { slots(store.lat, store.lng, d) }
-    fun counted(s: Slot) = s.key in prayed || (s.end <= now && store.tracked(s))
-
-    val perVakit = Vakit.entries.associateWith { intArrayOf(0, 0) }
-    for (i in 0 until days) {
-        val d = today.minusDays(i)
-        if (d.isBefore(first)) break
-        for (s in daySlots(d)) if (counted(s)) {
-            perVakit[s.vakit]!![0]++
-            if (s.key in prayed) perVakit[s.vakit]!![1]++
+    data class Bucket(
+        val start: LocalDate, val days: Int, val counts: IntArray, val pages: IntArray,
+        val any: Int, val full: Int, val total: Int, val prevAny: Int,
+    )
+    // a whole year of slots takes a moment: compute it off the main thread and show a spinner
+    var bucket by remember(period) { mutableStateOf<Bucket?>(null) }
+    LaunchedEffect(period, prayed.size, log.size) {
+        bucket = withContext(Dispatchers.Default) { run {
+        val len = when (period) { 0 -> 7; 1 -> 30; 2 -> 365; else -> (today.toEpochDay() - first.toEpochDay()).toInt() + 1 }
+        val start = today.minusDays((len - 1).toLong()).let { if (it.isBefore(first)) first else it }
+        val n = (today.toEpochDay() - start.toEpochDay()).toInt() + 1
+        val counts = IntArray(n); val pages = IntArray(n)
+        var any = 0; var full = 0; var total = 0
+        for (i in 0 until n) {
+            val d = start.plusDays(i.toLong())
+            val c = slots(store.lat, store.lng, d).count { it.key in prayed }
+            counts[i] = c; pages[i] = log[d.toString()] ?: 0
+            if (c > 0) any++
+            if (c >= 5) full++
+            total += c
         }
+        // aynı uzunluktaki önceki dönem
+        var prevAny = 0
+        for (i in 0 until n) {
+            val d = start.minusDays((n - i).toLong())
+            if (d.isBefore(first)) break
+            if (slots(store.lat, store.lng, d).any { it.key in prayed }) prevAny++
+        }
+        Bucket(start, n, counts, pages, any, full, total, prevAny)
+    } }
     }
-    val due = perVakit.values.sumOf { it[0] }; val kept = perVakit.values.sumOf { it[1] }
-    fun fullDay(d: LocalDate) = daySlots(d).all { it.key in prayed || !store.tracked(it) }
-    var streak = 0
-    var day = if (fullDay(today)) today else today.minusDays(1)
-    while (!day.isBefore(first) && fullDay(day)) { streak++; day = day.minusDays(1) }
-    var longest = 0; var run = 0; var d0 = first
-    while (!d0.isAfter(today)) { if (fullDay(d0)) { run++; longest = max(longest, run) } else run = 0; d0 = d0.plusDays(1) }
-    val pages = (0 until days).sumOf { log[today.minusDays(it).toString()] ?: 0 }
-    val rate = if (due == 0) 0f else kept.toFloat() / due
-    var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { shown = true }
-    val ringAnim by animateFloatAsState(if (shown) rate else 0f, tween(1000), label = "rate")
+    val data = bucket
+    if (data == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Pal.Gold) }
+        return
+    }
+
+    val range = "${data.start.format(java.time.format.DateTimeFormatter.ofPattern("d MMM", tr))} – " +
+        today.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", tr))
+    val pagesTotal = data.pages.sum()
+    val totalKaza = Vakit.entries.sumOf { store.kaza(it) } + store.kaza("VITIR")
+    val heatRamp = listOf(Pal.Track, Color(0xFF4A3D27), Color(0xFF6E5A35), Color(0xFF977A45), Color(0xFFC29B5A), Pal.Gold)
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (month) "Son 30 gün" else "Son 7 gün", color = Pal.Muted, fontSize = 13.sp)
-            Spacer(Modifier.weight(1f))
-            Segmented(listOf("Hafta", "Ay"), if (month) 1 else 0) { month = it == 1 }
-        }
-        Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            InfoCard(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
-                        Canvas(Modifier.fillMaxSize()) {
-                            val w = 6.dp.toPx()
-                            drawArc(Pal.Track, 0f, 360f, false, Offset(w / 2, w / 2), Size(size.width - w, size.height - w), style = Stroke(w))
-                            drawArc(Pal.Gold, -90f, 360f * ringAnim, false, Offset(w / 2, w / 2), Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
-                        }
-                        Text(if (due == 0) "—" else "%${(rate * 100).roundToInt()}", color = Pal.Text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Column {
-                        Text("Vaktinde", color = Pal.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        Text("$kept / $due vakit", color = Pal.Muted, fontSize = 12.sp)
-                    }
-                }
-            }
-            InfoCard(Modifier.weight(1f)) {
-                Text("Seri", color = Pal.Muted, fontSize = 12.sp)
-                Text("$streak gün", style = NumStyle, fontSize = 32.sp, color = Pal.Text)
-                Text("En uzun: $longest gün", color = Pal.Muted, fontSize = 12.sp)
-            }
-        }
+        Segmented(
+            listOf("Hafta", "Ay", "Yıl", "Tümü"), period,
+            Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth(), stretch = true,
+        ) { period = it }
+        Text(range, Modifier.padding(start = 24.dp, top = 10.dp), color = Pal.Muted, fontSize = 12.sp)
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth()) {
-            Row { Text("Son 5 hafta", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = 13.sp); Text("günde kılınan vakit", color = Pal.Muted, fontSize = 13.sp) }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz").forEach { Text(it, Modifier.weight(1f), color = Pal.Muted, fontSize = 10.sp, textAlign = TextAlign.Center) } }
-            val start = today.minusDays((today.dayOfWeek.value - 1 + 28).toLong())
-            for (w in 0 until 5) {
-                Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    for (dow in 0 until 7) {
-                        val d = start.plusDays((w * 7 + dow).toLong())
-                        val color = if (d.isAfter(today) || d.isBefore(first)) Pal.Track.copy(alpha = .4f) else {
-                            val n = daySlots(d).count { it.key in prayed }
-                            listOf(Pal.Track, Color(0xFF4A3D27), Color(0xFF6E5A35), Color(0xFF977A45), Color(0xFFC29B5A), Pal.Gold)[n]
-                        }
-                        Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(6.dp)).background(color))
-                    }
-                }
-            }
-        }
-
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth()) {
-            Text("Vakit vakit", color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-            perVakit.forEach { (vakit, c) ->
-                val r = if (c[0] == 0) 0f else c[1].toFloat() / c[0]
-                val anim by animateFloatAsState(if (shown) r else 0f, tween(900), label = "vakit")
-                Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(vakit.ad, Modifier.width(56.dp), color = Pal.Text, fontSize = 13.sp)
-                    Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Pal.Track)) {
-                        Box(Modifier.fillMaxWidth(anim).fillMaxHeight().clip(CircleShape).background(if (r < 0.8f) Pal.Warn else Pal.Gold))
-                    }
-                    Text(if (c[0] == 0) "—" else "%${(r * 100).roundToInt()}", Modifier.width(44.dp), color = Pal.Muted, fontSize = 13.sp, textAlign = TextAlign.End)
-                }
-            }
-        }
-
-        val worst = perVakit.filter { it.value[0] >= 3 }.minByOrNull { it.value[1].toFloat() / it.value[0] }
-        val worstRate = worst?.let { it.value[1].toFloat() / it.value[0] } ?: 1f
-        Column(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp))
-            .background(Pal.Gold.copy(alpha = .1f)).border(1.dp, Pal.Gold.copy(alpha = .3f), RoundedCornerShape(18.dp)).padding(16.dp)) {
+        Column(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp)) {
+            Text(
+                "${data.days} günün ${data.any}'inde ibadet işaretledin",
+                style = NumStyle, fontSize = 26.sp, lineHeight = 30.sp, color = Pal.Text,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text("önceki dönemde ${data.prevAny} gün", color = Pal.Muted, fontSize = 12.sp)
+            Spacer(Modifier.height(6.dp))
             Text(
                 when {
-                    due < 5 -> "Birkaç gün kullandıktan sonra burada sana özel bir değerlendirme göreceksin."
-                    worst != null && worstRate < 0.85f -> "En çok ${worst.key.ad.lowercase(java.util.Locale("tr"))} namazını kaçırıyorsun. O vakitte biraz daha dikkatli ol, hatırlatmalara kulak ver."
-                    else -> "Maşallah, bu dönem vakitlerin çoğunu vaktinde kıldın. Böyle devam."
-                }, color = Pal.Text, fontSize = 14.sp, lineHeight = 20.sp,
+                    data.any == 0 -> "İlk işareti koyunca burada birikmeye başlayacak."
+                    data.any > data.prevAny -> "Bu dönem öncekinden daha istikrarlısın — Allah kabul etsin."
+                    data.any < data.prevAny -> "Bu dönem biraz aksadı. Bir vakit bile sayılır, bugün başla."
+                    else -> "Geçen dönemle aynı tempodasın. Bir vakit daha ekleyelim."
+                },
+                color = Pal.Text.copy(alpha = .85f), fontSize = 14.sp, lineHeight = 20.sp,
             )
         }
 
-        Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp, bottom = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            InfoCard(Modifier.weight(1f)) { Text("Okunan sayfa", color = Pal.Muted, fontSize = 12.sp); Text("$pages", style = NumStyle, fontSize = 28.sp, color = Pal.Text) }
-            InfoCard(Modifier.weight(1f)) { Text("Bu ay kılınan kaza", color = Pal.Muted, fontSize = 12.sp); Text("${store.kazaPaidThisMonth()}", style = NumStyle, fontSize = 28.sp, color = Pal.Text) }
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp).fillMaxWidth()) {
+            Text("NAMAZ HARİTASI", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
+            Spacer(Modifier.height(10.dp))
+            // weeks across, Mon..Sun down; cell size shrinks so a whole year still fits the width
+            BoxWithConstraints {
+                val cols = (data.days + 6) / 7
+                val gap = 2.dp
+                val cell = minOf(14.dp, (maxWidth - gap * (cols - 1).coerceAtLeast(0)) / cols.coerceAtLeast(1))
+                val firstDow = data.start.dayOfWeek.value - 1
+                for (row in 0 until 7) {
+                    Row(Modifier.padding(top = if (row == 0) 0.dp else gap), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                        for (w in 0 until cols) {
+                            val idx = w * 7 - firstDow + row
+                            val c = if (idx in data.counts.indices) data.counts[idx] else -1
+                            Box(
+                                Modifier.size(cell).clip(RoundedCornerShape(2.dp))
+                                    .background(if (c < 0) Color.Transparent else heatRamp[c.coerceIn(0, 5)]),
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("hiç", color = Pal.Muted, fontSize = 10.sp)
+                heatRamp.forEach { Box(Modifier.size(9.dp).clip(CircleShape).background(it)) }
+                Text("beş vakit", color = Pal.Muted, fontSize = 10.sp)
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "${data.days} günün ${data.full}'inde beş vaktin tamamını işaretledin.",
+                color = Pal.Muted, fontSize = 12.sp,
+            )
+        }
+
+        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
+            Text("TÜRLERE GÖRE", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
+            Spacer(Modifier.height(8.dp))
+            val types = listOf(
+                Triple("Namaz", data.total to "vakit", Color(0xFF6BC5B0)),
+                Triple("Okuma", pagesTotal to "sayfa", Color(0xFF8AA6D8)),
+                Triple("Hatim", store.hatim to "hatim", Pal.Gold),
+                Triple("Kaza", totalKaza to "vakit", Pal.Warn),
+            )
+            types.forEach { (name, pair, color) ->
+                val (value, unit) = pair
+                Row(Modifier.padding(top = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(6.dp).clip(CircleShape).background(color))
+                    Spacer(Modifier.width(10.dp))
+                    Text(name, Modifier.weight(1f), color = Pal.Text, fontSize = 15.sp)
+                    // sparkline: son 21 günün günlük değeri
+                    Canvas(Modifier.size(64.dp, 24.dp)) {
+                        val n = minOf(21, data.counts.size)
+                        if (n > 1) {
+                            val vals = when (name) {
+                                "Namaz" -> IntArray(n) { data.counts[data.counts.size - n + it] }
+                                "Okuma" -> IntArray(n) { data.pages[data.pages.size - n + it] }
+                                else -> IntArray(n) { if (it == n - 1) value else 0 }
+                            }
+                            val maxV = (vals.maxOrNull() ?: 0).coerceAtLeast(1)
+                            val path = Path()
+                            vals.forEachIndexed { i, v ->
+                                val x = size.width * i / (n - 1).toFloat()
+                                val y = size.height - (size.height * v / maxV.toFloat()) * 0.9f
+                                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            }
+                            drawPath(path, color, style = Stroke(1.8.dp.toPx(), cap = StrokeCap.Round))
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text("$value", style = NumStyle, fontSize = 22.sp, color = Pal.Text)
+                    Spacer(Modifier.width(3.dp))
+                    Text(unit, color = Pal.Muted, fontSize = 10.sp)
+                }
+            }
         }
     }
 }
-
 
 
 
