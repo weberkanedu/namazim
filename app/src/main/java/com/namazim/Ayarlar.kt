@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -111,6 +113,9 @@ fun AyarlarScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     var locating by remember { mutableStateOf(false) }
     fun changed() { v++; Reminders.scheduleNext(ctx) }
+    var dialog by remember { mutableStateOf("") }
+    var draft by remember { mutableStateOf("") }
+    fun openDialog(kind: String, initial: String) { dialog = kind; draft = initial }
 
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) {
@@ -150,24 +155,19 @@ fun AyarlarScreen(onBack: () -> Unit) {
         }
 
         Section("Hatırlatmalar") {
-            Text("Vakitten önce hazırlan bildirimi", color = Pal.Text, fontSize = 14.sp)
-            val prep = v.let { store.prepOffsets }
-            Chips(listOf(45, 30, 15, 10, 5), { it in prep }, { "$it dk" }) {
-                store.prepOffsets = if (it in prep) prep - it else prep + it; changed()
-            }
-            Text("Vakit girince \"kıldın mı?\" sıklığı", color = Pal.Text, fontSize = 14.sp)
-            Chips(listOf(10, 15, 20, 30), { it == store.nagEvery }, { "$it dk" }) { store.nagEvery = it; changed() }
+            ValueRow(
+                "Vakitten önce hazırlan bildirimi",
+                if (store.prepOffsets.isEmpty()) "kapalı" else store.prepOffsets.sortedDescending().joinToString(", ") { "$it dk" },
+            ) { openDialog("prep", store.prepOffsets.sortedDescending().joinToString(", ")) }
+            ValueRow("\"Kıldın mı?\" sıklığı", "${store.nagEvery} dk") { openDialog("nag", "${store.nagEvery}") }
             SwitchRow("Vaktin son yarım saatinde 5 dakikada bir", v.let { store.nagBurst }) { store.nagBurst = it; changed() }
-            Text("Ertele süresi", color = Pal.Text, fontSize = 14.sp)
-            Chips(listOf(5, 10, 15, 30), { it == store.snoozeMin }, { "$it dk" }) { store.snoozeMin = it; changed() }
+            ValueRow("Ertele süresi", "${store.snoozeMin} dk") { openDialog("snooze", "${store.snoozeMin}") }
             GhostButton("Deneme bildirimi gönder", Modifier.fillMaxWidth(), color = Pal.Gold) { Reminders.test(ctx) }
         }
 
         Section("Okuma ve kaza") {
-            Text("Günlük okuma hedefi", color = Pal.Text, fontSize = 14.sp)
-            Chips(listOf(5, 10, 15, 20, 30), { it == store.readGoal }, { "$it" }) { store.readGoal = it; v++ }
-            Text("Günde kılınacak kaza", color = Pal.Text, fontSize = 14.sp)
-            Chips(listOf(1, 2, 3, 5), { it == store.kazaRate }, { "$it" }) { store.kazaRate = it; v++ }
+            ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
+            ValueRow("Günde kılınacak kaza", "${store.kazaRate} vakit") { openDialog("kaza", "${store.kazaRate}") }
         }
 
         Section("Konum") {
@@ -199,6 +199,74 @@ fun AyarlarScreen(onBack: () -> Unit) {
         Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.padding(24.dp), color = Pal.Muted, fontSize = 12.sp)
         }
     }
-}
 
+    if (dialog.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = { dialog = "" },
+            containerColor = Pal.Card,
+            title = {
+                Text(
+                    when (dialog) {
+                        "prep" -> "Hazırlan bildirimi"
+                        "nag" -> "Hatırlatma sıklığı"
+                        "snooze" -> "Ertele süresi"
+                        "goal" -> "Günlük okuma hedefi"
+                        else -> "Günde kılınacak kaza"
+                    },
+                    color = Pal.Text,
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        when (dialog) {
+                            "prep" -> "Vakitten kaç dakika önce bildirim gelsin? Birden fazlası için virgülle yaz (ör. 30, 15). Boş bırakırsan kapanır."
+                            "nag" -> "Vakit girdikten sonra kaç dakikada bir \"kıldın mı?\" diye soralım?"
+                            "snooze" -> "Hatırlatmayı kaç dakika erteleyelim?"
+                            "goal" -> "Günde kaç sayfa okumayı hedefliyorsun?"
+                            else -> "Günde kaç kaza namazı kılacaksın?"
+                        },
+                        color = Pal.Muted, fontSize = 12.sp, lineHeight = 17.sp,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        draft, { draft = it }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Pal.Gold, unfocusedBorderColor = Pal.Border),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    when (dialog) {
+                        "prep" -> store.prepOffsets = draft.split(',', ' ').mapNotNull { it.trim().toIntOrNull() }
+                            .filter { it in 1..180 }.toSet()
+                        "nag" -> draft.trim().toIntOrNull()?.let { if (it in 1..180) store.nagEvery = it }
+                        "snooze" -> draft.trim().toIntOrNull()?.let { if (it in 1..180) store.snoozeMin = it }
+                        "goal" -> draft.trim().toIntOrNull()?.let { if (it in 1..300) store.readGoal = it }
+                        "kaza" -> draft.trim().toIntOrNull()?.let { if (it in 1..50) store.kazaRate = it }
+                    }
+                    dialog = ""; changed()
+                }) { Text("Kaydet", color = Pal.Gold) }
+            },
+            dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Vazgeç", color = Pal.Muted) } },
+        )
+    }
+}
+/** Ayarlarda hazır seçenek yerine kendi değerini yazman için tek satır. */
+@Composable
+private fun ValueRow(label: String, value: String, onEdit: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onEdit).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(label, color = Pal.Text, fontSize = 14.sp, lineHeight = 18.sp)
+            Spacer(Modifier.height(2.dp))
+            Text(value, color = Pal.Gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        }
+        Spacer(Modifier.width(12.dp))
+        Text("Değiştir", color = Pal.Muted, fontSize = 12.sp)
+    }
+}
 

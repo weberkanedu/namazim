@@ -989,7 +989,8 @@ private fun MuhasebeGidisat() {
             }
         }
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = if (period == 3) 12.dp else 20.dp).fillMaxWidth()) {
+        // Tümü sekmesinde tür tablosu yok (yalnızca toplamlar ve zamanlama)
+        if (period != 3) InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
             Text("TÜRLERE GÖRE", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
             Spacer(Modifier.height(8.dp))
             val types = listOf(
@@ -1133,6 +1134,7 @@ private fun RadarChart(axes: List<Pair<String, Float>>, colors: List<Color>, ani
         }
     }
 }
+
 
 
 
