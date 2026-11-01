@@ -324,16 +324,13 @@ fun KazaScreen(embedded: Boolean = false) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(
-                        when {
-                            total == 0 -> "Kaza borcun yok"
-                            rate <= 1 -> "Günde 1 kaza"
-                            else -> "Günde $rate kaza"
-                        },
+                        if (total == 0) "Kaza borcun yok" else "$days günde biter",
                         color = Pal.Text, fontSize = Type.body, fontWeight = FontWeight.SemiBold,
                     )
                     Spacer(Modifier.height(3.dp))
+                    // plan her durumda görünür: Ayarlar'daki değerle aynı kaynaktan
                     Text(
-                        if (total == 0) "Allah kabul etsin." else "$days günde biter",
+                        if (total == 0) "Plan: günde $rate kaza · Allah kabul etsin." else "Günde $rate kaza · $total kaldı",
                         color = Pal.Muted, fontSize = Type.body2,
                     )
                 }
@@ -763,7 +760,7 @@ private fun MuhasebeOzet() {
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text("$totalKaza vakit kaldı", style = NumStyle, fontSize = 26.sp, color = Pal.Text)
-                    Text("Bu ay ${store.kazaPaidThisMonth()} kaza kıldın", color = Pal.Muted, fontSize = 12.sp)
+                    Text("Bu ay ${store.kazaPaidThisMonth()} kaza kıldın · plan günde ${store.kazaRate}", color = Pal.Muted, fontSize = 12.sp)
                     Text(
                         if (monthsLeft != null) "Bu hızla ~${monthsLeft.roundToInt()} ay içinde tamamlanır, inşallah"
                         else "Kaza kalmadı, elhamdülillah",
@@ -1207,6 +1204,7 @@ fun Modifier.pressable(onClick: () -> Unit): Modifier {
     return this.graphicsLayer { scaleX = scale; scaleY = scale }
         .clickable(interactionSource = src, indication = null, onClick = onClick)
 }
+
 
 
 

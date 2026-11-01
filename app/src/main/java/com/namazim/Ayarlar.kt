@@ -174,7 +174,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
 
         Section("Okuma ve kaza") {
             ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
-            ValueRow("Günde kılınacak kaza", "${store.kazaRate} vakit") { openDialog("kaza", "${store.kazaRate}") }
+            ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
         }
 
         Section("Konum") {
@@ -276,6 +276,7 @@ private fun ValueRow(label: String, value: String, onEdit: () -> Unit) {
         Text("Değiştir", color = Pal.Muted, fontSize = 12.sp)
     }
 }
+
 
 
 
