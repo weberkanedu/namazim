@@ -1,0 +1,186 @@
+Providers:
+  [0] provider ProviderId{user:0, app:10277, cmp:ComponentInfo{com.android.systemui/com.android.systemui.people.widget.PeopleSpaceWidgetProvider}}
+    min=(34817x0)   minResize=(15361x12801) updatePeriodMillis=60000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0386 initialKeyguardLayout=#0   zombie=false
+  [1] provider ProviderId{user:0, app:6101, cmp:ComponentInfo{com.android.thememanager/com.android.thememanager.appwidget.provider.ThemeRecommendProvider_4x2}}
+    min=(76801x28161)   minResize=(76801x28161) updatePeriodMillis=864000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e04a9 initialKeyguardLayout=#0   zombie=false
+  [2] provider ProviderId{user:0, app:6101, cmp:ComponentInfo{com.android.thememanager/com.android.thememanager.appwidget.provider.ThemePopularProvider_2x2}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=864000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e04a8 initialKeyguardLayout=#0   zombie=false
+  [3] provider ProviderId{user:0, app:6101, cmp:ComponentInfo{com.android.thememanager/com.android.thememanager.appwidget.provider.ThemeMoreProvider_4x2}}
+    min=(76801x28161)   minResize=(76801x28161) updatePeriodMillis=864000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e04a7 initialKeyguardLayout=#0   zombie=false
+  [4] provider ProviderId{user:0, app:6101, cmp:ComponentInfo{com.android.thememanager/com.android.thememanager.appwidget.provider.RingtoneNewProvider_2x2}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=864000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e04a6 initialKeyguardLayout=#0   zombie=false
+  [5] provider ProviderId{user:0, app:6101, cmp:ComponentInfo{com.android.thememanager/com.android.thememanager.appwidget.provider.RingtoneAddProvider_2x2}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=864000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e04a5 initialKeyguardLayout=#0   zombie=false
+  [6] provider ProviderId{user:0, app:10180, cmp:ComponentInfo{com.android.vending/com.google.android.finsky.rubiks.cubes.widget.CubesAppWidgetProvider}}
+    min=(32769x10241)   minResize=(32769x10241) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0028 initialKeyguardLayout=#0   zombie=false
+  [7] provider ProviderId{user:0, app:10180, cmp:ComponentInfo{com.android.vending/com.google.android.finsky.rubiks.cubes.widget.ContentForwardWidgetProvider}}
+    min=(32769x10241)   minResize=(32769x10241) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0028 initialKeyguardLayout=#0   zombie=false
+  [8] provider ProviderId{user:0, app:10253, cmp:ComponentInfo{com.google.android.apps.bard/com.google.android.apps.bard.widget.RobinToolBarAppWidgetReceiver}}
+    min=(14337x14337)   minResize=(12289x12289) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0182 initialKeyguardLayout=#0   zombie=false
+  [9] provider ProviderId{user:0, app:10229, cmp:ComponentInfo{com.google.android.apps.maps/com.google.android.apps.gmm.widget.SearchWidgetProvider}}
+    min=(56321x25601)   minResize=(40961x25601) updatePeriodMillis=43200000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0237 initialKeyguardLayout=#0   zombie=false
+  [10] provider ProviderId{user:0, app:10229, cmp:ComponentInfo{com.google.android.apps.maps/com.google.android.apps.gmm.widget.traffic.TrafficWidgetProvider}}
+    min=(56321x25601)   minResize=(35841x20481) updatePeriodMillis=0 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0374 initialKeyguardLayout=#0   zombie=false
+  [11] provider ProviderId{user:0, app:10183, cmp:ComponentInfo{com.google.android.apps.wellbeing/com.google.android.apps.wellbeing.widget.screentime.ScreenTimeWidgetProviderReceiver_Receiver}}
+    min=(25601x23041)   minResize=(25601x12801) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d00ba initialKeyguardLayout=#0   zombie=false
+  [12] provider ProviderId{user:0, app:10191, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.apps.gsa.staticplugins.smartspace.widget.SmartspaceWidgetProvider}}
+    min=(80385x12801)   minResize=(80385x12801) updatePeriodMillis=7200000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e043f initialKeyguardLayout=#0   zombie=false
+  [13] provider ProviderId{user:0, app:10191, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.apps.gsa.staticplugins.searchwidget.PremiumSearchWidgetProvider}}
+    min=(71681x10241)   minResize=(20481x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0935 initialKeyguardLayout=#0   zombie=false
+  [14] provider ProviderId{user:0, app:10191, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.googlequicksearchbox.SearchWidgetProvider}}
+    min=(71681x10241)   minResize=(20481x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=5 autoAdvanceViewId=-1 initialLayout=#7f0e09b1 initialKeyguardLayout=#0   zombie=false
+  [15] provider ProviderId{user:0, app:10191, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.apps.gsa.staticplugins.searchwidget.GoogleSearchWidgetProvider}}
+    min=(71681x10241)   minResize=(20481x10241) updatePeriodMillis=0 resizeMode=1 widgetCategory=5 autoAdvanceViewId=-1 initialLayout=#7f0e0960 initialKeyguardLayout=#0   zombie=false
+  [16] provider ProviderId{user:0, app:10191, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.apps.search.widgets.stocks.StocksWidgetReceiver}}
+    min=(35841x23041)   minResize=(35841x23041) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e1039 initialKeyguardLayout=#7f0e1039   zombie=false
+  [17] provider ProviderId{user:0, app:10176, cmp:ComponentInfo{com.miui.gallery/com.miui.gallery.gallerywidget.CustomWidgetProvider2_2}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=200000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d03f9 initialKeyguardLayout=#0   zombie=false
+  [18] provider ProviderId{user:0, app:10176, cmp:ComponentInfo{com.miui.gallery/com.miui.gallery.gallerywidget.CustomWidgetProvider2_3}}
+    min=(28161x46081)   minResize=(28161x46081) updatePeriodMillis=200000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d03fa initialKeyguardLayout=#0   zombie=false
+  [19] provider ProviderId{user:0, app:10176, cmp:ComponentInfo{com.miui.gallery/com.miui.gallery.gallerywidget.CustomWidgetProvider4_2}}
+    min=(76801x28161)   minResize=(76801x28161) updatePeriodMillis=200000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d03fb initialKeyguardLayout=#0   zombie=false
+  [20] provider ProviderId{user:0, app:10176, cmp:ComponentInfo{com.miui.gallery/com.miui.gallery.gallerywidget.CustomWidgetProvider4_4}}
+    min=(76801x64001)   minResize=(76801x64001) updatePeriodMillis=200000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d03fc initialKeyguardLayout=#0   zombie=false
+  [21] provider ProviderId{user:0, app:1000, cmp:ComponentInfo{com.miui.securitycenter/com.miui.permcenter.privacymanager.widget.BehaviorWidget}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e006e initialKeyguardLayout=#7f0e006e   zombie=false
+  [22] provider ProviderId{user:0, app:10416, cmp:ComponentInfo{app.revanced.android.youtube/com.google.android.apps.youtube.app.widget.YtQuickActionsWidgetProvider}}
+    min=(48641x30721)   minResize=(48641x12801) updatePeriodMillis=72000000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0072 initialKeyguardLayout=#0   zombie=false
+  [23] provider ProviderId{user:0, app:10416, cmp:ComponentInfo{app.revanced.android.youtube/com.google.android.apps.youtube.app.widget.YtSearchWidgetProvider}}
+    min=(57345x12801)   minResize=(48641x12801) updatePeriodMillis=72000000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0072 initialKeyguardLayout=#0   zombie=false
+  [24] provider ProviderId{user:0, app:10363, cmp:ComponentInfo{com.akbank.android.apps.akbank_direkt/com.akbank.feature.widget.consumer.AkbankWidgetSmall}}
+    min=(64001x30721)   minResize=(64001x30721) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e02a9 initialKeyguardLayout=#7f0e02a9   zombie=false
+  [25] provider ProviderId{user:0, app:10363, cmp:ComponentInfo{com.akbank.android.apps.akbank_direkt/com.akbank.feature.widget.consumer.AkbankWidget}}
+    min=(64001x58881)   minResize=(64001x58881) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e02a8 initialKeyguardLayout=#7f0e02a8   zombie=false
+  [26] provider ProviderId{user:0, app:10363, cmp:ComponentInfo{com.akbank.android.apps.akbank_direkt/com.akbank.feature.widget.corporate.AkbankCorporateWidgetSmall}}
+    min=(64001x30721)   minResize=(64001x30721) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0549 initialKeyguardLayout=#7f0e0549   zombie=false
+  [27] provider ProviderId{user:0, app:10363, cmp:ComponentInfo{com.akbank.android.apps.akbank_direkt/com.akbank.feature.widget.corporate.AkbankCorporateWidget}}
+    min=(64001x58881)   minResize=(64001x58881) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0548 initialKeyguardLayout=#7f0e0548   zombie=false
+  [28] provider ProviderId{user:0, app:10373, cmp:ComponentInfo{com.akbank.android.apps.axess/com.akbank.akbankx.feature.findqrtype.presentation.QrPaymentWidgetProvider}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0505 initialKeyguardLayout=#0   zombie=false
+  [29] provider ProviderId{user:0, app:10395, cmp:ComponentInfo{com.anthropic.claude/com.anthropic.claude.widget.ClaudeAppWidgetReceiver}}
+    min=(38913x15361)   minResize=(38913x15361) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e00f1 initialKeyguardLayout=#0   zombie=false
+  [30] provider ProviderId{user:0, app:10361, cmp:ComponentInfo{com.brave.browser_nightly/org.chromium.chrome.browser.widget.quickactionsearchandbookmark.QuickActionSearchAndBookmarkWidgetProvider}}
+    min=(77825x11265)   minResize=(77825x11265) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0402 initialKeyguardLayout=#0   zombie=false
+  [31] provider ProviderId{user:0, app:10361, cmp:ComponentInfo{com.brave.browser_nightly/com.google.android.apps.chrome.appwidget.bookmarks.BookmarkThumbnailWidgetProvider}}
+    min=(46081x38401)   minResize=(16385x12289) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e00d9 initialKeyguardLayout=#0   zombie=false
+  [32] provider ProviderId{user:0, app:10361, cmp:ComponentInfo{com.brave.browser_nightly/org.chromium.chrome.browser.searchwidget.SearchWidgetProvider}}
+    min=(61441x12289)   minResize=(61441x12289) updatePeriodMillis=86400000 resizeMode=1 widgetCategory=5 autoAdvanceViewId=-1 initialLayout=#7f0e044c initialKeyguardLayout=#0   zombie=false
+  [33] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.PrayerTimesWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [34] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.WorshipStreakWidgetReceiver}}
+    min=(64001x28161)   minResize=(64001x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [35] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.PrayerStreakWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [36] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.QuranStreakWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [37] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.DhikrStreakWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [38] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.HadithStreakWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [39] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.FastingStreakWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [40] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.QadaWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [41] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.DailyVerseWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [42] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.QuranBookmarkWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [43] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.DailyHadithWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [44] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.HijriCalendarWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [45] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.HolidaysWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [46] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.MoonPhaseWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [47] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.DailyEsmaWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [48] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.WorshipStatsWidgetReceiver}}
+    min=(64001x28161)   minResize=(64001x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [49] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.WeeklyStatsWidgetReceiver}}
+    min=(64001x28161)   minResize=(64001x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [50] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.HatimWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [51] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.OrucSayaciWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [52] provider ProviderId{user:0, app:10435, cmp:ComponentInfo{com.hakancelikdev.vakit/com.hakancelikdev.vakit.infrastructure.widget.TodaySummaryWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0172 initialKeyguardLayout=#0   zombie=false
+  [53] provider ProviderId{user:0, app:10406, cmp:ComponentInfo{com.maxrave.simpmusic/com.maxrave.simpmusic.ui.widget.TurntableWidgetReceiver}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+  [54] provider ProviderId{user:0, app:10406, cmp:ComponentInfo{com.maxrave.simpmusic/com.maxrave.simpmusic.ui.widget.PlaylistsWidgetReceiver}}
+    min=(64001x28161)   minResize=(46081x28161) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+  [55] provider ProviderId{user:0, app:10406, cmp:ComponentInfo{com.maxrave.simpmusic/com.maxrave.simpmusic.ui.widget.ListeningInsightsWidgetReceiver}}
+    min=(64001x28161)   minResize=(46081x28161) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#0 initialKeyguardLayout=#0   zombie=false
+  [56] provider ProviderId{user:0, app:10375, cmp:ComponentInfo{com.microsoft.office.outlook/com.acompli.acompli.AgendaWidgetProvider}}
+    min=(46081x46081)   minResize=(28161x28161) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0094 initialKeyguardLayout=#7f0e0094   zombie=false
+  [57] provider ProviderId{user:0, app:10375, cmp:ComponentInfo{com.microsoft.office.outlook/com.acompli.acompli.InboxWidgetProvider}}
+    min=(64001x46081)   minResize=(28161x46081) updatePeriodMillis=1800000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e0228 initialKeyguardLayout=#7f0e0228   zombie=false
+  [58] provider ProviderId{user:0, app:10332, cmp:ComponentInfo{com.miui.calculator/com.miui.calculator.widget.CalWidgetProvider}}
+    min=(76801x64001)   minResize=(76801x64001) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d012f initialKeyguardLayout=#0   zombie=false
+  [59] provider ProviderId{user:0, app:10332, cmp:ComponentInfo{com.miui.calculator/com.miui.calculator.widget.CurrencyWidgetProvider}}
+    min=(76801x64001)   minResize=(76801x64001) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d0131 initialKeyguardLayout=#0   zombie=false
+  [60] provider ProviderId{user:0, app:10388, cmp:ComponentInfo{com.omgodse.notally/com.omgodse.notally.widget.WidgetProvider}}
+    min=(25601x25601)   minResize=(25601x25601) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c008b initialKeyguardLayout=#0   zombie=false
+  [61] provider ProviderId{user:0, app:10396, cmp:ComponentInfo{com.openai.chatgpt/com.openai.feature.widget.WidgetReceiver}}
+    min=(0x0)   minResize=(0x0) updatePeriodMillis=0 resizeMode=3 widgetCategory=7 autoAdvanceViewId=-1 initialLayout=#7f0d0593 initialKeyguardLayout=#0   zombie=false
+  [62] provider ProviderId{user:0, app:10424, cmp:ComponentInfo{com.pozitron.hepsiburada/com.hepsiburada.appwidget.DodWidget}}
+    min=(83201x19969)   minResize=(83201x19969) updatePeriodMillis=0 resizeMode=2 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d00a1 initialKeyguardLayout=#7f0d00a1   zombie=false
+  [63] provider ProviderId{user:0, app:10374, cmp:ComponentInfo{com.quran.library/com.quran.library.prayer.PrayerWidgetProvider}}
+    min=(28161x12289)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0b003b initialKeyguardLayout=#0   zombie=false
+  [64] provider ProviderId{user:0, app:10380, cmp:ComponentInfo{com.whatsapp/com.whatsapp.appwidget.WidgetProvider}}
+    min=(64001x28161)   minResize=(10241x10241) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e1766 initialKeyguardLayout=#7f0e1766   zombie=false
+  [65] provider ProviderId{user:0, app:10437, cmp:ComponentInfo{com.whatsapp.w4b/com.whatsapp.appwidget.WidgetProvider}}
+    min=(64001x28161)   minResize=(10241x10241) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0e1b97 initialKeyguardLayout=#7f0e1b97   zombie=false
+  [66] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.xiaomi.smarthome/com.xiaomi.smarthome.miui.widget.MiJiaSingeDeviceWidgetProvider}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=10000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0307cc initialKeyguardLayout=#0   zombie=false
+  [67] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.xiaomi.smarthome/com.xiaomi.smarthome.miui.widget.MiJiaMiddleWidgetProvider}}
+    min=(76801x28161)   minResize=(76801x28161) updatePeriodMillis=10000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0307c9 initialKeyguardLayout=#0   zombie=false
+  [68] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.xiaomi.smarthome/com.xiaomi.smarthome.miui.widget.MiJiaBigWidgetProvider}}
+    min=(76801x64001)   minResize=(76801x64001) updatePeriodMillis=10000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0307c7 initialKeyguardLayout=#0   zombie=false
+  [69] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.xiaomi.smarthome/com.xiaomi.smarthome.miui.widget.MiJiaSmallEnvironmentWidgetProvider}}
+    min=(28161x28161)   minResize=(28161x28161) updatePeriodMillis=10000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0307cd initialKeyguardLayout=#0   zombie=false
+  [70] provider ProviderId{user:0, app:10346, cmp:ComponentInfo{com.xiaomi.smarthome/com.xiaomi.smarthome.miui.widget.MiJiaMiddleEnvironmentWidgetProvider}}
+    min=(76801x28161)   minResize=(76801x28161) updatePeriodMillis=10000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0307ca initialKeyguardLayout=#0   zombie=false
+  [71] provider ProviderId{user:0, app:10379, cmp:ComponentInfo{com.zhiliaoapp.musically.go/com.ss.android.ugc.aweme.lite.app_widget.SuggestedVideoAppWidgetProvider}}
+    min=(30721x30721)   minResize=(30721x30721) updatePeriodMillis=1800000 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c001c initialKeyguardLayout=#0   zombie=false
+  [72] provider ProviderId{user:0, app:10382, cmp:ComponentInfo{com.ziraat.ziraatmobil/com.veripark.ziraatmobile.screens.widget.ZiraatMobileAppWidget}}
+    min=(81921x64001)   minResize=(81921x64001) updatePeriodMillis=800000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0e0dd7 initialKeyguardLayout=#7f0e0dd7   zombie=false
+  [73] provider ProviderId{user:0, app:10449, cmp:ComponentInfo{de.danoeh.antennapod/de.danoeh.antennapod.ui.widget.PlayerWidget}}
+    min=(64001x10241)   minResize=(10241x10241) updatePeriodMillis=86400000 resizeMode=1 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0d00ca initialKeyguardLayout=#0   zombie=false
+  [74] provider ProviderId{user:0, app:10390, cmp:ComponentInfo{net.thunderbird.android.beta/net.thunderbird.android.widget.provider.MessageListWidgetProvider}}
+    min=(64001x46081)   minResize=(28161x28161) updatePeriodMillis=86400000 resizeMode=3 widgetCategory=3 autoAdvanceViewId=-1 initialLayout=#7f0c02dc initialKeyguardLayout=#7f0c02dc   zombie=false
+  [75] provider ProviderId{user:0, app:10390, cmp:ComponentInfo{net.thunderbird.android.beta/net.thunderbird.android.widget.provider.UnreadWidgetProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0582 initialKeyguardLayout=#0   zombie=false
+  [76] provider ProviderId{user:0, app:10383, cmp:ComponentInfo{org.fossify.calendar/org.fossify.calendar.helpers.MyWidgetMonthlyProvider}}
+    min=(64001x64001)   minResize=(28161x28161) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0086 initialKeyguardLayout=#0   zombie=false
+  [77] provider ProviderId{user:0, app:10383, cmp:ComponentInfo{org.fossify.calendar/org.fossify.calendar.helpers.MyWidgetListProvider}}
+    min=(64001x64001)   minResize=(10241x10241) updatePeriodMillis=600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0104 initialKeyguardLayout=#0   zombie=false
+  [78] provider ProviderId{user:0, app:10383, cmp:ComponentInfo{org.fossify.calendar/org.fossify.calendar.helpers.MyWidgetDateProvider}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f0c0103 initialKeyguardLayout=#0   zombie=false
+  [79] provider ProviderId{user:0, app:10378, cmp:ComponentInfo{org.telegram.messenger/org.telegram.messenger.ChatsWidgetProvider}}
+    min=(64001x28161)   minResize=(46081x10241) updatePeriodMillis=3600000 resizeMode=3 widgetCategory=1 autoAdvanceViewId=2131296476 initialLayout=#7f0c005f initialKeyguardLayout=#0   zombie=false
+  [80] provider ProviderId{user:0, app:10378, cmp:ComponentInfo{org.telegram.messenger/org.telegram.messenger.ContactsWidgetProvider}}
+    min=(28161x22017)   minResize=(28161x10241) updatePeriodMillis=3600000 resizeMode=2 widgetCategory=1 autoAdvanceViewId=2131296476 initialLayout=#7f0c0028 initialKeyguardLayout=#0   zombie=false
+  [81] provider ProviderId{user:0, app:10394, cmp:ComponentInfo{com.namazim/com.namazim.NamazimWidget}}
+    min=(10241x10241)   minResize=(10241x10241) updatePeriodMillis=0 resizeMode=0 widgetCategory=1 autoAdvanceViewId=-1 initialLayout=#7f080009 initialKeyguardLayout=#0   zombie=false
+ 
+Widgets:
+  [0] id=10
+    host=HostId{user:0, app:10174, hostId:1026, pkg:com.mi.android.globallauncher}
+    provider=ProviderId{user:0, app:10191, cmp:ComponentInfo{com.google.android.googlequicksearchbox/com.google.android.googlequicksearchbox.SearchWidgetProvider}}
+    host.callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@1860d84
+    views=android.widget.RemoteViews@64a296d
+    views_bitmap_memory=0
+ 
+Hosts:
+  [0] hostId=HostId{user:0, app:10174, hostId:1026, pkg:com.mi.android.globallauncher}
+    callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@1860d84
+    widgets.size=1 zombie=false
+  [1] hostId=HostId{user:0, app:10174, hostId:1024, pkg:com.mi.android.globallauncher}
+    callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@d8109a2
+    widgets.size=0 zombie=false
+  [2] hostId=HostId{user:0, app:10174, hostId:2051, pkg:com.mi.android.globallauncher}
+    callbacks=com.android.internal.appwidget.IAppWidgetHost$Stub$Proxy@62ca633
+    widgets.size=0 zombie=false
+ 
+Grants:
