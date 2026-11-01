@@ -279,6 +279,7 @@ fun KazaScreen(embedded: Boolean = false) {
     val paid = v.let { store.kazaPaidThisMonth() }
     val rate = v.let { store.kazaRate }
     val ring by animateFloatAsState(if (paid + total == 0) 1f else paid.toFloat() / (paid + total), tween(700), label = "ring")
+    var openKazaRate by remember { mutableStateOf(false) }
 
     // yanlış dokunuşu geri almak için: her işlemden sonra kısa bir "Geri al" fırsatı
     val snackbar = remember { SnackbarHostState() }
@@ -317,25 +318,31 @@ fun KazaScreen(embedded: Boolean = false) {
         }
 
         InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 20.dp).fillMaxWidth()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Kaza planı", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                listOf(1, 2, 3, 5).forEach { n ->
-                    val on = n == rate
-                    Box(
-                        Modifier.padding(start = 6.dp).size(44.dp, 32.dp).clip(CircleShape)
-                            .background(if (on) Pal.Gold else Color.Transparent)
-                            .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape)
-                            .clickable { store.kazaRate = n; v++ },
-                        contentAlignment = Alignment.Center,
-                    ) { Text("$n", color = if (on) Pal.Ground else Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = 13.sp) }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
+            SectionLabel("KAZA PLANI")
+            Spacer(Modifier.height(10.dp))
             val days = (total + rate - 1) / rate
-            Text(
-                if (total == 0) "Kaza borcun yok. Allah kabul etsin." else "Günde $rate kaza kılarsan $days günde bitirirsin.",
-                color = Pal.Text, fontSize = 14.sp,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        when {
+                            total == 0 -> "Kaza borcun yok"
+                            rate <= 1 -> "Günde 1 kaza"
+                            else -> "Günde $rate kaza"
+                        },
+                        color = Pal.Text, fontSize = Type.body, fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        if (total == 0) "Allah kabul etsin." else "$days günde biter",
+                        color = Pal.Muted, fontSize = Type.body2,
+                    )
+                }
+                Box(
+                    Modifier.heightIn(min = TouchMin).clip(CircleShape).border(1.dp, Pal.Gold.copy(alpha = .45f), CircleShape)
+                        .clickable { openKazaRate = true }.padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) { Text("Planı değiştir", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
+            }
         }
 
         Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
@@ -348,14 +355,14 @@ fun KazaScreen(embedded: Boolean = false) {
                         onClick = {
                             store.payKaza(key); v++
                             undoable("$name kazası kılındı") { store.unpayKaza(key) }
-                        }, contentPadding = PaddingValues(horizontal = 14.dp), modifier = Modifier.height(36.dp),
+                        }, contentPadding = PaddingValues(horizontal = 14.dp), modifier = Modifier.heightIn(min = TouchMin),
                         colors = ButtonDefaults.buttonColors(containerColor = Pal.Gold, contentColor = Pal.Ground),
                     ) { Text("Kıldım", fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
                     Spacer(Modifier.width(6.dp))
                     OutlinedIconButton(onClick = {
                             store.addKaza(key, 1); v++
                             undoable("$name kazası eklendi") { store.addKaza(key, -1) }
-                        }, modifier = Modifier.size(36.dp),
+                        }, modifier = Modifier.size(TouchMin),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Pal.Border)) {
                         Icon(Icons.Default.Add, "$name kazası ekle", tint = Pal.Text, modifier = Modifier.size(18.dp))
                     }
@@ -367,6 +374,33 @@ fun KazaScreen(embedded: Boolean = false) {
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)) { data ->
             Snackbar(snackbarData = data, containerColor = Pal.Card, contentColor = Pal.Text, actionColor = Pal.Gold)
         }
+    }
+
+    if (openKazaRate) {
+        var draft by remember { mutableStateOf("$rate") }
+        AlertDialog(
+            onDismissRequest = { openKazaRate = false },
+            containerColor = Pal.Card,
+            title = { Text("Günde kaç kaza?", color = Pal.Text) },
+            text = {
+                Column {
+                    Text("Kaza planını günde kaç vakit kılacağını yazarak belirle.", color = Pal.Muted, fontSize = Type.body2, lineHeight = 18.sp)
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedTextField(
+                        draft, { draft = it }, singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Pal.Gold, unfocusedBorderColor = Pal.Border),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    draft.trim().toIntOrNull()?.let { if (it in 1..50) store.kazaRate = it }
+                    openKazaRate = false; v++
+                }) { Text("Kaydet", color = Pal.Gold) }
+            },
+            dismissButton = { TextButton(onClick = { openKazaRate = false }) { Text("Vazgeç", color = Pal.Muted) } },
+        )
     }
 }
 
@@ -1158,5 +1192,7 @@ fun Modifier.pressable(onClick: () -> Unit): Modifier {
     return this.graphicsLayer { scaleX = scale; scaleY = scale }
         .clickable(interactionSource = src, indication = null, onClick = onClick)
 }
+
+
 
 
