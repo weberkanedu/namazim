@@ -19,6 +19,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -117,12 +119,23 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
             bottomBar = { SeherNav(tab) { tab = it } },
         ) { pad ->
             Box(Modifier.padding(pad).fillMaxSize()) {
-                when (tab) {
-                    0 -> NamazScreen { tab = 4 }
-                    1 -> KibleScreen()
-                    2 -> OkumaScreen()
-                    3 -> MuhasebeScreen()
-                    else -> AyarlarScreen { tab = 0 }
+                // sekmeler arası yumuşak geçiş: hafif kayma + solma
+                AnimatedContent(
+                    targetState = tab,
+                    transitionSpec = {
+                        (androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(240)) +
+                            androidx.compose.animation.slideInVertically { it / 28 }) togetherWith
+                            androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(150))
+                    },
+                    label = "tab",
+                ) { t ->
+                    when (t) {
+                        0 -> NamazScreen { tab = 4 }
+                        1 -> KibleScreen()
+                        2 -> OkumaScreen()
+                        3 -> MuhasebeScreen()
+                        else -> AyarlarScreen { tab = 0 }
+                    }
                 }
             }
         }
@@ -143,8 +156,13 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
             Modifier.fillMaxWidth().height(62.dp)
                 .shadow(16.dp, RoundedCornerShape(31.dp))
                 .clip(RoundedCornerShape(31.dp))
-                .background(Pal.Nav.copy(alpha = .95f))
-                .border(1.dp, Pal.Text.copy(alpha = .06f), RoundedCornerShape(31.dp))
+                .background(Pal.Nav.copy(alpha = .88f))
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(Color.White.copy(alpha = .07f), Color.White.copy(alpha = .015f), Color.Transparent),
+                    ),
+                )
+                .border(1.dp, Color.White.copy(alpha = .10f), RoundedCornerShape(31.dp))
                 .padding(horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -721,6 +739,10 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
+
+
+
 
 
 

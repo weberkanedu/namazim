@@ -257,7 +257,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
 @Composable
 private fun ValueRow(label: String, value: String, onEdit: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onEdit).padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).pressable(onClick = onEdit).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -269,4 +269,5 @@ private fun ValueRow(label: String, value: String, onEdit: () -> Unit) {
         Text("Değiştir", color = Pal.Muted, fontSize = 12.sp)
     }
 }
+
 

@@ -32,6 +32,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
@@ -74,7 +79,12 @@ private fun InfoCard(modifier: Modifier = Modifier, content: @Composable ColumnS
             .shadow(14.dp, RoundedCornerShape(22.dp), clip = false, ambientColor = Color.Black.copy(alpha = .35f), spotColor = Color.Black.copy(alpha = .45f))
             .clip(RoundedCornerShape(22.dp))
             .background(Pal.Card)
-            .border(1.dp, Color.White.copy(alpha = .045f), RoundedCornerShape(22.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = .05f), Color.White.copy(alpha = .012f), Color.Transparent),
+                ),
+            )
+            .border(1.dp, Color.White.copy(alpha = .055f), RoundedCornerShape(22.dp))
             .padding(horizontal = 18.dp, vertical = 16.dp),
         content = content,
     )
@@ -524,7 +534,7 @@ fun Segmented(options: List<String>, selected: Int, modifier: Modifier = Modifie
         options.forEachIndexed { i, label ->
             Box((if (stretch) Modifier.weight(1f) else Modifier).clip(RoundedCornerShape(20.dp))
                 .background(if (selected == i) Pal.Gold else Color.Transparent)
-                .clickable { onSelect(i) }.padding(horizontal = if (stretch) 0.dp else 14.dp, vertical = 8.dp),
+                .pressable { onSelect(i) }.padding(horizontal = if (stretch) 0.dp else 14.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center) {
                 Text(label, color = if (selected == i) Pal.Ground else Pal.Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
@@ -613,7 +623,7 @@ private fun MuhasebeOzet() {
     // radar: beş eksen (namaz, sayfa, hatim, kaza, hedef) — halkaların yerine
     val kazaProg = run {
         val paid = store.kazaPaidThisMonth(); val t = totalKaza
-        if (paid + t == 0) 1f else (paid.toFloat() / (paid + t)).coerceIn(0f, 1f)
+        if (paid + t == 0) 0.5f else (paid.toFloat() / (paid + t)).coerceIn(0f, 1f)
     }
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
@@ -1153,13 +1163,13 @@ private fun RadarChart(axes: List<Pair<String, Float>>, colors: List<Color>, ani
         }
     }
 }
-
-
-
-
-
-
-
-
-
+/** Dokununca hafifçe küçülen tıklanabilir yüzey — hareket hissi. */
+@Composable
+fun Modifier.pressable(onClick: () -> Unit): Modifier {
+    val src = remember { MutableInteractionSource() }
+    val pressed by src.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) .96f else 1f, spring(stiffness = Spring.StiffnessMedium), label = "press")
+    return this.graphicsLayer { scaleX = scale; scaleY = scale }
+        .clickable(interactionSource = src, indication = null, onClick = onClick)
+}
 
