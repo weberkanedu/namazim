@@ -435,8 +435,9 @@ private class SkyEvents {
         else floatArrayOf(((now / 1000.0) % 26 / 26 * 1.4 - 0.15).toFloat(), (0.42 + 0.04 * sin(now / 3000.0)).toFloat(), 1f, 0f)
 }
 
-/** Testing aid: `adb shell am start -n com.namazim/.MainActivity --el skytime 43200000` shifts the sky clock. */
-object SkyDebug { var offsetMs = 0L }
+/** Testing aid: `adb shell am start -n com.namazim/.MainActivity --el skytime 43200000` shifts the sky clock.
+ *  `--es skymode shader|photo|video` picks the renderer (see SkyLayers.kt). */
+object SkyDebug { var offsetMs = 0L; var mode: String? = null }
 
 /**
  * Live sky for the Seher theme. Long-press runs the day fast (a day per minute) to preview it.

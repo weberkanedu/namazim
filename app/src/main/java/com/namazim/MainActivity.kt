@@ -77,6 +77,7 @@ class MainActivity : ComponentActivity() {
         reminderKey = intent.getStringExtra(EXTRA_SLOT)
         startTab = intent.getIntExtra("tab", 0) // lets `adb shell am start -e tab N` open a tab for testing
         SkyDebug.offsetMs = intent.getLongExtra("skytime", 0L) // `--el skytime` previews another hour of the sky
+        SkyDebug.mode = intent.getStringExtra("skymode") // `--es skymode photo|video` switches the header renderer
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
             setContent { AppTheme { WidgetPreview() } }
@@ -344,7 +345,11 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                     locating, { if (!locating) locate() }, onOpenSettings)
             } else {
             Box(Modifier.fillMaxWidth().height(380.dp)) {
-                SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
+                when (SkyAssets.mode(ctx)) {
+                    SkyMode.Video -> SkyVideo("sky/scene.mp4", Modifier.fillMaxSize())
+                    SkyMode.Photo -> SkyPhoto(store.lat, store.lng, Modifier.fillMaxSize())
+                    else -> SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
+                }
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(96.dp)
                     .background(Brush.verticalGradient(listOf(Color.Transparent, Pal.Ground))))
                 val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 14f))

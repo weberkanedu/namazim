@@ -134,6 +134,18 @@ fun AyarlarScreen(onBack: () -> Unit) {
                     }
                 }
             }
+            // Which sky the Seher header draws: the live shader, layed photo plates, or a looping clip.
+            Text("Gökyüzü", color = Pal.Text, fontSize = 14.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("shader" to "Canlı", "photo" to "Fotoğraf", "video" to "Video").forEach { (id, label) ->
+                    val on = store.skyMode == id
+                    Box(Modifier.heightIn(min = 36.dp).clip(CircleShape).background(if (on) Pal.Gold else Color.Transparent)
+                        .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape).clickable { store.skyMode = id; v++ }
+                        .padding(horizontal = 14.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
+                        Text(label, color = if (on) Pal.Ground else Pal.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
         }
 
         Section("Hatırlatmalar") {

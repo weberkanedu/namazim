@@ -22,7 +22,8 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
   `adb shell am start -n com.namazim/.MainActivity --ei tab N` (0 Namaz, 1 Kıble, 2 Okuma, 3 Muhasebe, 4 Ayarlar),
   then `adb exec-out screencap -p > shot.png`. The tab extra also works on a running instance.
 - More test extras: `--el skytime <ms>` shifts the sky clock (e.g. `-19800000` shows noon at 18:30),
-  `--ez keepawake true` pins the screen on, `--ez widgetpreview true` shows the widget art big.
+  `--ez keepawake true` pins the screen on, `--ez widgetpreview true` shows the widget art big,
+  `--es skymode shader|photo|video` switches the header renderer.
 - The screen sleeps after 60 s; without a wake key the screenshots come out black.
 
 ## Code map (`app/src/main/java/com/namazim/`)
@@ -39,6 +40,7 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
 | `Sky.kt` | Seher home header (380 dp): AGSL `RuntimeShader` sky — Rayleigh/Mie atmosphere, soft clouds, stars, the sun and the moon riding one arc across the sky by azimuth (moon phase is real), hazy hills, a mosque with lit windows, and a wind-blown wheat field that melts into the page. Long-press = fast preview. Falls back to a gradient below API 33 or if the shader fails. ~20 ms GPU/frame, capped at ~12 fps. |
 | `Odak.kt` | Odak home header: ring of the five prayers. |
 | `NamazimWidget.kt` | 1×1 home-screen "canlı ikon": sky gradient for the time of day, crescent, hand to the next prayer, dots fill as prayers are marked, label "İkindi 15:27". Redrawn from `Reminders.scheduleNext` and on widget updates. |
+| `SkyLayers.kt` | Photo/video versions of the Seher header, asset driven from `app/src/main/assets/sky/` (`day/dusk/night.webp` plates, optional `wheat.webp` loop, optional `scene.mp4`). Photo mode crossfades the plates by sun altitude and draws the arc + sun + moon (real phase) itself; video mode plays the clip on a TextureView. Selected in Ayarlar › Görünüm › Gökyüzü (`Store.skyMode`) or with `--es skymode`. |
 
 Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTest.kt` (our times vs Diyanet Nov 2026, Ankara & İstanbul, ≤1 min).
 
@@ -61,10 +63,11 @@ Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTe
    would be nice. Design: `design/canvas/Canli-Ikon.dc.html`.
 2. Check on the phone: softer clouds (the old shards came from the `fract(p*123.34)` hash collapsing in half precision — replaced
    with Hoskins' hash), new mosque + treeline, lace logo, gear/location menu in the header, Ayarlar back arrow, Odak header.
-3. **Seher sky, next round**: the header is now a cinematic composition (arc, mosque, wheat field). Open ends: the wheat is
-   procedural stalks (reads a bit like corduroy up close — a photo texture would be the next step), the horizon still has a light
-   band, and the sun disc blows out at midday. `design/sky-test/sky.js` is one revision behind `Sky.kt`; bring it in line before
-   using the browser preview again.
+3. **Seher sky**: the shader remains the default. Photo (A) and video (C) renderers are wired in `SkyLayers.kt` and switchable
+   from Ayarlar; the bundled `assets/sky/*` are placeholders cut from the shader screenshots. Real art to drop in: `day/dusk/night.webp`
+   plates with the same framing and **no sun/moon drawn in** (photo mode draws the arc and the discs itself), an optional looping
+   `wheat.webp`, or a `scene.mp4` clip. Shader open ends: the wheat reads a bit like corduroy, the horizon has a light band, and the
+   sun blows out at midday. `design/sky-test/sky.js` is one revision behind `Sky.kt`.
 4. **Diyanet Awqat Salah API** (owner is applying for an account at awqatsalah.diyanet.gov.tr): district picker + yearly times,
    via a tiny server so credentials are not in the APK (the terms forbid sharing them; quota is ~5 requests/day/endpoint).
    Until then times are computed (`Prayers.kt`).
