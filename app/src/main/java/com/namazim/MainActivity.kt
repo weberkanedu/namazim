@@ -343,9 +343,9 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                 OdakHeader(store.city, today, holy, todaySlotsList, now, store, heroLabel, heroTime, heroSub,
                     locating, { if (!locating) locate() }, onOpenSettings)
             } else {
-            Box(Modifier.fillMaxWidth().height(300.dp)) {
+            Box(Modifier.fillMaxWidth().height(380.dp)) {
                 SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
-                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(56.dp)
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(96.dp)
                     .background(Brush.verticalGradient(listOf(Color.Transparent, Pal.Ground))))
                 val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 14f))
                 Row(

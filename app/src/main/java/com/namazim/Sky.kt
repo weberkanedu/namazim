@@ -80,11 +80,18 @@ uniform float uStarRot;
 uniform float4 uMeteor;
 uniform float4 uPlane;
 uniform float4 uBirds;
+uniform float2 uSunArc;   // x = position along the day's arc (0 = rising, 1 = setting), y = 1 when up
+uniform float2 uMoonArc;  // same for the moon
 
 const float PI = 3.14159265;
-const float HZ = 0.17;
+const float HZ = 0.42;        // horizon height: the wheat field gets the lower 42% of the header
 const float EL_SCALE = 1.05;
 const float AZ_SCALE = 1.365;
+const float ARC_H = 0.31;     // how high the sun/moon path rises above the horizon
+
+/** The path the sun and the moon ride: an arc from the left horizon to the right one. */
+float arcY(float s) { return HZ + ARC_H * sin(PI * clamp(s, 0.0, 1.0)); }
+float2 arcPos(float s) { return float2(0.05 + 0.90 * clamp(s, 0.0, 1.0), arcY(s)); }
 
 float hash(float2 p) {
   // Dave Hoskins' hash: no large intermediate values, so it still works when the GPU runs the
@@ -165,50 +172,55 @@ half4 main(float2 fc) {
   float3 rd = dirFrom(az, el);
   float3 rdSky = dirFrom(az, max(el, 0.012));
   float pix = EL_SCALE / uRes.y;
+  float pixUv = 1.0 / uRes.y;
   float dayF = smoothstep(-0.14, 0.2, uSun.y);
   float nightF = 1.0 - smoothstep(-0.2, -0.04, uSun.y);
   float3 sl = sunLight(uSun);
 
   float3 col = atmosphere(rdSky, uSun, 22.0);
   col += float3(0.0006, 0.0010, 0.0024) * (1.0 + 2.0 * smoothstep(0.3, 0.0, el));
-  float moonUp = smoothstep(-0.05, 0.1, uMoon.y);
+
+  // ---- The day's arc: sun and moon ride the same path, left to right.
+  float sunUp = uSunArc.y;
+  float2 sunPos = arcPos(uSunArc.x);
+  float moonUp = uMoonArc.y;
+  float2 moonPos = arcPos(uMoonArc.x);
   float illum = 0.5 + 0.5 * cos(uPhase);
-  float dm = acos(clamp(dot(rdSky, uMoon), -1.0, 1.0));
-  col += float3(0.6, 0.7, 0.9) * (exp(-dm * 9.0) * 0.004 + exp(-dm * 60.0) * 0.02) * illum * moonUp;
+  float2 aspect = float2(uRes.x / uRes.y, 1.0);
 
-  float ds = acos(clamp(dot(rd, uSun), -1.0, 1.0));
-  float sunR = 0.025;
-  float disc = smoothstep(sunR, sunR - 1.5 * pix, ds);
-  float limb = sqrt(max(0.0, 1.0 - (ds * ds) / (sunR * sunR)));
-  col += disc * sl * (25.0 * (0.6 + 0.4 * limb)) * step(0.0, el);
-  float aboveH = smoothstep(-0.01, 0.02, el);
-  float glare = 1.6 * exp(-ds * 55.0) + 0.45 * exp(-ds * 14.0) + 0.08 * exp(-ds * 4.0);
-  float ang = atan(dot(rd - uSun, normalize(cross(uSun, float3(0.0, 1.0, 0.0)))), rd.y - uSun.y);
-  float rays = pow(abs(cos(ang * 4.0)), 60.0) * exp(-ds * 22.0) * 0.5;
-  col += sl * (glare + rays) * aboveH * smoothstep(-0.02, 0.15, uSun.y);
+  // the trail of the path itself, like a long-exposure star trail
+  {
+    float s = clamp((uv.x - 0.05) / 0.90, 0.0, 1.0);
+    float trail = smoothstep(0.005, 0.0, abs(uv.y - arcY(s))) * smoothstep(0.05, 0.15, uv.y) * (0.03 + 0.05 * dayF);
+    col += float3(1.0, 0.96, 0.9) * trail * (0.35 + 0.65 * dayF);
+  }
 
-  float moonR = 0.032;
-  float4 moonC = float4(0.0);
-  if (dm < moonR * 1.2) {
-    float3 m = uMoon;
-    float3 right = normalize(cross(m, float3(0.0, 1.0, 0.0)));
-    float3 up = cross(right, m);
-    float2 q = float2(dot(rd - m, right), dot(rd - m, up)) / moonR;
-    float r2 = dot(q, q);
-    if (r2 < 1.0) {
-      float3 n = float3(q, sqrt(1.0 - r2));
-      float3 st = uSun - dot(uSun, m) * m;
-      float2 sd = normalize(float2(dot(st, right), dot(st, up)) + 1e-5);
+  if (sunUp > 0.5) {
+    float dist = length((uv - sunPos) * aspect);
+    float warm = 1.0 - smoothstep(0.0, 0.22, min(uSunArc.x, 1.0 - uSunArc.x)); // low sun = orange
+    float3 sunCol = mix(float3(1.0, 0.60, 0.28), float3(1.0, 0.96, 0.88), 1.0 - warm);
+    float disc = smoothstep(0.030, 0.030 - 1.5 * pixUv, dist);
+    col += disc * sunCol * 7.0;
+    float glare = 1.2 * exp(-dist * 13.0) + 0.40 * exp(-dist * 4.5) + 0.10 * exp(-dist * 1.6);
+    col += sunCol * glare * (0.55 + 0.45 * smoothstep(0.0, 0.3, uSunArc.y));
+  }
+
+  if (moonUp > 0.5) {
+    float2 mp = (uv - moonPos) * aspect;
+    float dist = length(mp);
+    float edge = smoothstep(0.030, 0.030 - 1.5 * pixUv, dist);
+    if (edge > 0.0) {
+      float2 q = mp / 0.030;
+      float3 n = float3(q, sqrt(max(1.0 - dot(q, q), 0.0)));
+      float2 sd = normalize((sunPos - moonPos) * aspect + 1e-5);
       float3 sv = float3(sd * sin(uPhase), cos(uPhase));
-      float lit = smoothstep(-0.04, 0.12, dot(n, sv));
-      float maria = smoothstep(0.42, 0.68, fbm(q * 2.3 + 4.0));
-      float albedo = 0.85 - 0.32 * maria - 0.12 * smoothstep(0.55, 0.8, fbm(q * 9.0));
-      float edge = smoothstep(1.0, 1.0 - 2.5 * pix / moonR, sqrt(r2));
-      float3 ext = mix(float3(1.0, 0.75, 0.5), float3(1.0), smoothstep(0.0, 0.25, m.y));
-      moonC = float4(float3(1.0, 0.97, 0.92) * ext * albedo * (lit * 0.16 + 0.004), edge);
+      float lit = smoothstep(-0.05, 0.10, dot(n, sv));
+      float maria = smoothstep(0.40, 0.70, fbm(q * 2.2 + 4.0));
+      float albedo = 0.92 - 0.30 * maria - 0.10 * smoothstep(0.55, 0.8, fbm(q * 8.0));
+      float3 tint = mix(float3(1.0, 0.88, 0.74), float3(1.0, 0.98, 0.94), smoothstep(0.05, 0.35, moonPos.y - HZ));
+      col += tint * (albedo * lit * edge * 1.8 + exp(-dist * 16.0) * 0.08 * illum);
     }
   }
-  col = col * (1.0 - moonC.a * moonUp * 0.85 * nightF) + moonC.rgb * moonC.a * moonUp * (1.0 + 2.0 * dayF);
 
   float cloudA = 0.0;
   if (el > 0.002) {
@@ -260,20 +272,23 @@ half4 main(float2 fc) {
 
   // Horizon: rolling hazy ridges, the mosque silhouette sitting on the far one.
   // Only pixels near the horizon need this; skipping the rest keeps the GPU cool.
+  float3 horizonCol = col;
   if (el < 0.12) {
   float farRidge = 0.013 + 0.026 * fbm(float2(az * 3.4 + 2.0, 5.0)) + 0.005 * fbm(float2(az * 11.0, 13.0));
-  float3 hazeCol = col;
-  float3 farCol = mix(hazeCol, float3(0.010, 0.014, 0.022) * (0.35 + dayF * 3.0), 0.45);
+  float3 hazeCol = horizonCol;
+  float3 farCol = mix(hazeCol, float3(0.008, 0.011, 0.018) * (0.35 + dayF * 3.0), 0.78);
   float3 nearCol = mix(hazeCol, float3(0.004, 0.006, 0.010) * (0.35 + dayF * 3.0), 0.92);
   // a wide, soft transition: distance haze, not a drawn line
-  col = mix(col, farCol, smoothstep(farRidge + 7.0 * pix, farRidge - 3.0 * pix, el));
+  col = mix(col, farCol, smoothstep(farRidge + 4.0 * pix, farRidge - 2.0 * pix, el));
 
   // Mosque: a wide, slightly flattened dome on a drum, two half domes, two balconied minarets.
   // Edges are softened by a couple of pixels of haze, the way distance blurs a real skyline, and
   // the base dissolves into the ridge so it does not look pasted on.
   const float MX = 0.243;
   float ridgeAt = 0.013 + 0.026 * fbm(float2(MX * 3.4 + 2.0, 5.0)) + 0.005 * fbm(float2(MX * 11.0, 13.0));
-  float2 mp = float2(az - MX, el - ridgeAt);
+  // a wider, lower mosque: the header is taller than it is wide, so raw az/el units would make it
+  // read as a tower instead of a mosque on the skyline
+  float2 mp = float2((az - MX) / 1.55, (el - ridgeAt) / 1.10);
   float hall = max(abs(mp.x) - 0.050, abs(mp.y - 0.0055) - 0.0055);          // walls, 0 .. 0.011
   float drum = max(abs(mp.x) - 0.023, abs(mp.y - 0.0125) - 0.0015);          // drum under the dome
   float dome = max(length(float2(mp.x, mp.y - 0.014)) - 0.026, -(mp.y - 0.014)); // dome, widest at its base
@@ -301,7 +316,7 @@ half4 main(float2 fc) {
 
   float mosq = smoothstep(1.2 * pix, -0.3 * pix, body) * step(-0.004, mp.y);
   float3 dark = float3(0.0045, 0.006, 0.011) * (0.6 + dayF * 2.2);
-  float3 mosqCol = mix(mix(hazeCol, dark, 0.62), dark, smoothstep(0.0, 0.045, mp.y));
+  float3 mosqCol = mix(mix(hazeCol, dark, 0.78), dark, smoothstep(0.0, 0.045, mp.y));
   col = mix(col, mosqCol, mosq);
   // lit windows at night: a faint row under the dome
   float win = step(abs(mp.y - 0.004), 0.0016) * step(abs(mp.x), 0.030) * step(0.55, fract((mp.x + 0.030) / 0.008));
@@ -320,6 +335,39 @@ half4 main(float2 fc) {
   // foreground ground darkens quickly below the horizon (the app fades it into the page anyway)
   float3 groundCol = float3(0.0025, 0.003, 0.0045) * (0.5 + dayF * 5.0);
   col = mix(col, groundCol, smoothstep(-0.010, -0.05, el) * nearMask);
+  }
+
+  // ---- Wheat field: dense strands, close to the viewer large and far away tiny, stirring in wind.
+  // The top edge is ragged and the bottom melts into the page, so the header ends softly.
+  float edge = 0.010 * (fbm3(float2(uv.x * 26.0, 3.0)) - 0.5);
+  float fieldMask = smoothstep(HZ + 0.012 + edge, HZ - 0.014 + edge, uv.y);
+  if (fieldMask > 0.0) {
+    float below = max(HZ - uv.y, 0.0);
+    float depth = clamp(below / HZ, 0.0, 1.0);          // 0 at the horizon, 1 at the bottom
+    // a gust travelling across the field bends the stalks: the whole texture shears
+    float gust = sin(uTime * 1.1 + uv.x * 4.0 + depth * 2.0) * 0.6
+               + sin(uTime * 1.9 + uv.x * 9.0 - depth * 3.0) * 0.4;
+    float shear = gust * mix(1.6, 0.5, depth);
+    // individual stalks: dense far away, thick and sparse near the viewer
+    float N = mix(430.0, 105.0, smoothstep(0.0, 0.5, depth));
+    float c = uv.x * N + shear * 1.6;
+    float id = floor(c);
+    float r = fract(c);
+    float h = hash(float2(id, 4.0));
+    float stalk = smoothstep(0.34 + 0.20 * h, 0.06, abs(r - 0.5)) * (0.45 + 0.55 * h);
+    float grain = 0.55 + 0.45 * sin((r - 0.5) * 34.0 + h * 20.0);
+    float ears = stalk;
+    float tips = stalk * grain * smoothstep(0.45, 0.9, h);
+    float sunAmt = smoothstep(-0.10, 0.10, uSun.y);
+    // linear colours: daylight exposure turns even 0.2 into a bright surface
+    float3 litA = mix(float3(0.018, 0.022, 0.032), float3(0.045, 0.026, 0.010), dayF);  // shadowed wheat
+    float3 litB = mix(float3(0.042, 0.050, 0.070), float3(0.230, 0.140, 0.048), dayF);  // sunlit ears
+    float3 field = mix(litA, litB, ears * (0.45 + 0.55 * (1.0 - depth)) + tips * 0.35);
+    float patch = fbm3(float2(uv.x * 2.5, depth * 2.0));
+    field *= (0.80 + 0.40 * patch) * mix(0.55, 1.0, sunAmt);
+    field *= mix(1.0, 0.42, smoothstep(0.50, 1.0, depth));                              // fades to the page
+    field = mix(horizonCol, field, smoothstep(0.0, 0.025, depth) * 0.45 + 0.55);          // far edge sinks into haze
+    col = mix(col, field, fieldMask);
   }
 
   if (uPlane.z > 0.0) {
@@ -351,6 +399,8 @@ half4 main(float2 fc) {
   col += starCol;
   col = pow(clamp(col, 0.0, 1.0), float3(1.0 / 2.2));
   col += (hash(uv * uRes + fract(uTime)) - 0.5) / 255.0;
+  // the photo ends softly: the bottom of the header melts into the page colour (#0B1322)
+  col = mix(col, float3(0.043, 0.075, 0.133), smoothstep(0.17, 0.0, uv.y));
   return half4(half3(col), 1.0);
 }
 """
@@ -449,6 +499,9 @@ private fun SkyShaderView(shader: RuntimeShader, lat: Double, lng: Double, modif
                     shader.setFloatUniform("uSun", viewDir(b.sun, 1.0))
                     shader.setFloatUniform("uMoon", viewDir(b.moon, 0.62))
                     shader.setFloatUniform("uPhase", b.moonPhase.toFloat())
+                    // the disc rides the arc by azimuth: left horizon at rising, right at setting
+                    shader.setFloatUniform("uSunArc", (b.sun.az / PI + 0.5).toFloat().coerceIn(0f, 1f), if (b.sun.alt > 0) 1f else 0f)
+                    shader.setFloatUniform("uMoonArc", (b.moon.az / PI + 0.5).toFloat().coerceIn(0f, 1f), if (b.moon.alt > 0) 1f else 0f)
                     shader.setFloatUniform("uStarRot", ((skyTime % 86_164_000) / 86_164_000.0 * 2 * PI).toFloat())
                     shader.setFloatUniform("uMeteor", events.meteor(now, sunAlt < -12))
                     shader.setFloatUniform("uPlane", events.plane(now, sunAlt > 8))
@@ -458,3 +511,7 @@ private fun SkyShaderView(shader: RuntimeShader, lat: Double, lng: Double, modif
         )
     }
 }
+
+
+
+

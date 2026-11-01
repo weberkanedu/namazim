@@ -36,7 +36,7 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
 | `Screens.kt` | Kıble (compass with magnetic declination fix, kıble saati), Kaza, Okuma (Kur'an pages/cüz/hatim, daily goal, books), Muhasebe (Özet + Kaza tabs, heatmap, streaks). |
 | `Ayarlar.kt` | Settings screen (theme, reminder cadence, snooze, extras, goals, location, phone permissions). Opened from the gear in the home header (tab 4), not from the bottom nav; its title has a back arrow. |
 | `Theme.kt` | Two palettes, `SeherPalette` (navy + gold, Cormorant) and `OdakPalette` (black + lime, Space Grotesk). `Pal.current` is Compose state, so switching theme recomposes everything. Use `Pal.X` colors and `NumStyle` for big numbers. |
-| `Sky.kt` | Seher home header: physically based sky as an AGSL `RuntimeShader` (Rayleigh/Mie scattering, clouds, stars, real sun/moon position and phase, planes, birds, hills + mosque). Long-press = fast preview. Falls back to a gradient below API 33 or if the shader fails. ~20 ms GPU/frame, capped at ~12 fps. |
+| `Sky.kt` | Seher home header (380 dp): AGSL `RuntimeShader` sky — Rayleigh/Mie atmosphere, soft clouds, stars, the sun and the moon riding one arc across the sky by azimuth (moon phase is real), hazy hills, a mosque with lit windows, and a wind-blown wheat field that melts into the page. Long-press = fast preview. Falls back to a gradient below API 33 or if the shader fails. ~20 ms GPU/frame, capped at ~12 fps. |
 | `Odak.kt` | Odak home header: ring of the five prayers. |
 | `NamazimWidget.kt` | 1×1 home-screen "canlı ikon": sky gradient for the time of day, crescent, hand to the next prayer, dots fill as prayers are marked, label "İkindi 15:27". Redrawn from `Reminders.scheduleNext` and on widget updates. |
 
@@ -61,12 +61,16 @@ Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTe
    would be nice. Design: `design/canvas/Canli-Ikon.dc.html`.
 2. Check on the phone: softer clouds (the old shards came from the `fract(p*123.34)` hash collapsing in half precision — replaced
    with Hoskins' hash), new mosque + treeline, lace logo, gear/location menu in the header, Ayarlar back arrow, Odak header.
-3. **Diyanet Awqat Salah API** (owner is applying for an account at awqatsalah.diyanet.gov.tr): district picker + yearly times,
+3. **Seher sky, next round**: the header is now a cinematic composition (arc, mosque, wheat field). Open ends: the wheat is
+   procedural stalks (reads a bit like corduroy up close — a photo texture would be the next step), the horizon still has a light
+   band, and the sun disc blows out at midday. `design/sky-test/sky.js` is one revision behind `Sky.kt`; bring it in line before
+   using the browser preview again.
+4. **Diyanet Awqat Salah API** (owner is applying for an account at awqatsalah.diyanet.gov.tr): district picker + yearly times,
    via a tiny server so credentials are not in the APK (the terms forbid sharing them; quota is ~5 requests/day/endpoint).
    Until then times are computed (`Prayers.kt`).
-4. Other phones: lower minSdk (now 31), brand-specific battery/autostart guidance, Play Store vs APK distribution.
+5. Other phones: lower minSdk (now 31), brand-specific battery/autostart guidance, Play Store vs APK distribution.
    `USE_EXACT_ALARM` may not pass Play review for a non-alarm app.
-5. Odak versions of Kıble/Okuma/Muhasebe are only recolored, not redesigned.
+6. Odak versions of Kıble/Okuma/Muhasebe are only recolored, not redesigned.
 
 ## Conventions
 
