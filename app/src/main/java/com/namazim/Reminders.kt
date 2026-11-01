@@ -119,6 +119,8 @@ object Reminders {
         val nm = ctx.getSystemService(NotificationManager::class.java)
         // Ses, kanal oluşturulurken sabitlenir; bu yüzden her ses için ayrı kanal kimliği kullanılır.
         val s = Store(ctx)
+        // Ses listesi değişmiş olabilir: bilinmeyen anahtar kalırsa sisteme dön
+        if (SOUNDS.none { it.first == s.notifSound }) s.notifSound = "system"
         val sound = s.notifSound
         val uri = soundUri(ctx, sound)
         val prep = NotificationChannel("hazirlik_$sound", "Namaza hazırlık", NotificationManager.IMPORTANCE_DEFAULT)
@@ -137,16 +139,16 @@ object Reminders {
     /** Seçilebilir bildirim sesleri: anahtar → (etiket, ham kaynak). */
     val SOUNDS = listOf(
         "system" to ("Sistem" to 0),
-        "sakin" to ("Sakin" to R.raw.notif_sakin),
-        "can" to ("Çan" to R.raw.notif_can),
-        "zil" to ("Zil" to R.raw.notif_zil),
-        "odak" to ("Odak" to R.raw.notif_odak),
-        "damla" to ("Damla" to R.raw.notif_damla),
-        "nefes" to ("Nefes" to R.raw.notif_nefes),
-        "hilal" to ("Hilal" to R.raw.notif_hilal),
-        "sabah" to ("Sabah" to R.raw.notif_sabah),
-        "yanki" to ("Yankı" to R.raw.notif_yanki),
-        "nagme" to ("Nağme" to R.raw.notif_nagme),
+        "ezan" to ("Ezan · Hicaz" to R.raw.notif_ezan),
+        "sala" to ("Sala · Rast" to R.raw.notif_sala),
+        "ney" to ("Ney" to R.raw.notif_ney),
+        "kudum" to ("Kudüm" to R.raw.notif_kudum),
+        "def" to ("Def" to R.raw.notif_def),
+        "ud" to ("Ud" to R.raw.notif_ud),
+        "rebap" to ("Rebap" to R.raw.notif_rebap),
+        "zikir" to ("Zikir" to R.raw.notif_zikir),
+        "hilal" to ("Hilal çanağı" to R.raw.notif_hilal),
+        "sabah" to ("Sabah · Saba" to R.raw.notif_sabah),
     )
 
     fun soundRes(sound: String): Int = SOUNDS.firstOrNull { it.first == sound }?.second?.second ?: 0
@@ -240,6 +242,8 @@ class PrayedReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) = Reminders.scheduleNext(ctx)
 }
+
+
 
 
 
