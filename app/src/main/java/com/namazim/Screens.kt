@@ -97,6 +97,8 @@ fun KibleScreen() {
     val km = remember { distanceKm(store.lat, store.lng) }
     val qTime = remember { qiblaTime(store.lat, store.lng, qibla) }
     var heading by remember { mutableFloatStateOf(0f) }
+    var pitchDeg by remember { mutableFloatStateOf(0f) }
+    var rollDeg by remember { mutableFloatStateOf(0f) }
     // The compass reads magnetic north; qibla is a true bearing. Ankara's declination is ~6°, which is
     // also why Diyanet lists 155° (magnetic) where the true bearing is 160°.
     val declination = remember {
@@ -113,6 +115,8 @@ fun KibleScreen() {
                 val az = ((Math.toDegrees(ori[0].toDouble()) + declination + 360) % 360).toFloat()
                 val d = ((az - heading + 540) % 360) - 180
                 heading = (heading + d * 0.15f + 360) % 360 // smooth out sensor jitter
+                pitchDeg = Math.toDegrees(ori[1].toDouble()).toFloat()
+                rollDeg = Math.toDegrees(ori[2].toDouble()).toFloat()
             }
             override fun onAccuracyChanged(s: Sensor?, a: Int) {}
         }
@@ -120,10 +124,14 @@ fun KibleScreen() {
         onDispose { sm.unregisterListener(listener) }
     }
 
-    val diff = (((qibla - heading + 540) % 360) - 180).toFloat() // + means turn right
+    val hdg = SkyDebug.kible ?: heading
+    val diff = (((qibla - hdg + 540) % 360) - 180).toFloat() // + means turn right
     val aligned = abs(diff) < 4
-    LaunchedEffect(aligned) {
-        if (aligned) ctx.getSystemService(VibratorManager::class.java).defaultVibrator
+    // face-up on a table is pitch -90°, roll 0; anything else means the dial is tilted
+    val level = abs(pitchDeg + 90f) < 7f && abs(rollDeg) < 7f
+    val okGreen = Color(0xFF6BD6A0)
+    LaunchedEffect(aligned, level) {
+        if (aligned && level) ctx.getSystemService(VibratorManager::class.java).defaultVibrator
             .vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
     }
     val glow by animateFloatAsState(if (aligned) 1f else 0.15f, tween(400), label = "glow")
@@ -131,55 +139,90 @@ fun KibleScreen() {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         ScreenTitle("Kıble", store.city.ifEmpty { null }) {
-            Text("Telefonu yere\nparalel tut", color = Pal.Muted, fontSize = 12.sp, textAlign = TextAlign.End)
+            Text(if (level) "Telefon düz" else "Telefonu yatay tut", color = if (level) okGreen else Pal.Muted,
+                fontSize = 12.sp, textAlign = TextAlign.End)
         }
         Box(Modifier.fillMaxWidth().height(340.dp), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(340.dp).background(Brush.radialGradient(listOf(Pal.Gold.copy(alpha = 0.32f * glow), Color.Transparent))))
+            Box(Modifier.size(340.dp).background(Brush.radialGradient(
+                listOf((if (aligned) okGreen else Pal.Gold).copy(alpha = 0.30f * glow), Color.Transparent))))
             Canvas(Modifier.size(300.dp)) {
                 val c = center; val r = size.minDimension / 2
-                drawCircle(Color(0xFF101B30), r)
-                drawCircle(Pal.Line, r, style = Stroke(1f))
-                rotate(-heading, c) {
+                // 3-D dial: soft shadow under it, a bezel with a light edge, then the face
+                drawOval(Color(0x66000000), topLeft = Offset(c.x - r * 1.02f, c.y + r * 0.55f),
+                    size = Size(r * 2.04f, r * 0.62f))
+                drawCircle(Brush.verticalGradient(listOf(Color(0xFF243550), Color(0xFF0A1220)), startY = c.y - r, endY = c.y + r), r)
+                drawCircle(Color(0x33FFFFFF), r - 1.dp.toPx(), style = Stroke(1.dp.toPx()))
+                drawCircle(Color(0xFF0B1424), r - 9.dp.toPx())
+                drawCircle(Pal.Text.copy(alpha = .07f), r - 9.dp.toPx(), style = Stroke(1.dp.toPx()))
+
+                rotate(-hdg, c) {
                     for (i in 0 until 72) {
                         val major = i % 6 == 0
                         rotate(i * 5f, c) {
-                            drawLine(if (major) Pal.Text.copy(alpha = .8f) else Pal.Text.copy(alpha = .35f),
-                                Offset(c.x, c.y - r + 10), Offset(c.x, c.y - r + if (major) 24 else 16), if (major) 3f else 2f)
+                            drawLine(
+                                if (major) Pal.Text.copy(alpha = .75f) else Pal.Text.copy(alpha = .28f),
+                                Offset(c.x, c.y - r + 18.dp.toPx()),
+                                Offset(c.x, c.y - r + (if (major) 31.dp.toPx() else 24.dp.toPx())),
+                                if (major) 2.5f else 1.5f,
+                            )
                         }
                     }
                     listOf("K" to 0f, "D" to 90f, "G" to 180f, "B" to 270f).forEach { (t, a) ->
-                        val l = measurer.measure(t, TextStyle(color = if (t == "K") Pal.Warn else Pal.Muted, fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
-                        val rr = r - 44
+                        val l = measurer.measure(t, TextStyle(color = if (t == "K") Pal.Warn else Pal.Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold))
+                        val rr = r - 82.dp.toPx()
                         val p = Offset(c.x + rr * sin(Math.toRadians(a.toDouble())).toFloat(), c.y - rr * cos(Math.toRadians(a.toDouble())).toFloat())
                         drawText(l, topLeft = Offset(p.x - l.size.width / 2, p.y - l.size.height / 2))
                     }
+                    // the Kaaba marker on the rim
                     rotate(qibla.toFloat(), c) {
-                        val s = 22.dp.toPx()
-                        drawRoundRect(Color(0xFF141414), Offset(c.x - s / 2, c.y - r + 26), Size(s, s), androidx.compose.ui.geometry.CornerRadius(4f))
-                        drawRect(Pal.Gold, Offset(c.x - s / 2, c.y - r + 26 + s * 0.22f), Size(s, s * 0.16f))
+                        val s = 20.dp.toPx()
+                        drawRoundRect(if (aligned) okGreen else Color(0xFF141414), Offset(c.x - s / 2, c.y - r + 34.dp.toPx()), Size(s, s * 0.9f), androidx.compose.ui.geometry.CornerRadius(4f))
+                        drawRect(if (aligned) Color.White.copy(alpha = .85f) else Pal.Gold,
+                            Offset(c.x - s / 2, c.y - r + 34.dp.toPx() + s * 0.22f), Size(s, s * 0.16f))
                     }
                 }
                 if (!aligned) {
-                    val inset = 26.dp.toPx()
+                    val inset = 22.dp.toPx()
                     drawArc(Pal.Gold, -90f, diff, false, Offset(inset, inset), Size(size.width - 2 * inset, size.height - 2 * inset),
                         style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+                } else {
+                    drawCircle(okGreen, r - 3.dp.toPx(), style = Stroke(3.dp.toPx()))
                 }
+                // needle from the centre to the rim, with a small tail
+                val nw = 6.dp.toPx()
                 val needle = Path().apply {
-                    moveTo(c.x, c.y - r + 34.dp.toPx()); lineTo(c.x + 10.dp.toPx(), c.y - r + 62.dp.toPx())
-                    lineTo(c.x, c.y - r + 56.dp.toPx()); lineTo(c.x - 10.dp.toPx(), c.y - r + 62.dp.toPx()); close()
+                    moveTo(c.x, c.y - r + 38.dp.toPx())
+                    lineTo(c.x + nw, c.y + 6.dp.toPx())
+                    lineTo(c.x, c.y + 14.dp.toPx())
+                    lineTo(c.x - nw, c.y + 6.dp.toPx())
+                    close()
                 }
-                drawPath(needle, if (aligned) Pal.Gold else Pal.Text)
-                drawCircle(Pal.Ground, r * 0.36f)
+                drawPath(needle, if (aligned) okGreen else Pal.Text)
+                drawCircle(if (aligned) okGreen else Pal.Text, 3.dp.toPx(), c)
+                drawCircle(Color(0xFF0B1424), r * 0.36f)
+                drawCircle(Pal.Text.copy(alpha = .05f), r * 0.36f, style = Stroke(1.dp.toPx()))
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("${heading.roundToInt()}°", style = NumStyle, fontSize = 38.sp, color = Pal.Text)
+                Text("${hdg.roundToInt()}°", style = NumStyle, fontSize = 38.sp,
+                    color = if (aligned) okGreen else Pal.Text)
                 Text("yönün", fontSize = 11.sp, color = Pal.Muted)
+                // little spirit level: bubble centres when the phone lies flat
+                Canvas(Modifier.padding(top = 8.dp).size(96.dp, 14.dp)) {
+                    drawRoundRect(Pal.Text.copy(alpha = .10f), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
+                    val bx = (size.width / 2) + (rollDeg.coerceIn(-25f, 25f) / 25f) * (size.width / 2 - 9.dp.toPx())
+                    drawCircle(if (level) okGreen else Pal.Muted, 5.dp.toPx(), Offset(bx, size.height / 2))
+                }
             }
         }
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                if (aligned) "Kıbleye döndün" else if (diff > 0) "Sağa ${diff.roundToInt()}° dön" else "Sola ${(-diff).roundToInt()}° dön",
-                color = if (aligned) Pal.Gold else Pal.Text, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
+                when {
+                    aligned && level -> "Kıbleye döndün"
+                    aligned -> "Yön doğru · telefonu düz tut"
+                    diff > 0 -> "Sağa ${diff.roundToInt()}° dön"
+                    else -> "Sola ${(-diff).roundToInt()}° dön"
+                },
+                color = if (aligned) okGreen else Pal.Text, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
             )
             Text(if (aligned) "Telefon hafifçe titreşti" else "Altın çizgi kıbleye kalan açıyı gösterir", color = Pal.Muted, fontSize = 13.sp)
         }
@@ -580,3 +623,4 @@ private fun MuhasebeOzet() {
         }
     }
 }
+

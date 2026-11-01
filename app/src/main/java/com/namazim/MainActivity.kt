@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -81,6 +82,7 @@ class MainActivity : ComponentActivity() {
         startTab = intent.getIntExtra("tab", 0) // lets `adb shell am start -e tab N` open a tab for testing
         SkyDebug.offsetMs = intent.getLongExtra("skytime", 0L) // `--el skytime` previews another hour of the sky
         SkyDebug.mode = intent.getStringExtra("skymode") // `--es skymode photo|video` switches the header renderer
+        if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
             setContent { AppTheme { WidgetPreview() } }
@@ -133,16 +135,33 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
         "Namaz" to Icons.Default.Home, "Kıble" to Icons.Default.LocationOn, "Okuma" to Icons.Default.Edit,
         "Muhasebe" to Icons.Default.DateRange,
     )
-    NavigationBar(containerColor = Pal.Nav, tonalElevation = 0.dp) {
-        tabs.forEachIndexed { i, (name, icon) ->
-            NavigationBarItem(
-                selected = selected == i, onClick = { onSelect(i) },
-                icon = { Icon(icon, null) }, label = { Text(name, fontSize = 11.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Pal.Gold, selectedTextColor = Pal.Gold, indicatorColor = Pal.Track,
-                    unselectedIconColor = Pal.Muted, unselectedTextColor = Pal.Muted,
-                ),
-            )
+    // floating dock instead of a full-width bar: the photo keeps running underneath it
+    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp, vertical = 10.dp)) {
+        Row(
+            Modifier.fillMaxWidth().height(62.dp)
+                .shadow(16.dp, RoundedCornerShape(31.dp))
+                .clip(RoundedCornerShape(31.dp))
+                .background(Pal.Nav.copy(alpha = .95f))
+                .border(1.dp, Pal.Text.copy(alpha = .06f), RoundedCornerShape(31.dp))
+                .padding(horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            tabs.forEachIndexed { i, (name, icon) ->
+                val on = selected == i
+                Column(
+                    Modifier.weight(1f).padding(horizontal = 2.dp).clip(RoundedCornerShape(26.dp))
+                        .background(if (on) Pal.Track else Color.Transparent)
+                        .clickable { onSelect(i) }
+                        .padding(vertical = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(icon, name, tint = if (on) Pal.Gold else Pal.Muted, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.height(2.dp))
+                    Text(name, color = if (on) Pal.Gold else Pal.Muted, fontSize = 9.5.sp,
+                        fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                }
+            }
         }
     }
 }
@@ -282,7 +301,16 @@ fun TimelineRow(
             Column(Modifier.weight(1f).padding(start = if (child) 12.dp else 0.dp)) {
                 Text(name, color = color, fontSize = if (child) 13.sp else 15.sp,
                     fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1)
-                if (sub != null) Text(sub, color = if (kaza) Pal.Warn else Pal.Gold.copy(alpha = .8f), fontSize = 11.sp)
+                when {
+                    kaza -> Text("kaza", color = Pal.Warn, fontSize = 10.sp, letterSpacing = .4.sp)
+                    !sub.isNullOrEmpty() -> Box(
+                        Modifier.padding(top = 1.dp).clip(RoundedCornerShape(6.dp))
+                            .border(1.dp, Pal.Gold.copy(alpha = .35f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 5.dp, vertical = 1.dp),
+                    ) {
+                        Text(sub, color = Pal.Gold.copy(alpha = .9f), fontSize = 10.sp, letterSpacing = .5.sp)
+                    }
+                }
             }
             Text(time, color = color, fontSize = if (child) 12.5.sp else 15.sp,
                 fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal)
@@ -294,15 +322,15 @@ fun TimelineRow(
 
 @Composable
 fun TickButton(on: Boolean, active: Boolean, onClick: () -> Unit) {
-    // 44 dp touch target around a 26 dp circle
+    // 44 dp touch target around a small, thin ring
     Box(Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.size(26.dp).clip(CircleShape)
+            Modifier.size(22.dp).clip(CircleShape)
                 .background(if (on) Pal.Gold else Color.Transparent)
-                .border(1.dp, if (on) Pal.Gold else if (active) Pal.Gold.copy(alpha = .9f) else Pal.Border, CircleShape),
+                .border(if (on) 0.dp else 1.dp, if (active) Pal.Gold.copy(alpha = .85f) else Pal.Border, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            if (on) Icon(Icons.Default.Check, "Kılındı", tint = Pal.Ground, modifier = Modifier.size(15.dp))
+            if (on) Icon(Icons.Default.Check, "Kılındı", tint = Pal.Ground, modifier = Modifier.size(13.dp))
         }
     }
 }
@@ -485,8 +513,7 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                 val kaza = slot != null && !prayed && now >= slot.end && store.tracked(slot)
                 val at = slot?.let { store.prayedAt(it.key) }
                 val sub = when {
-                    prayed && at != null -> "kılındı · ${hm(at)}"
-                    prayed -> "kılındı"
+                    prayed -> at?.let { hm(it) } ?: ""
                     kaza -> "kaza"
                     else -> null
                 }
@@ -661,5 +688,6 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
 
 

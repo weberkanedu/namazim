@@ -65,7 +65,7 @@ fun extras(d: DayTimes, nextImsak: Long): List<Extra> {
         Extra("İşrak", d.gunes + 45 * m, null, false, "GÜNEŞ"),
         Extra("Kuşluk (duha)", d.gunes + 45 * m, d.ogle - 10 * m, false, "GÜNEŞ"),
         Extra("İstiva kerahati", d.ogle - 10 * m, d.ogle, true, "GÜNEŞ"),
-        Extra("Sarı kerahat", d.aksam - 45 * m, d.aksam, true, "AKŞAM"),
+        Extra("Sarı kerahat", d.aksam - 45 * m, d.aksam, true, "İKİNDİ"),
         Extra("Evvâbin", d.aksam, d.yatsi, false, "AKŞAM"),
         Extra("Teheccüd", tehecud, nextImsak, false, "YATSI"),
     )
