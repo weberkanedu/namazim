@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.ZoneId
@@ -269,6 +270,17 @@ fun KazaScreen(embedded: Boolean = false) {
     val rate = v.let { store.kazaRate }
     val ring by animateFloatAsState(if (paid + total == 0) 1f else paid.toFloat() / (paid + total), tween(700), label = "ring")
 
+    // yanlış dokunuşu geri almak için: her işlemden sonra kısa bir "Geri al" fırsatı
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    fun undoable(message: String, undo: () -> Unit) {
+        scope.launch {
+            snackbar.currentSnackbarData?.dismiss()
+            val res = snackbar.showSnackbar(message, actionLabel = "Geri al", duration = SnackbarDuration.Long)
+            if (res == SnackbarResult.ActionPerformed) { undo(); v++ }
+        }
+    }
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         if (!embedded) ScreenTitle("Kaza")
         Text("Vaktinde kılınmayan namazlar buraya kendiliğinden eklenir", Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp),
@@ -323,17 +335,27 @@ fun KazaScreen(embedded: Boolean = false) {
                     Text("${v.let { store.kaza(key) }}", Modifier.widthIn(min = 32.dp), style = NumStyle, fontSize = 26.sp, color = Pal.Text, textAlign = TextAlign.End)
                     Spacer(Modifier.width(10.dp))
                     Button(
-                        onClick = { store.payKaza(key); v++ }, contentPadding = PaddingValues(horizontal = 14.dp), modifier = Modifier.height(36.dp),
+                        onClick = {
+                            store.payKaza(key); v++
+                            undoable("$name kazası kılındı") { store.unpayKaza(key) }
+                        }, contentPadding = PaddingValues(horizontal = 14.dp), modifier = Modifier.height(36.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Pal.Gold, contentColor = Pal.Ground),
                     ) { Text("Kıldım", fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
                     Spacer(Modifier.width(6.dp))
-                    OutlinedIconButton(onClick = { store.addKaza(key, 1); v++ }, modifier = Modifier.size(36.dp),
+                    OutlinedIconButton(onClick = {
+                            store.addKaza(key, 1); v++
+                            undoable("$name kazası eklendi") { store.addKaza(key, -1) }
+                        }, modifier = Modifier.size(36.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Pal.Border)) {
                         Icon(Icons.Default.Add, "$name kazası ekle", tint = Pal.Text, modifier = Modifier.size(18.dp))
                     }
                 }
                 HorizontalDivider(color = Pal.Line.copy(alpha = .5f))
             }
+        }
+        }
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)) { data ->
+            Snackbar(snackbarData = data, containerColor = Pal.Card, contentColor = Pal.Text, actionColor = Pal.Gold)
         }
     }
 }
@@ -861,6 +883,11 @@ private fun MuhasebeGidisat() {
         }
     }
 }
+
+
+
+
+
 
 
 

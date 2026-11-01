@@ -61,6 +61,12 @@ class Store(context: Context) {
         addKaza(key, -1)
         p.edit().putInt(paidKey(), kazaPaidThisMonth() + 1).apply()
     }
+    /** Undo a mis-tapped "Kıldım": one more owed, one less on this month's tally. */
+    fun unpayKaza(key: String) {
+        addKaza(key, 1)
+        StoreRev.n++
+        p.edit().putInt(paidKey(), (kazaPaidThisMonth() - 1).coerceAtLeast(0)).apply()
+    }
     fun kazaPaidThisMonth() = p.getInt(paidKey(), 0)
     private fun paidKey() = "kazaPaid_" + LocalDate.now().toString().take(7)
     var kazaRate: Int
@@ -156,5 +162,6 @@ class Store(context: Context) {
         p.edit().putString("readLog", o.toString()).apply()
     }
 }
+
 
 
