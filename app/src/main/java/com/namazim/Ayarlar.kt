@@ -2,6 +2,7 @@ package com.namazim
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -166,16 +167,61 @@ fun AyarlarScreen(onBack: () -> Unit) {
                 "Vakitten önce hazırlan bildirimi",
                 if (store.prepOffsets.isEmpty()) "kapalı" else store.prepOffsets.sortedDescending().joinToString(", ") { "$it dk" },
             ) { openDialog("prep", store.prepOffsets.sortedDescending().joinToString(", ")) }
-            ValueRow("\"Kıldın mı?\" sıklığı", "${store.nagEvery} dk") { openDialog("nag", "${store.nagEvery}") }
+            StepperRow(
+                "\"Kıldın mı?\" sıklığı", "${store.nagEvery} dk",
+                minusEnabled = store.nagEvery > 10, plusEnabled = store.nagEvery < 180,
+                onMinus = { store.nagEvery = (store.nagEvery - 5).coerceAtLeast(10); changed() },
+                onPlus = { store.nagEvery = (store.nagEvery + 5).coerceAtMost(180); changed() },
+                onEdit = { openDialog("nag", "${store.nagEvery}") },
+            )
             SwitchRow("Vaktin son yarım saatinde 5 dakikada bir", v.let { store.nagBurst }) { store.nagBurst = it; changed() }
-            ValueRow("Ertele süresi", "${store.snoozeMin} dk") { openDialog("snooze", "${store.snoozeMin}") }
+            StepperRow(
+                "Ertele süresi", "${store.snoozeMin} dk",
+                minusEnabled = store.snoozeMin > 5, plusEnabled = store.snoozeMin < 180,
+                onMinus = { store.snoozeMin = (store.snoozeMin - 5).coerceAtLeast(5); changed() },
+                onPlus = { store.snoozeMin = (store.snoozeMin + 5).coerceAtMost(180); changed() },
+                onEdit = { openDialog("snooze", "${store.snoozeMin}") },
+            )
             GhostButton("Deneme bildirimi gönder", Modifier.fillMaxWidth(), color = Pal.Gold) { Reminders.test(ctx) }
         }
 
-        Section("Okuma ve kaza") {
-            ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
-            ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
+        Section("Bildirim sesi") {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("system" to "Sistem", "sakin" to "Sakin", "zil" to "Zil", "odak" to "Odak").forEach { (id, label) ->
+                    val on = store.notifSound == id
+                    Box(
+                        Modifier.heightIn(min = 44.dp).clip(CircleShape)
+                            .background(if (on) Pal.Gold else Color.Transparent)
+                            .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape)
+                            .clickable { store.notifSound = id; Reminders.createChannels(ctx); v++ }
+                            .padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(label, color = if (on) Pal.Ground else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Seçili sesi dinle", Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
+                TextButton(onClick = { playTone(ctx, store.notifSound) }) { Text("Dinle", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
+            }
         }
+
+        Section("Okuma ve kaza") {
+            StepperRow(
+                "Günlük okuma hedefi", "${store.readGoal} sayfa",
+                minusEnabled = store.readGoal > 5, plusEnabled = store.readGoal < 300,
+                onMinus = { store.readGoal = (store.readGoal - 5).coerceAtLeast(5); v++ },
+                onPlus = { store.readGoal = (store.readGoal + 5).coerceAtMost(300); v++ },
+                onEdit = { openDialog("goal", "${store.readGoal}") },
+            )
+            StepperRow(
+                "Günde kılınacak kaza", "${store.kazaRate} kaza",
+                minusEnabled = store.kazaRate > 1, plusEnabled = store.kazaRate < 50,
+                onMinus = { store.kazaRate = (store.kazaRate - 1).coerceAtLeast(1); v++ },
+                onPlus = { store.kazaRate = (store.kazaRate + 1).coerceAtMost(50); v++ },
+                onEdit = { openDialog("kaza", "${store.kazaRate}") },
+            )
+        }
+
 
         Section("Konum") {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -276,8 +322,44 @@ private fun ValueRow(label: String, value: String, onEdit: () -> Unit) {
         Text("Değiştir", color = Pal.Muted, fontSize = 12.sp)
     }
 }
+/** − / + ile ayarlanan satır; değere dokununca elle giriş açılır. */
+@Composable
+private fun StepperRow(
+    label: String, value: String,
+    minusEnabled: Boolean, plusEnabled: Boolean,
+    onMinus: () -> Unit, onPlus: () -> Unit, onEdit: () -> Unit,
+) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(
+            Modifier.weight(1f).clip(RoundedCornerShape(Radius.s)).pressable(onClick = onEdit).padding(vertical = 6.dp),
+        ) {
+            Text(label, color = Pal.Text, fontSize = Type.body)
+            Spacer(Modifier.height(2.dp))
+            Text(value, color = Pal.Gold, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
+        }
+        StepButton("−", minusEnabled, onMinus)
+        Spacer(Modifier.width(Space.s))
+        StepButton("+", plusEnabled, onPlus)
+    }
+}
 
+@Composable
+private fun StepButton(text: String, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.size(TouchMin).clip(CircleShape)
+            .border(1.dp, if (enabled) Pal.Gold.copy(alpha = .45f) else Pal.Border, CircleShape)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(text, color = if (enabled) Pal.Gold else Pal.Muted, fontSize = 20.sp) }
+}
 
-
-
+/** Seçili bildirim sesini bir kez çalar. */
+fun playTone(ctx: Context, sound: String) {
+    val res = when (sound) { "sakin" -> R.raw.notif_sakin; "zil" -> R.raw.notif_zil; "odak" -> R.raw.notif_odak; else -> return }
+    runCatching {
+        val mp = android.media.MediaPlayer.create(ctx, res)
+        mp.setOnCompletionListener { it.release() }
+        mp.start()
+    }
+}
 

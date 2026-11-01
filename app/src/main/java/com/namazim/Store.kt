@@ -107,6 +107,9 @@ class Store(context: Context) {
     var prepOffsets: Set<Int>
         get() = p.getStringSet("prepOffsets", null)?.map { it.toInt() }?.toSet() ?: setOf(30, 15, 5)
         set(v) { StoreRev.n++; p.edit().putStringSet("prepOffsets", v.map { it.toString() }.toSet()).apply() }
+    var notifSound: String
+        get() = p.getString("notifSound", "system")!!
+        set(v) { StoreRev.n++; p.edit().putString("notifSound", v).apply() }
     var nagEvery: Int
         get() = p.getInt("nagEvery", 15)
         set(v) { StoreRev.n++; p.edit().putInt("nagEvery", v).apply() }
@@ -184,6 +187,7 @@ class Store(context: Context) {
         p.edit().putString("readLog", o.toString()).apply()
     }
 }
+
 
 
 

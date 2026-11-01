@@ -117,9 +117,32 @@ object Reminders {
 
     fun createChannels(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(NotificationChannel("hazirlik", "Namaza hazırlık", NotificationManager.IMPORTANCE_DEFAULT))
-        nm.createNotificationChannel(NotificationChannel("israr", "Kıldın mı?", NotificationManager.IMPORTANCE_HIGH))
+        // Ses, kanal oluşturulurken sabitlenir; bu yüzden her ses için ayrı kanal kimliği kullanılır.
+        val s = Store(ctx)
+        val sound = s.notifSound
+        val uri = soundUri(ctx, sound)
+        val prep = NotificationChannel("hazirlik_$sound", "Namaza hazırlık", NotificationManager.IMPORTANCE_DEFAULT)
+        val nag = NotificationChannel("israr_$sound", "Kıldın mı?", NotificationManager.IMPORTANCE_HIGH)
+        if (uri != null) { prep.setSound(uri, null); nag.setSound(uri, null) }
+        nag.enableVibration(true)
+        nm.createNotificationChannel(prep)
+        nm.createNotificationChannel(nag)
+        // eski kimlikleri temizle
+        listOf("hazirlik", "israr", "hazirlik_system", "israr_system", "hazirlik_sakin", "israr_sakin",
+            "hazirlik_zil", "israr_zil", "hazirlik_odak", "israr_odak")
+            .filter { it != "hazirlik_$sound" && it != "israr_$sound" }
+            .forEach { nm.deleteNotificationChannel(it) }
     }
+
+    /** Seçili ses (sistem = null → kanal varsayılanı). */
+    fun soundUri(ctx: Context, sound: String): android.net.Uri? = when (sound) {
+        "sakin" -> android.net.Uri.parse("android.resource://${ctx.packageName}/${R.raw.notif_sakin}")
+        "zil" -> android.net.Uri.parse("android.resource://${ctx.packageName}/${R.raw.notif_zil}")
+        "odak" -> android.net.Uri.parse("android.resource://${ctx.packageName}/${R.raw.notif_odak}")
+        else -> null
+    }
+
+    fun channelFor(kind: String, ctx: Context) = "${kind}_${Store(ctx).notifSound}"
 
     private val nags = listOf(
         "Kalk kıl, vakit geçiyor!",
@@ -133,11 +156,11 @@ object Reminders {
         val v = r.slot.vakit
         val left = (r.slot.end - now) / MIN
         val (channel, title, text) = if (r.prep) {
-            Triple("hazirlik", "${v.ad} vaktine ${(r.slot.start - now + MIN - 1) / MIN} dk", "Abdestini al, namaza hazırlan.")
+            Triple(channelFor("hazirlik", ctx), "${v.ad} vaktine ${(r.slot.start - now + MIN - 1) / MIN} dk", "Abdestini al, namaza hazırlan.")
         } else if (r.slot.nagEnd - now <= 30 * MIN) {
-            Triple("israr", "${v.ad} vakti çıkıyor!", "Son $left dakika. Kazaya bırakma, hemen kıl.")
+            Triple(channelFor("israr", ctx), "${v.ad} vakti çıkıyor!", "Son $left dakika. Kazaya bırakma, hemen kıl.")
         } else {
-            Triple("israr", "${v.ad} vakti — kıldın mı?", nags[((now / MIN) % nags.size).toInt()])
+            Triple(channelFor("israr", ctx), "${v.ad} vakti — kıldın mı?", nags[((now / MIN) % nags.size).toInt()])
         }
         val done = PendingIntent.getBroadcast(
             ctx, v.ordinal + 1,
@@ -201,6 +224,7 @@ class PrayedReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) = Reminders.scheduleNext(ctx)
 }
+
 
 
 
