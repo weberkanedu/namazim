@@ -28,7 +28,7 @@ class NamazimWideWidget : AppWidgetProvider() {
 
         private fun update(ctx: Context, mgr: AppWidgetManager, id: Int) {
             val views = RemoteViews(ctx.packageName, R.layout.widget_namazim_wide)
-            views.setImageViewBitmap(R.id.w_icon, NamazimWidget.art(ctx, 192))
+            views.setImageViewBitmap(R.id.w_icon, NamazimWidget.art(ctx, 256))
 
             val s = Store(ctx)
             val now = System.currentTimeMillis()
@@ -73,4 +73,5 @@ class NamazimWideWidget : AppWidgetProvider() {
         )
     }
 }
+
 

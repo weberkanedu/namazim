@@ -7,15 +7,15 @@
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:background="@drawable/widget_wide_bg"
-    android:paddingStart="10dp"
+    android:paddingStart="12dp"
     android:paddingEnd="12dp"
     android:paddingTop="8dp"
     android:paddingBottom="8dp">
 
     <ImageView
         android:id="@+id/w_icon"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:scaleType="fitCenter"
         android:contentDescription="@string/widget_desc" />
 
@@ -35,7 +35,7 @@
             android:ellipsize="end"
             android:text="3/5 kılındı"
             android:textColor="#F3EEE3"
-            android:textSize="17sp"
+            android:textSize="19sp"
             android:textStyle="bold" />
 
         <TextView
@@ -48,7 +48,8 @@
             android:ellipsize="end"
             android:text="Yatsı'ya 5sa 12dk"
             android:textColor="#C9D1DC"
-            android:textSize="11sp" />
+            android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>
+
 
