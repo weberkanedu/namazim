@@ -128,18 +128,34 @@ object Reminders {
         nm.createNotificationChannel(prep)
         nm.createNotificationChannel(nag)
         // eski kimlikleri temizle
-        listOf("hazirlik", "israr", "hazirlik_system", "israr_system", "hazirlik_sakin", "israr_sakin",
-            "hazirlik_zil", "israr_zil", "hazirlik_odak", "israr_odak")
+        (SOUNDS.map { it.first } + listOf("")).flatMap { listOf("hazirlik_`$it", "israr_`$it") }
             .filter { it != "hazirlik_$sound" && it != "israr_$sound" }
             .forEach { nm.deleteNotificationChannel(it) }
     }
 
     /** Seçili ses (sistem = null → kanal varsayılanı). */
-    fun soundUri(ctx: Context, sound: String): android.net.Uri? = when (sound) {
-        "sakin" -> android.net.Uri.parse("android.resource://${ctx.packageName}/${R.raw.notif_sakin}")
-        "zil" -> android.net.Uri.parse("android.resource://${ctx.packageName}/${R.raw.notif_zil}")
-        "odak" -> android.net.Uri.parse("android.resource://${ctx.packageName}/${R.raw.notif_odak}")
-        else -> null
+    /** Seçilebilir bildirim sesleri: anahtar → (etiket, ham kaynak). */
+    val SOUNDS = listOf(
+        "system" to ("Sistem" to 0),
+        "sakin" to ("Sakin" to R.raw.notif_sakin),
+        "can" to ("Çan" to R.raw.notif_can),
+        "zil" to ("Zil" to R.raw.notif_zil),
+        "odak" to ("Odak" to R.raw.notif_odak),
+        "damla" to ("Damla" to R.raw.notif_damla),
+        "nefes" to ("Nefes" to R.raw.notif_nefes),
+        "hilal" to ("Hilal" to R.raw.notif_hilal),
+        "sabah" to ("Sabah" to R.raw.notif_sabah),
+        "yanki" to ("Yankı" to R.raw.notif_yanki),
+        "nagme" to ("Nağme" to R.raw.notif_nagme),
+    )
+
+    fun soundRes(sound: String): Int = SOUNDS.firstOrNull { it.first == sound }?.second?.second ?: 0
+
+    fun soundLabel(sound: String): String = SOUNDS.firstOrNull { it.first == sound }?.second?.first ?: "Sistem"
+
+    fun soundUri(ctx: Context, sound: String): android.net.Uri? {
+        val res = soundRes(sound)
+        return if (res == 0) null else android.net.Uri.parse("android.resource://${ctx.packageName}/$res")
     }
 
     fun channelFor(kind: String, ctx: Context) = "${kind}_${Store(ctx).notifSound}"
@@ -224,6 +240,7 @@ class PrayedReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) = Reminders.scheduleNext(ctx)
 }
+
 
 
 

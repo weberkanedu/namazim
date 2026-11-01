@@ -167,23 +167,52 @@ fun AyarlarScreen(onBack: () -> Unit) {
                 "Vakitten önce hazırlan bildirimi",
                 if (store.prepOffsets.isEmpty()) "kapalı" else store.prepOffsets.sortedDescending().joinToString(", ") { "$it dk" },
             ) { openDialog("prep", store.prepOffsets.sortedDescending().joinToString(", ")) }
-            StepperRow(
-                "\"Kıldın mı?\" sıklığı", "${store.nagEvery} dk",
-                minusEnabled = store.nagEvery > 10, plusEnabled = store.nagEvery < 180,
-                onMinus = { store.nagEvery = (store.nagEvery - 5).coerceAtLeast(10); changed() },
-                onPlus = { store.nagEvery = (store.nagEvery + 5).coerceAtMost(180); changed() },
-                onEdit = { openDialog("nag", "${store.nagEvery}") },
-            )
+            ValueRow("\"Kıldın mı?\" sıklığı", "${store.nagEvery} dk") { openDialog("nag", "${store.nagEvery}") }
             SwitchRow("Vaktin son yarım saatinde 5 dakikada bir", v.let { store.nagBurst }) { store.nagBurst = it; changed() }
-            StepperRow(
-                "Ertele süresi", "${store.snoozeMin} dk",
-                minusEnabled = store.snoozeMin > 5, plusEnabled = store.snoozeMin < 180,
-                onMinus = { store.snoozeMin = (store.snoozeMin - 5).coerceAtLeast(5); changed() },
-                onPlus = { store.snoozeMin = (store.snoozeMin + 5).coerceAtMost(180); changed() },
-                onEdit = { openDialog("snooze", "${store.snoozeMin}") },
-            )
+            ValueRow("Ertele süresi", "${store.snoozeMin} dk") { openDialog("snooze", "${store.snoozeMin}") }
             GhostButton("Deneme bildirimi gönder", Modifier.fillMaxWidth(), color = Pal.Gold) { Reminders.test(ctx) }
         }
+
+        Section("Bildirim sesi") {
+            var soundOpen by remember { mutableStateOf(false) }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Ses", color = Pal.Text, fontSize = Type.body)
+                    Spacer(Modifier.height(2.dp))
+                    Text(Reminders.soundLabel(store.notifSound), color = Pal.Gold, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
+                }
+                TextButton(onClick = { playTone(ctx, store.notifSound) }) { Text("Dinle", color = Pal.Muted, fontWeight = FontWeight.SemiBold) }
+                Box {
+                    OutlinedButton(
+                        onClick = { soundOpen = true },
+                        shape = CircleShape,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Pal.Gold.copy(alpha = .5f)),
+                    ) { Text("Değiştir", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
+                    DropdownMenu(expanded = soundOpen, onDismissRequest = { soundOpen = false }) {
+                        Reminders.SOUNDS.forEach { (id, spec) ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        spec.first,
+                                        color = if (store.notifSound == id) Pal.Gold else Pal.Text,
+                                        fontWeight = if (store.notifSound == id) FontWeight.SemiBold else FontWeight.Normal,
+                                        fontSize = Type.body,
+                                    )
+                                },
+                                onClick = {
+                                    store.notifSound = id
+                                    Reminders.createChannels(ctx)
+                                    soundOpen = false
+                                    v++
+                                    playTone(ctx, id)
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
 
         Section("Bildirim sesi") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -206,22 +235,9 @@ fun AyarlarScreen(onBack: () -> Unit) {
         }
 
         Section("Okuma ve kaza") {
-            StepperRow(
-                "Günlük okuma hedefi", "${store.readGoal} sayfa",
-                minusEnabled = store.readGoal > 5, plusEnabled = store.readGoal < 300,
-                onMinus = { store.readGoal = (store.readGoal - 5).coerceAtLeast(5); v++ },
-                onPlus = { store.readGoal = (store.readGoal + 5).coerceAtMost(300); v++ },
-                onEdit = { openDialog("goal", "${store.readGoal}") },
-            )
-            StepperRow(
-                "Günde kılınacak kaza", "${store.kazaRate} kaza",
-                minusEnabled = store.kazaRate > 1, plusEnabled = store.kazaRate < 50,
-                onMinus = { store.kazaRate = (store.kazaRate - 1).coerceAtLeast(1); v++ },
-                onPlus = { store.kazaRate = (store.kazaRate + 1).coerceAtMost(50); v++ },
-                onEdit = { openDialog("kaza", "${store.kazaRate}") },
-            )
+            ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
+            ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
         }
-
 
         Section("Konum") {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -282,11 +298,25 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         color = Pal.Muted, fontSize = 12.sp, lineHeight = 17.sp,
                     )
                     Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        draft, { draft = it }, singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Pal.Gold, unfocusedBorderColor = Pal.Border),
-                    )
+                    // sayısal ayarlarda − / + ile hızlı ayar; yazmaya da devam edilebilir
+                    val range = when (dialog) { "nag" -> Triple(5, 10, 180); "snooze" -> Triple(5, 5, 180); "goal" -> Triple(5, 5, 300); "kaza" -> Triple(1, 1, 50); else -> null }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (range != null) {
+                            val (step, lo, _) = range
+                            val cur = draft.trim().toIntOrNull() ?: lo
+                            StepButton("−", cur > lo) { draft = (cur - step).coerceAtLeast(lo).toString() }
+                        }
+                        OutlinedTextField(
+                            draft, { draft = it }, singleLine = true, modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Pal.Gold, unfocusedBorderColor = Pal.Border),
+                        )
+                        if (range != null) {
+                            val (step, _, hi) = range
+                            val cur = draft.trim().toIntOrNull() ?: hi
+                            StepButton("+", cur < hi) { draft = (cur + step).coerceAtMost(hi).toString() }
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -322,27 +352,6 @@ private fun ValueRow(label: String, value: String, onEdit: () -> Unit) {
         Text("Değiştir", color = Pal.Muted, fontSize = 12.sp)
     }
 }
-/** − / + ile ayarlanan satır; değere dokununca elle giriş açılır. */
-@Composable
-private fun StepperRow(
-    label: String, value: String,
-    minusEnabled: Boolean, plusEnabled: Boolean,
-    onMinus: () -> Unit, onPlus: () -> Unit, onEdit: () -> Unit,
-) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(
-            Modifier.weight(1f).clip(RoundedCornerShape(Radius.s)).pressable(onClick = onEdit).padding(vertical = 6.dp),
-        ) {
-            Text(label, color = Pal.Text, fontSize = Type.body)
-            Spacer(Modifier.height(2.dp))
-            Text(value, color = Pal.Gold, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
-        }
-        StepButton("−", minusEnabled, onMinus)
-        Spacer(Modifier.width(Space.s))
-        StepButton("+", plusEnabled, onPlus)
-    }
-}
-
 @Composable
 private fun StepButton(text: String, enabled: Boolean, onClick: () -> Unit) {
     Box(
@@ -362,4 +371,7 @@ fun playTone(ctx: Context, sound: String) {
         mp.start()
     }
 }
+
+
+
 
