@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 1×1 canlı ikon: hilal saat. Görsel hücreyi tamamen doldurur (normal ikon boyu),
-     vakit adı/saat halkanın altına bindirilir ki hilal küçülmesin. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 1×1 canlı ikon: hilal saat + altyazı. Yerleşim, launcher'ın ikon + etiket düzenini taklit eder:
+     görsel hücrenin üstünü doldurur, yazı ikonun altında ve ikon yazılarıyla aynı tipografide durur. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/w_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
 
     <ImageView
         android:id="@+id/w_icon"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:scaleType="fitCenter"
         android:contentDescription="@string/widget_desc" />
 
@@ -17,16 +20,18 @@
         android:id="@+id/w_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
         android:gravity="center"
         android:maxLines="1"
         android:ellipsize="end"
-        android:paddingBottom="3dp"
+        android:includeFontPadding="false"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp"
         android:text="İkindi 15:27"
-        android:textColor="#F3EEE3"
-        android:textSize="9sp"
-        android:shadowColor="#CC000000"
+        android:textColor="#FFFFFFFF"
+        android:textSize="12sp"
+        android:shadowColor="#99000000"
         android:shadowDx="0"
         android:shadowDy="1"
-        android:shadowRadius="4" />
-</FrameLayout>
+        android:shadowRadius="3" />
+</LinearLayout>
+
