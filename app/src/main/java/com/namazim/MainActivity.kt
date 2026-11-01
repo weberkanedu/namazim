@@ -480,7 +480,10 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
             }
         } else {
 
-        val today = LocalDate.now()
+        // "Namaz günü" imsakla başlar: gece yarısından sonra imsaka kadar dünün yatsısı hâlâ kılınabilir.
+        val calDate = LocalDate.now()
+        val imsakToday = slots(store.lat, store.lng, calDate).first().start
+        val today = if (now < imsakToday) calDate.minusDays(1) else calDate
         val near = (-1L..1L).flatMap { slots(store.lat, store.lng, today.plusDays(it)) }
         val d = dayTimes(store.lat, store.lng, today)
         val tomorrow = dayTimes(store.lat, store.lng, today.plusDays(1))
@@ -541,16 +544,16 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                             .padding(horizontal = 9.dp, vertical = 5.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("${today.dayOfMonth}", style = NumStyle, fontSize = 19.sp, lineHeight = 20.sp, color = Pal.Text)
+                        Text("${calDate.dayOfMonth}", style = NumStyle, fontSize = 19.sp, lineHeight = 20.sp, color = Pal.Text)
                         Text(
-                            today.format(DateTimeFormatter.ofPattern("MMM", Locale("tr"))).uppercase(Locale("tr")),
+                            calDate.format(DateTimeFormatter.ofPattern("MMM", Locale("tr"))).uppercase(Locale("tr")),
                             color = Pal.Gold, fontSize = 8.sp, letterSpacing = 1.sp, fontWeight = FontWeight.SemiBold,
                         )
                     }
                     Spacer(Modifier.width(10.dp))
                     Column {
-                        Text(today.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = 12.sp, style = shadow)
-                        Text(hijri(today), color = Pal.Text.copy(alpha = .70f), fontSize = 11.5.sp, style = shadow)
+                        Text(calDate.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = 12.sp, style = shadow)
+                        Text(hijri(calDate), color = Pal.Text.copy(alpha = .70f), fontSize = 11.5.sp, style = shadow)
                         Spacer(Modifier.height(2.dp))
                         Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold, style = shadow)
@@ -764,6 +767,8 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
+
 
 
 
