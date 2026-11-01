@@ -70,7 +70,10 @@ class NamazimWidget : AppWidgetProvider() {
             }
             if (!s.hasLocation) return State("Konum gerekli", accent, top, bottom, 0, emptySet())
 
-            val today = LocalDate.now()
+            // Namaz günü imsakla başlar: gece yarısından sonra imsaka kadar dünün yatsısı hâlâ kılınabilir.
+            val calDate = LocalDate.now()
+            val imsakToday = slots(s.lat, s.lng, calDate).first().start
+            val today = if (now < imsakToday) calDate.minusDays(1) else calDate
             val todaySlots = slots(s.lat, s.lng, today)
             val next = todaySlots.firstOrNull { it.start > now }
                 ?: slots(s.lat, s.lng, today.plusDays(1)).first()
