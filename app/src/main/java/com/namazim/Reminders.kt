@@ -128,7 +128,7 @@ object Reminders {
         val (channel, title, text) = if (r.prep) {
             Triple("hazirlik", "${v.ad} vaktine ${(r.slot.start - now + MIN - 1) / MIN} dk", "Abdestini al, namaza hazırlan.")
         } else if (r.slot.nagEnd - now <= 30 * MIN) {
-            Triple("israr", "${v.ad} vakti çıkıyor!", "Son $left dakika. Kaza etme, hemen kıl.")
+            Triple("israr", "${v.ad} vakti çıkıyor!", "Son $left dakika. Kazaya bırakma, hemen kıl.")
         } else {
             Triple("israr", "${v.ad} vakti — kıldın mı?", nags[((now / MIN) % nags.size).toInt()])
         }
@@ -194,3 +194,4 @@ class PrayedReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) = Reminders.scheduleNext(ctx)
 }
+
