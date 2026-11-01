@@ -1,12 +1,20 @@
 package com.namazim
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import android.content.SharedPreferences
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
 
 data class Book(val name: String, val page: Int, val total: Int)
+
+/** Bumped by Store on every write: screens read it so a change in Ayarlar shows up immediately. */
+object StoreRev {
+    var n by mutableIntStateOf(0)
+}
 
 /** All app data lives in one SharedPreferences file; it is small enough. */
 class Store(context: Context) {
@@ -34,17 +42,18 @@ class Store(context: Context) {
     fun isPrayed(key: String) = key in prayed()
     fun prayed(): Set<String> = p.getStringSet("prayed", emptySet())!!
     fun markPrayed(key: String, at: Long = System.currentTimeMillis()) {
+        StoreRev.n++
         p.edit().putStringSet("prayed", prayed() + key).putLong("prayedAt_$key", at).apply()
     }
     /** Undo a mis-tap on the timeline. */
-    fun unmarkPrayed(key: String) = p.edit().putStringSet("prayed", prayed() - key).apply()
+    fun unmarkPrayed(key: String) { StoreRev.n++; p.edit().putStringSet("prayed", prayed() - key).apply() }
     /** When the prayer was marked (for the "12:41'de kılındı" line). */
     fun prayedAt(key: String): Long? = p.getLong("prayedAt_$key", 0L).takeIf { it > 0 }
 
     // --- Kaza, keyed by Vakit name or "VITIR"
     fun kaza(key: String) = p.getInt("kaza_$key", 0)
     fun kaza(v: Vakit) = kaza(v.name)
-    fun addKaza(key: String, n: Int) = p.edit().putInt("kaza_$key", (kaza(key) + n).coerceAtLeast(0)).apply()
+    fun addKaza(key: String, n: Int) { StoreRev.n++; p.edit().putInt("kaza_$key", (kaza(key) + n).coerceAtLeast(0)).apply() }
     fun addKaza(v: Vakit, n: Int) = addKaza(v.name, n)
     /** A kaza prayer made up: one less owed, one more on this month's tally. */
     fun payKaza(key: String) {
@@ -56,47 +65,47 @@ class Store(context: Context) {
     private fun paidKey() = "kazaPaid_" + LocalDate.now().toString().take(7)
     var kazaRate: Int
         get() = p.getInt("kazaRate", 2)
-        set(v) = p.edit().putInt("kazaRate", v).apply()
+        set(v) { StoreRev.n++; p.edit().putInt("kazaRate", v).apply() }
 
     // --- Settings
     var theme: String
         get() = p.getString("theme", SeherPalette.id)!!
-        set(v) = p.edit().putString("theme", v).apply()
+        set(v) { StoreRev.n++; p.edit().putString("theme", v).apply() }
     /** Which renderer the Seher header uses: "photo" (plates), "video" (looping clip) or "shader" (live). */
     var skyMode: String
         get() = p.getString("skyMode", "photo")!!
-        set(v) = p.edit().putString("skyMode", v).apply()
+        set(v) { StoreRev.n++; p.edit().putString("skyMode", v).apply() }
     /** Minutes before a prayer time for the "hazırlan" notifications. */
     var prepOffsets: Set<Int>
         get() = p.getStringSet("prepOffsets", null)?.map { it.toInt() }?.toSet() ?: setOf(30, 15, 5)
-        set(v) = p.edit().putStringSet("prepOffsets", v.map { it.toString() }.toSet()).apply()
+        set(v) { StoreRev.n++; p.edit().putStringSet("prepOffsets", v.map { it.toString() }.toSet()).apply() }
     var nagEvery: Int
         get() = p.getInt("nagEvery", 15)
-        set(v) = p.edit().putInt("nagEvery", v).apply()
+        set(v) { StoreRev.n++; p.edit().putInt("nagEvery", v).apply() }
     /** Nag every 5 minutes in the last half hour of a prayer time. */
     var nagBurst: Boolean
         get() = p.getBoolean("nagBurst", true)
-        set(v) = p.edit().putBoolean("nagBurst", v).apply()
+        set(v) { StoreRev.n++; p.edit().putBoolean("nagBurst", v).apply() }
     var snoozeMin: Int
         get() = p.getInt("snoozeMin", 15)
-        set(v) = p.edit().putInt("snoozeMin", v).apply()
+        set(v) { StoreRev.n++; p.edit().putInt("snoozeMin", v).apply() }
     fun reminderCfg() = ReminderCfg(prepOffsets.map { it.toLong() }.sortedDescending(), nagEvery.toLong(), nagBurst)
 
     var showExtras: Boolean
         get() = p.getBoolean("showExtras", false)
-        set(v) = p.edit().putBoolean("showExtras", v).apply()
+        set(v) { StoreRev.n++; p.edit().putBoolean("showExtras", v).apply() }
     var readGoal: Int
         get() = p.getInt("readGoal", 10)
-        set(v) = p.edit().putInt("readGoal", v).apply()
+        set(v) { StoreRev.n++; p.edit().putInt("readGoal", v).apply() }
 
     // --- Snooze: no reminders for a prayer until this moment
     fun snoozedUntil(key: String) = p.getLong("snooze_$key", 0)
-    fun snooze(key: String, until: Long) = p.edit().putLong("snooze_$key", until).apply()
+    fun snooze(key: String, until: Long) { StoreRev.n++; p.edit().putLong("snooze_$key", until).apply() }
 
     /** Prayers whose time ended before this moment have already been counted as prayed or kaza. */
     var settledUntil: Long
         get() = p.getLong("settledUntil", 0)
-        set(v) = p.edit().putLong("settledUntil", v).apply()
+        set(v) { StoreRev.n++; p.edit().putLong("settledUntil", v).apply() }
 
     /** Any slot that ended unprayed since the last check becomes kaza. */
     fun settleKaza(now: Long = System.currentTimeMillis()) {
@@ -119,10 +128,10 @@ class Store(context: Context) {
     // --- Reading
     var quranPage: Int
         get() = p.getInt("quranPage", 0)
-        set(v) = p.edit().putInt("quranPage", v).apply()
+        set(v) { StoreRev.n++; p.edit().putInt("quranPage", v).apply() }
     var hatim: Int
         get() = p.getInt("hatim", 0)
-        set(v) = p.edit().putInt("hatim", v).apply()
+        set(v) { StoreRev.n++; p.edit().putInt("hatim", v).apply() }
 
     fun books(): List<Book> {
         val a = JSONArray(p.getString("books", "[]"))
@@ -140,9 +149,12 @@ class Store(context: Context) {
         return o.keys().asSequence().associateWith { o.getInt(it) }
     }
     fun logPages(n: Int) {
+        StoreRev.n++
         val o = JSONObject(p.getString("readLog", "{}")!!)
         val today = LocalDate.now().toString()
         o.put(today, (o.optInt(today) + n).coerceAtLeast(0))
         p.edit().putString("readLog", o.toString()).apply()
     }
 }
+
+

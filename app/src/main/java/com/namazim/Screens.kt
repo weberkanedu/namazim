@@ -91,6 +91,7 @@ private fun qiblaTime(lat: Double, lng: Double, qibla: Double): Long? {
 
 @Composable
 fun KibleScreen() {
+    StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     if (!store.hasLocation) return NeedLocation()
@@ -255,6 +256,7 @@ private val KAZA_KEYS = listOf("SABAH" to "Sabah", "OGLE" to "Öğle", "IKINDI" 
 
 @Composable
 fun KazaScreen(embedded: Boolean = false) {
+    StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     var v by remember { mutableIntStateOf(0) }
@@ -345,6 +347,7 @@ private val TR_DAYS = listOf("Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz")
 
 @Composable
 fun OkumaScreen() {
+    StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     var v by remember { mutableIntStateOf(0) }
@@ -511,6 +514,7 @@ fun MuhasebeScreen() {
 /** "Bugün ne durumdayım": dört halka (namaz, okuma, hatim, kaza) + tek cümlelik değerlendirme. */
 @Composable
 private fun MuhasebeOzet() {
+    StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     if (!store.hasLocation) return NeedLocation()
@@ -697,6 +701,7 @@ private fun MuhasebeOzet() {
 /** Günlük gidişat: oran, seri, ısı haritası ve vakit vakit dağılım. */
 @Composable
 private fun MuhasebeGidisat() {
+    StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     if (!store.hasLocation) return NeedLocation()
@@ -818,6 +823,7 @@ private fun MuhasebeGidisat() {
         }
     }
 }
+
 
 
 

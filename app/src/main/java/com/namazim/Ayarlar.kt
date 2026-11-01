@@ -104,6 +104,7 @@ private fun ThemeCard(p: Palette, selected: Boolean, modifier: Modifier, onClick
 
 @Composable
 fun AyarlarScreen(onBack: () -> Unit) {
+    StoreRev.n.let { } // keep the chips in sync with what was just written
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     var v by remember { mutableIntStateOf(0) }
@@ -198,3 +199,4 @@ fun AyarlarScreen(onBack: () -> Unit) {
         Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.padding(24.dp), color = Pal.Muted, fontSize = 12.sp)
     }
 }
+
