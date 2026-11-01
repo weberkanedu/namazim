@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -68,7 +69,15 @@ fun NeedLocation() = Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment
 
 @Composable
 private fun InfoCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) =
-    Column(modifier.clip(RoundedCornerShape(18.dp)).background(Pal.Card).padding(horizontal = 16.dp, vertical = 14.dp), content = content)
+    Column(
+        modifier
+            .shadow(14.dp, RoundedCornerShape(22.dp), clip = false, ambientColor = Color.Black.copy(alpha = .35f), spotColor = Color.Black.copy(alpha = .45f))
+            .clip(RoundedCornerShape(22.dp))
+            .background(Pal.Card)
+            .border(1.dp, Color.White.copy(alpha = .045f), RoundedCornerShape(22.dp))
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        content = content,
+    )
 
 // ---------------------------------------------------------------- Kıble
 
@@ -1144,6 +1153,8 @@ private fun RadarChart(axes: List<Pair<String, Float>>, colors: List<Color>, ani
         }
     }
 }
+
+
 
 
 

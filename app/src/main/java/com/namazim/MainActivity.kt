@@ -356,12 +356,26 @@ fun rememberNow(): Long {
 
 @Composable
 fun ScreenTitle(title: String, sub: String? = null, trailing: @Composable () -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 24.dp, end = 24.dp, top = 20.dp), verticalAlignment = Alignment.Bottom) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = NumStyle, fontSize = 36.sp, lineHeight = 40.sp, color = Pal.Text)
-            if (sub != null) Text(sub, fontSize = 13.sp, color = Pal.Muted)
+    Column(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 24.dp, end = 24.dp, top = 18.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = NumStyle, fontSize = 40.sp, lineHeight = 44.sp, color = Pal.Text)
+                if (sub != null) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(sub, fontSize = 12.5.sp, letterSpacing = .3.sp, color = Pal.Muted)
+                }
+            }
+            trailing()
         }
-        trailing()
+        // ince altın çizgi: başlığı gövdeden ayırır
+        Spacer(Modifier.height(14.dp))
+        Box(
+            Modifier.fillMaxWidth().height(1.dp).background(
+                androidx.compose.ui.graphics.Brush.horizontalGradient(
+                    listOf(Pal.Gold.copy(alpha = .45f), Pal.Gold.copy(alpha = .12f), Color.Transparent),
+                ),
+            ),
+        )
     }
 }
 
@@ -707,6 +721,7 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
 
 
 
