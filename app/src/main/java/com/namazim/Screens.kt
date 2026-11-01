@@ -827,10 +827,11 @@ private fun MuhasebeGidisat() {
             BoxWithConstraints {
                 val cols = (data.days + 6) / 7
                 val gap = 2.dp
-                val cell = minOf(14.dp, (maxWidth - gap * (cols - 1).coerceAtLeast(0)) / cols.coerceAtLeast(1))
+                val cell = minOf(22.dp, (maxWidth - gap * (cols - 1).coerceAtLeast(0)) / cols.coerceAtLeast(1))
                 val firstDow = data.start.dayOfWeek.value - 1
+                Column {
                 for (row in 0 until 7) {
-                    Row(Modifier.padding(top = if (row == 0) 0.dp else gap), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                    Row(Modifier.fillMaxWidth().padding(top = if (row == 0) 0.dp else gap), horizontalArrangement = Arrangement.spacedBy(gap, Alignment.CenterHorizontally)) {
                         for (w in 0 until cols) {
                             val idx = w * 7 - firstDow + row
                             val c = if (idx in data.counts.indices) data.counts[idx] else -1
@@ -840,6 +841,7 @@ private fun MuhasebeGidisat() {
                             )
                         }
                     }
+                }
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -870,20 +872,23 @@ private fun MuhasebeGidisat() {
                     Box(Modifier.size(6.dp).clip(CircleShape).background(color))
                     Spacer(Modifier.width(10.dp))
                     Text(name, Modifier.weight(1f), color = Pal.Text, fontSize = 15.sp)
-                    // sparkline: son 21 günün günlük değeri
+                    // sparkline: son 21 günün 3 günlük ortalaması (pürüzleri yumuşatır)
                     Canvas(Modifier.size(64.dp, 24.dp)) {
                         val n = minOf(21, data.counts.size)
-                        if (n > 1) {
-                            val vals = when (name) {
+                        if (n > 1 && name != "Hatim" && name != "Kaza") {
+                            val raw = when (name) {
                                 "Namaz" -> IntArray(n) { data.counts[data.counts.size - n + it] }
-                                "Okuma" -> IntArray(n) { data.pages[data.pages.size - n + it] }
-                                else -> IntArray(n) { if (it == n - 1) value else 0 }
+                                else -> IntArray(n) { data.pages[data.pages.size - n + it] }
                             }
-                            val maxV = (vals.maxOrNull() ?: 0).coerceAtLeast(1)
+                            val vals = FloatArray(n) { i ->
+                                val a = raw[max(0, i - 1)]; val b = raw[i]; val c = raw[min(n - 1, i + 1)]
+                                (a + b + c) / 3f
+                            }
+                            val maxV = (vals.maxOrNull() ?: 0f).coerceAtLeast(1f)
                             val path = Path()
                             vals.forEachIndexed { i, v ->
                                 val x = size.width * i / (n - 1).toFloat()
-                                val y = size.height - (size.height * v / maxV.toFloat()) * 0.9f
+                                val y = size.height - (size.height * v / maxV) * 0.9f
                                 if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
                             }
                             drawPath(path, color, style = Stroke(1.8.dp.toPx(), cap = StrokeCap.Round))
@@ -897,7 +902,9 @@ private fun MuhasebeGidisat() {
             }
         }
 
-        // ---- Namazları ne zaman kılıyoruz (Vakit'in "vakit girdikten kaç dakika sonra" bölümü)
+        // ---- Namazları ne zaman kılıyoruz (Vakit'in "vakit girdikten kaç dakika sonra" bölümü).
+        // Yalnızca "Tümü"de gösterilir: kısa dönemlerde birkaç işaret ortalamayı yanıltıyor.
+        if (period == 3) {
         InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
             Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = 11.sp, letterSpacing = .8.sp)
             Spacer(Modifier.height(10.dp))
@@ -951,8 +958,12 @@ private fun MuhasebeGidisat() {
                 color = Pal.Muted, fontSize = 11.sp, lineHeight = 16.sp,
             )
         }
+        }
     }
 }
+
+
+
 
 
 
