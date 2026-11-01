@@ -53,20 +53,21 @@ fun slots(lat: Double, lng: Double, date: LocalDate): List<Slot> {
 
 fun qiblaDegrees(lat: Double, lng: Double): Double = Qibla(Coordinates(lat, lng)).direction
 
-/** Optional extra times (same rules as Vakit): kerahat windows and voluntary-prayer windows. */
-data class Extra(val name: String, val start: Long, val end: Long?, val kerahat: Boolean)
+/** Optional extra times (same rules as Vakit): kerahat windows and voluntary-prayer windows.
+ *  [group] says which main row of the day's timeline the time belongs under. */
+data class Extra(val name: String, val start: Long, val end: Long?, val kerahat: Boolean, val group: String)
 
 fun extras(d: DayTimes, nextImsak: Long): List<Extra> {
     val m = 60_000L
     val tehecud = d.aksam + (nextImsak - d.aksam) * 2 / 3 // last third of the night
     return listOf(
-        Extra("İşrak kerahati", d.gunes, d.gunes + 45 * m, true),
-        Extra("İşrak", d.gunes + 45 * m, null, false),
-        Extra("Kuşluk (duha)", d.gunes + 45 * m, d.ogle - 10 * m, false),
-        Extra("İstiva kerahati", d.ogle - 10 * m, d.ogle, true),
-        Extra("Sarı kerahat", d.aksam - 45 * m, d.aksam, true),
-        Extra("Evvâbin", d.aksam, d.yatsi, false),
-        Extra("Teheccüd", tehecud, nextImsak, false),
+        Extra("İşrak kerahati", d.gunes, d.gunes + 45 * m, true, "GÜNEŞ"),
+        Extra("İşrak", d.gunes + 45 * m, null, false, "GÜNEŞ"),
+        Extra("Kuşluk (duha)", d.gunes + 45 * m, d.ogle - 10 * m, false, "GÜNEŞ"),
+        Extra("İstiva kerahati", d.ogle - 10 * m, d.ogle, true, "GÜNEŞ"),
+        Extra("Sarı kerahat", d.aksam - 45 * m, d.aksam, true, "AKŞAM"),
+        Extra("Evvâbin", d.aksam, d.yatsi, false, "AKŞAM"),
+        Extra("Teheccüd", tehecud, nextImsak, false, "YATSI"),
     )
 }
 

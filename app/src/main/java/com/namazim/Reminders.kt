@@ -86,6 +86,11 @@ object Reminders {
         scheduleNext(ctx)
     }
 
+    fun unmarkPrayed(ctx: Context, key: String) {
+        Store(ctx).unmarkPrayed(key)
+        scheduleNext(ctx)
+    }
+
     fun snooze(ctx: Context, key: String, vakit: Vakit) {
         val s = Store(ctx)
         s.snooze(key, System.currentTimeMillis() + s.snoozeMin * MIN)

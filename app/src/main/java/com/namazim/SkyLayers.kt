@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -90,7 +91,7 @@ fun SkyPhoto(lat: Double, lng: Double, modifier: Modifier = Modifier) {
     val plates = remember { loadPlates(ctx) }
     val wheat = remember { loadWheat(ctx) }
     val bodies = remember(minute, lat, lng) { skyBodies(lat, lng, now + SkyDebug.offsetMs) }
-    Canvas(modifier) {
+    Canvas(modifier.clipToBounds()) {
         if (plates == null) return@Canvas
         val alt = bodies.sun.alt * 180 / PI
         val wDay = smoothstep(2f, 12f, alt.toFloat())
@@ -248,4 +249,5 @@ fun SkyVideo(name: String, modifier: Modifier = Modifier) {
     }
     AndroidView(factory = { view }, modifier = modifier)
 }
+
 

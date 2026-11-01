@@ -33,7 +33,13 @@ class Store(context: Context) {
     // --- Prayed log, keyed by Slot.key
     fun isPrayed(key: String) = key in prayed()
     fun prayed(): Set<String> = p.getStringSet("prayed", emptySet())!!
-    fun markPrayed(key: String) = p.edit().putStringSet("prayed", prayed() + key).apply()
+    fun markPrayed(key: String, at: Long = System.currentTimeMillis()) {
+        p.edit().putStringSet("prayed", prayed() + key).putLong("prayedAt_$key", at).apply()
+    }
+    /** Undo a mis-tap on the timeline. */
+    fun unmarkPrayed(key: String) = p.edit().putStringSet("prayed", prayed() - key).apply()
+    /** When the prayer was marked (for the "12:41'de kılındı" line). */
+    fun prayedAt(key: String): Long? = p.getLong("prayedAt_$key", 0L).takeIf { it > 0 }
 
     // --- Kaza, keyed by Vakit name or "VITIR"
     fun kaza(key: String) = p.getInt("kaza_$key", 0)

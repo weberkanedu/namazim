@@ -33,11 +33,11 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
 | `Prayers.kt` | Prayer times via `adhan2` (TURKEY method) + per-vakit second offsets fitted to Diyanet tables; `slots()` (one prayer per day: start/end/nagEnd), extra times (kerahat, işrak, kuşluk, evvâbin, teheccüd), hijri date (ICU Umm al-Qura), mübarek günler, sûre start pages. |
 | `Store.kt` | Everything persisted, in one SharedPreferences file: location, prayed set (`"yyyy-mm-dd|VAKIT"`), kaza counts (+VITIR), reading log, books, all settings, snooze. `settleKaza()` turns ended unprayed prayers into kaza. |
 | `Reminders.kt` | Alarm chain: always exactly one `setAlarmClock` alarm for the next reminder. `reminders(slot, cfg)` is the cadence; `fire()` shows due notifications; Kıldım / snooze receivers; `test()` sends a sample nag. |
-| `MainActivity.kt` | Activity, bottom nav, Namaz (home) screen, full-screen "Kıldın mı?" (`ReminderScreen`, opened from the nag notification), permission card, location fetch. |
+| `MainActivity.kt` | Activity, bottom nav, Namaz (home) screen, full-screen "Kıldın mı?" (`ReminderScreen`, opened from the nag notification), permission card, location fetch. The home screen is a countdown plus a vertical **timeline**: one node per vakit with a tick that marks it prayed (tap again to undo, and the mark time shows under the name), ek vakitler hang under their vakit and open with the chevron. |
 | `Screens.kt` | Kıble (compass with magnetic declination fix, kıble saati), Kaza, Okuma (Kur'an pages/cüz/hatim, daily goal, books), Muhasebe (Özet + Kaza tabs, heatmap, streaks). |
-| `Ayarlar.kt` | Settings screen (theme, reminder cadence, snooze, extras, goals, location, phone permissions). Opened from the gear in the home header (tab 4), not from the bottom nav; its title has a back arrow. |
+| `Ayarlar.kt` | Settings screen (theme, sky renderer, reminder cadence, snooze, goals, location, phone permissions). Opened from the gear in the home header (tab 4), not from the bottom nav; its title has a back arrow. |
 | `Theme.kt` | Two palettes, `SeherPalette` (navy + gold, Cormorant) and `OdakPalette` (black + lime, Space Grotesk). `Pal.current` is Compose state, so switching theme recomposes everything. Use `Pal.X` colors and `NumStyle` for big numbers. |
-| `Sky.kt` | Seher home header (380 dp): AGSL `RuntimeShader` sky — Rayleigh/Mie atmosphere, soft clouds, stars, the sun and the moon riding one arc across the sky by azimuth (moon phase is real), hazy hills, a mosque with lit windows, and a wind-blown wheat field that melts into the page. Long-press = fast preview. Falls back to a gradient below API 33 or if the shader fails. ~20 ms GPU/frame, capped at ~12 fps. |
+| `Sky.kt` | Seher home header (340 dp): AGSL `RuntimeShader` sky — Rayleigh/Mie atmosphere, soft clouds, stars, the sun and the moon riding one arc across the sky by azimuth (moon phase is real), hazy hills, a mosque with lit windows, and a wind-blown wheat field that melts into the page. Long-press = fast preview. Falls back to a gradient below API 33 or if the shader fails. ~20 ms GPU/frame, capped at ~12 fps. |
 | `Odak.kt` | Odak home header: ring of the five prayers. |
 | `NamazimWidget.kt` | 1×1 home-screen "canlı ikon": sky gradient for the time of day, crescent, hand to the next prayer, dots fill as prayers are marked, label "İkindi 15:27". Redrawn from `Reminders.scheduleNext` and on widget updates. |
 | `SkyLayers.kt` | Photo/video versions of the Seher header, asset driven from `app/src/main/assets/sky/` (`day/dusk/night.webp` plates, optional `wheat.webp` loop, optional `scene.mp4`). Photo mode crossfades the plates by sun altitude and draws the arc + sun + moon (real phase) itself; video mode plays the clip on a TextureView. Selected in Ayarlar › Görünüm › Gökyüzü (`Store.skyMode`) or with `--es skymode`. |
@@ -64,7 +64,7 @@ Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTe
 2. Check on the phone: softer clouds (the old shards came from the `fract(p*123.34)` hash collapsing in half precision — replaced
    with Hoskins' hash), new mosque + treeline, lace logo, gear/location menu in the header, Ayarlar back arrow, Odak header.
 3. **Seher sky**: the shader remains the default. Photo (A) and video (C) renderers are wired in `SkyLayers.kt` and switchable
-   from Ayarlar; the bundled `assets/sky/*` are placeholders cut from the shader screenshots. Real art to drop in: `day/dusk/night.webp`
+   from Ayarlar; `assets/sky/*` now hold the owner's Kling art: three photographic plates (day/dusk/night) and a 10 s looping `scene.mp4`. To replace: `day/dusk/night.webp`
    plates with the same framing and **no sun/moon drawn in** (photo mode draws the arc and the discs itself), an optional looping
    `wheat.webp`, or a `scene.mp4` clip. Shader open ends: the wheat reads a bit like corduroy, the horizon has a light band, and the
    sun blows out at midday. `design/sky-test/sky.js` is one revision behind `Sky.kt`.
@@ -80,3 +80,4 @@ Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTe
 - Keep changes small; match the surrounding style (Compose, one `Store`, no DI, no extra libraries).
 - `shortcut:` comments mark known limits.
 - Test on the phone after visual changes; screenshots go to `vakit-ekran/`.
+

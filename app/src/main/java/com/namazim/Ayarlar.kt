@@ -162,10 +162,6 @@ fun AyarlarScreen(onBack: () -> Unit) {
             GhostButton("Deneme bildirimi gönder", Modifier.fillMaxWidth(), color = Pal.Gold) { Reminders.test(ctx) }
         }
 
-        Section("Vakitler") {
-            SwitchRow("Ek vakitleri göster (kerahat, işrak, kuşluk, evvâbin, teheccüd)", v.let { store.showExtras }) { store.showExtras = it; v++ }
-        }
-
         Section("Okuma ve kaza") {
             Text("Günlük okuma hedefi", color = Pal.Text, fontSize = 14.sp)
             Chips(listOf(5, 10, 15, 20, 30), { it == store.readGoal }, { "$it" }) { store.readGoal = it; v++ }
