@@ -478,11 +478,13 @@ fun OkumaScreen() {
 // ---------------------------------------------------------------- Muhasebe
 
 @Composable
-fun Segmented(options: List<String>, selected: Int, modifier: Modifier = Modifier, onSelect: (Int) -> Unit) {
+fun Segmented(options: List<String>, selected: Int, modifier: Modifier = Modifier, stretch: Boolean = false, onSelect: (Int) -> Unit) {
     Row(modifier.clip(RoundedCornerShape(24.dp)).background(Pal.Card).padding(3.dp)) {
         options.forEachIndexed { i, label ->
-            Box(Modifier.weight(1f).clip(RoundedCornerShape(20.dp)).background(if (selected == i) Pal.Gold else Color.Transparent)
-                .clickable { onSelect(i) }.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+            Box((if (stretch) Modifier.weight(1f) else Modifier).clip(RoundedCornerShape(20.dp))
+                .background(if (selected == i) Pal.Gold else Color.Transparent)
+                .clickable { onSelect(i) }.padding(horizontal = if (stretch) 0.dp else 14.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center) {
                 Text(label, color = if (selected == i) Pal.Ground else Pal.Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
         }
@@ -491,11 +493,11 @@ fun Segmented(options: List<String>, selected: Int, modifier: Modifier = Modifie
 /** Muhasebe holds the overview (like Vakit's "Özet"), the history and the kaza list. */
 @Composable
 fun MuhasebeScreen() {
-    var section by remember { mutableIntStateOf(0) }
+    var section by remember { mutableIntStateOf(SkyDebug.mSection) }
     Column(Modifier.fillMaxSize()) {
         ScreenTitle("Muhasebe")
         Segmented(listOf("Özet", "Gidişat", "Kaza"), section,
-            Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth()) { section = it }
+            Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth(), stretch = true) { section = it }
         Box(Modifier.weight(1f)) {
             when (section) {
                 0 -> MuhasebeOzet()
@@ -733,8 +735,9 @@ private fun MuhasebeGidisat() {
     val ringAnim by animateFloatAsState(if (shown) rate else 0f, tween(1000), label = "rate")
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (month) "Son 30 gün" else "Son 7 gün", Modifier.weight(1f), color = Pal.Muted, fontSize = 13.sp)
+        Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (month) "Son 30 gün" else "Son 7 gün", color = Pal.Muted, fontSize = 13.sp)
+            Spacer(Modifier.weight(1f))
             Segmented(listOf("Hafta", "Ay"), if (month) 1 else 0) { month = it == 1 }
         }
         Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -815,6 +818,8 @@ private fun MuhasebeGidisat() {
         }
     }
 }
+
+
 
 
 

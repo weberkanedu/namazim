@@ -83,6 +83,7 @@ class MainActivity : ComponentActivity() {
         SkyDebug.offsetMs = intent.getLongExtra("skytime", 0L) // `--el skytime` previews another hour of the sky
         SkyDebug.mode = intent.getStringExtra("skymode") // `--es skymode photo|video` switches the header renderer
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
+        SkyDebug.mSection = intent.getIntExtra("msection", 0) // `--ei msection 1` opens Muhasebe > Gidişat
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
             setContent { AppTheme { WidgetPreview() } }
@@ -472,13 +473,30 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                     Spacer(Modifier.weight(1f))
                     GearButton(onOpenSettings)
                 }
-                // Date, hijri and the next mübarek gün live at the bottom left, over the horizon.
-                Column(Modifier.align(Alignment.BottomStart).padding(start = 22.dp, end = 96.dp, bottom = 14.dp)) {
-                    Text(today.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = 12.sp, style = shadow)
-                    Text(hijri(today), color = Pal.Text.copy(alpha = .68f), fontSize = 11.5.sp, style = shadow)
-                    Spacer(Modifier.height(3.dp))
-                    Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 11.5.sp,
-                        fontWeight = FontWeight.SemiBold, style = shadow)
+                // Date, hijri and the next mübarek gün: a small "1 KAS" tile like Vakit, then the details.
+                Row(
+                    Modifier.align(Alignment.BottomStart).padding(start = 20.dp, end = 96.dp, bottom = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        Modifier.clip(RoundedCornerShape(10.dp)).background(Color(0x59000000))
+                            .padding(horizontal = 9.dp, vertical = 5.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text("${today.dayOfMonth}", style = NumStyle, fontSize = 19.sp, lineHeight = 20.sp, color = Pal.Text)
+                        Text(
+                            today.format(DateTimeFormatter.ofPattern("MMM", Locale("tr"))).uppercase(Locale("tr")),
+                            color = Pal.Gold, fontSize = 8.sp, letterSpacing = 1.sp, fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text(today.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = 12.sp, style = shadow)
+                        Text(hijri(today), color = Pal.Text.copy(alpha = .70f), fontSize = 11.5.sp, style = shadow)
+                        Spacer(Modifier.height(2.dp))
+                        Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold, style = shadow)
+                    }
                 }
                 if (fastSky) {
                     Text("Hızlı önizleme · bitirmek için basılı tut", Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
@@ -688,6 +706,8 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
+
 
 
 
