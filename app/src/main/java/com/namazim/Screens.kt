@@ -74,21 +74,7 @@ fun NeedLocation() = Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment
 
 @Composable
 private fun InfoCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) =
-    Column(
-        modifier
-            .shadow(14.dp, RoundedCornerShape(22.dp), clip = false, ambientColor = Color.Black.copy(alpha = .35f), spotColor = Color.Black.copy(alpha = .45f))
-            .clip(RoundedCornerShape(22.dp))
-            .background(Pal.Card)
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = .05f), Color.White.copy(alpha = .012f), Color.Transparent),
-                ),
-            )
-            .border(1.dp, Color.White.copy(alpha = .055f), RoundedCornerShape(22.dp))
-            .padding(horizontal = 18.dp, vertical = 16.dp),
-        content = content,
-    )
-
+    AppCard(modifier, content = content)
 // ---------------------------------------------------------------- Kıble
 
 private const val KAABA_LAT = 21.4225
@@ -1172,4 +1158,5 @@ fun Modifier.pressable(onClick: () -> Unit): Modifier {
     return this.graphicsLayer { scaleX = scale; scaleY = scale }
         .clickable(interactionSource = src, indication = null, onClick = onClick)
 }
+
 

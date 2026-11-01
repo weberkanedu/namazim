@@ -396,10 +396,10 @@ fun ScreenTitle(title: String, sub: String? = null, trailing: @Composable () -> 
     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 24.dp, end = 24.dp, top = 18.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
-                Text(title, style = NumStyle, fontSize = 40.sp, lineHeight = 44.sp, color = Pal.Text)
+                Text(title, style = NumStyle, fontSize = Type.display, lineHeight = 46.sp, letterSpacing = (-0.5).sp, color = Pal.Text)
                 if (sub != null) {
                     Spacer(Modifier.height(2.dp))
-                    Text(sub, fontSize = 12.5.sp, letterSpacing = .3.sp, color = Pal.Muted)
+                    Text(sub, fontSize = Type.body2, letterSpacing = .3.sp, color = Pal.Muted)
                 }
             }
             trailing()
@@ -758,6 +758,7 @@ internal suspend fun fetchLocation(ctx: Context, store: Store) {
     }
     store.setLocation(loc.latitude, loc.longitude, city ?: "")
 }
+
 
 
 
