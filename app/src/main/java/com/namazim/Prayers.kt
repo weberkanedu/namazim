@@ -40,14 +40,15 @@ fun dayTimes(lat: Double, lng: Double, date: LocalDate): DayTimes {
 fun slots(lat: Double, lng: Double, date: LocalDate): List<Slot> {
     val d = dayTimes(lat, lng, date)
     val nextImsak = dayTimes(lat, lng, date.plusDays(1)).imsak
-    // Yatsı lasts until imsak, but nagging all night is useless: stop at the middle of the night.
-    val midnight = d.aksam + (nextImsak - d.aksam) / 2
+    // Yatsı imsağa kadar sürer; gece boyunca sık hatırlatmak yorucu, ama tamamen susmak da yanlış.
+    // Nag'lar gece yarısından sonra seyrekleşir (Reminders.reminders içinde 60 dk), son yarım saatte sıklaşır.
+    val yatsiNagEnd = nextImsak - 30 * 60_000L
     return listOf(
         Slot(Vakit.SABAH, date, d.imsak, d.gunes, d.gunes),
         Slot(Vakit.OGLE, date, d.ogle, d.ikindi, d.ikindi),
         Slot(Vakit.IKINDI, date, d.ikindi, d.aksam, d.aksam),
         Slot(Vakit.AKSAM, date, d.aksam, d.yatsi, d.yatsi),
-        Slot(Vakit.YATSI, date, d.yatsi, nextImsak, midnight),
+        Slot(Vakit.YATSI, date, d.yatsi, nextImsak, yatsiNagEnd),
     )
 }
 
@@ -154,3 +155,4 @@ private val SURE_PAGES = listOf(
 
 /** Sûre that a page is in (shared pages give the later sûre's name, good enough for "where am I"). */
 fun sureOf(page: Int): String = SURE_PAGES.last { it.first <= page.coerceAtLeast(1) }.second
+

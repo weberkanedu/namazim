@@ -22,9 +22,16 @@ data class ReminderCfg(val prep: List<Long> = listOf(30, 15, 5), val every: Long
 fun reminders(slot: Slot, cfg: ReminderCfg = ReminderCfg()): List<Reminder> {
     val list = cfg.prep.map { Reminder(slot.start - it * MIN, slot, true) }.toMutableList()
     var t = slot.start
+    // Yatsı gece yarısını geçince seyrelir: 60 dakikada bir; son yarım saatte yine sık.
+    val night = if (slot.vakit == Vakit.YATSI) slot.start + (slot.end - slot.start) / 2 else Long.MAX_VALUE
     while (t < slot.nagEnd) {
         list += Reminder(t, slot, false)
-        t += if (!cfg.burst || slot.nagEnd - t > 30 * MIN) cfg.every * MIN else 5 * MIN
+        val step = when {
+            slot.nagEnd - t <= 30 * MIN && cfg.burst -> 5 * MIN
+            t >= night -> 60 * MIN
+            else -> cfg.every * MIN
+        }
+        t += step
     }
     return list
 }
@@ -194,4 +201,8 @@ class PrayedReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) = Reminders.scheduleNext(ctx)
 }
+
+
+
+
 
