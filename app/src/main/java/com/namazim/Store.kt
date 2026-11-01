@@ -44,14 +44,14 @@ class Store(context: Context) {
     fun prayed(): Set<String> = p.getStringSet("prayed", emptySet())!!
     fun markPrayed(key: String, at: Long = System.currentTimeMillis()) {
         StoreRev.n++
-        runCatching { NamazimWidget.refresh(appCtx) }
+        runCatching { NamazimWidget.refresh(appCtx); NamazimWideWidget.refresh(appCtx) }
         p.edit().putStringSet("prayed", prayed() + key).putLong("prayedAt_$key", at).apply()
     }
     /** Undo a mis-tap on the timeline. */
     fun unmarkPrayed(key: String) {
         StoreRev.n++
         p.edit().putStringSet("prayed", prayed() - key).apply()
-        runCatching { NamazimWidget.refresh(appCtx) }
+        runCatching { NamazimWidget.refresh(appCtx); NamazimWideWidget.refresh(appCtx) }
     }
     /** When the prayer was marked (for the "12:41'de kılındı" line). */
     fun prayedAt(key: String): Long? = p.getLong("prayedAt_$key", 0L).takeIf { it > 0 }
@@ -184,6 +184,7 @@ class Store(context: Context) {
         p.edit().putString("readLog", o.toString()).apply()
     }
 }
+
 
 
 
