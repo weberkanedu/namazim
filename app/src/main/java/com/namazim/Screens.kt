@@ -18,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,6 +49,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.StrokeJoin
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -596,35 +600,29 @@ private fun MuhasebeOzet() {
     val eta = if (perDay <= 0.05f || page == 0) null else today.plusDays(((604 - page) / perDay).toLong().coerceAtLeast(1))
     val monthsLeft = if (store.kazaRate <= 0 || totalKaza == 0) null else totalKaza / (store.kazaRate * 30f)
 
-    val rings = listOf(
-        Triple((prayedToday / 5f), Pal.Gold, 1.00f),
-        Triple(if (store.readGoal == 0) 0f else (pagesToday.toFloat() / store.readGoal).coerceIn(0f, 1f), Color(0xFF6BC5B0), 0.80f),
-        Triple((page / 604f).coerceIn(0f, 1f), Color(0xFF8AA6D8), 0.60f),
-        Triple(if (store.kazaRate == 0) 0f else (store.kazaPaidThisMonth().toFloat() / (store.kazaRate * 30)).coerceIn(0f, 1f), Pal.Warn, 0.40f),
-    )
+    // radar: beş eksen (namaz, sayfa, hatim, kaza, hedef) — halkaların yerine
+    val kazaProg = run {
+        val paid = store.kazaPaidThisMonth(); val t = totalKaza
+        if (paid + t == 0) 1f else (paid.toFloat() / (paid + t)).coerceIn(0f, 1f)
+    }
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
-    val anim by animateFloatAsState(if (shown) 1f else 0f, tween(900), label = "rings")
+    val anim by animateFloatAsState(if (shown) 1f else 0f, tween(900), label = "radar")
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth()) {
-            Box(Modifier.fillMaxWidth().height(196.dp).padding(top = 4.dp), contentAlignment = Alignment.Center) {
-                Canvas(Modifier.size(188.dp)) {
-                    val c = center
-                    val base = size.minDimension / 2 - 8.dp.toPx()
-                    rings.forEachIndexed { i, (p, color, frac) ->
-                        val r = base * (1f - i * 0.19f)
-                        val w = 9.dp.toPx()
-                        drawCircle(Pal.Track.copy(alpha = .7f), r - w / 2, c, style = Stroke(w))
-                        drawArc(color, -90f, 360f * (p * anim), false,
-                            Offset(c.x - r + w / 2, c.y - r + w / 2), Size((r - w / 2) * 2, (r - w / 2) * 2),
-                            style = Stroke(w, cap = StrokeCap.Round))
-                    }
-                    drawCircle(Pal.Card, base * 0.14f, c)
-                    drawCircle(Pal.Text.copy(alpha = .25f), base * 0.14f, c, style = Stroke(2f))
-                }
-            }
-            Spacer(Modifier.height(6.dp))
+            RadarChart(
+                axes = listOf(
+                    "Namaz" to (prayedToday / 5f),
+                    "Sayfa" to (if (store.readGoal == 0) 0f else pagesToday.toFloat() / store.readGoal).coerceIn(0f, 1f),
+                    "Hatim" to (page / 604f).coerceIn(0f, 1f),
+                    "Kaza" to kazaProg,
+                    "Hedef" to (full30 / 30f).coerceIn(0f, 1f),
+                ),
+                colors = listOf(Pal.Gold, Color(0xFF6BC5B0), Color(0xFF8AA6D8), Pal.Warn, Color(0xFFC29B5A)),
+                anim = anim,
+            )
+            Spacer(Modifier.height(4.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 listOf(
                     "$prayedToday/5 namaz" to Pal.Gold,
@@ -810,6 +808,7 @@ private fun MuhasebeGidisat() {
         endOfRange.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", tr))
     val heatRamp = listOf(Pal.Track, Color(0xFF4A3D27), Color(0xFF6E5A35), Color(0xFF977A45), Color(0xFFC29B5A), Pal.Gold)
     val futureCell = Pal.Track.copy(alpha = .45f)
+    val emptyCell = Color(0xFF39465F)
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Segmented(
@@ -871,11 +870,19 @@ private fun MuhasebeGidisat() {
                 if (period == 2) {
                     // yıl: 53 hafta × 7 gün, ay etiketleriyle
                     BoxWithConstraints {
-                        val gap = 2.dp
+                        val gap = 1.dp
                         val cols = (data.days + 6) / 7
-                        val cell = minOf(22.dp, (maxWidth - gap * (cols - 1).coerceAtLeast(0)) / cols.coerceAtLeast(1))
+                        // %50 daha büyük kutular; sığmazsa sağa sola kaydırılır
+                        val fitW = (maxWidth - gap * (cols - 1).coerceAtLeast(0)) / cols.coerceAtLeast(1)
+                        val cellW = fitW * 1.5f
+                        val cellH = cellW * 1.25f
+                        val totalW = cellW * cols + gap * (cols - 1)
+                        val hScroll = rememberScrollState()
+                        LaunchedEffect(totalW) { hScroll.scrollTo(hScroll.maxValue) }
                         val firstDow = data.start.dayOfWeek.value - 1
-                        Row(Modifier.fillMaxWidth().height(13.dp)) {
+                        Box(Modifier.fillMaxWidth().horizontalScroll(hScroll)) {
+                        Column(Modifier.width(totalW)) {
+                        Row(Modifier.fillMaxWidth().height(16.dp)) {
                             for (w in 0 until cols) {
                                 val d = data.start.plusDays((w * 7 - firstDow).toLong())
                                 val prev = data.start.plusDays(((w - 1) * 7 - firstDow).toLong())
@@ -890,7 +897,7 @@ private fun MuhasebeGidisat() {
                                 }
                             }
                         }
-                        Spacer(Modifier.height(3.dp))
+                        Spacer(Modifier.height(5.dp))
                         Column {
                             for (row in 0 until 7) {
                                 Row(
@@ -903,8 +910,8 @@ private fun MuhasebeGidisat() {
                                         val future = idx >= data.elapsed || idx < 0
                                         val todayCell = idx == data.elapsed - 1
                                         Box(
-                                            Modifier.size(cell).clip(RoundedCornerShape(2.dp))
-                                                .background(if (future) futureCell else heatRamp[c.coerceIn(0, 5)])
+                                            Modifier.size(cellW, cellH).clip(RoundedCornerShape(2.dp))
+                                                .background(if (future) futureCell else if (c == 0) emptyCell else heatRamp[c.coerceIn(0, 5)])
                                                 .then(
                                                     if (todayCell) Modifier.border(1.dp, Pal.Text.copy(alpha = .7f), RoundedCornerShape(2.dp))
                                                     else Modifier,
@@ -914,12 +921,15 @@ private fun MuhasebeGidisat() {
                                 }
                             }
                         }
+                        }
+                        }
                     }
                 } else {
                     // hafta / ay: gerçek takvim ızgarası (7 sütun), gün numaralarıyla
                     BoxWithConstraints {
                         val gap = 4.dp
-                        val cell = (maxWidth - gap * 6) / 7
+                        val cellW = (maxWidth - gap * 6) / 7
+                        val cellH = cellW * 0.5f
                         val offset = data.start.dayOfWeek.value - 1
                         val rows = (offset + data.days + 6) / 7
                         Column(Modifier.fillMaxWidth()) {
@@ -939,7 +949,7 @@ private fun MuhasebeGidisat() {
                                         val n = if (inRange && idx < data.elapsed) data.counts[idx] else -1
                                         val todayCell = inRange && idx == data.elapsed - 1
                                         Box(
-                                            Modifier.size(cell).clip(RoundedCornerShape(8.dp))
+                                            Modifier.size(cellW, cellH).clip(RoundedCornerShape(8.dp))
                                                 .background(
                                                     when {
                                                         !inRange -> Color.Transparent
@@ -1083,7 +1093,46 @@ private fun MuhasebeGidisat() {
     }
 }
 
-
+/** Beş eksenli radar: Özet'in üst kartı (halkaların yerine). */
+@Composable
+private fun RadarChart(axes: List<Pair<String, Float>>, colors: List<Color>, anim: Float) {
+    val measurer = rememberTextMeasurer()
+    val labelStyle = TextStyle(fontSize = 11.sp, color = Pal.Muted)
+    Canvas(Modifier.fillMaxWidth().height(250.dp)) {
+        val c = Offset(size.width / 2f, size.height / 2f + 2.dp.toPx())
+        val r = minOf(size.width, size.height) / 2f - 34.dp.toPx()
+        val n = axes.size
+        fun pt(i: Int, f: Float): Offset {
+            val a = (-Math.PI / 2 + 2 * Math.PI * i / n).toFloat()
+            return Offset(c.x + r * f * cos(a), c.y + r * f * sin(a))
+        }
+        for (ring in 1..4) {
+            val path = Path()
+            for (i in 0 until n) {
+                val o = pt(i, ring / 4f)
+                if (i == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y)
+            }
+            path.close()
+            drawPath(path, Pal.Line, style = Stroke(1.dp.toPx()))
+        }
+        for (i in 0 until n) drawLine(Pal.Line, c, pt(i, 1f), 1.dp.toPx())
+        val poly = Path()
+        axes.forEachIndexed { i, axis ->
+            val o = pt(i, (axis.second * anim).coerceIn(0.03f, 1f))
+            if (i == 0) poly.moveTo(o.x, o.y) else poly.lineTo(o.x, o.y)
+        }
+        poly.close()
+        drawPath(poly, Pal.Gold.copy(alpha = .18f))
+        drawPath(poly, Pal.Gold, style = Stroke(2.dp.toPx(), join = StrokeJoin.Round))
+        axes.forEachIndexed { i, axis ->
+            val o = pt(i, (axis.second * anim).coerceIn(0.03f, 1f))
+            drawCircle(colors[i % colors.size], 4.dp.toPx(), o)
+            val lp = pt(i, 1.22f)
+            val layout = measurer.measure(axis.first, labelStyle)
+            drawText(layout, topLeft = Offset(lp.x - layout.size.width / 2f, lp.y - layout.size.height / 2f))
+        }
+    }
+}
 
 
 

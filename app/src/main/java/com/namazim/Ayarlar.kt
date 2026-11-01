@@ -125,13 +125,13 @@ fun AyarlarScreen(onBack: () -> Unit) {
         ScreenTitle("Ayarlar", trailing = {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = Pal.Text) }
         })
-        v.let { }
-
+        // key(v): chip'lerin seçimi her dokunuşta yeniden çizilsin (lambda'lar Compose'da hatırlanıyor)
+        key(v) {
         Section("Görünüm") {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf(SeherPalette, OdakPalette).forEach { p ->
                     ThemeCard(p, Pal.current.id == p.id, Modifier.weight(1f)) {
-                        store.theme = p.id; Pal.current = p; NamazimWidget.refresh(ctx)
+                        store.theme = p.id; Pal.current = p; NamazimWidget.refresh(ctx); v++
                     }
                 }
             }
@@ -197,6 +197,8 @@ fun AyarlarScreen(onBack: () -> Unit) {
         }
 
         Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.padding(24.dp), color = Pal.Muted, fontSize = 12.sp)
+        }
     }
 }
+
 
