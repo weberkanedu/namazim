@@ -214,25 +214,6 @@ fun AyarlarScreen(onBack: () -> Unit) {
         }
 
 
-        Section("Bildirim sesi") {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("system" to "Sistem", "sakin" to "Sakin", "zil" to "Zil", "odak" to "Odak").forEach { (id, label) ->
-                    val on = store.notifSound == id
-                    Box(
-                        Modifier.heightIn(min = 44.dp).clip(CircleShape)
-                            .background(if (on) Pal.Gold else Color.Transparent)
-                            .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape)
-                            .clickable { store.notifSound = id; Reminders.createChannels(ctx); v++ }
-                            .padding(horizontal = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) { Text(label, color = if (on) Pal.Ground else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Seçili sesi dinle", Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
-                TextButton(onClick = { playTone(ctx, store.notifSound) }) { Text("Dinle", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
-            }
-        }
 
         Section("Okuma ve kaza") {
             ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
@@ -364,13 +345,20 @@ private fun StepButton(text: String, enabled: Boolean, onClick: () -> Unit) {
 
 /** Seçili bildirim sesini bir kez çalar. */
 fun playTone(ctx: Context, sound: String) {
-    val res = when (sound) { "sakin" -> R.raw.notif_sakin; "zil" -> R.raw.notif_zil; "odak" -> R.raw.notif_odak; else -> return }
     runCatching {
-        val mp = android.media.MediaPlayer.create(ctx, res)
-        mp.setOnCompletionListener { it.release() }
-        mp.start()
+        val res = Reminders.soundRes(sound)
+        if (res != 0) {
+            val mp = android.media.MediaPlayer.create(ctx, res) ?: return@runCatching
+            mp.setOnCompletionListener { it.release() }
+            mp.start()
+        } else {
+            // "Sistem": telefonun varsayılan bildirim sesini bir kez çal
+            val uri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION)
+            android.media.RingtoneManager.getRingtone(ctx, uri)?.play()
+        }
     }
 }
+
 
 
 

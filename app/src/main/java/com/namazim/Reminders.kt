@@ -128,7 +128,7 @@ object Reminders {
         nm.createNotificationChannel(prep)
         nm.createNotificationChannel(nag)
         // eski kimlikleri temizle
-        (SOUNDS.map { it.first } + listOf("")).flatMap { listOf("hazirlik_`$it", "israr_`$it") }
+        (SOUNDS.map { it.first } + listOf("")).flatMap { listOf("hazirlik_$it", "israr_$it") }
             .filter { it != "hazirlik_$sound" && it != "israr_$sound" }
             .forEach { nm.deleteNotificationChannel(it) }
     }
@@ -240,6 +240,7 @@ class PrayedReceiver : BroadcastReceiver() {
 class RescheduleReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) = Reminders.scheduleNext(ctx)
 }
+
 
 
 
