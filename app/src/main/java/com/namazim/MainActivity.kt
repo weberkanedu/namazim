@@ -630,7 +630,6 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                         }
                     }
                 }
-                item { Spacer(Modifier.height(Space.m)); SetupCard(); Spacer(Modifier.height(Space.m)) }
             }
         }
         }
@@ -698,42 +697,6 @@ fun ReminderScreen(key: String, onClose: () -> Unit) {
             Reminders.snooze(ctx, slot.key, slot.vakit); onClose()
         }
         Text("Kılana kadar hatırlatmaya devam edeceğim.", Modifier.padding(vertical = Space.m), color = Pal.Muted, fontSize = Type.label)
-    }
-}
-
-// ---------------------------------------------------------------- setup (permissions the reminders need)
-
-/** Reminders only work if the phone lets us: notifications on, no battery kill, Xiaomi autostart. */
-@Composable
-fun SetupCard() {
-    val ctx = LocalContext.current
-    rememberNow() // ticking recomposes this card, so it re-checks after the user returns from settings
-    val notifOk = ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-    val batteryOk = ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName)
-    val prefs = ctx.getSharedPreferences("namazim", Context.MODE_PRIVATE)
-    // Android can't tell us if autostart is on, so hide the hint once the user has opened that screen.
-    var autostartSeen by remember { mutableStateOf(prefs.getBoolean("autostartSeen", false)) }
-    val xiaomi = Build.MANUFACTURER.equals("xiaomi", true) && !autostartSeen
-    val askNotif = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-    if (notifOk && batteryOk && !xiaomi) return
-
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.m)).background(Pal.Card).padding(Space.l),
-        verticalArrangement = Arrangement.spacedBy(Space.s)) {
-        Text("Hatırlatmalar için", color = Pal.Text, fontWeight = FontWeight.SemiBold)
-        if (!notifOk) GhostButton("Bildirimlere izin ver", color = Pal.Gold) { askNotif.launch(Manifest.permission.POST_NOTIFICATIONS) }
-        if (!batteryOk) GhostButton("Pil kısıtlamasını kaldır", color = Pal.Gold) {
-            @SuppressLint("BatteryLife")
-            val i = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}"))
-            ctx.startActivity(i)
-        }
-        if (xiaomi) {
-            Text("Xiaomi uygulamaları arka planda kapatır. Otomatik başlatmayı aç:", color = Pal.Muted, fontSize = Type.body2)
-            GhostButton("Otomatik başlatma", color = Pal.Gold) {
-                openAutostart(ctx)
-                prefs.edit().putBoolean("autostartSeen", true).apply()
-                autostartSeen = true
-            }
-        }
     }
 }
 
