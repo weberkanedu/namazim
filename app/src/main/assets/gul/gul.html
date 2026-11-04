@@ -204,7 +204,9 @@ queued.forEach(([f, a]) => window.gul[f](a));
 function resize(){ const w = innerWidth, h = innerHeight, pr = Math.min(devicePixelRatio, 1.5);
   // css size in px from innerWidth/innerHeight: in the app's WebView 100vh resolves to 0
   renderer.setPixelRatio(pr); renderer.setSize(w,h); composer.setPixelRatio(pr); composer.setSize(w,h);
-  ov.setAttribute('width',w); ov.setAttribute('height',h); cam.aspect = w/h; cam.updateProjectionMatrix(); }
+  ov.setAttribute('width',w); ov.setAttribute('height',h); cam.aspect = w/h;
+  cam.zoom = Math.min(1, cam.aspect / 1.07);   // narrower than the old 320x300 card: pull back so the rose keeps its width
+  cam.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 let sizeW = innerWidth, sizeH = innerHeight;
 let prev = performance.now(), dirty = true;

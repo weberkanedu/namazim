@@ -676,12 +676,14 @@ private fun MuhasebeOzet() {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
-            GulCard(petals)
-            Spacer(Modifier.height(Space.s))
-            // long-term progress stays under the rose; the rose itself is today's effort
-            ProgressLine("Hatim", "$page/604", page / 604f)
-            Spacer(Modifier.height(Space.s))
-            ProgressLine("Son 30 gün", "$full30/30 tam gün", full30 / 30f)
+            // the rose is today's effort; long-term progress stands beside it
+            Row(Modifier.height(300.dp)) {
+                GulCard(petals, Modifier.weight(1f))
+                Spacer(Modifier.width(Space.s))
+                ProgressColumn("Hatim", "$page", "/604", page / 604f)
+                Spacer(Modifier.width(Space.s))
+                ProgressColumn("Son 30 gün", "$full30", "/30", full30 / 30f)
+            }
         }
 
         InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
@@ -1148,14 +1150,17 @@ private fun MuhasebeGidisat() {
 
 /** Thin labelled bar for a long-running goal (under the Özet rose). */
 @Composable
-private fun ProgressLine(name: String, value: String, progress: Float) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(name, Modifier.weight(1f), color = Pal.Muted, fontSize = Type.label)
-        Text(value, color = Pal.Text, fontSize = Type.label)
-    }
-    Spacer(Modifier.height(Space.xs))
-    Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Pal.Track)) {
-        Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).fillMaxHeight().clip(CircleShape).background(Pal.Gold))
+private fun ProgressColumn(name: String, value: String, of: String, progress: Float) {
+    Column(Modifier.width(48.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = Pal.Text, fontSize = Type.body)
+        Text(of, color = Pal.Muted, fontSize = Type.micro)
+        Spacer(Modifier.height(Space.xs))
+        // fills from the bottom up
+        Box(Modifier.weight(1f).width(4.dp).clip(CircleShape).background(Pal.Track), contentAlignment = Alignment.BottomCenter) {
+            Box(Modifier.fillMaxWidth().fillMaxHeight(progress.coerceIn(0f, 1f)).clip(CircleShape).background(Pal.Gold))
+        }
+        Spacer(Modifier.height(Space.xs))
+        Text(name, color = Pal.Muted, fontSize = Type.micro, textAlign = TextAlign.Center, lineHeight = Type.micro, minLines = 2)
     }
 }
 /** Dokununca hafifçe küçülen tıklanabilir yüzey — hareket hissi. */
