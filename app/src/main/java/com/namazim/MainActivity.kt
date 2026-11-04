@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -123,12 +124,14 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
     var tab by remember { mutableIntStateOf(startTab) }
     // `am start --ei tab N` on a running instance moves to that tab (useful for screenshots)
     LaunchedEffect(startTab) { tab = startTab }
+    // Kıble (1) ve Ayarlar (4) sekme değil, ana sayfanın başlığından açılır: dock gizlenir, geri ana sayfaya döner
+    val subPage = tab == 1 || tab == 4
+    BackHandler(subPage) { tab = 0 }
     Box(Modifier.fillMaxSize().background(Pal.Ground)) {
         Scaffold(
             containerColor = Pal.Ground,
             contentWindowInsets = WindowInsets(0),
-            // Ayarlar bir sekme değil: açıkken dock gizlenir, geri oku tek çıkış olur
-            bottomBar = { if (tab != 4) SeherNav(tab) { tab = it } },
+            bottomBar = { if (!subPage) SeherNav(tab) { tab = it } },
         ) { pad ->
             Box(Modifier.padding(pad).fillMaxSize()) {
                 // sekmeler arası yumuşak geçiş: hafif kayma + solma
@@ -142,8 +145,8 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
                     label = "tab",
                 ) { t ->
                     when (t) {
-                        0 -> NamazScreen { tab = 4 }
-                        1 -> KibleScreen()
+                        0 -> NamazScreen(onOpenKible = { tab = 1 }) { tab = 4 }
+                        1 -> KibleScreen { tab = 0 }
                         2 -> OkumaScreen()
                         3 -> MuhasebeScreen()
                         else -> AyarlarScreen { tab = 0 }
@@ -157,10 +160,10 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
 
 @Composable
 fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
-    // Ayarlar is not a tab any more: it opens from the gear on the home header (tab 4), so back returns here.
-    val tabs = listOf<Pair<String, Int>>(
-        "Namaz" to R.drawable.ic_nav_namaz, "Kıble" to R.drawable.ic_nav_kible,
-        "Okuma" to R.drawable.ic_nav_okuma, "Muhasebe" to R.drawable.ic_nav_muhasebe,
+    // (tab, name, icon): Kıble (1) and Ayarlar (4) open from the home header, not from the dock
+    val tabs = listOf(
+        Triple(0, "Namaz", R.drawable.ic_nav_namaz),
+        Triple(2, "Okuma", R.drawable.ic_nav_okuma), Triple(3, "Muhasebe", R.drawable.ic_nav_muhasebe),
     )
     val haptic = LocalHapticFeedback.current
     // floating dock instead of a full-width bar: the photo keeps running underneath it
@@ -181,7 +184,7 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             // seçili sekme genişleyip adını gösterir; diğerleri yalnızca ikon
-            tabs.forEachIndexed { i, (name, res) ->
+            tabs.forEach { (i, name, res) ->
                 val on = selected == i
                 Row(
                     Modifier.weight(if (on) 1.9f else 1f).height(46.dp)
@@ -252,13 +255,19 @@ fun LocationChip(city: String, locating: Boolean, onRefresh: () -> Unit) {
     }
 }
 
-/** Thin-line gear: eight teeth on a ring, more elegant than the filled Material icon. */
+/** Round translucent button on the sky header (Kıble, gear). */
 @Composable
-fun GearButton(onClick: () -> Unit) {
+fun HeaderButton(onClick: () -> Unit, content: @Composable () -> Unit) {
     Box(
         Modifier.size(34.dp).clip(CircleShape).background(Color(0x26000000)).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) {
+    ) { content() }
+}
+
+/** Thin-line gear: eight teeth on a ring, more elegant than the filled Material icon. */
+@Composable
+fun GearButton(onClick: () -> Unit) {
+    HeaderButton(onClick) {
         androidx.compose.foundation.Canvas(Modifier.size(18.dp)) {
             val c = center
             val r = size.minDimension * 0.29f
@@ -446,7 +455,7 @@ private val TR_DATE = DateTimeFormatter.ofPattern("d MMMM EEEE", Locale("tr"))
 // ---------------------------------------------------------------- Namaz (home)
 
 @Composable
-fun NamazScreen(onOpenSettings: () -> Unit) {
+fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     val now = rememberNow()
@@ -526,6 +535,8 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
             ) {
                 LocationChip(store.city, locating) { if (!locating) locate() }
                 Spacer(Modifier.weight(1f))
+                HeaderButton(onOpenKible) { Icon(painterResource(R.drawable.ic_nav_kible), "Kıble", tint = Pal.Text, modifier = Modifier.size(18.dp)) }
+                Spacer(Modifier.width(Space.s))
                 GearButton(onOpenSettings)
             }
             // Date, hijri and the next mübarek gün: a small "1 KAS" tile like Vakit, then the details.

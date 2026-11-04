@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
@@ -102,7 +103,7 @@ private fun qiblaTime(lat: Double, lng: Double, qibla: Double): Long? {
 }
 
 @Composable
-fun KibleScreen() {
+fun KibleScreen(onBack: () -> Unit) {
     StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
@@ -153,8 +154,11 @@ fun KibleScreen() {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         ScreenTitle("Kıble", store.city.ifEmpty { null }) {
-            Text(if (level) "Telefon düz" else "Telefonu yatay tut", color = if (level) okGreen else Pal.Muted,
-                fontSize = Type.label, textAlign = TextAlign.End)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(if (level) "Telefon düz" else "Telefonu yatay tut", color = if (level) okGreen else Pal.Muted,
+                    fontSize = Type.label, textAlign = TextAlign.End)
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = Pal.Text) }
+            }
         }
         Box(Modifier.fillMaxWidth().height(340.dp), contentAlignment = Alignment.Center) {
             Box(Modifier.size(340.dp).background(Brush.radialGradient(

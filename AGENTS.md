@@ -21,7 +21,8 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
   Holds until the phone reboots.
 - `adb install -r` shows a Xiaomi confirmation on the phone; the user must tap *Yükle*.
 - Tap/key injection is not allowed. To open a tab for a screenshot:
-  `adb shell am start -n com.namazim/.MainActivity --ei tab N` (0 Namaz, 1 Kıble, 2 Okuma, 3 Muhasebe, 4 Ayarlar),
+  `adb shell am start -n com.namazim/.MainActivity --ei tab N` (0 Namaz, 1 Kıble, 2 Okuma, 3 Muhasebe, 4 Ayarlar;
+  1 and 4 are not in the dock, they open from the home header),
   then `adb exec-out screencap -p > shot.png`. The tab extra also works on a running instance.
 - More test extras: `--el skytime <ms>` shifts the sky clock (e.g. `-19800000` shows noon at 18:30),
   `--ez keepawake true` pins the screen on, `--ez widgetpreview true` shows the widget art big,
@@ -36,7 +37,7 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
 | `Store.kt` | Everything persisted, in one SharedPreferences file: location, prayed set (`"yyyy-mm-dd|VAKIT"`), kaza counts (+VITIR), reading log, books, all settings, snooze. `settleKaza()` turns ended unprayed prayers into kaza. |
 | `Reminders.kt` | Alarm chain: always exactly one `setAlarmClock` alarm for the next reminder. `reminders(slot, cfg)` is the cadence; `fire()` shows due notifications; Kıldım / snooze receivers; `test()` sends a sample nag. |
 | `MainActivity.kt` | Activity, bottom nav, Namaz (home) screen, full-screen "Kıldın mı?" (`ReminderScreen`, opened from the nag notification), permission card, location fetch. The home screen is a countdown plus a vertical **timeline**: one node per vakit with a tick that marks it prayed (tap again to undo, and the mark time shows under the name), ek vakitler hang under their vakit and open with the chevron. |
-| `Screens.kt` | Kıble (compass with magnetic declination fix, kıble saati), Kaza, Okuma (Kur'an pages/cüz/hatim, daily goal, books), Muhasebe (Özet + Kaza tabs, heatmap, streaks). |
+| `Screens.kt` | Kıble (compass with magnetic declination fix, kıble saati; opened from the compass button in the home header, back arrow like Ayarlar — its dock slot is reserved for the coming Zikir tab), Kaza, Okuma (Kur'an pages/cüz/hatim, daily goal, books), Muhasebe (Özet + Kaza tabs, heatmap, streaks). |
 | `Ayarlar.kt` | Settings screen (theme, sky renderer, reminder cadence, snooze, goals, location, phone permissions). Opened from the gear in the home header (tab 4), not from the bottom nav; its title has a back arrow. |
 | `GulLogic.kt` / `GulView.kt` | Muhasebe › Özet 3D rose. Pure petal progress (Namaz, Vaktinde, Sayfa, Kaza, Zikir), prayer day = imsak to imsak; tests in `GulTest.kt`. `GulCard` hosts `assets/gul/gul.html` (three.js 0.170.0, vendored) in a WebView served from `https://gul.local/` via `shouldInterceptRequest`, and drives it through `gul.set` / `gul.spin`. Spec `docs/superpowers/specs/2026-11-04-gul-design.md`, approved look `design/gul/gul-3d.html`. |
 | `Theme.kt` | One palette, `SeherPalette` (navy + gold, Cormorant). Use `Pal.X` colors and `NumStyle` for big numbers. |
