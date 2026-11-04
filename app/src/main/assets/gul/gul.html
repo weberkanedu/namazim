@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Gül</title>
+<!-- Muhasebe › Özet rose. Derived from design/gul/gul-3d.html (the approved prototype); the app drives it via gul.set / gul.spin. -->
+<style>
+  html,body{margin:0;height:100%;background:#121D33;overflow:hidden;-webkit-user-select:none;user-select:none}
+  canvas{display:block;width:100vw;height:100vh}
+  #ov,#labs{position:absolute;inset:0;pointer-events:none;transition:opacity .9s}
+  .lab{position:absolute;transform:translate(-50%,-50%);font:600 12px system-ui,sans-serif;white-space:nowrap;color:#F3EEE3;text-align:center}
+  .lab small{display:block;font:500 10px system-ui,sans-serif;color:#C9D1DC}
+</style></head>
+<body>
+<svg id="ov"></svg><div id="labs"></div>
+<script>
+  // calls from Kotlin can arrive before the module has run: queue them
+  window.gul = {ready:false, q:[], set(p){ this.q.push(['set', p]); }, spin(d){ this.q.push(['spin', d]); }};
+</script>
+<script type="importmap">{"imports":{"three":"./three/build/three.module.min.js","three/addons/":"./three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+
+// petals in the app's order: Namaz, Vaktinde, Sayfa, Kaza, Zikir
+let petals = Array.from({length:5}, () => ({name:'', progress:0, label:'', counts:true}));
+const target = [0,0,0,0,0], cur = [0,0,0,0,0];
+let budC = 0;
+
+// ---------------- renderer / stage (teardown studio recipe: env softboxes, soft shadow, neutral tone map)
+const renderer = new THREE.WebGLRenderer({antialias:false, powerPreference:'high-performance'});
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#121D33');
+scene.environmentIntensity = .9;
+const cam = new THREE.PerspectiveCamera(30, 1, .05, 60);
+// camera orbit: the prototype's start position around target (0,1,0); drag + auto-rotate change only the azimuth
+// closer than the desktop prototype: the phone card is small and the rose should fill ~60-70% of it
+const TGT = new THREE.Vector3(0, 1.12, 0), OFF = new THREE.Vector3(3.6, 4.0, 5.2).multiplyScalar(.7);
+const RAD = Math.hypot(OFF.x, OFF.z), ELEV = OFF.y;
+let az = Math.atan2(OFF.x, OFF.z), lastSpin = -1e9;
+const AUTO = .0471;   // rad/s, the prototype's OrbitControls autoRotateSpeed .45
+
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType, samples:4}));
+composer.addPass(new RenderPass(scene, cam));
+// bloom only catches the reward glow (emissive): threshold high, strength low
+const bloom = new UnrealBloomPass(new THREE.Vector2(4,4), 0, .6, .82);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// environment: big top softbox, two side strips, a warm front kicker
+{
+  const env = new THREE.Scene(); env.background = new THREE.Color('#5a5e66');
+  const box = (w,h,pos,c,k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(k), side:THREE.DoubleSide})); m.position.copy(pos); m.lookAt(0,0,0); env.add(m); };
+  box(12,12,new THREE.Vector3(0,14,2),'#ffffff',2.4);
+  box(3,14,new THREE.Vector3(-12,4,6),'#ffffff',3.0);
+  box(3,14,new THREE.Vector3(12,4,-4),'#dfe8ff',2.0);
+  box(18,2,new THREE.Vector3(0,2,14),'#ffe6c8',1.4);
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(env, .02).texture; pm.dispose();
+}
+const sun = new THREE.DirectionalLight('#fff4e6', 2.4);
+sun.position.set(-2.2, 6, 2.6); sun.castShadow = true;
+Object.assign(sun.shadow.camera, {left:-2.2,right:2.2,top:2.2,bottom:-2.2,near:1,far:14});
+sun.shadow.mapSize.set(1024,1024); sun.shadow.radius = 4; sun.shadow.bias = -.0004; sun.shadow.normalBias = .02;
+scene.add(sun, new THREE.HemisphereLight('#ffffff', '#3a3030', .35));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.ShadowMaterial({opacity:.42, color:'#05070c', polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-8}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+
+// ---------------- petal: a surface along a bending spine, cupped across, margins rolled back near the rim
+const NU = 28, NV = 40;
+function petalGeo(){
+  const g = new THREE.BufferGeometry(), n = (NU+1)*(NV+1), idx = [];
+  for (let j=0;j<NV;j++) for (let i=0;i<NU;i++){ const a=j*(NU+1)+i, b=a+1, c=a+NU+1, d=c+1; idx.push(a,c,b, b,c,d); }
+  g.setIndex(idx);
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3),3));
+  g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n*3),3));
+  return g;
+}
+const C1 = new THREE.Color(), C2 = new THREE.Color();
+const ss = (a,b,x) => { const t = Math.min(1,Math.max(0,(x-a)/(b-a))); return t*t*(3-2*t); };
+const lerp = THREE.MathUtils.lerp;
+// p: {L, W, lean, curl, cup, hug, roll, rb, y0, wave, col:{base,mid,edge}}
+function shape(geo, p){
+  const pos = geo.attributes.position.array, col = geo.attributes.color.array;
+  const ds = p.L / NV; let a = p.lean, r = p.rb, y = p.y0, k = 0;
+  for (let j=0;j<=NV;j++){
+    const v = j/NV;
+    if (j>0){ a += p.curl*ds*(.4 + 1.2*v); r += Math.sin(a)*ds; y += Math.cos(a)*ds; }
+    const Tr = Math.sin(a), Ty = Math.cos(a), Nr = -Ty, Ny = Tr;   // N: the inner/upper face
+    // obovate outline with a rounded rim
+    const w = p.W * (.16 + .84*Math.sin(Math.PI/2*Math.min(1, v/.66))) * (v>.66 ? Math.sqrt(Math.max(0, 1 - ((v-.66)/.34)**2)) : 1);
+    for (let i=0;i<=NU;i++){
+      const u = i/NU*2 - 1, au = Math.abs(u);
+      const cup = p.cup * p.W * u*u * (.35 + .65*Math.sin(Math.PI*Math.min(1,v*1.1)));
+      const roll = p.roll * p.W * Math.max(0, au - .35)**2 * ss(.35, 1, v) * 2.2;
+      const wav = p.wave * Math.sin(u*9.0 + j*.05) * ss(.75,1,v) * .03;
+      const xh = u * w * .5, hugD = Math.min(xh*xh / (2*Math.max(r, .07)), Math.max(r, .07));
+      const d = lerp(cup, hugD, p.hug || 0) - roll + wav;
+      const x = u * w * .5 * (1 - .18*roll/(p.W+1e-6));
+      pos[k] = r + Nr*d; pos[k+1] = y + Ny*d; pos[k+2] = x;
+      // colour: pale base → body → darker rim, a touch of variation, baked occlusion toward the base
+      C1.copy(p.col.base).lerp(p.col.mid, ss(0, .32, v));
+      C2.copy(C1).lerp(p.col.edge, ss(.55, 1, Math.max(v, au*.95)) * .6);
+      const occ = (p.occ ?? .5) * (1 - ss(0, .45, v)) + .25*(p.hug||0)*(1-au);
+      const n = (.94 + .06*Math.sin(u*13 + v*7)) * (1 - Math.min(.7, occ));
+      col[k] = C2.r*n; col[k+1] = C2.g*n; col[k+2] = C2.b*n; k += 3;
+    }
+  }
+  geo.attributes.position.needsUpdate = true; geo.attributes.color.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
+  return {r, y};   // tip
+}
+
+const L = {base:'#f2d7a6', mid:'#b8123a', edge:'#4a0614', inner:'#7a0a22', sheen:'#ff8fa6', glow:'#ff3a5c'};   // kızıl
+const petalMat = new THREE.MeshPhysicalMaterial({vertexColors:true, side:THREE.DoubleSide, roughness:.52, sheen:1, sheenRoughness:.45, envMapIntensity:.55, sheenColor:new THREE.Color(L.sheen)});
+
+const head = new THREE.Group(); head.position.y = 1.0; head.rotation.z = .06; scene.add(head);
+const mk = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; return m; };
+const ANG = i => -(i*72 + 18) * Math.PI/180;
+// 5 goal petals, outermost, 72° apart; each has its own material so it can glow on its own
+const outer = petals.map((_,i) => { const m = mk(petalGeo(), petalMat.clone()); m.rotation.y = ANG(i); head.add(m); return m; });
+// inner spiral by the golden angle, small and tight at the centre
+const NIN = 16;
+const inner = Array.from({length:NIN}, (_,i) => { const m = mk(petalGeo(), petalMat); m.rotation.y = -(i*137.508) * Math.PI/180; m.userData.k = i/(NIN-1); head.add(m); return m; });
+// 5 sepals and a stem
+const green = new THREE.MeshPhysicalMaterial({vertexColors:true, side:THREE.DoubleSide, roughness:.6, envMapIntensity:.5});
+const SEP = {base:new THREE.Color('#3e6b3a'), mid:new THREE.Color('#2f5a33'), edge:new THREE.Color('#1d3b22')};
+const sepals = Array.from({length:5}, (_,i) => { const m = mk(petalGeo(), green); m.rotation.y = -(i*72 + 54) * Math.PI/180; head.add(m); return m; });
+const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(.0,1.0,0), new THREE.Vector3(.03,.6,.02), new THREE.Vector3(-.02,.25,0), new THREE.Vector3(0,0,0)]);
+const stemMat = new THREE.MeshPhysicalMaterial({color:'#2d5530', roughness:.55, envMapIntensity:.5});
+scene.add(mk(new THREE.TubeGeometry(stemCurve, 40, .035, 12), stemMat));
+const hip = mk(new THREE.SphereGeometry(.09, 24, 16), stemMat); hip.scale.set(1,.8,1); hip.position.y = .97; scene.add(hip);
+
+// ---------------- reward: a warm light in the heart and gold dust rising once every goal is done
+const heart = new THREE.PointLight('#ffc46b', 0, 3.2, 1.6); heart.position.set(0, 1.28, 0); scene.add(heart);
+const NDUST = 240, dustPos = new Float32Array(NDUST*3);
+let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+const dustSeed = Array.from({length:NDUST}, () => [rnd(), rnd(), rnd()]);
+const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos,3));
+const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,240,200,1)'); gr.addColorStop(.35,'rgba(255,200,110,.55)'); gr.addColorStop(1,'rgba(255,190,90,0)');
+  g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const dustMat = new THREE.PointsMaterial({map:dotTex, size:.07, transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending, color:'#ffd38a'});
+scene.add(new THREE.Points(dustGeo, dustMat));
+let full = 0;   // 0..1, eases in when every counting petal is complete
+
+// ---------------- labels with leader lines
+const ov = document.getElementById('ov'), labs = document.getElementById('labs');
+const lines = petals.map(() => { const l = document.createElementNS('http://www.w3.org/2000/svg','line'); l.setAttribute('stroke-width','1'); l.setAttribute('stroke','#C9D1DC'); l.setAttribute('stroke-opacity','.45'); ov.appendChild(l); return l; });
+const tags = petals.map(() => { const d = document.createElement('div'); d.className = 'lab'; labs.appendChild(d); return d; });
+const tips = petals.map(() => new THREE.Vector3());
+const vproj = new THREE.Vector3();
+function proj(v){ vproj.copy(v).project(cam); return [(vproj.x*.5+.5)*innerWidth, (-vproj.y*.5+.5)*innerHeight]; }
+
+// ---------------- pose
+// openness never goes past this: the owner's chosen "fully open" look
+const OPEN_MAX = .6;
+const HSL = {};
+// t=0: greyed and dimmed, t=1: the true colour
+const muted = (c, t) => { c.getHSL(HSL); return new THREE.Color().setHSL(HSL.h, HSL.s*(.32 + .68*t), HSL.l*(.55 + .45*t)); };
+const counting = () => petals.map((p,i) => i).filter(i => petals[i].counts);
+function pose(){
+  const col = {base:new THREE.Color(L.base), mid:new THREE.Color(L.mid), edge:new THREE.Color(L.edge)};
+  const colIn = {base:new THREE.Color(L.base), mid:new THREE.Color(L.inner), edge:new THREE.Color(L.edge)};
+  const avg = cur.reduce((a,b)=>a+b,0)/5;
+  outer.forEach((m,i) => {
+    const o = cur[i], oc = o*OPEN_MAX, e = oc*oc*(3-2*oc);
+    // closed petals are dull and dark; each step of progress brings the colour back
+    const pc = {base:muted(col.base, o), mid:muted(col.mid, o), edge:muted(col.edge, o)};
+    m.material.emissive.set(L.glow).multiplyScalar(.10*o*o + (o > .98 ? .06 : 0));   // a finished goal glows
+    const tip = shape(m.geometry, {L:1.12, W:1.2, lean:lerp(.95, 1.32, e), curl:lerp(-2.05, 1.05, e), hug:1-e, cup:.2, roll:lerp(0, .55, e), rb:.13, y0:-.02, wave:e, col:pc});
+    tips[i].set(tip.r, tip.y, 0).applyEuler(m.rotation).add(head.position);
+  });
+  const ci = {base:muted(colIn.base, budC*.7+.3*avg), mid:muted(colIn.mid, budC*.7+.3*avg), edge:muted(colIn.edge, budC*.7+.3*avg)};
+  inner.forEach(m => {
+    const k = m.userData.k, b = budC*(.25 + .75*k), e = b*b*(3-2*b);
+    shape(m.geometry, {L:.36 + .56*k, W:.55 + .7*k, lean:lerp(.85, .45 + .75*k, e), curl:lerp(-2.3/(.36 + .56*k), (-1.6 + 2.2*k)/(.36 + .56*k), e), hug:1 - e*.8, cup:.5, roll:lerp(0, .3*k, e), rb:.02 + .09*k, y0:.02*(1-k), wave:.4*e, col:ci});
+  });
+  sepals.forEach(m => shape(m.geometry, {L:.62, W:.3, lean:lerp(1.0, 2.1, avg), curl:lerp(-1.5, .8, avg), hug:1-avg, cup:.5, roll:0, rb:.12, y0:-.06, wave:0, col:SEP}));
+}
+
+// ---------------- app API
+function set(list){
+  petals = list.slice(0,5).map(p => ({name:String(p.name), progress:Math.min(1, Math.max(0, +p.progress || 0)), label:String(p.label), counts:!!p.counts}));
+  petals.forEach((p,i) => { target[i] = p.progress; tags[i].innerHTML = `${p.name}<small>${p.label}</small>`; });
+}
+function spin(dx){ az -= dx * .008; lastSpin = performance.now(); }
+const queued = window.gul.q;
+window.gul = {ready:true, set, spin};
+queued.forEach(([f, a]) => window.gul[f](a));
+
+// ---------------- loop
+function resize(){ const w = innerWidth, h = innerHeight, pr = Math.min(devicePixelRatio, 1.5);
+  renderer.setPixelRatio(pr); renderer.setSize(w,h,false); composer.setPixelRatio(pr); composer.setSize(w,h);
+  ov.setAttribute('width',w); ov.setAttribute('height',h); cam.aspect = w/h; cam.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+let prev = performance.now(), dirty = true;
+function frame(now){
+  const dt = Math.min(.1, (now - prev)/1000); prev = now;
+  let moved = dirty; dirty = false;
+  for (let i=0;i<5;i++){ const d = target[i]-cur[i]; if (Math.abs(d)>.0008){ cur[i] += d*(1-Math.exp(-dt*2.6)); moved = true; } else cur[i] = target[i]; }
+  // "all done" = every counting petal (the first four until the zikir module exists): drives bud, labels and celebration
+  const cnt = counting();
+  const minT = cnt.length ? Math.min(...cnt.map(i => target[i])) : 0, minC = cnt.length ? Math.min(...cnt.map(i => cur[i])) : 0;
+  const db = minT - budC; if (Math.abs(db)>.0008){ budC += db*(1-Math.exp(-dt*1.6)); moved = true; } else budC = minT;
+  if (moved) pose();
+  head.rotation.x = Math.sin(now/2300)*.012;   // one thing always alive
+  const allDone = minC > .985 ? 1 : 0; full += (allDone - full)*(1-Math.exp(-dt*1.2));
+  heart.intensity = full*(2.2 + .5*Math.sin(now/700));
+  bloom.strength = .15 + full*.55;
+  dustMat.opacity = full*.95;
+  if (full > .01){ const t = now/1000;
+    for (let i=0;i<NDUST;i++){ const [a,b,c] = dustSeed[i], life = (t*.12 + a) % 1, ang = b*6.283 + t*.4*(c-.5) + life*2.2, r = .12 + life*(.7 + c*.9);
+      dustPos[i*3] = Math.cos(ang)*r; dustPos[i*3+1] = 1.15 + life*(1.4 + b*.8); dustPos[i*3+2] = Math.sin(ang)*r; }
+    dustGeo.attributes.position.needsUpdate = true; }
+  if (full > .01 && !moved) outer.forEach(m => m.material.emissiveIntensity = 1 + full*(.6 + .4*Math.sin(now/900)));
+  // camera: drag sets the azimuth; auto-rotate resumes 3 s after the last drag
+  if (now - lastSpin > 3000) az += AUTO*dt;
+  cam.position.set(TGT.x + Math.sin(az)*RAD, TGT.y + ELEV, TGT.z + Math.cos(az)*RAD); cam.lookAt(TGT);
+  composer.render();
+  // labels: shown until everything is done, then they fade out and the rose stands alone
+  const op = allDone ? '0' : '1'; labs.style.opacity = op; ov.style.opacity = op;
+  petals.forEach((p,i) => {
+    const [x,y] = proj(tips[i]), ring = proj(new THREE.Vector3(Math.cos(ANG(i))*1.4, 1.05, -Math.sin(ANG(i))*1.4));
+    ring[0] = Math.min(innerWidth - 36, Math.max(36, ring[0])); ring[1] = Math.min(innerHeight - 16, Math.max(14, ring[1]));   // keep labels on the card
+    const dx = ring[0]-x, dy = ring[1]-y, len = Math.hypot(dx,dy) || 1;
+    tags[i].style.left = ring[0]+'px'; tags[i].style.top = ring[1]+'px';
+    lines[i].setAttribute('x1',x); lines[i].setAttribute('y1',y); lines[i].setAttribute('x2',ring[0] - dx/len*14); lines[i].setAttribute('y2',ring[1] - dy/len*12);
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body></html>
