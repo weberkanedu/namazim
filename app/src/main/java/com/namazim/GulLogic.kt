@@ -19,9 +19,28 @@ fun inFirstThird(slot: Slot, at: Long?): Boolean =
 /** No goal set counts as done, so nobody is punished for not having one. */
 fun ratio(done: Int, goal: Int): Float = if (goal <= 0) 1f else (done.toFloat() / goal).coerceIn(0f, 1f)
 
+/** A zikir on the user's own list; [name] is unique and keys the day's count. */
+data class Zikir(val name: String, val target: Int)
+
+/** The tesbihat the list starts with; the user may edit or empty it. */
+val DEFAULT_ZIKIRS = listOf(Zikir("Sübhânallah", 33), Zikir("Elhamdülillah", 33), Zikir("Allâhu ekber", 33))
+
+/** Fifth petal: the average of each zikir's completion; an empty list counts as done. */
+fun zikirPetal(zikirs: List<Zikir>, counts: Map<String, Int>): Petal {
+    val r = zikirs.map { ratio(counts[it.name] ?: 0, it.target) }
+    val done = r.count { it >= 1f }
+    return Petal("Zikir", if (r.isEmpty()) 1f else r.average().toFloat(), "$done/${zikirs.size}", true)
+}
+
+/** After [from] is completed: the next unfinished zikir (wrapping), or [from] itself when all are done. */
+fun nextOpenZikir(zikirs: List<Zikir>, counts: Map<String, Int>, from: Int): Int =
+    (1 until zikirs.size).map { (from + it) % zikirs.size }
+        .firstOrNull { (counts[zikirs[it].name] ?: 0) < zikirs[it].target } ?: from
+
 fun gulPetals(
     slots: List<Slot>, prayed: Set<String>, prayedAt: (String) -> Long?,
     pagesToday: Int, readGoal: Int, kazaToday: Int, kazaRate: Int, kazaOwed: Int,
+    zikirs: List<Zikir> = emptyList(), zikirCounts: Map<String, Int> = emptyMap(),
 ): List<Petal> {
     val kept = slots.filter { it.key in prayed }
     val onTime = kept.count { inFirstThird(it, prayedAt(it.key)) }
@@ -30,6 +49,6 @@ fun gulPetals(
         Petal("Vaktinde", onTime / 5f, "$onTime/5", true),
         Petal("Sayfa", ratio(pagesToday, readGoal), "$pagesToday/$readGoal", true),
         Petal("Kaza", if (kazaOwed == 0) 1f else ratio(kazaToday, kazaRate), "$kazaToday/$kazaRate", true),
-        Petal("Zikir", 0f, "yakında", false),   // shortcut: closed until the zikir module exists
+        zikirPetal(zikirs, zikirCounts),
     )
 }

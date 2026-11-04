@@ -614,19 +614,6 @@ fun PageTabs(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     }
 }
 
-/** Zikir tab: placeholder until the zikir module lands (shortcut: empty state only; the module is its own project). */
-@Composable
-fun ZikirScreen() {
-    Column(Modifier.fillMaxSize()) {
-        ScreenTitle("Zikir")
-        EmptyState(
-            "Zikir yakında",
-            "Kendi zikir listeni kuracak, tesbihle sayacaksın. Tamamladıkça gülün beşinci yaprağı açılacak.",
-            modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.xxl),
-        )
-    }
-}
-
 /** Muhasebe holds the overview (like Vakit's "Özet"), the history and the kaza list. */
 @Composable
 fun MuhasebeScreen() {
@@ -679,6 +666,7 @@ private fun MuhasebeOzet() {
         slots(store.lat, store.lng, day), prayed, store::prayedAt,
         pagesToday = log[day.toString()] ?: 0, readGoal = store.readGoal,
         kazaToday = store.kazaLog()[day.toString()] ?: 0, kazaRate = store.kazaRate, kazaOwed = totalKaza,
+        zikirs = store.zikirs, zikirCounts = store.zikirCounts(day),
     )
 
     val slotCache = remember { mutableMapOf<LocalDate, List<Slot>>() }

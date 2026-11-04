@@ -38,11 +38,32 @@ class GulTest {
         // 3 prayed: slots 0 and 1 in their first hour (first third), slot 2 in its last hour
         val at = mapOf(k[0] to 10 * min, k[1] to 3 * h + 10 * min, k[2] to 8 * h + 30 * min)
         val p = gulPetals(slots, prayed = setOf(k[0], k[1], k[2]), prayedAt = at::get,
-            pagesToday = 1, readGoal = 3, kazaToday = 1, kazaRate = 2, kazaOwed = 40)
+            pagesToday = 1, readGoal = 3, kazaToday = 1, kazaRate = 2, kazaOwed = 40,
+            zikirs = DEFAULT_ZIKIRS, zikirCounts = mapOf("Sübhânallah" to 33))
         assertEquals(listOf("Namaz", "Vaktinde", "Sayfa", "Kaza", "Zikir"), p.map { it.name })
-        assertEquals(listOf(.6f, .4f, 1f / 3, .5f, 0f), p.map { it.progress })
-        assertEquals(listOf("3/5", "2/5", "1/3", "1/2", "yakında"), p.map { it.label })
-        assertEquals(listOf(true, true, true, true, false), p.map { it.counts })
+        assertEquals(listOf(.6f, .4f, 1f / 3, .5f, 1f / 3), p.map { it.progress })
+        assertEquals(listOf("3/5", "2/5", "1/3", "1/2", "1/3"), p.map { it.label })
+        assertTrue(p.all { it.counts })
+    }
+
+    @Test fun zikirPetalAveragesClampedRatios() {
+        val z = listOf(Zikir("A", 33), Zikir("B", 100))
+        // A overshoots (clamped to 1), B is a quarter done
+        assertEquals(.625f, zikirPetal(z, mapOf("A" to 40, "B" to 25)).progress, 1e-6f)
+        assertEquals("1/2", zikirPetal(z, mapOf("A" to 40, "B" to 25)).label)
+        assertEquals(0f, zikirPetal(z, emptyMap()).progress)
+    }
+
+    @Test fun emptyZikirListIsOpen() {
+        assertEquals(1f, zikirPetal(emptyList(), emptyMap()).progress)
+    }
+
+    @Test fun nextOpenZikirWrapsAndStaysWhenAllDone() {
+        val z = listOf(Zikir("A", 1), Zikir("B", 1), Zikir("C", 1))
+        assertEquals(2, nextOpenZikir(z, mapOf("A" to 1, "B" to 1), from = 1))
+        assertEquals(0, nextOpenZikir(z, mapOf("B" to 1, "C" to 1), from = 2))
+        assertEquals(1, nextOpenZikir(z, mapOf("A" to 1, "B" to 1, "C" to 1), from = 1))
+        assertEquals(0, nextOpenZikir(listOf(Zikir("A", 1)), mapOf("A" to 1), from = 0))
     }
 
     @Test fun noKazaDebtIsFullPetal() {

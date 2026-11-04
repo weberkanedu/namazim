@@ -178,6 +178,33 @@ class Store(context: Context) {
         p.edit().putString("books", a.toString()).apply()
     }
 
+    /** The user's zikir list; until it is first saved it is the tesbihat. */
+    var zikirs: List<Zikir>
+        get() {
+            val raw = p.getString("zikirs", null) ?: return DEFAULT_ZIKIRS
+            val a = JSONArray(raw)
+            return (0 until a.length()).map { a.getJSONObject(it).run { Zikir(getString("name"), getInt("target")) } }
+        }
+        set(v) {
+            StoreRev.n++
+            val a = JSONArray(); v.forEach { a.put(JSONObject().put("name", it.name).put("target", it.target)) }
+            p.edit().putString("zikirs", a.toString()).apply()
+        }
+
+    /** Counts on the given prayer day (imsak to imsak): zikir name -> count. */
+    fun zikirCounts(day: LocalDate = prayerDay()): Map<String, Int> {
+        val o = JSONObject(p.getString("zikirLog", "{}")!!).optJSONObject(day.toString()) ?: return emptyMap()
+        return o.keys().asSequence().associateWith { o.getInt(it) }
+    }
+    fun addZikir(name: String, n: Int) {
+        StoreRev.n++
+        val all = JSONObject(p.getString("zikirLog", "{}")!!)
+        val today = prayerDay().toString()
+        val o = all.optJSONObject(today) ?: JSONObject()
+        o.put(name, (o.optInt(name) + n).coerceAtLeast(0))
+        p.edit().putString("zikirLog", all.put(today, o).toString()).apply()
+    }
+
     /** Pages read per day: "2026-11-01" -> count. */
     fun readLog(): Map<String, Int> {
         val o = JSONObject(p.getString("readLog", "{}")!!)
