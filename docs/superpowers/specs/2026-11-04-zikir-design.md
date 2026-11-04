@@ -38,3 +38,14 @@ Dock'taki Zikir sekmesi bugün boş durum gösteriyor; burası gerçek bir sayac
 ## Test
 
 `ZikirTest`: ortalama ilerleme, boş liste, hedefi aşan sayının 1'de kırpılması, "sıradaki tamamlanmamış zikir" seçimi (sarma ve hepsi bittiğinde yerinde kalma).
+
+## Ek (2026-11-04, sahibinin isteği): Takip, Serbest, ekstra
+
+- Zikir sekmesinin üstünde iki sekme var: **Zikirhane** (sayaç) ve **Takip** (alışkanlık tablosu). Takip'te satırlar zikirlerdir, sütunlar son 5 namaz günüdür ve bugün soldadır. Hücreler şöyle gösterilir:
+  - hedef tamamsa altın tik;
+  - hedef aşıldıysa tikin altında "+12";
+  - yarımsa sayı;
+  - hiç sayılmadıysa soluk ×.
+  Zikirhane'de saydıkça bugünün sütunu kendiliğinden dolar.
+- **Serbest:** çiplerin başında hedefsiz tek bir sayaç durur. Halka 33'lük turlarla dolar ve her tur kısa bir titreşimle biter. Günlük hedefe de güle de sayılmaz; Takip'te ayrı bir satırda görünür. Kayıt anahtarı `#serbest` olduğu için kullanıcı "Serbest" adlı bir zikir ekleyemez.
+- **Ekstra:** hedefte uzun titreşim olur ve sıradaki zikre geçilir. Tamamlanan çipe dönüp saymaya devam edilirse fazlası "+N ekstra" olarak yazılır. Oran %100'de kalır.

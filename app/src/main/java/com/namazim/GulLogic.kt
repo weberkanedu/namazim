@@ -37,6 +37,18 @@ fun nextOpenZikir(zikirs: List<Zikir>, counts: Map<String, Int>, from: Int): Int
     (1 until zikirs.size).map { (from + it) % zikirs.size }
         .firstOrNull { (counts[zikirs[it].name] ?: 0) < zikirs[it].target } ?: from
 
+/** Log key of the free counter: no target, never part of the daily goal or the rose. */
+const val FREE_ZIKIR = "#serbest"
+
+/** One Takip cell: [done] = target reached; [text] = the count while short, "+extra" past the target, "" for nothing. */
+data class ZikirCell(val done: Boolean, val text: String)
+
+fun zikirCell(count: Int, target: Int?): ZikirCell = when {
+    target == null -> ZikirCell(false, if (count > 0) "$count" else "")
+    count >= target -> ZikirCell(true, if (count > target) "+${count - target}" else "")
+    else -> ZikirCell(false, if (count > 0) "$count" else "")
+}
+
 fun gulPetals(
     slots: List<Slot>, prayed: Set<String>, prayedAt: (String) -> Long?,
     pagesToday: Int, readGoal: Int, kazaToday: Int, kazaRate: Int, kazaOwed: Int,
