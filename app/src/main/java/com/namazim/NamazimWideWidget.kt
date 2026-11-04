@@ -32,7 +32,7 @@ class NamazimWideWidget : AppWidgetProvider() {
 
             val s = Store(ctx)
             val now = System.currentTimeMillis()
-            val accent = if (s.theme == OdakPalette.id) 0xFFC6F45E.toInt() else 0xFFE8BE74.toInt()
+            val accent = 0xFFE8BE74.toInt()
 
             if (!s.hasLocation) {
                 views.setTextViewText(R.id.w_count, "Konum gerekli")

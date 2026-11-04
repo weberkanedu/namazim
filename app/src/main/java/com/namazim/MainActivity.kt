@@ -86,7 +86,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Reminders.createChannels(this)
-        Pal.current = Pal.byId(Store(this).theme)
     // Uygulama açılır açılmaz kaçan vakitleri kazaya yaz (Kaza sekmesini açmayı bekleme)
     Thread {
         runCatching { Store(this).settleKaza() }
@@ -507,65 +506,59 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
         }
 
         Column(Modifier.fillMaxSize()) {
-            if (Pal.current.id == OdakPalette.id) {
-                val todaySlotsList = slots(store.lat, store.lng, today)
-                OdakHeader(store.city, today, holy, todaySlotsList, now, store, heroLabel, heroTime, heroSub,
-                    locating, { if (!locating) locate() }, onOpenSettings)
-            } else {
-            Box(Modifier.fillMaxWidth().height(340.dp)) {
-                when (SkyAssets.mode(ctx)) {
-                    SkyMode.Video -> {
-                        SkyVideo("sky/scene.mp4", Modifier.fillMaxSize())
-                        SkyArc(store.lat, store.lng, Modifier.fillMaxSize())
-                    }
-                    SkyMode.Photo -> SkyPhoto(store.lat, store.lng, Modifier.fillMaxSize())
-                    else -> SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
+        Box(Modifier.fillMaxWidth().height(340.dp)) {
+            when (SkyAssets.mode(ctx)) {
+                SkyMode.Video -> {
+                    SkyVideo("sky/scene.mp4", Modifier.fillMaxSize())
+                    SkyArc(store.lat, store.lng, Modifier.fillMaxSize())
                 }
-                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(150.dp)
-                    .background(Brush.verticalGradient(
-                        0f to Color.Transparent, 0.45f to Pal.Ground.copy(alpha = .72f), 1f to Pal.Ground,
-                    )))
-                val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 14f))
-                Row(
-                    Modifier.statusBarsPadding().fillMaxWidth().padding(start = 14.dp, end = 8.dp, top = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                SkyMode.Photo -> SkyPhoto(store.lat, store.lng, Modifier.fillMaxSize())
+                else -> SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
+            }
+            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(150.dp)
+                .background(Brush.verticalGradient(
+                    0f to Color.Transparent, 0.45f to Pal.Ground.copy(alpha = .72f), 1f to Pal.Ground,
+                )))
+            val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 14f))
+            Row(
+                Modifier.statusBarsPadding().fillMaxWidth().padding(start = 14.dp, end = 8.dp, top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                LocationChip(store.city, locating) { if (!locating) locate() }
+                Spacer(Modifier.weight(1f))
+                GearButton(onOpenSettings)
+            }
+            // Date, hijri and the next mübarek gün: a small "1 KAS" tile like Vakit, then the details.
+            Row(
+                Modifier.align(Alignment.BottomStart).padding(start = 20.dp, end = 96.dp, bottom = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    Modifier.clip(RoundedCornerShape(10.dp)).background(Color(0x59000000))
+                        .padding(horizontal = 9.dp, vertical = 5.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    LocationChip(store.city, locating) { if (!locating) locate() }
-                    Spacer(Modifier.weight(1f))
-                    GearButton(onOpenSettings)
+                    Text("${calDate.dayOfMonth}", style = NumStyle, fontSize = 19.sp, lineHeight = 20.sp, color = Pal.Text)
+                    Text(
+                        calDate.format(DateTimeFormatter.ofPattern("MMM", Locale("tr"))).uppercase(Locale("tr")),
+                        color = Pal.Gold, fontSize = 8.sp, letterSpacing = 1.sp, fontWeight = FontWeight.SemiBold,
+                    )
                 }
-                // Date, hijri and the next mübarek gün: a small "1 KAS" tile like Vakit, then the details.
-                Row(
-                    Modifier.align(Alignment.BottomStart).padding(start = 20.dp, end = 96.dp, bottom = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(
-                        Modifier.clip(RoundedCornerShape(10.dp)).background(Color(0x59000000))
-                            .padding(horizontal = 9.dp, vertical = 5.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text("${calDate.dayOfMonth}", style = NumStyle, fontSize = 19.sp, lineHeight = 20.sp, color = Pal.Text)
-                        Text(
-                            calDate.format(DateTimeFormatter.ofPattern("MMM", Locale("tr"))).uppercase(Locale("tr")),
-                            color = Pal.Gold, fontSize = 8.sp, letterSpacing = 1.sp, fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Column {
-                        Text(calDate.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = 12.sp, style = shadow)
-                        Text(hijri(calDate), color = Pal.Text.copy(alpha = .70f), fontSize = 11.5.sp, style = shadow)
-                        Spacer(Modifier.height(2.dp))
-                        Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold, style = shadow)
-                    }
-                }
-                if (fastSky) {
-                    Text("Hızlı önizleme · bitirmek için basılı tut", Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
-                        .clip(CircleShape).background(Color(0x66000000)).padding(horizontal = 12.dp, vertical = 4.dp),
-                        color = Pal.Text, fontSize = 11.sp)
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(calDate.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = 12.sp, style = shadow)
+                    Text(hijri(calDate), color = Pal.Text.copy(alpha = .70f), fontSize = 11.5.sp, style = shadow)
+                    Spacer(Modifier.height(2.dp))
+                    Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold, style = shadow)
                 }
             }
+            if (fastSky) {
+                Text("Hızlı önizleme · bitirmek için basılı tut", Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
+                    .clip(CircleShape).background(Color(0x66000000)).padding(horizontal = 12.dp, vertical = 4.dp),
+                    color = Pal.Text, fontSize = 11.sp)
             }
+        }
 
             // ---- geri sayım: uygulama açılır açılmaz görünsün
             Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {

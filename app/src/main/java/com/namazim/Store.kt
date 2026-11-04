@@ -96,9 +96,6 @@ class Store(context: Context) {
         set(v) { StoreRev.n++; p.edit().putInt("kazaRate", v).apply() }
 
     // --- Settings
-    var theme: String
-        get() = p.getString("theme", SeherPalette.id)!!
-        set(v) { StoreRev.n++; p.edit().putString("theme", v).apply() }
     /** Which renderer the Seher header uses: "photo" (plates), "video" (looping clip) or "shader" (live). */
     var skyMode: String
         get() = p.getString("skyMode", "photo")!!

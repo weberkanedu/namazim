@@ -59,7 +59,7 @@ class NamazimWidget : AppWidgetProvider() {
         private fun state(ctx: Context): State {
             val s = Store(ctx)
             val now = System.currentTimeMillis()
-            val accent = if (s.theme == OdakPalette.id) 0xFFC6F45E.toInt() else 0xFFE8BE74.toInt()
+            val accent = 0xFFE8BE74.toInt()
             val alt = if (s.hasLocation) skyBodies(s.lat, s.lng, now).sun.alt / (PI / 180) else 30.0
             // Sky colour of the moment: the same ranges the live sky uses.
             val (top, bottom) = when {

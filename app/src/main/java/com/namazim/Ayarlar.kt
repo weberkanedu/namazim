@@ -11,7 +11,6 @@ import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,12 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
@@ -81,30 +75,6 @@ private fun StatusRow(text: String, ok: Boolean, action: String, onClick: () -> 
     }
 }
 
-/** Small theme preview: a strip of the theme's look. */
-@Composable
-private fun ThemeCard(p: Palette, selected: Boolean, subtitle: String, modifier: Modifier, onClick: () -> Unit) {
-    Column(modifier.clip(RoundedCornerShape(16.dp)).border(2.dp, if (selected) Pal.Gold else Pal.Border, RoundedCornerShape(16.dp))
-        .clickable(onClick = onClick)) {
-        Box(Modifier.fillMaxWidth().height(90.dp).background(
-            if (p.id == SeherPalette.id) Brush.verticalGradient(listOf(Color(0xFF2E5C99), Color(0xFFE7B07F), p.ground))
-            else Brush.verticalGradient(listOf(p.ground, p.ground))), contentAlignment = Alignment.Center) {
-            if (p.id == OdakPalette.id) {
-                Canvas(Modifier.size(64.dp)) {
-                    val w = 7.dp.toPx(); val tl = Offset(w / 2, w / 2); val sz = Size(size.width - w, size.height - w)
-                    for (i in 0 until 5) drawArc(if (i < 2) p.accent else p.track, -90f + i * 72 + 5, 62f, false, tl, sz, style = Stroke(w, cap = StrokeCap.Round))
-                }
-            } else {
-                Box(Modifier.size(18.dp).clip(CircleShape).background(Color(0xFFFFE9B8)))
-            }
-        }
-        Column(Modifier.background(p.card).fillMaxWidth().padding(10.dp)) {
-            Text(p.name, color = p.text, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFamily = p.display)
-            Text(subtitle, color = p.muted, fontSize = Type.label)
-        }
-    }
-}
-
 @Composable
 fun AyarlarScreen(onBack: () -> Unit) {
     StoreRev.n.let { } // keep the chips in sync with what was just written
@@ -134,20 +104,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
         // key(v): chip'lerin seçimi her dokunuşta yeniden çizilsin (lambda'lar Compose'da hatırlanıyor)
         key(v) {
         Section("Görünüm") {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                listOf(SeherPalette, OdakPalette).forEach { p ->
-                    ThemeCard(
-                        p, Pal.current.id == p.id,
-                        if (p.id == SeherPalette.id) when (store.skyMode) { "shader" -> "Canlı gökyüzü"; "video" -> "Video gökyüzü"; else -> "Fotoğraf gökyüzü" }
-                        else "Halka, sade ve sportif",
-                        Modifier.weight(1f),
-                    ) {
-                        store.theme = p.id; Pal.current = p; NamazimWidget.refresh(ctx); v++
-                    }
-                }
-            }
             // Which sky the Seher header draws: the live shader, layed photo plates, or a looping clip.
-            if (store.theme != OdakPalette.id) {
             Text("Gökyüzü", color = Pal.Text, fontSize = Type.body)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("shader" to "Canlı", "photo" to "Fotoğraf", "video" to "Video").forEach { (id, label) ->
@@ -158,7 +115,6 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         Text(label, color = if (on) Pal.Ground else Pal.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
-            }
             }
         }
 
