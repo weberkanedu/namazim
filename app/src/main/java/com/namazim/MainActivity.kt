@@ -28,6 +28,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -317,8 +318,10 @@ fun TimelineRow(
         main -> 52.dp
         else -> 40.dp
     }
+    val beat = if (active) heartbeat() else null
     Row(Modifier.fillMaxWidth().height(h), verticalAlignment = Alignment.CenterVertically) {
         androidx.compose.foundation.Canvas(Modifier.width(28.dp).fillMaxHeight()) {
+            val b = beat?.value ?: 0f   // read in draw only: the beat redraws the dot, not the row
             val cx = size.width / 2f
             val cy = size.height / 2f
             val lw = 1.5.dp.toPx()
@@ -330,9 +333,9 @@ fun TimelineRow(
                 kaza -> Pal.Warn
                 else -> Pal.Border
             }
-            if (active) drawCircle(Pal.Gold.copy(alpha = .20f), radius = 10.dp.toPx(), center = Offset(cx, cy))
+            if (active) drawCircle(Pal.Gold.copy(alpha = .20f + .22f * b), radius = 10.dp.toPx() * (1f + .45f * b), center = Offset(cx, cy))
             val r = when {
-                active -> 5.5.dp.toPx()
+                active -> 5.5.dp.toPx() * (1f + .2f * b)
                 child -> 2.5.dp.toPx()
                 else -> 4.dp.toPx()
             }
@@ -374,6 +377,24 @@ fun TimelineRow(
         if (onToggle != null) TickButton(prayed, active, onToggle) else Spacer(Modifier.width(26.dp))
     }
 }
+
+/** Heartbeat strength 0..1: a "lub-dub" double beat, then rest; one cycle ≈ 1.2 s (about 50 bpm, calm). */
+@Composable
+private fun heartbeat(): androidx.compose.runtime.State<Float> =
+    androidx.compose.animation.core.rememberInfiniteTransition(label = "beat").animateFloat(
+        0f, 0f,
+        androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.keyframes {
+                durationMillis = 1200
+                0f at 0
+                1f at 120 using androidx.compose.animation.core.FastOutSlowInEasing
+                .2f at 260
+                .7f at 380 using androidx.compose.animation.core.FastOutSlowInEasing
+                0f at 640
+            },
+        ),
+        label = "beat",
+    )
 
 @Composable
 fun TickButton(on: Boolean, active: Boolean, onClick: () -> Unit) {
