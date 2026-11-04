@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logo seçenekleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system/styles.css">
+<style>
+body{font-family:var(--font-body);background:var(--surface-container-lowest);color:var(--on-surface);padding:72px 24px 96px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1180px;width:100%}
+.kicker{font:600 11px var(--font-body);letter-spacing:.16em;text-transform:uppercase;color:var(--primary-ink)}
+h1{font:600 46px/1.05 var(--font-display);margin-top:6px}
+.lede{color:var(--on-surface-variant);font-size:15px;line-height:1.65;max-width:760px;margin-top:12px}
+.opt{display:grid;grid-template-columns:300px 1fr;gap:40px;margin-top:56px;padding-top:40px;border-top:1px solid var(--outline-variant)}
+.opt h2{font:600 30px var(--font-display)}
+.opt .idea{color:var(--on-surface-variant);font-size:14px;line-height:1.65;margin:8px 0 18px;max-width:560px}
+.big{width:300px;height:300px;border-radius:66px;overflow:hidden;box-shadow:var(--elev-4)}
+.big svg,.m svg{display:block;width:100%;height:100%}
+.sizes{display:flex;gap:28px;align-items:flex-end;flex-wrap:wrap}
+.cell{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cell .k{font:11px var(--font-mono);color:var(--subtle)}
+.m{overflow:hidden}
+.circle{border-radius:50%}.squircle{border-radius:28%}
+.home{margin-top:24px;width:560px;max-width:100%;border-radius:22px;padding:22px;display:grid;grid-template-columns:repeat(5,1fr);gap:18px 10px;
+  background:linear-gradient(160deg,#3b4a6b,#1b2236 55%,#141a2a)}
+.home.light{background:linear-gradient(160deg,#e9e3d6,#cfd7e3)}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px;font:500 11px var(--font-body);color:#fff}
+.home.light .app{color:#1c2230}
+.app .ph{width:52px;height:52px;border-radius:50%;background:rgb(255 255 255 / .12)}
+.home.light .app .ph{background:rgb(0 0 0 / .08)}
+.note{margin-top:56px;font-size:13px;color:var(--on-surface-variant);line-height:1.7;border-top:1px solid var(--outline-variant);padding-top:18px}
+.note b{color:var(--on-surface)}
+.backlink{position:fixed;top:18px;left:18px;z-index:50;display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font-body);text-decoration:none;color:var(--primary-ink);background:var(--surface-container);border:1px solid var(--outline);border-radius:999px;padding:8px 14px}
+@media (max-width:820px){.opt{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<a class="backlink" href="design-system/index.html">← Stil rehberi</a>
+<div class="wrap">
+  <div class="kicker">Logo · dört yön</div>
+  <h1>Hilal, gül ve namaz</h1>
+  <p class="lede">Mevcut "Hilal saat"in yerine dört öneri. Hepsi aynı malzemeden: gece laciverdi zemin, ince altın çizgi, tek dolgu yok ya da yalnız bir vurgu. Gül, Muhasebe'deki gülün kendisi; beş yaprağı beş vakit. Her yön büyük, launcher boyutlarında (yuvarlak ve squircle maske, 48 px), Android'in tek renk temalı ikonu olarak ve ana ekranda gösteriliyor.</p>
+  <div id="opts"></div>
+  <div class="note">
+    <b>Uygulama:</b> seçilen yön <code>design/logo-gen.py</code>'ye işlenir; o da <code>res/drawable/ic_logo.xml</code> (uyarlanabilir ikonun ön yüzü), temalı ikonun tek renk sürümü ve widget'taki sadeleştirilmiş çizimi üretir. Çizimler 108 birimlik ızgarada, güvenli bölge (orta 66 birim) içinde.<br>
+    <b>Not:</b> küçük boyutta (48 px) ince çizgiler incelir; seçilen yönde çizgi kalınlığını boyuta göre ayarlarım.
+  </div>
+</div>
+<script>
+const GOLD='#E8BE74',INK='#F3EEE3';
+const bg=(id,light)=>`<defs><radialGradient id="bg${id}" cx=".5" cy=".38" r=".75"><stop offset="0" stop-color="${light?'#F6F1E6':'#1B2A47'}"/><stop offset="1" stop-color="${light?'#E6DFD0':'#0B1322'}"/></radialGradient>
+ <radialGradient id="gl${id}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${GOLD}" stop-opacity=".22"/><stop offset="1" stop-color="${GOLD}" stop-opacity="0"/></radialGradient></defs>
+ <rect width="108" height="108" fill="url(#bg${id})"/>`;
+const LUNE='M49.65,24.31 A30,30 0 1,0 82.01,64.75 A26,26 0 1,1 49.65,24.31 Z';
+
+/* a rose seen from above, drawn like the Ottoman gül motif: five overlapping outer petals (one per vakit),
+   five smaller ones turned between them, a spiral bud. [lit] tints one outer petal: the next vakit. */
+function rosette(cx,cy,R,c,sw,lit){
+  const P=(r,a)=>{const t=(a-90)*Math.PI/180;return [cx+r*Math.cos(t),cy+r*Math.sin(t)];};
+  const f=p=>p[0].toFixed(2)+','+p[1].toFixed(2);
+  const petal=(r0,r1,a0,a1)=>{const w=a1-a0;
+    return `M${f(P(r0,a0))} C${f(P(r1*1.02,a0-w*.08))} ${f(P(r1*1.16,a0+w*.34))} ${f(P(r1,a0+w*.5))} C${f(P(r1*1.16,a1-w*.34))} ${f(P(r1*1.02,a1+w*.08))} ${f(P(r0,a1))}`;};
+  let s='';
+  for(let i=0;i<5;i++){const a=i*72;const d=petal(R*.34,R,a-40,a+40);
+    // each petal covers the one before it, so the rose reads as layered, not as crossing lines
+    s+=`<path d="${d} Z" fill="${PETAL}" stroke="none"/>`+(i===lit?`<path d="${d} Z" fill="${c}" fill-opacity=".3"/>`:'')+
+       `<path d="${d}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`;}
+  for(let i=0;i<5;i++){const a=i*72+36;s+=`<path d="${petal(R*.16,R*.6,a-38,a+38)}" fill="none" stroke="${c}" stroke-width="${sw*.85}" stroke-linecap="round"/>`;}
+  // the bud: a tightening spiral
+  let sp='';for(let k=0;k<=60;k++){const th=k/60*Math.PI*3.2,r=R*.24*(1-k/68);const x=cx+r*Math.cos(th),y=cy+r*Math.sin(th);sp+=(k?' L':'M')+x.toFixed(2)+','+y.toFixed(2);}
+  s+=`<path d="${sp}" fill="none" stroke="${c}" stroke-width="${sw*.9}" stroke-linecap="round"/>`;
+  return s;}
+
+/* A · Hilal ve gül: the old crescent cradles a small rose */
+function A(c,id,light){return `${bg(id,light)}<path d="${LUNE}" fill="none" stroke="${c}" stroke-width="1.6"/>
+ <circle cx="66" cy="50" r="18" fill="url(#gl${id})"/>${rosette(66,50,13,c,1.1,1)}`;}
+
+/* B · Beş vakit gülü: the rose alone, a big rosette; the lit petal is the next vakit (like the old hand) */
+function B(c,id,light){return `${bg(id,light)}<circle cx="54" cy="54" r="30" fill="url(#gl${id})"/>${rosette(54,54,27,c,1.5,1)}
+ <circle cx="54" cy="54" r="31.5" fill="none" stroke="${c}" stroke-width=".6" stroke-opacity=".45"/>`;}
+
+/* C · Mihrap gülü: a pointed arch with the rose where the lamp would hang */
+function C(c,id,light){const arch='M33,84 V54 C33,40 44,30 54,23 C64,30 75,40 75,54 V84';
+ return `${bg(id,light)}<path d="${arch}" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/>
+ <path d="M39,84 V56 C39,45 47,37 54,31 C61,37 69,45 69,56 V84" fill="none" stroke="${c}" stroke-width=".7" stroke-opacity=".55"/>
+ <line x1="28" y1="84" x2="80" y2="84" stroke="${c}" stroke-width="1.7" stroke-linecap="round"/>
+ <circle cx="54" cy="58" r="15" fill="url(#gl${id})"/>${rosette(54,58,12,c,1.05,1)}`;}
+
+/* D · Seccade: a prayer rug seen from above, its niche pointing up, a crescent over it, a rose woven in */
+function D(c,id,light){return `${bg(id,light)}
+ <rect x="35" y="30" width="38" height="54" rx="3" fill="none" stroke="${c}" stroke-width="1.6"/>
+ <path d="M40,80 V52 C40,44 47,39 54,35 C61,39 68,44 68,52 V80 Z" fill="none" stroke="${c}" stroke-width=".8" stroke-opacity=".7"/>
+ ${[39,44,49,54,59,64,69].map(x=>`<line x1="${x}" y1="84" x2="${x}" y2="88" stroke="${c}" stroke-width="1" stroke-linecap="round"/>`).join('')}
+ <path d="M50.6,17.2 A6,6 0 1,0 57.4,25.4 A4.8,4.8 0 1,1 50.6,17.2 Z" fill="${c}"/>
+ ${rosette(54,62,9,c,.9,1)}`;}
+
+const OPTS=[
+ ['A · Hilal ve gül',A,'Bugünkü hilal korunur, saat ibresinin yerine hilalin kucağında küçük bir gül açar. Beş yaprak beş vakit; altın dolgulu yaprak sıradaki vakit. Tanıdıklık kaybolmadan gül uygulamanın içinden ikona taşınır.'],
+ ['B · Beş vakit gülü',B,'Yalnız gül: yukarıdan bakılmış beş yapraklı bir gül, ince bir halkanın içinde. En sade ve küçük boyutta en okunaklı yön. Dolgulu yaprak saat ibresinin işini görür: sıradaki vakit.'],
+ ['C · Mihrap gülü',C,'Sivri kemerli bir mihrap, kandilin asılacağı yerde bir gül. Namazı en doğrudan anlatan yön; uzun dikey biçimi ikonlar arasında ayırt edilir.'],
+ ['D · Seccade',D,'Yukarıdan bakılmış bir seccade: secde yönünü gösteren niş, saçaklar, üstünde hilal, ortasında dokunmuş bir gül. En hikâyeli yön; küçük boyutta ayrıntılar azalır.'],
+];
+let PETAL='#16233F';
+const svg=(f,id,c,light)=>(PETAL=light?'#EFE8DA':'#16233F',`<svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">${f(c,id,light)}</svg>`);
+let n=0;
+opts.innerHTML=OPTS.map(([t,f,idea])=>{const k=n++;
+ const home=light=>`<div class="home${light?' light':''}">${['Saat','Takvim','','Hava','Fotoğraf'].map((a,i)=>i===2?`<div class="app"><div class="m circle" style="width:52px;height:52px">${light?svg(f,`t${k}`,'#2A3A52',true):svg(f,`h${k}`,GOLD)}</div>Namazım</div>`:`<div class="app"><div class="ph"></div>${a}</div>`).join('')}</div>`;
+ return `<div class="opt"><div><div class="big">${svg(f,`b${k}`,GOLD)}</div></div>
+  <div><h2>${t}</h2><p class="idea">${idea}</p>
+   <div class="sizes">
+    <div class="cell"><div class="m circle" style="width:96px;height:96px">${svg(f,`c${k}`,GOLD)}</div><span class="k">yuvarlak · 96</span></div>
+    <div class="cell"><div class="m squircle" style="width:96px;height:96px">${svg(f,`s${k}`,GOLD)}</div><span class="k">squircle · 96</span></div>
+    <div class="cell"><div class="m circle" style="width:48px;height:48px">${svg(f,`x${k}`,GOLD)}</div><span class="k">48</span></div>
+    <div class="cell"><div class="m circle" style="width:96px;height:96px">${svg(f,`m${k}`,'#2A3A52',true)}</div><span class="k">temalı (tek renk)</span></div>
+   </div>${home(false)}${home(true)}</div></div>`;}).join('');
+</script>
+</body>
+</html>
