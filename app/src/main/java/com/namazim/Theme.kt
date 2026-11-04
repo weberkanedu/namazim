@@ -1,6 +1,7 @@
 package com.namazim
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -10,10 +11,19 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalTextApi::class)
 val Cormorant = FontFamily(
     Font(R.font.cormorant, FontWeight.SemiBold, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
+)
+
+/** Reading face (body, buttons, nav). One variable file, four weights. */
+@OptIn(ExperimentalTextApi::class)
+val Inter = FontFamily(
+    listOf(400, 500, 600, 700).map { w ->
+        Font(R.font.inter, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
+    },
 )
 
 class Palette(
@@ -58,6 +68,18 @@ fun AppTheme(content: @Composable () -> Unit) {
             surfaceContainer = Pal.Nav, surfaceContainerHighest = Pal.Card, secondaryContainer = Pal.Track,
             onSecondaryContainer = Pal.Gold, outline = Pal.Border,
         ),
+        // Inter everywhere by default; Cormorant only where a Text asks for NumStyle / display
+        typography = Typography().run {
+            // M3's default tracking (up to .5sp) is tuned for Roboto and reads loose in Inter
+            fun TextStyle.inter() = copy(fontFamily = Inter, letterSpacing = 0.sp)
+            copy(
+                displayLarge.inter(), displayMedium.inter(), displaySmall.inter(),
+                headlineLarge.inter(), headlineMedium.inter(), headlineSmall.inter(),
+                titleLarge.inter(), titleMedium.inter(), titleSmall.inter(),
+                bodyLarge.inter(), bodyMedium.inter(), bodySmall.inter(),
+                labelLarge.inter(), labelMedium.inter(), labelSmall.inter(),
+            )
+        },
         content = content,
     )
 }

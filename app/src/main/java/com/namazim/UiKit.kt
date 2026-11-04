@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -65,7 +64,8 @@ object Radius {
 val TouchMin = 48.dp
 
 /**
- * Kart: uygulamanın tek yüzey dili. Gölge + cam kenar + üstten hafif parıltı.
+ * Kart: uygulamanın tek yüzey dili. Tonal: kart rengi + cam kenar + üstten hafif parıltı, gölgesiz
+ * (gölge yalnız gökyüzü üstünde yüzen dock'ta; bkz. design/design-system).
  * Tıklanabilir olacaksa [onClick] ver; erişilebilirlik etiketi [label] ile geçer.
  */
 @Composable
@@ -77,7 +77,6 @@ fun AppCard(
 ) {
     val shape = RoundedCornerShape(Radius.l)
     var m = modifier
-        .shadow(14.dp, shape, clip = false, ambientColor = Color.Black.copy(alpha = .35f), spotColor = Color.Black.copy(alpha = .45f))
         .clip(shape)
         .background(Pal.Card)
         .background(

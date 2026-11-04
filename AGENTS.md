@@ -21,7 +21,7 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
   Holds until the phone reboots.
 - `adb install -r` shows a Xiaomi confirmation on the phone; the user must tap *Yükle*.
 - Tap/key injection is not allowed. To open a tab for a screenshot:
-  `adb shell am start -n com.namazim/.MainActivity --ei tab N` (0 Namaz, 1 Kıble, 2 Okuma, 3 Muhasebe, 4 Ayarlar;
+  `adb shell am start -n com.namazim/.MainActivity --ei tab N` (0 Namaz, 1 Kıble, 2 Okuma, 3 Muhasebe, 4 Ayarlar, 5 Zikir;
   1 and 4 are not in the dock, they open from the home header),
   then `adb exec-out screencap -p > shot.png`. The tab extra also works on a running instance.
 - More test extras: `--el skytime <ms>` shifts the sky clock (e.g. `-19800000` shows noon at 18:30),
@@ -49,6 +49,7 @@ Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTe
 
 ## Design
 
+- `design/design-system/` — **the Seher design system (approved 2026-11-04)**: tokens (`styles.css`, each with its Compose twin), every M3 component + Namazım extensions (`index.html`, Dev Mode + Copy as prompt), concept of home + Muhasebe › Özet (`concept.html`). Serve the repo root (`python -m http.server 8765`) and open `/design/design-system/index.html`. Body font Inter (`res/font/inter.ttf`, OFL), display/numbers Cormorant; cards are tonal (no shadow); dock = Namaz, Zikir, Okuma, Muhasebe (Zikir is an empty state until the module lands).
 - `design/canvas/*.dc.html` — the design mockups (open in a browser; they were made on a claude.ai design canvas, private link
   `https://claude.ai/artifact/5Sti4FGu2sFyQBBg8v3XMT`). `Main.dc.html` is the WebGL version of the sky shader.
 - `design/sky-test/` — standalone WebGL test page for the sky shader (serve the folder with `python -m http.server`).

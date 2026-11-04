@@ -149,6 +149,7 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
                         1 -> KibleScreen { tab = 0 }
                         2 -> OkumaScreen()
                         3 -> MuhasebeScreen()
+                        5 -> ZikirScreen()
                         else -> AyarlarScreen { tab = 0 }
                     }
                 }
@@ -162,7 +163,7 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
 fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
     // (tab, name, icon): Kıble (1) and Ayarlar (4) open from the home header, not from the dock
     val tabs = listOf(
-        Triple(0, "Namaz", R.drawable.ic_nav_namaz),
+        Triple(0, "Namaz", R.drawable.ic_nav_namaz), Triple(5, "Zikir", R.drawable.ic_nav_zikir),
         Triple(2, "Okuma", R.drawable.ic_nav_okuma), Triple(3, "Muhasebe", R.drawable.ic_nav_muhasebe),
     )
     val haptic = LocalHapticFeedback.current
@@ -406,7 +407,7 @@ fun rememberNow(): Long {
 }
 
 @Composable
-fun ScreenTitle(title: String, sub: String? = null, trailing: @Composable () -> Unit = {}) {
+fun ScreenTitle(title: String, sub: String? = null, rule: Boolean = true, trailing: @Composable () -> Unit = {}) {
     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(start = Space.xl, end = Space.xl, top = Space.l)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
@@ -418,9 +419,9 @@ fun ScreenTitle(title: String, sub: String? = null, trailing: @Composable () -> 
             }
             trailing()
         }
-        // ince altın çizgi: başlığı gövdeden ayırır
+        // ince altın çizgi: başlığı gövdeden ayırır (sekmeli sayfalarda sekmelerin taban çizgisi bu işi görür)
         Spacer(Modifier.height(Space.m))
-        Box(
+        if (rule) Box(
             Modifier.fillMaxWidth().height(1.dp).background(
                 androidx.compose.ui.graphics.Brush.horizontalGradient(
                     listOf(Pal.Gold.copy(alpha = .45f), Pal.Gold.copy(alpha = .12f), Color.Transparent),

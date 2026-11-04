@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Namazım · Seher Tasarım Sistemi</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* style-guide chrome only; tokens + components live in styles.css */
+body{font-family:var(--font-body);color:var(--on-surface);background:var(--background);display:flex}
+nav.side{position:sticky;top:0;align-self:flex-start;height:100vh;width:220px;flex:0 0 220px;background:var(--surface-container-lowest);border-right:1px solid var(--outline);padding:22px 14px;overflow:auto}
+nav.side .brand{font:600 24px var(--font-display);color:var(--primary-ink);margin:0 10px 16px}
+nav.side a{display:block;padding:6px 10px;border-radius:8px;font-size:13px;color:var(--on-surface-variant);text-decoration:none}
+nav.side a:hover{background:var(--surface-container);color:var(--primary-ink)}
+nav.side a.concept-link{margin:0 0 6px;padding:11px 12px;font-weight:600;color:var(--on-primary);background:var(--primary);border-radius:12px}
+nav.side a.concept-link:hover{color:var(--on-primary);filter:brightness(1.05)}
+nav.side .grp{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--subtle);margin:18px 0 6px 10px}
+main{flex:1;padding:40px 48px 140px;max-width:1100px;min-width:0}
+section{margin-bottom:60px;scroll-margin-top:20px}
+h2.sec{font:600 30px var(--font-display);color:var(--on-surface);margin-bottom:6px}
+.sec-desc{color:var(--on-surface-variant);font-size:14px;margin-bottom:20px;max-width:700px;line-height:1.6}
+.sec-desc code,.legend code{font:12px var(--font-mono);color:var(--primary-ink)}
+.stage{background:var(--surface-container-low);border:1px solid var(--outline);border-radius:var(--r-lg);padding:28px;display:flex;flex-wrap:wrap;gap:28px;align-items:center}
+.stage.col{flex-direction:column;align-items:stretch}
+.stage.sky-bg{background:linear-gradient(180deg,#2B3B5E,#0F182B)}
+.cell{display:flex;flex-direction:column;align-items:center;gap:10px}
+.spec{font:11px var(--font-mono);color:var(--subtle);text-align:center}
+.colors{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.sw{border:1px solid var(--outline);border-radius:var(--r-sm);overflow:hidden;background:var(--surface-container-low)}
+.sw .c{height:64px;display:flex;align-items:flex-end;padding:8px 10px;font:600 13px var(--font-body)}
+.sw .m{padding:8px 10px}.sw .n{font:600 12px var(--font-mono)}.sw .v{font:11px var(--font-mono);color:var(--subtle)}
+.typerow{display:flex;align-items:baseline;gap:20px;padding:12px 0;border-bottom:1px solid var(--outline-variant)}
+.typerow .tk{width:170px;flex:0 0 170px;font:11px/1.5 var(--font-mono);color:var(--subtle)}
+.sprow{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.sprow .bar{background:var(--primary);height:12px;border-radius:3px}.sprow .lbl{width:200px;font:12px var(--font-mono);color:var(--on-surface-variant)}
+.shape{width:88px;height:88px;background:var(--primary-container);border:1px solid rgb(232 190 116 / .3)}
+.elev{width:120px;height:84px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font:12px var(--font-mono);color:var(--on-surface-variant)}
+.iconGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.iconGrid .it{background:var(--surface-container);border:var(--hairline);border-radius:var(--r-sm);padding:14px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:7px}
+.iconGrid .it .nm{font:11px var(--font-mono);color:var(--subtle)}
+.phone{width:360px;background:var(--background);border:1px solid var(--outline);overflow:hidden;position:relative}
+.motion-demo{width:240px;height:8px;border-radius:4px;background:var(--surface-container-high);position:relative}
+.motion-demo i{position:absolute;top:-6px;left:0;width:20px;height:20px;border-radius:50%;background:var(--primary)}
+.stage:hover .motion-demo i{left:220px}
+.legend{font-size:12px;color:var(--subtle);line-height:1.6;margin-top:10px}
+
+#topctl{position:fixed;top:16px;right:20px;z-index:50;display:flex;gap:10px;align-items:center}
+#langSel{font:600 12px var(--font-body);border:1px solid var(--outline);border-radius:8px;padding:8px 10px;background:var(--surface-container);color:var(--on-surface-variant)}
+.ds-btn{font:600 12px var(--font-body);background:var(--surface-container);border:1px solid var(--primary);color:var(--primary-ink);border-radius:8px;padding:8px 12px;cursor:pointer}
+#devToggle{font:600 13px var(--font-body);background:var(--surface-container);border:1px solid var(--outline);border-radius:8px;padding:8px 14px;cursor:pointer;color:var(--on-surface-variant)}
+#devToggle.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.sec-prompt{font:600 11px var(--font-body);border:1px solid var(--primary);background:transparent;color:var(--primary-ink);border-radius:8px;padding:3px 9px;margin-left:12px;cursor:pointer;vertical-align:middle}
+body.dev [data-insp]:hover{outline:2px dashed var(--tertiary);outline-offset:3px;cursor:pointer}
+.insp-sel{outline:2px solid var(--primary)!important;outline-offset:3px}
+#inspector{position:fixed;top:0;right:0;width:350px;height:100vh;background:var(--surface-container-low);border-left:1px solid var(--outline);box-shadow:var(--elev-4);transform:translateX(100%);transition:transform .28s var(--ease-standard);z-index:49;overflow:auto;padding:60px 20px 40px}
+body.inspecting #inspector{transform:translateX(0)} body.inspecting main{margin-right:350px}
+#inspector .iclose{position:absolute;top:16px;right:16px;border:none;background:none;font-size:18px;color:var(--on-surface-variant);cursor:pointer}
+#inspector .nm{font:600 26px var(--font-display);color:var(--primary-ink)}
+#inspector .file{font:12px var(--font-mono);color:var(--subtle);margin-top:2px}
+#inspector .desc{font-size:13px;color:var(--on-surface-variant);line-height:1.6;margin-top:10px}
+#inspector h4{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle);margin:20px 0 8px}
+.prop{padding:8px 0;border-bottom:1px solid var(--outline-variant)}.prop .pn{font:600 13px var(--font-mono)}.prop .pt{font:11px var(--font-mono);color:var(--tertiary)}.prop .pdef{font:11px var(--font-mono);color:var(--subtle)}
+.tok{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px;cursor:pointer}.tok:hover{background:var(--surface-container)}
+.tok .tsw{width:22px;height:22px;border-radius:6px;border:1px solid var(--outline);flex:0 0 22px}.tok .tn{font:600 12px var(--font-mono)}.tok .tr{font-size:11px;color:var(--on-surface-variant)}.tok .tv{margin-left:auto;font:11px var(--font-mono);color:var(--subtle);text-align:right}
+.metric{display:flex;justify-content:space-between;gap:12px;font:12px var(--font-mono);padding:5px 0;border-bottom:1px dashed var(--outline-variant)}.metric .mk{color:var(--on-surface-variant)}
+.copyprompt{width:100%;margin-top:16px;font:600 13px var(--font-body);background:var(--primary);color:var(--on-primary);border:none;border-radius:var(--r-full);padding:12px;cursor:pointer}
+.copied{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--inverse-surface);color:var(--inverse-on-surface);font-size:12px;padding:8px 16px;border-radius:8px;opacity:0;transition:.2s;z-index:60;pointer-events:none}.copied.show{opacity:1}
+</style>
+</head>
+<body>
+<!-- icon sprite copied from icons.html -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- solid dock glyphs: taken from res/drawable/ic_nav_*.xml; cut-outs are even-odd holes so they work on any fill -->
+  <symbol id="i-namaz" viewBox="0 0 24 24"><path d="M4.6 12.4h1.6v8.2H4.6zM17.8 12.4h1.6v8.2h-1.6z"/><path fill-rule="evenodd" d="M6.6 12.6a5.4 5.4 0 0 1 10.8 0v8H6.6zM9.4 20.6v-4.4a2.6 2.6 0 0 1 5.2 0v4.4z"/><path d="M12 1.2a1.5 1.5 0 1 0 .9 2.7 1.9 1.9 0 0 1-1.4 2.6 2.2 2.2 0 0 0 2.4-2.9A2.2 2.2 0 0 0 12 1.2z"/></symbol>
+  <symbol id="i-zikir" viewBox="0 0 24 24"><circle cx="8.50" cy="15.26" r="1.55"/><circle cx="5.94" cy="12.70" r="1.55"/><circle cx="5.00" cy="9.20" r="1.55"/><circle cx="5.94" cy="5.70" r="1.55"/><circle cx="8.50" cy="3.14" r="1.55"/><circle cx="12.00" cy="2.20" r="1.55"/><circle cx="15.50" cy="3.14" r="1.55"/><circle cx="18.06" cy="5.70" r="1.55"/><circle cx="19.00" cy="9.20" r="1.55"/><circle cx="18.06" cy="12.70" r="1.55"/><circle cx="15.50" cy="15.26" r="1.55"/><rect x="10.9" y="15.3" width="2.2" height="4.4" rx="1.1"/><path d="M12 19.4l2.3 3.6H9.7z"/></symbol>
+  <symbol id="i-okuma" viewBox="0 0 24 24"><path d="M2.4 5.6c3-1.5 6.3-1.5 8.8.2v13.4c-2.5-1.7-5.8-1.7-8.8-.2zM21.6 5.6c-3-1.5-6.3-1.5-8.8.2v13.4c2.5-1.7 5.8-1.7 8.8-.2z"/></symbol>
+  <symbol id="i-muhasebe" viewBox="0 0 24 24"><path d="M3.4 13.2h4.2v7.6H3.4zM9.9 8.4h4.2v12.4H9.9zM16.4 3.6h4.2v17.2h-4.2z"/></symbol>
+  <symbol id="i-kible" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1.6a10.4 10.4 0 1 1 0 20.8 10.4 10.4 0 0 1 0-20.8zM12 3.9a8.1 8.1 0 1 0 0 16.2 8.1 8.1 0 0 0 0-16.2z"/><path fill-rule="evenodd" d="M12 5.6l4.6 11.2-4.6-2.6-4.6 2.6zM12 10.2l2.1 5.1-2.1-1.2-2.1 1.2z"/></symbol>
+  <!-- line glyphs: Lucide/Material-outlined style, stroke = --icon-stroke -->
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6"/><path d="M18.47 14.68L20.68 15.6M14.68 18.47l.92 2.21M9.32 18.47l-.92 2.21M5.53 14.68l-2.21.92M5.53 9.32L3.32 8.4M9.32 5.53L8.4 3.32M14.68 5.53l.92-2.21M18.47 9.32l2.21-.92"/></symbol>
+  <symbol id="i-place" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-snooze" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M22 6l-3-3"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.6L19.5 10.5 13.9 12.4 12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.4 1.4 1.3 2.8 2.5 2.8z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="i-more-v" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="i-vibrate" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9v6M21 9v6"/></symbol>
+</svg>
+
+<div id="topctl">
+  <button class="ds-btn" onclick="copyFullSystem()" title="Tüm sistemi kurmak ya da güncellemek için istem kopyala">⤓ Tasarım sistemini kur</button>
+  <select id="langSel" title="İstemin hedef dili" aria-label="Hedef dil"></select>
+  <button id="devToggle" onclick="toggleDev()">◧ Dev Mode</button>
+</div>
+<aside id="inspector"><button class="iclose" onclick="closeInspector()" aria-label="Kapat">✕</button><div id="inspectorBody"></div></aside>
+<div class="copied" id="copied">Kopyalandı</div>
+
+<nav class="side">
+  <div class="brand">Seher</div>
+  <a class="concept-link" href="concept.html">◳ &nbsp;Konsept önizleme &nbsp;→</a>
+  <div class="grp">Temeller</div>
+  <a href="#colors">Renk</a><a href="#type">Tipografi</a><a href="#shape">Şekil</a><a href="#elevation">Yükselti</a><a href="#states">Durum katmanları</a><a href="#spacing">Boşluk</a><a href="#motion">Hareket</a><a href="#icons">İkonlar</a>
+  <div class="grp">Eylemler</div>
+  <a href="#button">Buton</a><a href="#iconButton">İkon butonu</a><a href="#fab">FAB</a><a href="#segmented">Segmentli buton</a>
+  <div class="grp">İletişim</div>
+  <a href="#badge">Rozet</a><a href="#progress">İlerleme</a><a href="#snackbar">Snackbar</a><a href="#tooltip">İpucu</a>
+  <div class="grp">Kapsayıcılar</div>
+  <a href="#card">Kart</a><a href="#carousel">Karusel</a><a href="#divider">Ayraç</a><a href="#list">Liste</a><a href="#sheet">Alt sayfa</a><a href="#dialog">Diyalog</a>
+  <div class="grp">Gezinme</div>
+  <a href="#appBar">Üst çubuk</a><a href="#navBar">Dock (gezinme çubuğu)</a><a href="#navRail">Gezinme rayı</a><a href="#navDrawer">Çekmece</a><a href="#tabs">Sekmeler</a><a href="#search">Arama</a><a href="#menu">Menü</a>
+  <div class="grp">Seçim</div>
+  <a href="#checkbox">Onay kutusu</a><a href="#chips">Çipler</a><a href="#radio">Radyo</a><a href="#switch">Anahtar</a><a href="#slider">Kaydırıcı</a><a href="#datePicker">Tarih seçici</a><a href="#timePicker">Saat seçici</a>
+  <div class="grp">Metin girişi</div>
+  <a href="#textField">Metin alanı</a>
+  <div class="grp">Namazım eklentileri</div>
+  <a href="#skyHeader">Gökyüzü başlığı</a><a href="#countdown">Geri sayım</a><a href="#timeline">Vakit zaman çizgisi</a><a href="#roseCard">Gül kartı</a>
+</nav>
+
+<main>
+  <header style="margin-bottom:44px">
+    <div class="t-display-m">Seher tasarım sistemi</div>
+    <p class="sec-desc" style="margin-top:10px">Gece laciverdi üzerinde tek altın vurgu. Material 3'ün token ve bileşen ayrımını izler; görünüm Namazım'ın kendisi. Kaynak <code>styles.css</code>; her token yorumunda Compose karşılığı (<code>Pal.X</code>, <code>Type</code>, <code>Space</code>, <code>Radius</code>) yazılı. <b>Dev Mode</b> ile bileşene tıkla, <b>Copy as prompt</b> ile kodlanacak istemi al. Uygulama koduna henüz dokunulmadı.</p>
+  </header>
+
+  <!-- ===================== FOUNDATIONS ===================== -->
+  <section id="colors"><h2 class="sec">Renk</h2><p class="sec-desc">Her dolgu kendi <code>--on-*</code> rengiyle eşli; oranlar WCAG formülüyle hesaplandı. Altın yalnızca etkileşim ve "sıradaki iş" için. Şeftali (<code>tertiary</code>) yalnızca kaza ve kerahat anlamı taşır.</p><div class="colors" id="colorGrid"></div></section>
+
+  <section id="type"><h2 class="sec">Tipografi</h2><p class="sec-desc">Başlık ve rakamlar <b>Cormorant 600</b>, her zaman <code>lnum</code> (eski usul "0" harf O'ya benziyor). Okuma metni, butonlar ve gezinme <b>Inter</b>. 15 M3 stili, mevcut <code>Type</code> boyutlarına oturtuldu.</p><div id="typeList"></div></section>
+
+  <section id="shape"><h2 class="sec">Şekil</h2><p class="sec-desc">Yumuşak, cömert köşeler. Kart 22 (<code>Radius.l</code>), dock ve alt sayfa 31.</p>
+    <div class="stage" id="shapeList"></div></section>
+
+  <section id="elevation"><h2 class="sec">Yükselti</h2><p class="sec-desc"><b>Tonal:</b> seviye arttıkça yüzey açılır, kenar ince bir saç çizgisi, üstte hafif parıltı. Gölge yalnızca gökyüzü fotoğrafının üstünde yüzen şeylerde (dock, menü, alt sayfa, diyalog). Bugünkü <code>AppCard</code> 14 dp gölge kullanıyor; öneri, kartlarda gölgeyi kaldırmak.</p>
+    <div class="stage">
+      <div class="elev" style="background:var(--surface)">0 · surface</div>
+      <div class="elev" style="background:var(--surface-container-low);border:var(--hairline)">1 · low</div>
+      <div class="elev" style="background:var(--surface-container) var(--sheen);border:var(--hairline)">2 · card</div>
+      <div class="elev" style="background:var(--surface-container-high) var(--sheen);border:var(--hairline);box-shadow:var(--elev-3)">3 · menü</div>
+      <div class="elev" style="background:var(--surface-container-high);border:var(--hairline);box-shadow:var(--elev-4)">4 · dock</div>
+      <div class="elev" style="background:var(--surface-container-highest);box-shadow:var(--elev-5)">5 · diyalog</div>
+    </div></section>
+
+  <section id="states"><h2 class="sec">Durum katmanları</h2><p class="sec-desc">İçerik renginin üstüne bindirilen saydamlık: üstüne gelme .08, odak .10 (+ altın 2 px halka), basma .10, sürükleme .16, devre dışı .38.</p>
+    <div class="stage">
+      <div class="cell"><div class="btn btn-tonal sl">Varsayılan</div><div class="spec">enabled</div></div>
+      <div class="cell"><div class="btn btn-tonal sl is-hover">Üstünde</div><div class="spec">hover · .08</div></div>
+      <div class="cell"><div class="btn btn-tonal sl is-focus">Odakta</div><div class="spec">focus · ring</div></div>
+      <div class="cell"><div class="btn btn-tonal sl is-pressed">Basılı</div><div class="spec">pressed · .10</div></div>
+      <div class="cell"><div class="btn btn-tonal is-disabled">Kapalı</div><div class="spec">disabled · .38</div></div>
+    </div></section>
+
+  <section id="spacing"><h2 class="sec">Boşluk</h2><p class="sec-desc">4 dp ızgara, <code>Space.xs…xxl</code>. Anlamsal roller: ilişkili öğeler 8, kartlar arası 16, büyük bölümler 32, ekran kenarı 24.</p><div id="spacingList"></div></section>
+
+  <section id="motion"><h2 class="sec">Hareket</h2><p class="sec-desc">M3 eğrileri. Kısa 150 ms (durum, dock sekmesi), orta 250 ms (kart, sayfa), uzun 450 ms (alt sayfa), gül açılışı 900 ms. Üstüne gel: standart eğri.</p>
+    <div class="stage"><div class="motion-demo"><i style="transition:left var(--dur-long) var(--ease-standard)"></i></div><div class="spec">standard (.2,0,0,1) · decel (.05,.7,.1,1) · accel (.3,0,.8,.15)</div></div></section>
+
+  <section id="icons"><h2 class="sec">İkonlar</h2><p class="sec-desc">Dock glifleri dolu siluet (uygulamadakiyle aynı; <b>Zikir tesbihi yeni</b>). Arayüz ikonları ince çizgi, <code>--icon-stroke:1.75</code>. Tüm set: <a href="icons.html" style="color:var(--primary-ink)">icons.html</a>.</p><div class="iconGrid" id="iconGrid"></div></section>
+
+  <!-- ===================== ACTIONS ===================== -->
+  <section id="button"><h2 class="sec">Buton</h2><p class="sec-desc">Hap biçimli. <b>Filled</b> = altın ana eylem (<code>GoldButton</code>), ekranda bir tane. "Kıldım" için 60 dp'lik hero boyu.</p>
+    <div class="stage">
+      <div class="cell"><div class="btn btn-elevated sl" data-insp="button">Hatırlat</div><div class="spec">elevated</div></div>
+      <div class="cell"><div class="btn btn-filled sl" data-insp="button"><svg class="ico"><use href="#i-check"/></svg>Kıldım</div><div class="spec">filled</div></div>
+      <div class="cell"><div class="btn btn-tonal sl" data-insp="button">10 dk ertele</div><div class="spec">filled-tonal</div></div>
+      <div class="cell"><div class="btn btn-outlined sl" data-insp="button"><svg class="ico"><use href="#i-place"/></svg>Konumumu bul</div><div class="spec">outlined</div></div>
+      <div class="cell"><div class="btn btn-text sl" data-insp="button">Geri al</div><div class="spec">text</div></div>
+    </div>
+    <div class="stage" style="margin-top:12px">
+      <div class="cell"><div class="btn btn-filled sl is-hover" data-insp="button">Kıldım</div><div class="spec">hover</div></div>
+      <div class="cell"><div class="btn btn-filled sl is-focus" data-insp="button">Kıldım</div><div class="spec">focus</div></div>
+      <div class="cell"><div class="btn btn-filled sl is-pressed" data-insp="button">Kıldım</div><div class="spec">pressed</div></div>
+      <div class="cell"><div class="btn btn-filled is-disabled" data-insp="button">Kıldım</div><div class="spec">disabled</div></div>
+      <div class="cell" style="width:300px"><div class="btn btn-filled btn-hero sl" data-insp="button"><svg class="ico"><use href="#i-check"/></svg>Kıldım</div><div class="spec">hero · 60 dp</div></div>
+    </div></section>
+
+  <section id="iconButton"><h2 class="sec">İkon butonu</h2><p class="sec-desc">Dokunma alanı her zaman 48. Gökyüzü üstünde <code>glass</code> (34 dp yarı saydam daire; <code>HeaderButton</code>).</p>
+    <div class="stage">
+      <div class="cell"><div class="icon-btn sl" data-insp="iconButton"><svg class="ico"><use href="#i-more-v"/></svg></div><div class="spec">standard</div></div>
+      <div class="cell"><div class="icon-btn filled sl" data-insp="iconButton"><svg class="ico"><use href="#i-plus"/></svg></div><div class="spec">filled</div></div>
+      <div class="cell"><div class="icon-btn tonal sl" data-insp="iconButton"><svg class="ico"><use href="#i-bell"/></svg></div><div class="spec">tonal</div></div>
+      <div class="cell"><div class="icon-btn outlined sl" data-insp="iconButton"><svg class="ico"><use href="#i-edit"/></svg></div><div class="spec">outlined</div></div>
+      <div class="cell"><div class="icon-btn sl" data-insp="iconButton"><svg class="ico"><use href="#i-vibrate"/></svg></div><div class="spec">toggle · off</div></div>
+      <div class="cell"><div class="icon-btn selected sl" data-insp="iconButton"><svg class="ico"><use href="#i-vibrate"/></svg></div><div class="spec">toggle · on</div></div>
+      <div class="cell"><div class="icon-btn outlined selected sl" data-insp="iconButton"><svg class="ico"><use href="#i-bell"/></svg></div><div class="spec">outlined · on</div></div>
+      <div class="cell" style="background:linear-gradient(#5d7aa8,#2a3a5e);padding:12px;border-radius:12px"><div class="icon-btn glass sl" data-insp="iconButton"><svg class="ico ico--sm ico--solid"><use href="#i-kible"/></svg></div><div class="spec" style="color:#fff">glass</div></div>
+    </div></section>
+
+  <section id="fab"><h2 class="sec">FAB</h2><p class="sec-desc">Tonal altın kap. <b>Large</b> Zikir'de tesbih sayacı olarak öneri: başparmakla tek dokunuş, her dokunuşta titreşim.</p>
+    <div class="stage">
+      <div class="cell"><div class="fab small sl" data-insp="fab"><svg class="ico ico--sm"><use href="#i-plus"/></svg></div><div class="spec">small · 40</div></div>
+      <div class="cell"><div class="fab regular sl" data-insp="fab"><svg class="ico"><use href="#i-plus"/></svg></div><div class="spec">regular · 56</div></div>
+      <div class="cell"><div class="fab large gold sl" data-insp="fab"><svg class="ico ico--solid"><use href="#i-zikir"/></svg></div><div class="spec">large · 96 · gold</div></div>
+      <div class="cell"><div class="fab extended sl" data-insp="fab"><svg class="ico"><use href="#i-plus"/></svg>Zikir ekle</div><div class="spec">extended</div></div>
+    </div></section>
+
+  <section id="segmented"><h2 class="sec">Segmentli buton</h2><p class="sec-desc">Kısa seçenek kümeleri (Ayarlar). Seçili segment <code>secondary-container</code> + altın.</p>
+    <div class="stage">
+      <div class="cell"><div class="seg" data-insp="segmented"><div class="s on sl"><svg class="ico"><use href="#i-check"/></svg>Shader</div><div class="s sl">Fotoğraf</div><div class="s sl">Video</div></div><div class="spec">single-select</div></div>
+      <div class="cell"><div class="seg" data-insp="segmented"><div class="s on sl"><svg class="ico"><use href="#i-check"/></svg>Bildirim</div><div class="s on sl"><svg class="ico"><use href="#i-check"/></svg>Titreşim</div><div class="s sl">Ses</div></div><div class="spec">multi-select</div></div>
+    </div></section>
+
+  <!-- ===================== COMMUNICATION ===================== -->
+  <section id="badge"><h2 class="sec">Rozet</h2><p class="sec-desc">Şeftali: bekleyen kaza ya da kılınmamış vakit.</p>
+    <div class="stage">
+      <div class="cell"><div class="badge-host icon-btn" data-insp="badge"><svg class="ico"><use href="#i-bell"/></svg><span class="badge dot"></span></div><div class="spec">small · dot</div></div>
+      <div class="cell"><div class="badge-host icon-btn" data-insp="badge"><svg class="ico ico--solid"><use href="#i-muhasebe"/></svg><span class="badge">3</span></div><div class="spec">large · sayı</div></div>
+      <div class="cell"><div class="badge-host icon-btn" data-insp="badge"><svg class="ico ico--solid"><use href="#i-muhasebe"/></svg><span class="badge">99+</span></div><div class="spec">large · taşma</div></div>
+    </div></section>
+
+  <section id="progress"><h2 class="sec">İlerleme</h2><p class="sec-desc">Ray <code>surface-container-high</code>, dolgu altın, uçları yuvarlak.</p>
+    <div class="stage">
+      <div class="cell" style="width:220px"><div class="lin" data-insp="progress" style="width:100%"><i style="width:62%"></i></div><div class="spec">linear · 375/604 sayfa</div></div>
+      <div class="cell" style="width:220px"><div class="lin indet" data-insp="progress" style="width:100%"><i></i></div><div class="spec">linear · belirsiz</div></div>
+      <div class="cell"><svg class="circ" viewBox="0 0 48 48" data-insp="progress"><circle class="trk" cx="24" cy="24" r="20"/><circle class="val" cx="24" cy="24" r="20" stroke-dasharray="125.7" stroke-dashoffset="50"/></svg><div class="spec">circular · %60</div></div>
+      <div class="cell"><svg class="circ indet" viewBox="0 0 48 48" data-insp="progress"><circle class="trk" cx="24" cy="24" r="20"/><circle class="val" cx="24" cy="24" r="20" stroke-dasharray="40 86"/></svg><div class="spec">circular · belirsiz</div></div>
+    </div></section>
+
+  <section id="snackbar"><h2 class="sec">Snackbar</h2><p class="sec-desc">Ters yüzey (krem üstüne lacivert). Eylem rengi <code>inverse-primary</code>.</p>
+    <div class="stage col">
+      <div class="snackbar" data-insp="snackbar">Öğle kılındı olarak işaretlendi.</div>
+      <div class="snackbar" data-insp="snackbar">İkindi işareti kaldırıldı.<span class="act sl">Geri al</span></div>
+    </div></section>
+
+  <section id="tooltip"><h2 class="sec">İpucu</h2><p class="sec-desc">Düz ipucu ikon etiketleri için; zengin ipucu bir kavramı açıklamak için (ör. "Vaktinde").</p>
+    <div class="stage">
+      <div class="cell"><span class="tooltip" data-insp="tooltip">Kıble</span><div class="spec">plain</div></div>
+      <div class="cell"><div class="tooltip rich" data-insp="tooltip"><b>Vaktinde</b>"Kıldım"a vaktin ilk üçte birinde basarsan bu yaprak açılır.</div><div class="spec">rich</div></div>
+    </div></section>
+
+  <!-- ===================== CONTAINMENT ===================== -->
+  <section id="card"><h2 class="sec">Kart</h2><p class="sec-desc"><b>Filled</b> uygulamanın varsayılan yüzeyi (<code>AppCard</code>): kart rengi + üst parıltı + 1 px cam kenar, gölgesiz. Gold kart yalnızca ekranın tek "imza" anı için.</p>
+    <div class="stage">
+      <div class="card elevated" data-insp="card" style="width:200px"><div class="t-label-m ink-muted">Elevated</div><div class="t-title-l" style="margin-top:6px">Bayram namazı</div><div class="t-body-s ink-muted">Gökyüzü üstünde yüzer</div></div>
+      <div class="card filled" data-insp="card" style="width:200px"><div class="t-label-m ink-muted">Filled</div><div class="t-headline-m" style="margin-top:6px">12 gün</div><div class="t-body-s ink-muted">üst üste tam gün</div></div>
+      <div class="card outlined" data-insp="card" style="width:200px"><div class="t-label-m ink-muted">Outlined</div><div class="t-title-m" style="margin-top:6px">Ek vakit ekle</div><div class="t-body-s ink-muted">İsteğe bağlı içerik</div></div>
+      <div class="card gold" data-insp="card" style="width:200px"><div class="t-label-m ink-gold">İmza</div><div class="t-title-l" style="margin-top:6px">Kadir Gecesi</div><div class="t-body-s ink-muted">3 gün sonra</div></div>
+    </div></section>
+
+  <section id="carousel"><h2 class="sec">Karusel</h2><p class="sec-desc">Okuma'da kitaplar ya da mübarek günler. Sağdaki küçük öğe kaydırılabildiğini söyler.</p>
+    <div class="stage col"><div class="carousel" data-insp="carousel" style="max-width:420px">
+      <div class="item card filled"><div class="t-label-s ink-gold">Kur'an</div><div class="t-title-l">Bakara</div><div class="t-body-s ink-muted">sayfa 34</div></div>
+      <div class="item card filled"><div class="t-label-s ink-gold">Kitap</div><div class="t-title-l">Riyâzü's-Sâlihîn</div><div class="t-body-s ink-muted">%41</div></div>
+      <div class="item card filled"><div class="t-label-s ink-gold">Kitap</div><div class="t-title-l">İhyâ</div><div class="t-body-s ink-muted">%8</div></div>
+      <div class="item small card filled"></div>
+    </div></div></section>
+
+  <section id="divider"><h2 class="sec">Ayraç</h2><p class="sec-desc"><code>outline-variant</code> (Pal.Line), 1 px. Inset hali öncü ikonun hizasından başlar.</p>
+    <div class="stage col" style="max-width:420px">
+      <div class="spec" style="text-align:left">full</div><hr class="divider" data-insp="divider">
+      <div class="spec" style="text-align:left">inset · 56</div><hr class="divider inset" data-insp="divider">
+    </div></section>
+
+  <section id="list"><h2 class="sec">Liste</h2><p class="sec-desc">Bir, iki, üç satır; öncü ikon/avatar ve ardıl metin/kontrol. Rakamlar Cormorant değil Inter (tablo hizası).</p>
+    <div class="stage col" style="max-width:440px;padding:8px">
+      <div class="li sl" data-insp="list"><svg class="ico ink-gold"><use href="#i-bell"/></svg><div class="txt"><div class="hl">Vakit hatırlatmaları</div></div><span class="switch on"></span></div>
+      <hr class="divider inset">
+      <div class="li two sl" data-insp="list"><div class="lead"><svg class="ico ico--sm"><use href="#i-snooze"/></svg></div><div class="txt"><div class="hl">Erteleme süresi</div><div class="sup">"Kıldın mı?" tekrar sorulmadan önce</div></div><span class="trail">10 dk</span></div>
+      <hr class="divider inset">
+      <div class="li three sl" data-insp="list"><div class="lead"><svg class="ico ico--sm"><use href="#i-place"/></svg></div><div class="txt"><div class="hl">Konum</div><div class="sup">Çankaya, Ankara. Vakitler Diyanet tablosuna göre ayarlı, en fazla 1 dk fark.</div></div><svg class="ico ico--sm ink-subtle"><use href="#i-chevron-right"/></svg></div>
+    </div></section>
+
+  <section id="sheet"><h2 class="sec">Alt sayfa</h2><p class="sec-desc">Standart: içerikle yan yana durur. Modal: arkası <code>scrim</code> ile kararır. Köşeler 31, tutamak 32×4.</p>
+    <div class="stage">
+      <div class="cell"><div class="sheet" data-insp="sheet" style="width:300px"><div class="grab"></div><div class="t-title-l">Ek vakitler</div><div class="t-body-s ink-muted" style="margin:4px 0 12px">Öğle'nin altında görünür</div><div class="li" style="padding:0"><span class="cb on"><svg class="ico"><use href="#i-check"/></svg></span><div class="txt hl">Kuşluk</div><span class="trail">09:41</span></div><div class="li" style="padding:0"><span class="cb"><svg class="ico"><use href="#i-check"/></svg></span><div class="txt hl">İşrak</div><span class="trail">07:52</span></div></div><div class="spec">standard</div></div>
+      <div class="cell"><div class="scrim" style="width:300px;height:250px;display:flex;align-items:flex-end;border-radius:var(--r-md);overflow:hidden"><div class="sheet" data-insp="sheet" style="width:100%"><div class="grab"></div><div class="t-title-l">Konum</div><div class="t-body-s ink-muted" style="margin:4px 0 16px">Çankaya, Ankara</div><div class="btn btn-filled" style="width:100%"><svg class="ico"><use href="#i-refresh"/></svg>Konumu güncelle</div></div></div><div class="spec">modal</div></div>
+    </div></section>
+
+  <section id="dialog"><h2 class="sec">Diyalog</h2><p class="sec-desc">Temel: başlık Cormorant, en fazla iki eylem, onay sağda. Tam ekran: kendi üst çubuğu ve "Kaydet"i olan formlar (kaza planı).</p>
+    <div class="stage">
+      <div class="dialog" data-insp="dialog"><svg class="ico ink-gold"><use href="#i-trash"/></svg><div class="ttl">Okuma kaydı silinsin mi?</div><div class="bd">Bugünkü 4 sayfa günlükten çıkar; hatim ilerlemen bir sayfa geri gider.</div><div class="acts"><span class="btn btn-text sl">Vazgeç</span><span class="btn btn-text sl">Sil</span></div></div>
+      <div class="dialog full" data-insp="dialog"><div class="appbar" style="height:56px"><span class="icon-btn"><svg class="ico"><use href="#i-close"/></svg></span><span class="ttl" style="font-size:20px">Kaza planı</span><span class="btn btn-text">Kaydet</span></div><div style="padding:16px 20px"><div class="field outlined up" style="width:100%"><div class="box"><span class="val">2</span></div><span class="lbl">Günde kaç kaza</span></div><div class="t-body-s ink-muted" style="margin-top:16px">Bu hızla 412 kazan yaklaşık 7 ayda biter.</div></div></div>
+    </div></section>
+
+  <!-- ===================== NAVIGATION ===================== -->
+  <section id="appBar"><h2 class="sec">Üst çubuk</h2><p class="sec-desc">Başlık Cormorant. Ayarlar ve Kıble <b>small</b> + geri ok kullanır. <b>Large</b>, Muhasebe gibi sekme sayfalarının başı için öneri (bugünkü "Muhasebe" başlığı + Segmented yerine).</p>
+    <div class="stage col">
+      <div class="appbar center" data-insp="appBar"><span class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></span><span class="ttl">Kıble</span><span class="icon-btn"><svg class="ico"><use href="#i-info"/></svg></span></div><div class="spec" style="text-align:left">center-aligned</div>
+      <div class="appbar" data-insp="appBar"><span class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></span><span class="ttl">Ayarlar</span><span class="icon-btn"><svg class="ico"><use href="#i-more-v"/></svg></span></div><div class="spec" style="text-align:left">small</div>
+      <div class="appbar medium" data-insp="appBar"><span class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></span><span class="sp"></span><span class="icon-btn"><svg class="ico"><use href="#i-calendar"/></svg></span><span class="ttl">Okuma</span></div><div class="spec" style="text-align:left">medium</div>
+      <div class="appbar large" data-insp="appBar"><span class="sp"></span><span class="icon-btn"><svg class="ico"><use href="#i-calendar"/></svg></span><span class="ttl">Muhasebe</span></div><div class="spec" style="text-align:left">large</div>
+    </div></section>
+
+  <section id="navBar"><h2 class="sec">Dock (gezinme çubuğu)</h2><p class="sec-desc">Yüzen cam dock (<code>SeherNav</code>), dört sekme: <b>Namaz, Zikir, Okuma, Muhasebe</b>. Seçili sekme 1.9 kat genişler ve adını altınla yazar; diğerleri yalnız ikon. Kıble ve Ayarlar dock'ta değil, ana sayfa başlığından açılır.</p>
+    <div class="stage sky-bg col" style="align-items:center">
+      <div class="dock" data-insp="navBar" style="width:330px"><div class="ni on sl"><svg class="ico ico--solid"><use href="#i-namaz"/></svg><span class="nm">Namaz</span></div><div class="ni sl"><svg class="ico ico--solid"><use href="#i-zikir"/></svg><span class="nm">Zikir</span></div><div class="ni sl"><svg class="ico ico--solid"><use href="#i-okuma"/></svg><span class="nm">Okuma</span></div><div class="ni sl"><svg class="ico ico--solid"><use href="#i-muhasebe"/></svg><span class="nm">Muhasebe</span></div></div>
+      <div class="dock" data-insp="navBar" style="width:330px"><div class="ni sl"><svg class="ico ico--solid"><use href="#i-namaz"/></svg><span class="nm">Namaz</span></div><div class="ni on sl"><svg class="ico ico--solid"><use href="#i-zikir"/></svg><span class="nm">Zikir</span></div><div class="ni sl"><svg class="ico ico--solid"><use href="#i-okuma"/></svg><span class="nm">Okuma</span></div><div class="ni badge-host sl"><svg class="ico ico--solid"><use href="#i-muhasebe"/></svg><span class="nm">Muhasebe</span><span class="badge dot" style="top:10px;right:24px"></span></div></div>
+    </div></section>
+
+  <section id="navRail"><h2 class="sec">Gezinme rayı</h2><p class="sec-desc">Henüz kullanılmıyor; tablet ve yatay ekran için aynı dört sekme.</p>
+    <div class="stage"><div class="rail" data-insp="navRail"><div class="ri on"><div class="pill"><svg class="ico ico--solid"><use href="#i-namaz"/></svg></div>Namaz</div><div class="ri"><div class="pill"><svg class="ico ico--solid"><use href="#i-zikir"/></svg></div>Zikir</div><div class="ri"><div class="pill"><svg class="ico ico--solid"><use href="#i-okuma"/></svg></div>Okuma</div><div class="ri"><div class="pill"><svg class="ico ico--solid"><use href="#i-muhasebe"/></svg></div>Muhasebe</div></div></div></section>
+
+  <section id="navDrawer"><h2 class="sec">Çekmece</h2><p class="sec-desc">Henüz kullanılmıyor. Standart (yan yana) ya da modal (scrim ile). Zikir listesi gibi uzun gezinmeler için yedek.</p>
+    <div class="stage"><div class="drawer" data-insp="navDrawer"><div class="hd">Zikirlerim</div><div class="di on sl"><svg class="ico ico--sm"><use href="#i-sparkle"/></svg>Sübhânallah<span class="n">21/33</span></div><div class="di sl"><svg class="ico ico--sm"><use href="#i-sparkle"/></svg>Elhamdülillah<span class="n">0/33</span></div><div class="di sl"><svg class="ico ico--sm"><use href="#i-sparkle"/></svg>Salavat<span class="n">40/100</span></div><hr class="divider" style="margin:8px 16px"><div class="di sl"><svg class="ico ico--sm"><use href="#i-plus"/></svg>Zikir ekle</div></div></div></section>
+
+  <section id="tabs"><h2 class="sec">Sekmeler</h2><p class="sec-desc"><b>Primary</b> (altın kısa çizgi) sayfanın ana bölümleri için: Muhasebe'deki "Özet / Gidişat / Kaza" bugünkü Segmented hap yerine bununla önerilir. <b>Secondary</b> bir bölümün içinde.</p>
+    <div class="stage col" style="max-width:420px">
+      <div class="tabs primary" data-insp="tabs"><div class="tb on sl">Özet</div><div class="tb sl">Gidişat</div><div class="tb sl">Kaza</div></div><div class="spec" style="text-align:left">primary · fixed</div>
+      <div class="tabs secondary" data-insp="tabs"><div class="tb on sl">Hafta</div><div class="tb sl">Ay</div><div class="tb sl">Yıl</div></div><div class="spec" style="text-align:left">secondary · fixed</div>
+      <div class="tabs primary scroll" data-insp="tabs"><div class="tb sl">Sabah</div><div class="tb on sl">Öğle</div><div class="tb sl">İkindi</div><div class="tb sl">Akşam</div><div class="tb sl">Yatsı</div><div class="tb sl">Vitir</div></div><div class="spec" style="text-align:left">primary · scrollable</div>
+    </div></section>
+
+  <section id="search"><h2 class="sec">Arama</h2><p class="sec-desc">Çubuk: Okuma'da sûre arama. Görünüm: çubuk açılınca öneri listesi.</p>
+    <div class="stage">
+      <div class="search" data-insp="search" style="width:320px"><svg class="ico"><use href="#i-search"/></svg><span class="q">Sûre ara</span></div>
+      <div class="search-view" data-insp="search"><div class="search"><svg class="ico"><use href="#i-back"/></svg><span class="q" style="color:var(--on-surface)">Ya<span class="field"><span class="caret"></span></span></span><svg class="ico"><use href="#i-close"/></svg></div><div class="li"><svg class="ico ico--sm ink-subtle"><use href="#i-book"/></svg><div class="txt"><div class="hl">Yâsîn</div></div><span class="trail">s. 440</span></div><div class="li"><svg class="ico ico--sm ink-subtle"><use href="#i-book"/></svg><div class="txt"><div class="hl">Yûnus</div></div><span class="trail">s. 208</span></div></div>
+    </div></section>
+
+  <section id="menu"><h2 class="sec">Menü</h2><p class="sec-desc">Açılır menü (<code>LocationChip</code>). Kart rengi, 18 köşe, öncü ikon altın.</p>
+    <div class="stage"><div class="menu" data-insp="menu"><div class="mh">Çankaya, Ankara</div><hr class="divider"><div class="mi sl"><svg class="ico"><use href="#i-refresh"/></svg>Konumu güncelle</div><div class="mi sl"><svg class="ico" style="color:var(--on-surface-variant)"><use href="#i-gear"/></svg>Uygulama izinleri</div></div></div></section>
+
+  <!-- ===================== SELECTION ===================== -->
+  <section id="checkbox"><h2 class="sec">Onay kutusu</h2><p class="sec-desc">18 dp kutu, 48 dp dokunma alanı. Belirsiz hal: grubun bir kısmı seçili.</p>
+    <div class="stage">
+      <div class="cell"><span class="tap" data-insp="checkbox"><span class="cb"><svg class="ico"><use href="#i-check"/></svg></span></span><div class="spec">off</div></div>
+      <div class="cell"><span class="tap" data-insp="checkbox"><span class="cb on"><svg class="ico"><use href="#i-check"/></svg></span></span><div class="spec">on</div></div>
+      <div class="cell"><span class="tap" data-insp="checkbox"><span class="cb mixed"></span></span><div class="spec">indeterminate</div></div>
+      <div class="cell"><span class="tap" data-insp="checkbox"><span class="cb err"></span></span><div class="spec">error</div></div>
+      <div class="cell"><span class="tap is-disabled" data-insp="checkbox"><span class="cb on"><svg class="ico"><use href="#i-check"/></svg></span></span><div class="spec">disabled</div></div>
+    </div></section>
+
+  <section id="chips"><h2 class="sec">Çipler</h2><p class="sec-desc">Assist: hızlı eylem. Filter: seçim. Input: kullanıcının eklediği (zikir adı). Suggestion: öneri, kesik çizgili. Glass: gökyüzü üstündeki konum çipi.</p>
+    <div class="stage">
+      <div class="cell"><span class="chip assist sl" data-insp="chips"><svg class="ico"><use href="#i-calendar"/></svg>Takvime ekle</span><div class="spec">assist</div></div>
+      <div class="cell"><span class="chip filter sl" data-insp="chips">Kaza</span><div class="spec">filter · off</div></div>
+      <div class="cell"><span class="chip filter on sl" data-insp="chips"><svg class="ico"><use href="#i-check"/></svg>Vaktinde</span><div class="spec">filter · on</div></div>
+      <div class="cell"><span class="chip input sl" data-insp="chips">Salavat · 100<svg class="ico x"><use href="#i-close"/></svg></span><div class="spec">input</div></div>
+      <div class="cell"><span class="chip suggestion sl" data-insp="chips">Estağfirullah · 100</span><div class="spec">suggestion</div></div>
+      <div class="cell" style="background:linear-gradient(#5d7aa8,#2a3a5e);padding:10px;border-radius:12px"><span class="chip glass sl" data-insp="chips"><svg class="ico ico--sm ink-gold" style="--icon-size:12px"><use href="#i-place"/></svg>Çankaya<svg class="ico" style="--icon-size:14px;opacity:.55"><use href="#i-chevron-down"/></svg></span><div class="spec" style="color:#fff">glass</div></div>
+    </div></section>
+
+  <section id="radio"><h2 class="sec">Radyo</h2><p class="sec-desc">Tek seçimli listeler (hesap yöntemi, ses).</p>
+    <div class="stage">
+      <div class="cell"><span class="tap" data-insp="radio"><span class="radio"></span></span><div class="spec">off</div></div>
+      <div class="cell"><span class="tap" data-insp="radio"><span class="radio on"></span></span><div class="spec">on</div></div>
+      <div class="cell"><span class="tap is-disabled" data-insp="radio"><span class="radio on"></span></span><div class="spec">disabled</div></div>
+    </div></section>
+
+  <section id="switch"><h2 class="sec">Anahtar</h2><p class="sec-desc">Açıkken altın ray, lacivert düğme büyür (16 → 24).</p>
+    <div class="stage">
+      <div class="cell"><span class="switch" data-insp="switch"></span><div class="spec">off</div></div>
+      <div class="cell"><span class="switch on" data-insp="switch"></span><div class="spec">on</div></div>
+      <div class="cell"><span class="switch on is-disabled" data-insp="switch"></span><div class="spec">disabled</div></div>
+    </div></section>
+
+  <section id="slider"><h2 class="sec">Kaydırıcı</h2><p class="sec-desc">M3 Expressive tarzı kalın ray ve çubuk tutamak. Günlük sayfa hedefi (sürekli), hatırlatma sıklığı (adımlı), sessiz saatler (aralık).</p>
+    <div class="stage" style="padding-top:48px">
+      <div class="cell"><div class="slider" data-insp="slider"><div class="tr"></div><div class="fl" style="left:0;width:40%"></div><div class="th" style="left:40%"></div><div class="val" style="left:40%">8</div></div><div class="spec">continuous · 8 sayfa</div></div>
+      <div class="cell"><div class="slider" data-insp="slider"><div class="tr"></div><div class="fl" style="left:0;width:50%"></div><span class="tk in" style="left:25%"></span><span class="tk" style="left:75%"></span><div class="th" style="left:50%"></div></div><div class="spec">discrete · 15 dk</div></div>
+      <div class="cell"><div class="slider" data-insp="slider"><div class="tr"></div><div class="fl" style="left:20%;width:55%"></div><div class="th" style="left:20%"></div><div class="th" style="left:75%"></div></div><div class="spec">range · 23:00–05:00</div></div>
+    </div></section>
+
+  <section id="datePicker"><h2 class="sec">Tarih seçici</h2><p class="sec-desc">Bugün altın halka, seçili altın dolgu, mübarek gün altında şeftali nokta.</p>
+    <div class="stage"><div class="datepicker" data-insp="datePicker"><div class="hd">Kasım 2026<svg class="ico ico--sm" style="margin-left:4px"><use href="#i-chevron-down"/></svg><span class="sp"></span><span class="icon-btn" style="width:40px;height:40px"><svg class="ico"><use href="#i-chevron-left"/></svg></span><span class="icon-btn" style="width:40px;height:40px"><svg class="ico"><use href="#i-chevron-right"/></svg></span></div>
+      <div class="grid" id="dpGrid"></div></div></div></section>
+
+  <section id="timePicker"><h2 class="sec">Saat seçici</h2><p class="sec-desc">Büyük Cormorant rakamlar; 24 saat (AM/PM yok).</p>
+    <div class="stage"><div class="timepicker" data-insp="timePicker"><div class="t-label-m ink-muted" style="margin-bottom:16px">Teheccüd hatırlatması</div><div class="row"><span class="seg-t on">03</span><span class="colon">:</span><span class="seg-t">40</span></div>
+      <svg class="dial" viewBox="0 0 232 232" style="display:block"><circle cx="116" cy="116" r="4" fill="var(--primary)"/><line x1="116" y1="116" x2="116" y2="34" stroke="var(--primary)" stroke-width="2"/><circle cx="116" cy="30" r="20" fill="var(--primary)"/><g font-family="Inter" font-size="14" fill="var(--on-surface)" text-anchor="middle" id="dialNums"></g></svg>
+      <div class="dialog" style="padding:0;background:none;box-shadow:none"><div class="acts"><span class="btn btn-text">Vazgeç</span><span class="btn btn-text">Tamam</span></div></div></div></div></section>
+
+  <!-- ===================== TEXT INPUTS ===================== -->
+  <section id="textField"><h2 class="sec">Metin alanı</h2><p class="sec-desc">Filled varsayılan, outlined diyalog ve formlarda. Hata metni etiketin yerini değil, yardım satırını alır.</p>
+    <div class="stage">
+      <div class="cell"><div class="field filled" data-insp="textField"><div class="box"></div><span class="lbl">Zikir adı</span><div class="help">Ör. Sübhânallah</div></div><div class="spec">filled · empty</div></div>
+      <div class="cell"><div class="field filled up focus" data-insp="textField"><div class="box"><span class="val">Salavat<span class="caret"></span></span></div><span class="lbl">Zikir adı</span><div class="help">&nbsp;</div></div><div class="spec">filled · focused</div></div>
+      <div class="cell"><div class="field filled up has-lead" data-insp="textField"><div class="box"><svg class="ico ico--sm"><use href="#i-sparkle"/></svg><span class="val">100</span><svg class="ico ico--sm"><use href="#i-close"/></svg></div><span class="lbl">Hedef</span><div class="help">Günde bir kez sıfırlanır</div></div><div class="spec">filled · lead + trail</div></div>
+      <div class="cell"><div class="field outlined up err" data-insp="textField"><div class="box"><span class="val">0</span><svg class="ico ico--sm" style="color:var(--error)"><use href="#i-info"/></svg></div><span class="lbl">Hedef</span><div class="help">Hedef en az 1 olmalı</div></div><div class="spec">outlined · error</div></div>
+      <div class="cell"><div class="field outlined up is-disabled" data-insp="textField"><div class="box"><span class="val">Ankara</span></div><span class="lbl">Şehir</span><div class="help">GPS'ten alınır</div></div><div class="spec">outlined · disabled</div></div>
+    </div></section>
+
+  <!-- ===================== NAMAZIM EXTENSIONS ===================== -->
+  <section id="skyHeader"><h2 class="sec">Gökyüzü başlığı</h2><p class="sec-desc">Ana sayfanın 340 dp başlığı. Gökyüzü (shader / fotoğraf / video) en altta 150 dp boyunca zemine erir. Üstte konum çipi + Kıble + Ayarlar; altta tarih karosu, hicri tarih, sıradaki mübarek gün. Aşağıdaki örnekte senin <code>dusk.webp</code> plakan var.</p>
+    <div class="stage" style="justify-content:center"><div class="phone" data-insp="skyHeader"><div class="sky">
+      <img src="../../app/src/main/assets/sky/dusk.webp" alt="Gökyüzü plakası (akşam)">
+      <div class="bar"><span class="chip glass"><svg class="ico ink-gold" style="--icon-size:12px"><use href="#i-place"/></svg>Çankaya<svg class="ico" style="--icon-size:14px;opacity:.55"><use href="#i-chevron-down"/></svg></span><span class="sp"></span><span class="icon-btn glass"><svg class="ico ico--solid" style="--icon-size:18px"><use href="#i-kible"/></svg></span><span class="icon-btn glass"><svg class="ico" style="--icon-size:18px"><use href="#i-gear"/></svg></span></div>
+      <div class="date"><div class="datetile"><b>4</b><span>KAS</span></div><div><div class="t-body-s">4 Kasım 2026, Çarşamba</div><div style="font-size:11px;opacity:.7">23 Cemâziyelevvel 1448</div><div style="font:600 11px var(--font-body);color:var(--primary-ink);margin-top:2px">✦ Regâib Kandili · 37 gün</div></div></div>
+    </div></div></div></section>
+
+  <section id="countdown"><h2 class="sec">Geri sayım</h2><p class="sec-desc">Başlığın hemen altında, ekranın tek odağı. Üç durum: sıradaki vakte; kılınmamış vakit (şeftali etiket); kılındı.</p>
+    <div class="stage" style="justify-content:space-around">
+      <div class="countdown" data-insp="countdown"><span class="k">İkindi vaktine</span><span class="t">01:12:40</span><span class="s">kaldı</span></div>
+      <div class="countdown" data-insp="countdown"><span class="k ink-warn">Öğle vakti · henüz kılmadın</span><span class="t">00:34:05</span><span class="s">vaktin çıkmasına</span></div>
+      <div class="countdown" data-insp="countdown"><span class="k">Akşam vaktine</span><span class="t">02:05:11</span><span class="s">İkindi kılındı</span></div>
+    </div></section>
+
+  <section id="timeline"><h2 class="sec">Vakit zaman çizgisi</h2><p class="sec-desc">Her vakit bir düğüm. Altın dolu düğüm = kılındı (altında işaretlenme saati), halkalı = şimdiki vakit, şeftali = kazaya düştü. Düğüme tekrar dokunmak işareti geri alır.</p>
+    <div class="stage" style="justify-content:center"><div class="tl" data-insp="timeline" style="width:320px">
+      <div class="node done"><span class="dot"><svg class="ico"><use href="#i-check"/></svg></span><span class="nm">İmsak<small>05:41'de kılındı</small></span><span class="tm">05:31</span></div>
+      <div class="node"><span class="dot"></span><span class="nm" style="color:var(--subtle)">Güneş</span><span class="tm">06:58</span></div>
+      <div class="node kaza"><span class="dot"></span><span class="nm">Öğle<small>kaza</small></span><span class="tm">12:13</span></div>
+      <div class="node now"><span class="dot"></span><span class="nm">İkindi<small>şimdi</small></span><span class="tm">14:59</span></div>
+      <div class="node"><span class="dot"></span><span class="nm">Akşam</span><span class="tm">17:24</span></div>
+      <div class="node"><span class="dot"></span><span class="nm">Yatsı</span><span class="tm">18:45</span></div>
+    </div></div></section>
+
+  <section id="roseCard"><h2 class="sec">Gül kartı</h2><p class="sec-desc">Muhasebe › Özet. Solda bugünün 3B gülü (onaylı <code>design/gul/gul-3d.html</code>, WebView'de <code>gul.html</code>), sağda iki dikey çubuk: <b>Hatim</b> ve <b>Son 30 gün</b>. Gül bugünkü çabayı, çubuklar uzun vadeyi gösterir. Gül çizimi internetten three.js yükler.</p>
+    <div class="stage" style="justify-content:center"><div class="card filled" data-insp="roseCard" style="width:340px"><div class="rose-card">
+      <div class="rose"><iframe src="../gul/gul-3d.html" title="3B gül" scrolling="no" style="width:300px;height:600px;left:-32px;top:-66px;transform:scale(.72);transform-origin:0 0"></iframe></div>
+      <div class="vbar"><span class="v">375<small>/604</small></span><div class="rail-v"><i style="height:62%"></i></div><span class="k">Hatim</span></div>
+      <div class="vbar"><span class="v">21<small>/30</small></span><div class="rail-v"><i style="height:70%"></i></div><span class="k">Son 30<br>gün</span></div>
+    </div></div></div></section>
+</main>
+
+<script>
+/* ===== Foundations data ===== */
+const COLORS=[['primary','#E8BE74','on-primary','#0B1322'],['primary-container','#32353D','on-primary-container','#E8BE74'],['secondary','#9FB3D1','on-secondary','#0B1322'],['secondary-container','#1C2943','on-secondary-container','#E8BE74'],['tertiary','#F4B08F','on-tertiary','#0B1322'],['tertiary-container','#3A2E34','on-tertiary-container','#F4B08F'],['error','#F2948A','on-error','#2A0B0B'],['error-container','#3D2128','on-error-container','#F9C5BF'],['success','#9CCFA8','on-success','#0B1322'],['background / surface','#0B1322','on-surface','#F3EEE3'],['surface-container-lowest','#091020','on-surface','#F3EEE3'],['surface-container-low','#0F182B','on-surface','#F3EEE3'],['surface-container','#121D33','on-surface-variant','#C9D1DC'],['surface-container-high','#1C2943','on-surface-variant','#C9D1DC'],['surface-container-highest','#24324F','on-surface','#F3EEE3'],['outline','#2A3A52','on-surface','#F3EEE3'],['subtle (ink)','#121D33','subtle','#8C97A8'],['inverse-surface','#F3EEE3','inverse-on-surface','#121D33'],['inverse-primary','#F3EEE3','inverse-primary','#8A6420']];
+function lum(h){const c=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255).map(x=>x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4));return .2126*c[0]+.7152*c[1]+.0722*c[2];}
+function ratio(a,b){const[x,y]=[lum(a),lum(b)].sort((p,q)=>p-q);return((y+.05)/(x+.05)).toFixed(1);}
+colorGrid.innerHTML=COLORS.map(([n,h,on,oh])=>`<div class="sw"><div class="c" style="background:${h};color:${oh}">Aa ${ratio(h,oh)}:1</div><div class="m"><div class="n">${n}</div><div class="v">${h} · ${on} ${oh}</div></div></div>`).join('');
+const TYPE=[['t-display-l','Cormorant 600 / 56','05:31'],['t-display-m','Cormorant 600 / 44 · Type.display','01:12:40'],['t-display-s','Cormorant 600 / 34 · Type.title','Muhasebe'],['t-headline-l','Cormorant 600 / 30','Kadir Gecesi'],['t-headline-m','Cormorant 600 / 28 · Type.num','412 kaza'],['t-headline-s','Cormorant 600 / 24','Bugün'],['t-title-l','Cormorant 600 / 22 · Type.h2','Ek vakitler'],['t-title-m','Inter 600 / 16','Vakit hatırlatmaları'],['t-title-s','Inter 600 / 14','Erteleme süresi'],['t-body-l','Inter 400 / 16','Kıldın mı? Vaktin çıkmasına 34 dakika var.'],['t-body-m','Inter 400 / 15 · Type.body','Namazlarını çoğunlukla vaktin başında kılıyorsun.'],['t-body-s','Inter 400 / 13 · Type.body2','Diyanet tablosuna göre ayarlı, en fazla 1 dk fark.'],['t-label-l','Inter 600 / 14','Kıldım'],['t-label-m','Inter 500 / 12 · Type.label','Hatim takibi'],['t-label-s','Inter 600 / 11 · Type.micro','İkindi vaktine']];
+typeList.innerHTML=TYPE.map(([n,m,s])=>`<div class="typerow"><div class="tk">${n}<br>${m}</div><div class="${n}">${s}</div></div>`).join('');
+const SHAPES=[['none',0],['xs',6],['sm · Radius.s',12],['md · Radius.m',18],['lg · Radius.l',22],['xl · dock',31],['full',999]];
+shapeList.innerHTML=SHAPES.map(([n,v])=>`<div class="cell"><div class="shape" style="border-radius:${v}px"></div><div class="spec">${n}<br>${v===999?'∞':v}</div></div>`).join('');
+const SPACING=[['sp-4 · Space.xs',4],['sp-8 · Space.s · gap-related',8],['sp-12 · Space.m',12],['sp-16 · Space.l · gap-section',16],['sp-24 · Space.xl · gutter',24],['sp-32 · Space.xxl · gap-major',32],['sp-48 · target-min',48],['sp-64',64]];
+spacingList.innerHTML=SPACING.map(([n,v])=>`<div class="sprow"><div class="lbl">${n}</div><div class="bar" style="width:${v*4}px"></div><span class="spec">${v}</span></div>`).join('');
+const ICONS=[['namaz','ico--solid'],['zikir','ico--solid'],['okuma','ico--solid'],['muhasebe','ico--solid'],['kible','ico--solid'],['gear',''],['place',''],['back',''],['check',''],['bell',''],['snooze',''],['moon',''],['sun',''],['calendar',''],['sparkle',''],['flame',''],['book',''],['refresh','']];
+iconGrid.innerHTML=ICONS.map(([n,c])=>`<div class="it"><svg class="ico ico--lg ${c}"><use href="#i-${n}"/></svg><div class="nm">i-${n}</div></div>`).join('');
+// date picker: Nov 2026 starts on Sunday (Mon-first grid → 6 leading blanks)
+dpGrid.innerHTML=['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].map(d=>`<span class="w">${d}</span>`).join('')+[26,27,28,29,30,31].map(d=>`<span class="d out">${d}</span>`).join('')+Array.from({length:30},(_,i)=>{const d=i+1;return `<span class="d${d===4?' today':''}${d===13?' sel':''}${d===10?' holy':''}">${d}</span>`;}).join('');
+dialNums.innerHTML=Array.from({length:12},(_,i)=>{const a=(i*30-90)*Math.PI/180;return `<text x="${116+86*Math.cos(a)}" y="${121+86*Math.sin(a)}"${i===1?' fill="var(--on-primary)"':''}>${String(i===0?0:i).padStart(2,'0')}</text>`;}).join('').replace('y="35"','y="35"');
+
+/* ===== SPECS: one entry per component (drives Inspector + Copy as prompt) ===== */
+const C=(r,n,v)=>({r,n,v,c:v.startsWith('#')?v:undefined});
+const SPECS={
+ button:{name:'Button',file:'UiKit.kt · GoldButton / AppButton',desc:'Pill button. Variants elevated / filled (gold, the one main action per screen) / filled-tonal / outlined / text; hero size 60dp for "Kıldım". States enabled/hover/focus/pressed/disabled via state layers.',
+  props:[{n:'label',t:'String'},{n:'onClick',t:'() -> Unit'},{n:'variant',t:'Elevated|Filled|Tonal|Outlined|Text',def:'Filled'},{n:'icon',t:'ImageVector?'},{n:'hero',t:'Boolean',def:'false'},{n:'enabled',t:'Boolean',def:'true'}],
+  tokens:[C('filled bg','primary','#E8BE74'),C('filled fg','on-primary','#0B1322'),C('tonal bg','primary-container','#32353D'),C('tonal/outlined/text fg','primary-ink','#E8BE74'),C('outlined border','outline','#2A3A52'),C('elevated bg','surface-container-high','#1C2943'),{r:'label',n:'t-label-l',v:'Inter 600 / 15'}],
+  metrics:[['radius','r-full'],['minHeight','48 (hero 60)'],['padding','h 24 (text 12)'],['icon','18, gap 8'],['disabled','opacity .38']]},
+ iconButton:{name:'Icon button',file:'MainActivity.kt · HeaderButton',desc:'Icon-only action, 48dp target. Variants standard / filled / tonal / outlined, toggle selected/unselected, and glass (34dp translucent circle on the sky photo, hit area padded to 48).',
+  props:[{n:'icon',t:'ImageVector'},{n:'contentDescription',t:'String'},{n:'variant',t:'Standard|Filled|Tonal|Outlined|Glass',def:'Standard'},{n:'selected',t:'Boolean?',def:'null'}],
+  tokens:[C('standard fg','on-surface-variant','#C9D1DC'),C('selected fg','primary-ink','#E8BE74'),C('filled bg','primary','#E8BE74'),C('tonal bg','secondary-container','#1C2943'),{r:'glass bg',n:'black 15%',v:'rgb(0 0 0/.15)'}],
+  metrics:[['size','48 (glass 34 visual)'],['icon','24 (glass 18)'],['radius','r-full']]},
+ fab:{name:'FAB',file:'— (new) · Zikir counter',desc:'Floating action. small 40 / regular 56 / large 96 / extended. Tonal gold container; the large gold FAB is the proposed tesbih counter in Zikir (tap counts + haptic).',
+  props:[{n:'icon',t:'ImageVector'},{n:'size',t:'Small|Regular|Large|Extended',def:'Regular'},{n:'label',t:'String?'},{n:'gold',t:'Boolean',def:'false'}],
+  tokens:[C('bg','primary-container','#32353D'),C('fg','on-primary-container','#E8BE74'),C('gold bg','primary','#E8BE74'),{r:'shadow',n:'elev-3',v:'0 6 18 /.35'}],
+  metrics:[['radius','small 12 · regular 18 · large 31'],['extended','h56, pad 16/24']]},
+ segmented:{name:'Segmented button',file:'UiKit.kt · Segmented',desc:'Short option sets in Ayarlar (sky renderer, alert channels). Single and multi select; selected segment shows a check.',
+  props:[{n:'options',t:'List<String>'},{n:'selected',t:'Set<Int>'},{n:'multi',t:'Boolean',def:'false'}],
+  tokens:[C('border','outline','#2A3A52'),C('selected bg','secondary-container','#1C2943'),C('selected fg','on-secondary-container','#E8BE74'),C('fg','on-surface-variant','#C9D1DC')],
+  metrics:[['height','40'],['radius','r-full'],['padding','h 16']]},
+ badge:{name:'Badge',file:'— (new)',desc:'Small dot or count on an icon. Peach: pending kaza or an unprayed vakit.',
+  props:[{n:'count',t:'Int?',d:'null = dot'},{n:'max',t:'Int',def:'99'}],
+  tokens:[C('bg','tertiary','#F4B08F'),C('fg','on-tertiary','#0B1322')],metrics:[['dot','6'],['large','min 16, pad h4'],['type','Inter 700/10']]},
+ progress:{name:'Progress indicator',file:'UiKit.kt · ProgressColumn',desc:'Linear and circular, determinate and indeterminate. Gold fill on track colour, round caps.',
+  props:[{n:'progress',t:'Float?',d:'null = indeterminate'},{n:'kind',t:'Linear|Circular',def:'Linear'}],
+  tokens:[C('track','surface-container-high','#1C2943'),C('fill','primary','#E8BE74')],metrics:[['linear','h 4'],['circular','48, stroke 4']]},
+ snackbar:{name:'Snackbar',file:'— (new)',desc:'Short confirmation after marking or unmarking a prayer; optional "Geri al".',
+  props:[{n:'message',t:'String'},{n:'actionLabel',t:'String?'}],
+  tokens:[C('bg','inverse-surface','#F3EEE3'),C('fg','inverse-on-surface','#121D33'),C('action','inverse-primary','#8A6420')],metrics:[['radius','12'],['minHeight','48'],['maxWidth','340']]},
+ tooltip:{name:'Tooltip',file:'— (new)',desc:'Plain for icon labels, rich for explaining a concept such as "Vaktinde".',
+  props:[{n:'text',t:'String'},{n:'title',t:'String?',d:'rich only'}],
+  tokens:[C('plain bg','inverse-surface','#F3EEE3'),C('rich bg','surface-container-highest','#24324F'),C('rich body','on-surface-variant','#C9D1DC')],metrics:[['plain radius','6'],['rich radius','12, pad 12/16']]},
+ card:{name:'Card',file:'UiKit.kt · AppCard',desc:'The app\'s one surface. Filled (default): card colour + top sheen + 1px glass edge, NO shadow. Elevated only over the sky; outlined for optional content; gold for the one signature moment.',
+  props:[{n:'variant',t:'Filled|Elevated|Outlined|Gold',def:'Filled'},{n:'onClick',t:'(() -> Unit)?'},{n:'label',t:'String?',d:'a11y'}],
+  tokens:[C('filled bg','surface-container','#121D33'),{r:'sheen',n:'sheen',v:'white 5%→0'},{r:'edge',n:'hairline',v:'1px white 6%'},C('outlined border','outline','#2A3A52'),C('gold bg','primary-container','#32353D')],
+  metrics:[['radius','22 (Radius.l)'],['padding','16'],['gap between cards','16 (gap-section)']]},
+ carousel:{name:'Carousel',file:'— (new) · Okuma',desc:'Horizontally scrolling cards (books, holy days). A small trailing item signals more.',
+  props:[{n:'items',t:'List<T>'},{n:'itemWidth',t:'Dp',def:'132'}],tokens:[C('item bg','surface-container','#121D33')],metrics:[['item','132×164, radius 18'],['gap','8'],['snap','start']]},
+ divider:{name:'Divider',file:'HorizontalDivider(color = Pal.Line)',desc:'1px separator, full or inset to the leading icon.',props:[{n:'inset',t:'Dp',def:'0'}],
+  tokens:[{r:'colour',n:'outline-variant',v:'#F3EEE3 @12%'}],metrics:[['thickness','1'],['inset','56']]},
+ list:{name:'List item',file:'Ayarlar.kt rows',desc:'One / two / three line rows with leading icon or avatar and trailing text, switch or chevron.',
+  props:[{n:'headline',t:'String'},{n:'supporting',t:'String?'},{n:'leading',t:'@Composable?'},{n:'trailing',t:'@Composable?'},{n:'lines',t:'1|2|3',def:'1'}],
+  tokens:[C('headline','on-surface','#F3EEE3'),C('supporting','on-surface-variant','#C9D1DC'),C('leading bg','secondary-container','#1C2943'),{r:'headline type',n:'Inter 500',v:'15'}],
+  metrics:[['height','56 / 72 / 88'],['padding','h 16'],['leading','40 circle']]},
+ sheet:{name:'Bottom sheet',file:'— (new)',desc:'Standard (beside content) or modal (scrim). For ek vakitler and the location picker.',
+  props:[{n:'modal',t:'Boolean',def:'true'},{n:'content',t:'@Composable'}],
+  tokens:[C('bg','surface-container-low','#0F182B'),C('handle','outline','#2A3A52'),{r:'scrim',n:'scrim',v:'#03070F @62%'},{r:'shadow',n:'elev-4',v:'0 10 28 /.45'}],
+  metrics:[['top radius','31'],['handle','32×4'],['padding','h 24']]},
+ dialog:{name:'Dialog',file:'AlertDialog',desc:'Basic (icon, Cormorant title, body, max two text actions) and full-screen (own app bar with "Kaydet").',
+  props:[{n:'title',t:'String'},{n:'text',t:'String'},{n:'confirm',t:'String'},{n:'dismiss',t:'String?'},{n:'fullScreen',t:'Boolean',def:'false'}],
+  tokens:[C('bg','surface-container-high','#1C2943'),{r:'title',n:'t-headline-s',v:'Cormorant 600/24'},C('body','on-surface-variant','#C9D1DC')],metrics:[['radius','31'],['padding','24'],['maxWidth','312']]},
+ appBar:{name:'Top app bar',file:'Ayarlar.kt / Screens.kt titles',desc:'center-aligned / small / medium / large. Cormorant title. Large is the proposed head for tab pages like Muhasebe, replacing the title + Segmented pill.',
+  props:[{n:'title',t:'String'},{n:'variant',t:'Center|Small|Medium|Large',def:'Small'},{n:'navigationIcon',t:'@Composable?'},{n:'actions',t:'@Composable RowScope'}],
+  tokens:[C('bg','surface','#0B1322'),C('title','on-surface','#F3EEE3'),{r:'title type',n:'Cormorant 600',v:'22 / 30 / 44'}],metrics:[['height','64 / 112 / 152'],['icon slots','48']]},
+ navBar:{name:'Navigation bar (dock)',file:'MainActivity.kt · SeherNav',desc:'Floating glass dock with four tabs: Namaz, Zikir, Okuma, Muhasebe. Selected tab grows (weight 1.9) and shows its name in gold; others icon only. Kıble and Ayarlar open from the home header, not the dock.',
+  props:[{n:'selected',t:'Int'},{n:'onSelect',t:'(Int) -> Unit'},{n:'tabs',t:'Namaz|Zikir|Okuma|Muhasebe'}],
+  tokens:[{r:'bg',n:'surface-container-lowest @88%',v:'#091020 + sheen'},C('selected pill','secondary-container','#1C2943'),C('selected fg','primary-ink','#E8BE74'),C('fg','on-surface-variant','#C9D1DC'),{r:'edge',n:'white 10%',v:'1px'},{r:'shadow',n:'elev-4',v:'0 10 28 /.45'}],
+  metrics:[['height','62'],['radius','31'],['item','h 46, pill'],['margin','h 24, v 8'],['icon','22'],['grow','tween 180ms']]},
+ navRail:{name:'Navigation rail',file:'— (not yet used)',desc:'Same four tabs for tablet/landscape.',props:[{n:'selected',t:'Int'}],
+  tokens:[C('bg','surface-container-lowest','#091020'),C('pill','secondary-container','#1C2943'),C('selected fg','primary-ink','#E8BE74')],metrics:[['width','80'],['pill','56×32']]},
+ navDrawer:{name:'Navigation drawer',file:'— (not yet used)',desc:'Standard or modal; fallback for long lists such as the zikir list.',props:[{n:'items',t:'List<Item>'},{n:'selected',t:'Int'},{n:'modal',t:'Boolean',def:'true'}],
+  tokens:[C('bg','surface-container-lowest','#091020'),C('selected bg','secondary-container','#1C2943'),C('selected fg','on-secondary-container','#E8BE74')],metrics:[['width','280'],['item','h 56, r-full']]},
+ tabs:{name:'Tabs',file:'Screens.kt · MuhasebeScreen',desc:'Primary (short gold indicator) for a page\'s sections: Özet / Gidişat / Kaza, replacing today\'s Segmented pill. Secondary (full-width indicator) inside a section. Fixed or scrollable.',
+  props:[{n:'tabs',t:'List<String>'},{n:'selected',t:'Int'},{n:'variant',t:'Primary|Secondary',def:'Primary'},{n:'scrollable',t:'Boolean',def:'false'}],
+  tokens:[C('selected','primary-ink','#E8BE74'),C('unselected','on-surface-variant','#C9D1DC'),C('indicator','primary','#E8BE74'),{r:'baseline',n:'outline-variant',v:'#F3EEE3 @12%'}],metrics:[['height','48'],['indicator','primary 32×3, secondary full×2']]},
+ search:{name:'Search',file:'— (new) · Okuma',desc:'Search bar and expanded search view with suggestions (sûre search).',props:[{n:'query',t:'String'},{n:'placeholder',t:'String'},{n:'expanded',t:'Boolean'}],
+  tokens:[C('bg','surface-container-high','#1C2943'),C('placeholder','on-surface-variant','#C9D1DC')],metrics:[['height','56'],['radius','r-full / view 22']]},
+ menu:{name:'Menu',file:'MainActivity.kt · LocationChip DropdownMenu',desc:'Dropdown with header line, divider and items with gold leading icons.',props:[{n:'items',t:'List<MenuItem>'},{n:'header',t:'String?'}],
+  tokens:[C('bg','surface-container','#121D33'),C('icon','primary-ink','#E8BE74'),{r:'shadow',n:'elev-3',v:'0 6 18 /.35'}],metrics:[['radius','18'],['item','h 48'],['minWidth','200']]},
+ checkbox:{name:'Checkbox',file:'— (M3 Checkbox)',desc:'Off / on / indeterminate / error / disabled. 18dp box in a 48dp target.',props:[{n:'state',t:'On|Off|Indeterminate'},{n:'isError',t:'Boolean',def:'false'}],
+  tokens:[C('on bg','primary','#E8BE74'),C('check','on-primary','#0B1322'),C('off border','on-surface-variant','#C9D1DC'),C('error','error','#F2948A')],metrics:[['box','18, radius 4'],['target','48']]},
+ chips:{name:'Chips',file:'— (M3 chips) · LocationChip',desc:'assist / filter / input / suggestion, plus glass (the location chip on the sky).',props:[{n:'label',t:'String'},{n:'kind',t:'Assist|Filter|Input|Suggestion|Glass'},{n:'selected',t:'Boolean',def:'false'},{n:'onRemove',t:'(() -> Unit)?'}],
+  tokens:[C('border','outline','#2A3A52'),C('fg','on-surface-variant','#C9D1DC'),C('filter on bg','secondary-container','#1C2943'),C('filter on fg','on-secondary-container','#E8BE74')],metrics:[['height','32'],['radius','12'],['icon','18']]},
+ radio:{name:'Radio button',file:'— (M3 RadioButton)',desc:'Single choice in lists.',props:[{n:'selected',t:'Boolean'}],
+  tokens:[C('on','primary','#E8BE74'),C('off','on-surface-variant','#C9D1DC')],metrics:[['size','20, dot 10'],['target','48']]},
+ switch:{name:'Switch',file:'— (M3 Switch)',desc:'Gold track when on; the thumb grows 16 → 24.',props:[{n:'checked',t:'Boolean'}],
+  tokens:[C('on track','primary','#E8BE74'),C('on thumb','on-primary','#0B1322'),C('off track','surface-container-highest','#24324F'),C('off border','outline','#2A3A52')],metrics:[['track','52×32'],['thumb','16 / 24']]},
+ slider:{name:'Slider',file:'Ayarlar.kt',desc:'Continuous, discrete (ticks) and range. Thick 16dp track, bar handle, value label.',props:[{n:'value',t:'Float | ClosedRange'},{n:'steps',t:'Int',def:'0'}],
+  tokens:[C('active','primary','#E8BE74'),C('inactive','surface-container-high','#1C2943'),C('label bg','inverse-surface','#F3EEE3')],metrics:[['track','16, r-full'],['handle','4×44'],['height','44']]},
+ datePicker:{name:'Date picker',file:'— (M3 DatePicker)',desc:'Month grid, Monday first. Today = gold ring, selected = gold fill, holy day = peach dot.',props:[{n:'selected',t:'LocalDate?'},{n:'holyDays',t:'Set<LocalDate>'}],
+  tokens:[C('bg','surface-container-high','#1C2943'),C('selected','primary','#E8BE74'),C('holy dot','tertiary','#F4B08F'),C('outside month','subtle','#8C97A8')],metrics:[['width','312'],['day','40 circle'],['radius','31']]},
+ timePicker:{name:'Time picker',file:'— (M3 TimePicker)',desc:'Large Cormorant hour/minute fields + dial, 24h.',props:[{n:'hour',t:'Int'},{n:'minute',t:'Int'}],
+  tokens:[C('active field','primary-container','#32353D'),C('active fg','on-primary-container','#E8BE74'),C('dial','surface-container-highest','#24324F'),C('hand','primary','#E8BE74')],metrics:[['field','96×80, Cormorant 52'],['dial','232']]},
+ textField:{name:'Text field',file:'— (M3 TextField)',desc:'Filled (default) and outlined; empty / focused / filled / error / disabled; label, helper, error, leading/trailing icons.',
+  props:[{n:'value',t:'String'},{n:'label',t:'String'},{n:'supportingText',t:'String?'},{n:'isError',t:'Boolean',def:'false'},{n:'variant',t:'Filled|Outlined',def:'Filled'}],
+  tokens:[C('filled bg','surface-container-high','#1C2943'),C('focus','primary','#E8BE74'),C('error','error','#F2948A'),C('label','on-surface-variant','#C9D1DC')],metrics:[['height','56'],['radius','6 (filled top only)'],['focus line','2']]},
+ skyHeader:{name:'Sky header',file:'MainActivity.kt · NamazScreen header + Sky.kt / SkyLayers.kt',desc:'340dp home header. Sky renderer (shader / photo plates / video) fades into the ground over the bottom 150dp. Top: glass location chip, Kıble and gear glass buttons. Bottom-left: date tile (Cormorant day + gold month), date, hijri date, next holy day in gold.',
+  props:[{n:'mode',t:'Shader|Photo|Video'},{n:'city',t:'String'},{n:'onOpenKible',t:'() -> Unit'},{n:'onOpenSettings',t:'() -> Unit'}],
+  tokens:[{r:'fade',n:'background',v:'transparent → .72 → #0B1322'},{r:'date tile',n:'black 35%',v:'r 10'},C('month / holy day','primary-ink','#E8BE74'),{r:'text shadow',n:'black 60%',v:'blur 14'}],
+  metrics:[['height','340'],['fade','150'],['bar','top 8 + status bar, sides 12/8'],['date','left 16, bottom 12']]},
+ countdown:{name:'Countdown',file:'MainActivity.kt · hero',desc:'The single focus under the header: small gold caps label, 44sp Cormorant time, muted sub line. Owed state shows the label in peach.',
+  props:[{n:'label',t:'String'},{n:'time',t:'String'},{n:'sub',t:'String'},{n:'owed',t:'Boolean',def:'false'}],
+  tokens:[C('label','primary-ink','#E8BE74'),C('label (owed)','tertiary','#F4B08F'),{r:'time',n:'t-display-m',v:'Cormorant 600/44'},C('sub','on-surface-variant','#C9D1DC')],metrics:[['label tracking','.18em'],['lineHeight','48']]},
+ timeline:{name:'Vakit timeline',file:'MainActivity.kt · timeline',desc:'One node per vakit on a hairline. Gold filled = prayed (time it was marked below the name), ringed with halo = current, peach = went to kaza. Tap again to undo.',
+  props:[{n:'rows',t:'List<Row_>'},{n:'onToggle',t:'(Slot) -> Unit'}],
+  tokens:[C('done dot','primary','#E8BE74'),C('rail','outline','#2A3A52'),C('kaza','tertiary','#F4B08F'),{r:'time',n:'Cormorant 600',v:'20'}],metrics:[['node','28'],['row','min 52'],['halo','5 @14%']]},
+ roseCard:{name:'Rose card',file:'Screens.kt · MuhasebeOzet + GulView.kt',desc:'Özet summary card: today\'s 3D rose on the left (WebView gul.html), two vertical progress columns on the right: Hatim (pages/604) and Son 30 gün (full days/30).',
+  props:[{n:'petals',t:'List<Petal>'},{n:'hatimPage',t:'Int'},{n:'fullDays30',t:'Int'}],
+  tokens:[C('card','surface-container','#121D33'),C('column track','surface-container-high','#1C2943'),{r:'column fill',n:'primary',v:'gold 55% → 100% up'},{r:'value',n:'Cormorant 600',v:'24'}],
+  metrics:[['height','300'],['column','56 wide, rail 10'],['gap','8']]},
+};
+
+/* ===== Copy as prompt ===== */
+const LANGS=['Jetpack Compose (Kotlin)','Flutter (Dart)','React (TypeScript + CSS)','SwiftUI','React Native','HTML + CSS'];
+let promptLang=LANGS[0];
+langSel.innerHTML=LANGS.map(l=>`<option${l===promptLang?' selected':''}>${l}</option>`).join('');
+langSel.onchange=()=>promptLang=langSel.value;
+const varGroups={
+ 'Color roles (keep every fill paired with its --on-*)':['--primary','--on-primary','--primary-container','--on-primary-container','--primary-ink','--secondary','--on-secondary','--secondary-container','--on-secondary-container','--tertiary','--on-tertiary','--tertiary-container','--on-tertiary-container','--error','--on-error','--error-container','--on-error-container','--success','--on-success','--background','--on-background','--surface','--on-surface','--surface-variant','--on-surface-variant','--surface-container-lowest','--surface-container-low','--surface-container','--surface-container-high','--surface-container-highest','--outline','--outline-variant','--subtle','--inverse-surface','--inverse-on-surface','--inverse-primary','--scrim'],
+ 'State layers':['--state-hover','--state-focus','--state-pressed','--state-dragged'],
+ 'Spacing':['--gap-related','--gap-section','--gap-major','--layout-gutter','--target-min','--sp-2','--sp-4','--sp-8','--sp-12','--sp-16','--sp-24','--sp-32','--sp-48','--sp-64'],
+ 'Shape':['--r-none','--r-xs','--r-sm','--r-md','--r-lg','--r-xl','--r-full'],
+ 'Elevation (tonal; shadow only over the sky)':['--elev-0','--elev-1','--elev-2','--elev-3','--elev-4','--elev-5','--hairline','--sheen'],
+ 'Craft':['--ring','--focus-ring','--signature'],
+ 'Type families':['--font-display','--font-body','--num'],
+ 'Motion':['--dur-short','--dur-medium','--dur-long','--dur-rose','--ease-standard','--ease-decel','--ease-accel'],
+ 'Icons':['--icon-size','--icon-inline','--icon-large','--icon-stroke']};
+function tokenLines(){const cs=getComputedStyle(document.documentElement);const out=[];
+ for(const[grp,names]of Object.entries(varGroups)){const rows=names.map(n=>{const v=cs.getPropertyValue(n).trim();return v?`- ${n} = ${v}`:null;}).filter(Boolean);if(rows.length)out.push(`### ${grp}`,...rows,'');}
+ return out;}
+const CONTEXT=`Project: Namazım, an Android prayer app (Kotlin + Jetpack Compose, minSdk 31). All UI text is Turkish. One theme only: Seher (dark navy + one gold accent). Existing token homes: Theme.kt (Palette/Pal.X, Cormorant, NumStyle with lnum), UiKit.kt (Type, Space, Radius, TouchMin, AppCard, SectionLabel). Extend those; no new libraries, no DI. Display numbers always use Cormorant with font feature "lnum". Inter must be added as a font resource (res/font) for body text.`;
+function foundationsBody(){const L=[`## Foundations — design tokens (single source of truth)`,`Map every token below onto Theme.kt / UiKit.kt (${promptLang}). Components reference tokens by name — never inline raw values.`,'',...tokenLines(),`### Type scale (text styles)`];
+ TYPE.forEach(([n,m])=>L.push(`- ${n}: ${m}`));
+ L.push('',`### Rules`,`- Every fill stays paired with its --on-* foreground (WCAG ≥ 4.5:1, verified).`,`- Gold (primary) leads interaction and marks the ONE "next thing" per screen. Peach (tertiary) means kaza / kerahat only.`,`- Elevation is tonal: cards have no shadow (sheen + 1px hairline). Shadow only on things floating over the sky photo.`,`- Use the semantic spacing roles (8 related < 16 section < 32 major, 24 gutter).`);
+ return L.join('\n');}
+function buildPrompt(key){const s=SPECS[key];const L=[`# Add or update the \`${s.name}\` component — ${promptLang}`,'',CONTEXT,'',`If a component with this role ALREADY EXISTS (see: ${s.file}), modify it IN PLACE to match this spec — don't duplicate; note any breaking change. Otherwise create it next to the existing UiKit components.`,'',`## What it is`,s.desc,'',`## Props`];
+  s.props.forEach(p=>L.push(`- \`${p.n}\`: ${p.t}${p.def?` (default ${p.def})`:''}${p.d?` — ${p.d}`:''}`));
+  L.push('',`## Design tokens`);s.tokens.forEach(t=>L.push(`- ${t.n} = ${t.v}   // ${t.r}`));
+  L.push('',`## Metrics`);s.metrics.forEach(([k,v])=>L.push(`- ${k}: ${v}`));
+  L.push('',`## Requirements`,`- Implement every variant/state listed; touch targets ≥ 48dp.`,`- Reference tokens by name; keep fill/--on-* pairs.`,`- Turkish copy. Complete, compilable ${promptLang} code + a short usage example. Keep the diff small and match the surrounding style.`);
+  return L.join('\n');}
+function copyPrompt(key){copyText(buildPrompt(key));toast(`Kopyalandı: ${SPECS[key].name} → ${promptLang}`);}
+function fullSystemPrompt(){const keys=Object.keys(SPECS);const L=[`# Install or update the Seher design system — ${promptLang}`,'',CONTEXT,'',`Update in place where things exist; create what is missing. Collect breaking changes with migration notes.`,'',`## Build order`,`1. Foundation token layer first (Theme.kt + UiKit.kt).`,`2. Then components; each imports the shared token layer, never redefines values.`,`3. Reconcile: every component references only named tokens.`,'','---','',foundationsBody(),'','---','',`## Components (${keys.length})`];
+ keys.forEach(k=>{const s=SPECS[k];L.push('',`### ${s.name} — \`${s.file}\``,s.desc,`- props: ${s.props.map(p=>p.n+':'+p.t).join(', ')}`,`- tokens: ${s.tokens.map(t=>t.n).join(', ')}`,`- metrics: ${s.metrics.map(m=>m[0]+' '+m[1]).join(', ')}`);});
+ return L.join('\n');}
+function copyFullSystem(){copyText(fullSystemPrompt());toast(`Kopyalandı: tüm sistem (${Object.keys(SPECS).length} bileşen) → ${promptLang}`);}
+function copyText(t){navigator.clipboard&&navigator.clipboard.writeText(t);}
+document.querySelectorAll('main section[id]').forEach(sec=>{const key=sec.id;if(!SPECS[key])return;const h=sec.querySelector('h2.sec');if(!h||h.querySelector('.sec-prompt'))return;
+  const b=document.createElement('button');b.className='sec-prompt';b.type='button';b.textContent='Copy as prompt';b.addEventListener('click',()=>copyPrompt(key));h.appendChild(b);});
+
+/* ===== Dev Mode + Inspector ===== */
+function toggleDev(){const on=document.body.classList.toggle('dev');devToggle.classList.toggle('on',on);devToggle.textContent=on?'◧ Dev Mode · AÇIK':'◧ Dev Mode';if(!on)closeInspector();}
+function closeInspector(){document.body.classList.remove('inspecting');document.querySelectorAll('.insp-sel').forEach(e=>e.classList.remove('insp-sel'));}
+document.addEventListener('click',e=>{if(e.target.closest('#inspector')||e.target.closest('#topctl'))return;if(!document.body.classList.contains('dev'))return;
+  const el=e.target.closest('[data-insp]');if(el&&SPECS[el.dataset.insp]){e.preventDefault();selectComp(el,el.dataset.insp);}});
+function selectComp(el,key){document.querySelectorAll('.insp-sel').forEach(x=>x.classList.remove('insp-sel'));el.classList.add('insp-sel');document.body.classList.add('inspecting');const s=SPECS[key];
+  const props=s.props.map(p=>`<div class="prop"><span class="pn">${p.n}</span> <span class="pt">${p.t}</span>${p.def?` <span class="pdef">= ${p.def}</span>`:''}</div>`).join('');
+  const toks=s.tokens.map(t=>`<div class="tok" onclick="copyVal('${t.v}')"><div class="tsw" style="background:${t.c||'var(--surface-container)'}"></div><div><div class="tn">${t.n}</div><div class="tr">${t.r}</div></div><div class="tv">${t.v}</div></div>`).join('');
+  const mets=s.metrics.map(([k,v])=>`<div class="metric"><span class="mk">${k}</span><span>${v}</span></div>`).join('');
+  inspectorBody.innerHTML=`<div class="nm">${s.name}</div><div class="file">${s.file}</div><div class="desc">${s.desc}</div><h4>Özellikler</h4>${props}<h4>Tokenlar · kopyalamak için tıkla</h4>${toks}<h4>Ölçüler</h4>${mets}<button class="copyprompt" onclick="copyPrompt('${key}')">Copy as prompt</button>`;}
+function copyVal(v){copyText(v);toast('Kopyalandı '+v);}
+function toast(msg){const c=document.getElementById('copied');c.textContent=msg;c.classList.add('show');setTimeout(()=>c.classList.remove('show'),1400);}
+</script>
+</body>
+</html>

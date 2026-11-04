@@ -7,7 +7,14 @@ import android.hardware.SensorManager
 import android.os.VibrationEffect
 import android.os.VibratorManager
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -576,14 +583,57 @@ fun Segmented(options: List<String>, selected: Int, modifier: Modifier = Modifie
         }
     }
 }
+/** Primary tabs for a page's sections: gold label + short gold bar under the selected one, hairline baseline. */
+@Composable
+fun PageTabs(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    val haptic = LocalHapticFeedback.current
+    Column(Modifier.fillMaxWidth().padding(horizontal = Space.s)) {
+        Row(Modifier.fillMaxWidth()) {
+            options.forEachIndexed { i, label ->
+                val on = selected == i
+                val color by animateColorAsState(if (on) Pal.Gold else Pal.Muted, tween(150), label = "tab")
+                val bar by animateFloatAsState(if (on) 1f else 0f, tween(250), label = "bar")
+                Box(
+                    Modifier.weight(1f).height(TouchMin).clip(RoundedCornerShape(Radius.s))
+                        .clickable {
+                            if (!on) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onSelect(i)
+                        }
+                        .semantics { this.selected = on; role = Role.Tab },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(label, color = color, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
+                    Box(
+                        Modifier.align(Alignment.BottomCenter).width(32.dp * bar).height(3.dp)
+                            .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(Pal.Gold),
+                    )
+                }
+            }
+        }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Pal.Line))
+    }
+}
+
+/** Zikir tab: placeholder until the zikir module lands (shortcut: empty state only; the module is its own project). */
+@Composable
+fun ZikirScreen() {
+    Column(Modifier.fillMaxSize()) {
+        ScreenTitle("Zikir")
+        EmptyState(
+            "Zikir yakında",
+            "Kendi zikir listeni kuracak, tesbihle sayacaksın. Tamamladıkça gülün beşinci yaprağı açılacak.",
+            modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.xxl),
+        )
+    }
+}
+
 /** Muhasebe holds the overview (like Vakit's "Özet"), the history and the kaza list. */
 @Composable
 fun MuhasebeScreen() {
     var section by remember { mutableIntStateOf(SkyDebug.mSection) }
     Column(Modifier.fillMaxSize()) {
-        ScreenTitle("Muhasebe")
-        Segmented(listOf("Özet", "Gidişat", "Kaza"), section,
-            Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth(), stretch = true) { section = it }
+        ScreenTitle("Muhasebe", rule = false)
+        PageTabs(listOf("Özet", "Gidişat", "Kaza"), section) { section = it }
         Box(Modifier.weight(1f).clipToBounds()) {
             when (section) {
                 0 -> MuhasebeOzet()
@@ -1155,13 +1205,16 @@ private fun MuhasebeGidisat() {
 /** Thin labelled bar for a long-running goal (under the Özet rose). */
 @Composable
 private fun ProgressColumn(name: String, value: String, of: String, progress: Float) {
-    Column(Modifier.width(48.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = Pal.Text, fontSize = Type.body)
+    Column(Modifier.width(56.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, style = NumStyle, color = Pal.Text, fontSize = Type.h2, lineHeight = Type.h2)
         Text(of, color = Pal.Muted, fontSize = Type.micro)
-        Spacer(Modifier.height(Space.xs))
-        // fills from the bottom up
-        Box(Modifier.weight(1f).width(4.dp).clip(CircleShape).background(Pal.Track), contentAlignment = Alignment.BottomCenter) {
-            Box(Modifier.fillMaxWidth().fillMaxHeight(progress.coerceIn(0f, 1f)).clip(CircleShape).background(Pal.Gold))
+        Spacer(Modifier.height(Space.s))
+        // fills from the bottom up, brightening toward the top
+        Box(Modifier.weight(1f).width(10.dp).clip(CircleShape).background(Pal.Track), contentAlignment = Alignment.BottomCenter) {
+            Box(
+                Modifier.fillMaxWidth().fillMaxHeight(progress.coerceIn(0f, 1f)).clip(CircleShape)
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Pal.Gold, Pal.Gold.copy(alpha = .55f)))),
+            )
         }
         Spacer(Modifier.height(Space.xs))
         Text(name, color = Pal.Muted, fontSize = Type.micro, textAlign = TextAlign.Center, lineHeight = Type.micro, minLines = 2)
