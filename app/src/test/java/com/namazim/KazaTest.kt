@@ -14,6 +14,27 @@ class KazaTest {
         assertEquals(562, kazaDebtDays(12, 14, 7, 0))
     }
 
+    @Test fun dayByDayCountsFullSetsAndTheOneInProgress() {
+        // two full days, the third has Sabah and Öğle in
+        val (days, inNow) = kazaRound(listOf(3, 3, 2, 2, 2, 2), listOf(10, 10, 10, 10, 10, 10))
+        assertEquals(2, days)
+        assertEquals(listOf(true, true, false, false, false, false), inNow)
+    }
+
+    @Test fun aVakitNeverOwedDoesNotBlockTheDay() {
+        // no vitir debt at all: five vakit make the day
+        val (days, inNow) = kazaRound(listOf(1, 1, 1, 1, 1, 0), listOf(4, 4, 4, 4, 4, 0))
+        assertEquals(1, days)
+        assertEquals(true, inNow[5])
+        assertEquals(0 to List(6) { false }, kazaRound(List(6) { 0 }, List(6) { 0 }))
+    }
+
+    @Test fun streakSkipsAnEmptyToday() {
+        assertEquals(3, kazaStreak(listOf(0, 2, 1, 4, 0, 5)))
+        assertEquals(2, kazaStreak(listOf(1, 1, 0)))
+        assertEquals(0, kazaStreak(listOf(0, 0, 3)))
+    }
+
     @Test fun neverNegativeAndNothingWhenAgesAreBackwards() {
         assertEquals(0, kazaDebtDays(20, 18, 0, 0))
         assertEquals(0, kazaDebtDays(12, 13, 0, 1000))

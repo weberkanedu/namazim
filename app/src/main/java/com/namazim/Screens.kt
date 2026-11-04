@@ -296,6 +296,84 @@ fun kazaDebtDays(fromAge: Int, toAge: Int, excusedPerMonth: Int, alreadyDays: In
     return (years * 365 - years * 12 * excusedPerMonth - alreadyDays).coerceAtLeast(0)
 }
 
+/**
+ * "Gün gün eda": one day of kaza is one of every vakit. From what was made up ([done]) and what is still owed ([owed]),
+ * per vakit, returns the full days made up and which vakit are already in for the day in progress. A vakit that was
+ * never owed (no kaza either way) does not hold the day back.
+ */
+fun kazaRound(done: List<Int>, owed: List<Int>): Pair<Int, List<Boolean>> {
+    val active = done.indices.filter { done[it] > 0 || owed[it] > 0 }
+    if (active.isEmpty()) return 0 to done.map { false }
+    val days = active.minOf { done[it] }
+    return days to done.indices.map { it !in active || done[it] > days }
+}
+
+/** Days in a row with at least one kaza, newest first; an empty today does not break yesterday's run. */
+fun kazaStreak(newestFirst: List<Int>): Int =
+    newestFirst.drop(if (newestFirst.firstOrNull() == 0) 1 else 0).takeWhile { it > 0 }.size
+
+/** Kaza takvimi: the last 22 weeks, Monday first; gold where the plan was kept, soft gold for less, empty before first use. */
+@Composable
+private fun KazaCalendar(today: LocalDate, first: LocalDate, newestFirst: List<Int>, rate: Int) {
+    val weeks = 22
+    val start = today.minusDays((today.dayOfWeek.value - 1 + (weeks - 1) * 7).toLong())
+    val tr = java.util.Locale("tr")
+    val monthFmt = java.time.format.DateTimeFormatter.ofPattern("MMM", tr)
+    val noData = Pal.Track.copy(alpha = .35f)
+    Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl)) {
+        SectionLabel("KAZA TAKVİMİ", Modifier.padding(bottom = Space.s))
+        BoxWithConstraints {
+            val gap = 3.dp
+            val cell = (maxWidth - gap * (weeks - 1)) / weeks
+            Column {
+                Row(Modifier.height(14.dp), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                    for (w in 0 until weeks) {
+                        val d = start.plusDays(w * 7L)
+                        Box(Modifier.width(cell)) {
+                            if (w == 0 || d.monthValue != d.minusDays(7).monthValue) Text(
+                                d.format(monthFmt), Modifier.wrapContentWidth(Alignment.Start, unbounded = true),
+                                color = Pal.Muted, fontSize = 9.sp, maxLines = 1, softWrap = false,
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                for (row in 0 until 7) Row(Modifier.padding(top = if (row == 0) 0.dp else gap), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                    for (w in 0 until weeks) {
+                        val d = start.plusDays(w * 7L + row)
+                        val ago = (today.toEpochDay() - d.toEpochDay()).toInt()
+                        val n = newestFirst.getOrElse(ago) { 0 }
+                        val color = when {
+                            ago < 0 -> Color.Transparent
+                            d.isBefore(first) -> noData
+                            n == 0 -> Pal.Track
+                            n >= rate -> Pal.Gold
+                            else -> Pal.Gold.copy(alpha = .4f)
+                        }
+                        Box(
+                            Modifier.size(cell).clip(RoundedCornerShape(2.dp)).background(color)
+                                .then(if (ago == 0) Modifier.border(1.dp, Pal.Text.copy(alpha = .8f), RoundedCornerShape(2.dp)) else Modifier),
+                        )
+                    }
+                }
+            }
+        }
+        Row(Modifier.padding(top = Space.s), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+            Text("hiç", color = Pal.Muted, fontSize = Type.micro)
+            listOf(Pal.Track, Pal.Gold.copy(alpha = .4f), Pal.Gold).forEach { Box(Modifier.size(9.dp).clip(RoundedCornerShape(2.dp)).background(it)) }
+            Text("plan tuttu (günde $rate)", color = Pal.Muted, fontSize = Type.micro)
+        }
+        val kept30 = newestFirst.take(30).count { it >= rate }
+        var run = 0; var longest = 0
+        newestFirst.forEach { if (it > 0) { run++; longest = max(longest, run) } else run = 0 }
+        Text(
+            if (newestFirst.none { it > 0 }) "Kaza kıldıkça günler burada altınla dolar."
+            else "Son 30 günde planı $kept30 gün tuttun; en uzun seri $longest gün.",
+            Modifier.padding(top = Space.m), color = Pal.Text, fontSize = Type.body2,
+        )
+    }
+}
+
 /** Kaza › "Geçmişten kalan borcunu hesapla": four numbers in, a live estimate out; [onAdd] gets the days to add per vakit. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -398,16 +476,32 @@ fun KazaScreen(embedded: Boolean = false) {
         val maxC = counts.maxOrNull()?.coerceAtLeast(1) ?: 1
         val days = if (rate <= 0) 0 else (total + rate - 1) / rate
         val eta = LocalDate.now().plusDays(days.toLong()).format(java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale("tr")))
+        // daily rhythm: today (and yesterday), last 7 days, days in a row with kaza
+        val log = v.let { store.kazaLog() }
+        val today = store.prayerDay()
+        val daily = (0 until 160).map { log[today.minusDays(it.toLong()).toString()] ?: 0 }   // newest first
+        Row(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).fillMaxWidth().height(IntrinsicSize.Min)) {
+            BigStat("${daily[0]}", "bugün · dün ${daily[1]}")
+            Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
+            BigStat("${daily.take(7).sum()}", "son 7 gün")
+            Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
+            BigStat("${kazaStreak(daily)}", "gün seri")
+        }
+        // "gün gün eda": what is left in days of six, and the day in progress
+        val done = KAZA_KEYS.map { v.let { _ -> store.kazaDone(it.first) } }
+        val (edaDays, inNow) = kazaRound(done, counts)
+        val dayLeft = (total + KAZA_KEYS.size - 1) / KAZA_KEYS.size
         Column(Modifier.fillMaxWidth().padding(top = Space.xl), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(verticalAlignment = Alignment.Bottom) {
-                AnimatedContent(total, transitionSpec = { (scaleIn(initialScale = 1.3f) + fadeIn()) togetherWith fadeOut() }, label = "total") {
+                AnimatedContent(if (total == 0) 0 else dayLeft, transitionSpec = { (scaleIn(initialScale = 1.3f) + fadeIn()) togetherWith fadeOut() }, label = "total") {
                     Text("$it", style = NumStyle, fontSize = Type.display, lineHeight = Type.display, color = Pal.Text)
                 }
-                Text("vakit kaldı", Modifier.padding(start = Space.xs, bottom = 7.dp), color = Pal.Muted, fontSize = Type.body)
+                Text(if (total == 0) "vakit kaldı" else "günlük kaza", Modifier.padding(start = Space.xs, bottom = 7.dp), color = Pal.Muted, fontSize = Type.body)
             }
             Text(
-                if (total == 0) "Kaza borcun yok · Allah kabul etsin." else "günde $rate · bu hızla ~$eta",
-                color = Pal.Muted, fontSize = Type.body2,
+                if (total == 0) "Kaza borcun yok · Allah kabul etsin."
+                else "$total vakit · günde $rate ile ~$eta" + if (edaDays > 0) " · $edaDays gün eda edildi" else "",
+                Modifier.padding(horizontal = Space.xl), color = Pal.Muted, fontSize = Type.body2, textAlign = TextAlign.Center,
             )
             // with nothing owed yet, the likely reason is that the past was never entered
             if (total == 0) Box(
@@ -415,6 +509,20 @@ fun KazaScreen(embedded: Boolean = false) {
                     .clickable { openDebt = true }.padding(horizontal = Space.l),
                 contentAlignment = Alignment.Center,
             ) { Text("Geçmişten kalan borcunu hesapla", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
+            if (total > 0) {
+                SectionLabel("SIRADAKİ GÜN · ${edaDays + 1}. GÜN", Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l, bottom = Space.s))
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+                    KAZA_KEYS.forEachIndexed { i, (_, name) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            // a bead, shaded like the zikir ring: gold once this vakit is in for the day
+                            Box(Modifier.size(28.dp).clip(CircleShape).background(Brush.radialGradient(
+                                if (inNow[i]) listOf(Color(0xFFFFF1CF), Pal.Gold, Color(0xFF8A6420)) else listOf(Color(0xFF3A4A68), Pal.Track),
+                            )))
+                            Text(name, Modifier.padding(top = Space.xs), color = Pal.Muted, fontSize = Type.micro)
+                        }
+                    }
+                }
+            }
         }
         Row(Modifier.fillMaxWidth().padding(start = Space.m, end = Space.m, top = Space.xl), verticalAlignment = Alignment.Bottom) {
             KAZA_KEYS.forEachIndexed { i, (key, name) ->
@@ -437,7 +545,12 @@ fun KazaScreen(embedded: Boolean = false) {
                         Modifier.padding(top = Space.xs).size(TouchMin).clip(CircleShape)
                             .clickable(enabled = c > 0) {
                                 store.payKaza(key); v++
-                                undoable("$name kazası kılındı") { store.unpayKaza(key) }
+                                val after = kazaRound(KAZA_KEYS.map { store.kazaDone(it.first) }, KAZA_KEYS.map { store.kaza(it.first) }).first
+                                if (after > edaDays) {
+                                    ctx.getSystemService(android.os.VibratorManager::class.java)?.defaultVibrator
+                                        ?.vibrate(android.os.VibrationEffect.createOneShot(320, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                                    undoable("Bir günlük kaza tamamlandı, Allah kabul etsin") { store.unpayKaza(key) }
+                                } else undoable("$name kazası kılındı") { store.unpayKaza(key) }
                             }
                             .semantics { contentDescription = "$name kazası kıldım" },
                         contentAlignment = Alignment.Center,
@@ -454,6 +567,7 @@ fun KazaScreen(embedded: Boolean = false) {
         }
         Text("sütunun altındaki tik: o vakitten bir kaza kıldım", Modifier.fillMaxWidth().padding(top = Space.s),
             color = Pal.Muted.copy(alpha = .8f), fontSize = Type.label, textAlign = TextAlign.Center)
+        KazaCalendar(today, store.firstDay, daily, rate)
 
         Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

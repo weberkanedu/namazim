@@ -72,7 +72,7 @@ class Store(context: Context) {
     fun payKaza(key: String) {
         if (kaza(key) == 0) return
         addKaza(key, -1)
-        p.edit().putInt(paidKey(), kazaPaidThisMonth() + 1).apply()
+        p.edit().putInt(paidKey(), kazaPaidThisMonth() + 1).putInt("kazaDone_$key", kazaDone(key) + 1).apply()
         logKaza(1) // günlük grafik için: bugün kaç kaza kılındı
     }
 
@@ -94,8 +94,11 @@ class Store(context: Context) {
         addKaza(key, 1)
         StoreRev.n++
         logKaza(-1)
-        p.edit().putInt(paidKey(), (kazaPaidThisMonth() - 1).coerceAtLeast(0)).apply()
+        p.edit().putInt(paidKey(), (kazaPaidThisMonth() - 1).coerceAtLeast(0))
+            .putInt("kazaDone_$key", (kazaDone(key) - 1).coerceAtLeast(0)).apply()
     }
+    /** Kaza of this vakit made up since this counter existed (Nov 2026); drives "gün gün eda". */
+    fun kazaDone(key: String) = p.getInt("kazaDone_$key", 0)
     fun kazaPaidThisMonth() = p.getInt(paidKey(), 0)
     private fun paidKey() = "kazaPaid_" + LocalDate.now().toString().take(7)
     var kazaRate: Int
