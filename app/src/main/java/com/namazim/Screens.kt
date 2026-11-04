@@ -56,7 +56,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.StrokeJoin
 import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.unit.sp
@@ -603,11 +602,14 @@ private fun MuhasebeOzet() {
     val first = store.firstDay
     val log = store.readLog()
     val prayed = store.prayed()
-    val todaySlots = slots(store.lat, store.lng, today)
-    val prayedToday = todaySlots.count { it.key in prayed }
-    val pagesToday = log[today.toString()] ?: 0
     val page = store.quranPage
     val totalKaza = Vakit.entries.sumOf { store.kaza(it) } + store.kaza("VITIR")
+    val day = store.prayerDay()   // the rose's day runs imsak to imsak
+    val petals = gulPetals(
+        slots(store.lat, store.lng, day), prayed, store::prayedAt,
+        pagesToday = log[day.toString()] ?: 0, readGoal = store.readGoal,
+        kazaToday = store.kazaLog()[day.toString()] ?: 0, kazaRate = store.kazaRate, kazaOwed = totalKaza,
+    )
 
     val slotCache = remember { mutableMapOf<LocalDate, List<Slot>>() }
     fun daySlots(d: LocalDate) = slotCache.getOrPut(d) { slots(store.lat, store.lng, d) }
@@ -652,45 +654,18 @@ private fun MuhasebeOzet() {
     val eta = if (perDay <= 0.05f || page == 0) null else today.plusDays(((604 - page) / perDay).toLong().coerceAtLeast(1))
     val monthsLeft = if (store.kazaRate <= 0 || totalKaza == 0) null else totalKaza / (store.kazaRate * 30f)
 
-    // radar: beş eksen (namaz, sayfa, hatim, kaza, hedef) — halkaların yerine
-    val kazaProg = run {
-        val paid = store.kazaPaidThisMonth(); val t = totalKaza
-        if (paid + t == 0) 0.5f else (paid.toFloat() / (paid + t)).coerceIn(0f, 1f)
-    }
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
     val anim by animateFloatAsState(if (shown) 1f else 0f, tween(900), label = "radar")
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
-            RadarChart(
-                axes = listOf(
-                    "Namaz" to (prayedToday / 5f),
-                    "Sayfa" to (if (store.readGoal == 0) 0f else pagesToday.toFloat() / store.readGoal).coerceIn(0f, 1f),
-                    "Hatim" to (page / 604f).coerceIn(0f, 1f),
-                    "Kaza" to kazaProg,
-                    "Hedef" to (full30 / 30f).coerceIn(0f, 1f),
-                ),
-                colors = listOf(Pal.Gold, Color(0xFF6BC5B0), Color(0xFF8AA6D8), Pal.Warn, Color(0xFFC29B5A)),
-                anim = anim,
-            )
-            Spacer(Modifier.height(Space.xs))
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.CenterVertically) {
-                listOf(
-                    "$prayedToday/5 namaz" to Pal.Gold,
-                    "$pagesToday/${store.readGoal} sayfa" to Color(0xFF6BC5B0),
-                    "${page}/604 hatim" to Color(0xFF8AA6D8),
-                    "$totalKaza kaza" to Pal.Warn,
-                ).forEach { (label, color) ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(5.dp).clip(CircleShape).background(color))
-                        Spacer(Modifier.width(Space.xs))
-                        Text(label, color = Pal.Muted, fontSize = Type.micro)
-                    }
-                }
-            }
+            GulCard(petals)
             Spacer(Modifier.height(Space.s))
-            Text("Hedefe ulaşılan gün: $full30/30", color = Pal.Muted, fontSize = Type.label)
+            // long-term progress stays under the rose; the rose itself is today's effort
+            ProgressLine("Hatim", "$page/604", page / 604f)
+            Spacer(Modifier.height(Space.s))
+            ProgressLine("Son 30 gün", "$full30/30 tam gün", full30 / 30f)
         }
 
         InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
@@ -1155,44 +1130,16 @@ private fun MuhasebeGidisat() {
     }
 }
 
-/** Beş eksenli radar: Özet'in üst kartı (halkaların yerine). */
+/** Thin labelled bar for a long-running goal (under the Özet rose). */
 @Composable
-private fun RadarChart(axes: List<Pair<String, Float>>, colors: List<Color>, anim: Float) {
-    val measurer = rememberTextMeasurer()
-    val labelStyle = TextStyle(fontSize = Type.micro, color = Pal.Muted)
-    Canvas(Modifier.fillMaxWidth().height(250.dp)) {
-        val c = Offset(size.width / 2f, size.height / 2f + 2.dp.toPx())
-        val r = minOf(size.width, size.height) / 2f - 34.dp.toPx()
-        val n = axes.size
-        fun pt(i: Int, f: Float): Offset {
-            val a = (-Math.PI / 2 + 2 * Math.PI * i / n).toFloat()
-            return Offset(c.x + r * f * cos(a), c.y + r * f * sin(a))
-        }
-        for (ring in 1..4) {
-            val path = Path()
-            for (i in 0 until n) {
-                val o = pt(i, ring / 4f)
-                if (i == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y)
-            }
-            path.close()
-            drawPath(path, Pal.Line, style = Stroke(1.dp.toPx()))
-        }
-        for (i in 0 until n) drawLine(Pal.Line, c, pt(i, 1f), 1.dp.toPx())
-        val poly = Path()
-        axes.forEachIndexed { i, axis ->
-            val o = pt(i, (axis.second * anim).coerceIn(0.03f, 1f))
-            if (i == 0) poly.moveTo(o.x, o.y) else poly.lineTo(o.x, o.y)
-        }
-        poly.close()
-        drawPath(poly, Pal.Gold.copy(alpha = .18f))
-        drawPath(poly, Pal.Gold, style = Stroke(2.dp.toPx(), join = StrokeJoin.Round))
-        axes.forEachIndexed { i, axis ->
-            val o = pt(i, (axis.second * anim).coerceIn(0.03f, 1f))
-            drawCircle(colors[i % colors.size], 4.dp.toPx(), o)
-            val lp = pt(i, 1.22f)
-            val layout = measurer.measure(axis.first, labelStyle)
-            drawText(layout, topLeft = Offset(lp.x - layout.size.width / 2f, lp.y - layout.size.height / 2f))
-        }
+private fun ProgressLine(name: String, value: String, progress: Float) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(name, Modifier.weight(1f), color = Pal.Muted, fontSize = Type.label)
+        Text(value, color = Pal.Text, fontSize = Type.label)
+    }
+    Spacer(Modifier.height(Space.xs))
+    Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Pal.Track)) {
+        Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).fillMaxHeight().clip(CircleShape).background(Pal.Gold))
     }
 }
 /** Dokununca hafifçe küçülen tıklanabilir yüzey — hareket hissi. */
