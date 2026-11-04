@@ -20,8 +20,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * 1×1 home-screen widget: the "hilal saat" logo, but alive — the sky behind it takes the colour of the
- * time of day, the hand points at the next prayer, the five dots fill in as prayers are marked.
+ * 1×1 home-screen widget: the "Beş vakit gülü" logo, but alive — the sky behind it takes the colour of the
+ * time of day, the petal of the next prayer is outlined bright, the petals fill with gold as prayers are marked.
  * Android has no live launcher icons, so this is the next best thing.
  */
 class NamazimWidget : AppWidgetProvider() {
@@ -88,7 +88,7 @@ class NamazimWidget : AppWidgetProvider() {
         /** The icon's caption, e.g. "İkindi 15:27" (also used by the debug preview screen). */
         internal fun label(ctx: Context): String = state(ctx).label
 
-        /** The round icon as a bitmap: sky, crescent, five dots, hand. */
+        /** The round icon as a bitmap: sky, the rose, a petal per vakit. */
         internal fun art(ctx: Context, px: Int): Bitmap {
             val st = state(ctx)
             val bmp = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
@@ -102,35 +102,48 @@ class NamazimWidget : AppWidgetProvider() {
                     shader = LinearGradient(0f, 0f, 0f, px.toFloat(), st.skyTop, st.skyBottom, Shader.TileMode.CLAMP)
                 })
 
-            // crescent: the same lune as the launcher icon, drawn as a thin gold rim so the widget
-            // and the icon look like one family (the lace lattice itself is too fine at 52 dp)
-            val outer = Path().apply { addCircle(54f * u, 54f * u, 30f * u, Path.Direction.CW) }
-            val inner = Path().apply { addCircle(64f * u, 46f * u, 26f * u, Path.Direction.CW) }
-            val crescent = Path().apply { op(outer, inner, Path.Op.DIFFERENCE) }
-            c.drawPath(crescent, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = st.accent; style = Paint.Style.STROKE; strokeWidth = 3.0f * u; strokeJoin = Paint.Join.ROUND
-            })
-
-            val dot = Paint(Paint.ANTI_ALIAS_FLAG)
-            for (i in 0 until 5) {
-                val a = (-90 + i * 30) * PI / 180
-                val x = 54f + cos(a).toFloat() * 21f
-                val y = 54f + sin(a).toFloat() * 21f
-                if (i in st.prayed) {
-                    dot.style = Paint.Style.FILL; dot.color = st.accent
-                } else {
-                    dot.style = Paint.Style.STROKE; dot.strokeWidth = 1.5f * u; dot.color = Color.argb(150, 255, 255, 255)
-                }
-                c.drawCircle(x * u, y * u, 2.4f * u, dot)
+            // the rose of the launcher icon ("Beş vakit gülü"): outer petal i is vakit i, clockwise from the top.
+            // A prayed vakit fills its petal with gold; the next (or owed) one gets a bright, heavier edge.
+            val r = 31f
+            fun pt(rad: Float, deg: Float): Pair<Float, Float> {
+                val t = Math.toRadians(deg - 90.0)
+                return (54f + rad * cos(t).toFloat()) * u to (54f + rad * sin(t).toFloat()) * u
             }
-
-            val hand = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xFFF3EEE3.toInt(); strokeWidth = 3.5f * u; strokeCap = Paint.Cap.ROUND; style = Paint.Style.STROKE
+            fun petal(r0: Float, r1: Float, a0: Float, a1: Float, close: Boolean) = Path().apply {
+                val w = a1 - a0
+                val s0 = pt(r0, a0); moveTo(s0.first, s0.second)
+                val c1 = pt(r1 * 1.02f, a0 - w * .08f); val c2 = pt(r1 * 1.16f, a0 + w * .34f); val m = pt(r1, a0 + w * .5f)
+                cubicTo(c1.first, c1.second, c2.first, c2.second, m.first, m.second)
+                val c3 = pt(r1 * 1.16f, a1 - w * .34f); val c4 = pt(r1 * 1.02f, a1 + w * .08f); val e0 = pt(r0, a1)
+                cubicTo(c3.first, c3.second, c4.first, c4.second, e0.first, e0.second)
+                if (close) close()
             }
-            val a = (-90 + st.nextIndex * 30) * PI / 180
-            c.drawLine(54f * u, 54f * u, (54f + cos(a).toFloat() * 14f) * u, (54f + sin(a).toFloat() * 14f) * u, hand)
-            c.drawCircle(54f * u, 54f * u, 3.4f * u,
-                Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFF3EEE3.toInt(); style = Paint.Style.FILL })
+            val shade = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(150, 14, 26, 48); style = Paint.Style.FILL }
+            val gold = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = st.accent; style = Paint.Style.FILL; alpha = 105 }
+            val line = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = st.accent; style = Paint.Style.STROKE; strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND
+            }
+            // the next vakit's petal goes last so nothing covers its bright edge
+            for (i in (0 until 5).filter { it != st.nextIndex } + st.nextIndex) {
+                val a = i * 72f
+                val shape = petal(r * .34f, r, a - 40f, a + 40f, true)
+                c.drawPath(shape, shade)   // each petal covers the one before it
+                if (i in st.prayed) c.drawPath(shape, gold)
+                val next = i == st.nextIndex
+                line.strokeWidth = (if (next) 3.6f else 2.2f) * u
+                line.color = if (next) 0xFFF3EEE3.toInt() else st.accent
+                c.drawPath(petal(r * .34f, r, a - 40f, a + 40f, false), line)
+            }
+            line.color = st.accent; line.strokeWidth = 1.7f * u
+            for (i in 0 until 5) { val a = i * 72f + 36f; c.drawPath(petal(r * .16f, r * .6f, a - 38f, a + 38f, false), line) }
+            val bud = Path()
+            for (k in 0..60) {
+                val th = k / 60.0 * PI * 3.2
+                val rad = r * .24f * (1 - k / 68f)
+                val x = (54f + rad * cos(th).toFloat()) * u; val y = (54f + rad * sin(th).toFloat()) * u
+                if (k == 0) bud.moveTo(x, y) else bud.lineTo(x, y)
+            }
+            c.drawPath(bud, line)
             c.restore()
             return bmp
         }
