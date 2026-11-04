@@ -1,5 +1,7 @@
 .gradle/
 build/
+# three.js ships its library in a folder named build: it is an app asset, not build output
+!app/src/main/assets/gul/three/build/
 local.properties
 *.iml
 .idea/

@@ -5,7 +5,8 @@
 <!-- Muhasebe › Özet rose. Derived from design/gul/gul-3d.html (the approved prototype); the app drives it via gul.set / gul.spin. -->
 <style>
   html,body{margin:0;height:100%;background:#121D33;overflow:hidden;-webkit-user-select:none;user-select:none}
-  canvas{display:block;width:100vw;height:100vh}
+  /* fixed: in the app's WebView body's 100% height is 0 and its overflow:hidden would clip the canvas */
+  canvas{display:block;position:fixed;top:0;left:0}
   #ov,#labs{position:absolute;inset:0;pointer-events:none;transition:opacity .9s}
   .lab{position:absolute;transform:translate(-50%,-50%);font:600 12px system-ui,sans-serif;white-space:nowrap;color:#F3EEE3;text-align:center}
   .lab small{display:block;font:500 10px system-ui,sans-serif;color:#C9D1DC}
@@ -50,21 +51,6 @@ const RAD = Math.hypot(OFF.x, OFF.z), ELEV = OFF.y;
 let az = Math.atan2(OFF.x, OFF.z), lastSpin = -1e9;
 const AUTO = .0471;   // rad/s, the prototype's OrbitControls autoRotateSpeed .45
 
-// tanı: logs size, GPU and a pixel readback once (logcat tag "Gul"); plain = fall back to no composer on a GL error.
-// shortcut: kept while the "rose invisible on the phone" bug is open (docs/superpowers/notes/2026-11-04-devir.md); remove after
-let plain = false, checked = false;
-const firstSize = `${innerWidth}x${innerHeight}`;   // 0x0 here means the WebView loaded before layout
-function diag(){
-  const gl = renderer.getContext(), dbg = gl.getExtension('WEBGL_debug_renderer_info');
-  const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
-  const err = gl.getError(), fb = composer.renderTarget1 ? 'rt' : '-';
-  // read back what was just drawn (same frame, so the drawing buffer is still intact): rose-coloured centre = rendering works
-  const px = (fx, fy) => { const d = new Uint8Array(4); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.readPixels(Math.floor(gl.drawingBufferWidth*fx), Math.floor(gl.drawingBufferHeight*fy), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, d); return d.slice(0,3).join(','); };
-  console.log(`tanı: piksel orta ${px(.5,.62)} | ${px(.5,.5)} köşe ${px(.03,.97)}`);
-  console.log(`tanı: ilk ${firstSize}, tuval ${renderer.domElement.width}x${renderer.domElement.height}, görünüm ${innerWidth}x${innerHeight}, dpr ${devicePixelRatio}, webgl${renderer.capabilities.isWebGL2 ? 2 : 1}, gpu ${gpu}, glHata ${err}, yol ${plain ? 'sade' : 'composer'} ${fb}`);
-  if (err !== 0 && !plain){ plain = true; console.log('tanı: GPU hatası, sade çizime geçildi'); }
-}
 const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType, samples:4}));
 composer.addPass(new RenderPass(scene, cam));
 // bloom only catches the reward glow (emissive): threshold high, strength low
@@ -215,7 +201,8 @@ queued.forEach(([f, a]) => window.gul[f](a));
 
 // ---------------- loop
 function resize(){ const w = innerWidth, h = innerHeight, pr = Math.min(devicePixelRatio, 1.5);
-  renderer.setPixelRatio(pr); renderer.setSize(w,h,false); composer.setPixelRatio(pr); composer.setSize(w,h);
+  // css size in px from innerWidth/innerHeight: in the app's WebView 100vh resolves to 0
+  renderer.setPixelRatio(pr); renderer.setSize(w,h); composer.setPixelRatio(pr); composer.setSize(w,h);
   ov.setAttribute('width',w); ov.setAttribute('height',h); cam.aspect = w/h; cam.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 let sizeW = innerWidth, sizeH = innerHeight;
@@ -243,8 +230,7 @@ function frame(now){
   if (now - lastSpin > 3000) az += AUTO*dt;
   cam.position.set(TGT.x + Math.sin(az)*RAD, TGT.y + ELEV, TGT.z + Math.cos(az)*RAD); cam.lookAt(TGT);
   if (innerWidth !== sizeW || innerHeight !== sizeH){ sizeW = innerWidth; sizeH = innerHeight; resize(); }   // WebView starts at 0x0
-  if (plain) renderer.render(scene, cam); else composer.render();
-  if (!checked && now > 3000){ checked = true; diag(); }
+  composer.render();
   // labels: shown until everything is done, then they fade out and the rose stands alone
   const op = allDone ? '0' : '1'; labs.style.opacity = op; ov.style.opacity = op;
   petals.forEach((p,i) => {
