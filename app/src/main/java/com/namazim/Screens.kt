@@ -669,151 +669,386 @@ fun cuz(page: Int) = if (page < 22) 1 else minOf(30, (page - 2) / 20 + 1)
 
 private val TR_DAYS = listOf("Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz")
 
+/** Today's share of a dated plan: what was left at the start of today, spread evenly over the days left (today included). */
+fun todayShare(total: Int, pageNow: Int, readToday: Int, today: LocalDate, until: LocalDate): Int {
+    val left = (total - (pageNow - readToday)).coerceAtLeast(0)
+    val days = (until.toEpochDay() - today.toEpochDay() + 1).coerceAtLeast(1)
+    return ((left + days - 1) / days).toInt()
+}
+
+/** Days ahead (+) or behind (−) of an even plan from page [startPage] on [from] to [total] on [until], counted at the end of today. */
+fun planLead(startPage: Int, total: Int, from: LocalDate, until: LocalDate, today: LocalDate, pageNow: Int): Int {
+    val span = (until.toEpochDay() - from.toEpochDay() + 1).coerceAtLeast(1)
+    val perDay = (total - startPage).toFloat() / span
+    if (perDay <= 0f) return 0
+    val expected = startPage + perDay * (today.toEpochDay() - from.toEpochDay() + 1).coerceIn(0, span)
+    return ((pageNow - expected) / perDay).toInt()   // toward zero: half a day is not a day yet
+}
+
+/** Today's share of one reading: the plan's share when dated, the fixed daily goal for an undated Kur'an, nothing for an undated book. */
+fun readingShare(r: Reading, readToday: Int, today: LocalDate, readGoal: Int): Int = when {
+    r.until != null -> if (r.page >= r.total) 0 else todayShare(r.total, r.page, readToday, today, r.until)
+    r.quran -> readGoal
+    else -> 0
+}
+
+/** Pages read today and today's target over every reading on the shelf (the rose's Sayfa petal uses the same pair). */
+fun readingToday(store: Store): Pair<Int, Int> {
+    val day = store.prayerDay()
+    val by = store.readLogBy(day)
+    var done = 0; var target = 0
+    store.readings().forEach { r ->
+        val read = by[r.id] ?: 0
+        val share = readingShare(r, read, day, store.readGoal)
+        target += share; done += minOf(read, share)
+    }
+    return done to target
+}
+
+private val SHORT_DATE = java.time.format.DateTimeFormatter.ofPattern("d MMM", java.util.Locale("tr"))
+
+/** Okuma, design M1 "Raf üstte": today's total, the shelf (each spine carries its own share and tick), the chosen reading, 14 days. */
 @Composable
 fun OkumaScreen() {
     StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     var v by remember { mutableIntStateOf(0) }
-    var adding by remember { mutableStateOf(false) }
-    val page = v.let { store.quranPage }
-    val log = v.let { store.readLog() }
-    val todayDate = store.prayerDay()   // logPages writes to the prayer day (imsak to imsak)
-    val today = log[todayDate.toString()] ?: 0
+    val todayDate = store.prayerDay()   // logs write to the prayer day (imsak to imsak)
+    val readings = v.let { store.readings() }
+    val byToday = v.let { store.readLogBy(todayDate) }
     val goal = v.let { store.readGoal }
-    val gauge by animateFloatAsState(page / QURAN_PAGES.toFloat(), tween(600), label = "gauge")
-    val goalBar by animateFloatAsState((today.toFloat() / goal).coerceAtMost(1f), tween(500), label = "goal")
+    val shares = readings.map { readingShare(it, byToday[it.id] ?: 0, todayDate, goal) }
+    val target = shares.sum()
+    val done = readings.indices.sumOf { minOf(byToday[readings[it].id] ?: 0, shares[it]) }
+    var sel by remember { mutableIntStateOf(0) }
+    val i = sel.coerceIn(0, readings.size - 1)
+    var sheet by remember { mutableStateOf<String?>(null) }   // null closed, "" new reading, else the id whose plan is edited
+    val heroBar by animateFloatAsState(if (target == 0) 0f else done.toFloat() / target, tween(500), label = "today")
 
-    fun readQuran(n: Int) {
-        var p = store.quranPage + n
-        if (p > QURAN_PAGES) { store.hatim += 1; p -= QURAN_PAGES } // finished: count a hatim, carry over
-        store.quranPage = p.coerceAtLeast(0)
-        store.logPages(n)
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    fun undoable(message: String, undo: () -> Unit) {
+        scope.launch {
+            snackbar.currentSnackbarData?.dismiss()
+            if (snackbar.showSnackbar(message, actionLabel = "Geri al", duration = SnackbarDuration.Short) == SnackbarResult.ActionPerformed) { undo(); v++ }
+        }
+    }
+    /** Moves a reading by [n] pages and logs it; the Kur'an wraps into a new hatim (and its dated plan ends there). */
+    fun read(r: Reading, n: Int) {
+        if (r.quran) {
+            if (n < 0 && store.quranPage == 0) return
+            var p = store.quranPage + n
+            if (p > QURAN_PAGES) { store.hatim += 1; p -= QURAN_PAGES; store.setQuranPlan("", 0, null, null) }
+            store.quranPage = p.coerceAtLeast(0)
+            store.logPagesFor("quran", n)
+        } else {
+            val np = (r.page + n).coerceIn(0, r.total)
+            store.saveBooks(store.books().map { if (it.name == r.id) it.copy(page = np) else it })
+            store.logPagesFor(r.id, np - r.page)
+        }
         v++
     }
 
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         ScreenTitle("Okuma") {
-            if (store.hatim > 0) Text("${store.hatim} hatim tamamlandı", Modifier.clip(CircleShape).background(Pal.Gold.copy(alpha = .14f))
+            if (store.hatim > 0) Text("${store.hatim} hatim", Modifier.clip(CircleShape).background(Pal.Gold.copy(alpha = .14f))
                 .padding(horizontal = Space.m, vertical = Space.xs), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
         }
-        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).fillMaxWidth()) {
-            Text("Kur'an-ı Kerîm", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
-            Box(Modifier.fillMaxWidth().height(140.dp), contentAlignment = Alignment.BottomCenter) {
-                Canvas(Modifier.size(240.dp, 130.dp)) {
-                    val w = 12.dp.toPx()
-                    val d = size.width - w
-                    drawArc(Pal.Track, 180f, 180f, false, Offset(w / 2, w / 2), Size(d, d), style = Stroke(w, cap = StrokeCap.Round))
-                    drawArc(Pal.Gold, 180f, 180f * gauge, false, Offset(w / 2, w / 2), Size(d, d), style = Stroke(w, cap = StrokeCap.Round))
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("$page", style = NumStyle, fontSize = Type.display, color = Pal.Text)
-                    Text(
-                        if (page == 0) "henüz başlamadın" else "$QURAN_PAGES sayfada",
-                        color = Pal.Muted, fontSize = Type.label,
-                    )
-                }
+
+        // ---- today, across every reading
+        Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.s)) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text("$target", style = NumStyle, fontSize = Type.display, lineHeight = Type.display, color = Pal.Text)
+                Text("sayfa bugün", Modifier.padding(start = Space.xs, bottom = 7.dp), color = Pal.Muted, fontSize = Type.body)
             }
             Text(
-                if (page == 0) "İlk sayfayı okuyunca burada birikmeye başlar" else "${cuz(page)}. cüz · ${sureOf(page)} Sûresi",
-                Modifier.fillMaxWidth().padding(top = Space.s), color = if (page == 0) Pal.Muted else Pal.Text,
-                fontSize = Type.body2, textAlign = TextAlign.Center,
+                when { target == 0 -> "Bugün için hedef yok; bir okumaya bitiş tarihi ver."; done >= target -> "Bugünkü okuma tamam, elhamdülillah."; else -> "$done / $target okundu" },
+                color = Pal.Muted, fontSize = Type.body2,
             )
-            Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.CenterVertically) {
-                GhostButton("−1", Modifier.width(64.dp)) { if (store.quranPage > 0) readQuran(-1) }
-                GoldButton("+1 sayfa", Modifier.weight(1f)) { readQuran(1) }
-                GhostButton("+1 cüz", color = Pal.Gold) { readQuran(20) }
+            Box(Modifier.padding(top = Space.m).fillMaxWidth().height(6.dp).clip(CircleShape).background(Pal.Track)) {
+                Box(Modifier.fillMaxWidth(heroBar.coerceIn(0f, 1f)).fillMaxHeight().clip(CircleShape).background(Pal.Gold))
             }
         }
 
-        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
-            Row {
-                Text(if (today >= goal) "Bugünkü hedef tamam ✓" else "Bugün $today sayfa", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = Type.body2)
-                // Tap to change the daily goal.
-                Text("Hedef $goal sayfa", Modifier.clickable {
-                    val goals = listOf(5, 10, 15, 20, 30)
-                    store.readGoal = goals[(goals.indexOf(goal) + 1) % goals.size]; v++
-                }, color = Pal.Muted, fontSize = Type.body2)
+        // ---- the shelf: fill = how far the reading is; the foot carries today's share and its tick
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.s),
+            horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+            readings.forEachIndexed { k, r ->
+                val read = byToday[r.id] ?: 0
+                Spine(r, read, shares[k], store.hatim, k == i, onClick = { sel = k }) {
+                    // tick: finish today's share in one go
+                    val add = shares[k] - read
+                    if (add > 0) { read(r, add); undoable("${r.title}: bugünkü $add sayfa okundu") { read(r.copy(page = r.page + add), -add) } }
+                }
             }
-            Box(Modifier.padding(top = Space.s).fillMaxWidth().height(8.dp).clip(CircleShape).background(Pal.Track)) {
-                Box(Modifier.fillMaxWidth(goalBar).fillMaxHeight().clip(CircleShape).background(Pal.Gold))
+            Box(
+                Modifier.size(72.dp, 168.dp).clip(RoundedCornerShape(14.dp)).border(1.dp, Pal.Border, RoundedCornerShape(14.dp))
+                    .clickable { sheet = "" }.semantics { contentDescription = "Yeni okuma" },
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.Add, null, tint = Pal.Gold)
+                    Text("Yeni", color = Pal.Muted, fontSize = Type.label)
+                }
             }
-            val week = (6 downTo 0).map { todayDate.minusDays(it.toLong()) }
-            val max = maxOf(goal, week.maxOf { log[it.toString()] ?: 0 }).toFloat()
-            Row(Modifier.padding(top = Space.m).fillMaxWidth().height(80.dp), horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.Bottom) {
-                week.forEach { d ->
-                    val n = log[d.toString()] ?: 0
-                    val h by animateFloatAsState(n / max, tween(500), label = "bar")
+        }
+
+        // ---- the chosen reading
+        val r = readings[i]
+        val read = byToday[r.id] ?: 0
+        val share = shares[i]
+        Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l)) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text("${r.page}", style = NumStyle, fontSize = Type.title, lineHeight = Type.title, color = Pal.Text)
+                Text("/ ${r.total} sayfa", Modifier.padding(start = Space.xs, bottom = 5.dp), color = Pal.Muted, fontSize = Type.body2)
+            }
+            Text(
+                listOfNotNull(
+                    if (r.quran && r.page > 0) "${cuz(r.page)}. cüz · ${sureOf(r.page)}" else null,
+                    if (!r.quran) r.title else null,
+                    r.until?.let { "bitiş ${it.format(SHORT_DATE)}" },
+                ).joinToString(" · ").ifEmpty { "henüz başlamadın" },
+                color = Pal.Muted, fontSize = Type.body2,
+            )
+            // pace of the last 14 days for this reading → when it would end
+            val pace = (0 until 14).sumOf { store.readLogBy(todayDate.minusDays(it.toLong()))[r.id] ?: 0 } / 14f
+            val finish = if (pace < .05f || r.page >= r.total) null else todayDate.plusDays(kotlin.math.ceil((r.total - r.page) / pace).toLong())
+            Row(Modifier.padding(top = Space.m).fillMaxWidth().height(IntrinsicSize.Min)) {
+                BigStat(if (share > 0) "$read/$share" else "$read", "bugün")
+                Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
+                if (r.from != null && r.until != null) {
+                    val lead = planLead(r.startPage, r.total, r.from, r.until, todayDate, r.page)
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.fillMaxWidth().height((56 * h).dp.coerceAtLeast(3.dp)).clip(RoundedCornerShape(4.dp))
-                            .background(if (d == todayDate) Pal.Gold else Color(0xFF3A4A66)))
-                        Text(if (d == todayDate) "Bugün" else TR_DAYS[d.dayOfWeek.value - 1], color = Pal.Muted, fontSize = Type.label)
+                        Text(if (lead > 0) "+$lead" else "$lead", style = NumStyle, fontSize = Type.num, lineHeight = Type.num,
+                            color = when { lead > 0 -> Pal.Good; lead < 0 -> Pal.Warn; else -> Pal.Text })
+                        Text(when { lead > 0 -> "gün önde"; lead < 0 -> "gün geride"; else -> "planda" }, color = Pal.Muted, fontSize = Type.label)
                     }
+                } else if (r.quran) {
+                    // undated Kur'an: the fixed daily goal, tap to change it
+                    Column(Modifier.weight(1f).clickable {
+                        val goals = listOf(5, 10, 15, 20, 30)
+                        store.readGoal = goals[(goals.indexOf(goal) + 1) % goals.size]; v++
+                    }, horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$goal", style = NumStyle, fontSize = Type.num, lineHeight = Type.num, color = Pal.Gold)
+                        Text("günlük hedef", color = Pal.Muted, fontSize = Type.label)
+                    }
+                } else BigStat("–", "plan yok")
+                Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
+                BigStat(finish?.format(SHORT_DATE) ?: "–", "bu hızla biter")
+            }
+            Row(Modifier.padding(top = Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedIconButton(onClick = { read(r, -1) }, Modifier.size(TouchMin), border = androidx.compose.foundation.BorderStroke(1.dp, Pal.Border)) {
+                    Text("−1", color = Pal.Text, fontSize = Type.body2)
                 }
+                if (share > read) GoldButton("Bugünkünü tamamla", Modifier.weight(1f), Icons.Default.Check) {
+                    val add = share - read
+                    read(r, add); undoable("${r.title}: bugünkü $add sayfa okundu") { read(r.copy(page = r.page + add), -add) }
+                } else GoldButton("+1 sayfa", Modifier.weight(1f)) { read(r, 1) }
+                OutlinedIconButton(onClick = { read(r, 1) }, Modifier.size(TouchMin), border = androidx.compose.foundation.BorderStroke(1.dp, Pal.Border)) {
+                    Text("+1", color = Pal.Text, fontSize = Type.body2)
+                }
+            }
+            Row(Modifier.padding(top = Space.xs), verticalAlignment = Alignment.CenterVertically) {
+                if (r.quran) TextButton(onClick = { read(r, 20) }) { Text("+1 cüz", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
+                TextButton(onClick = { sheet = r.id }) { Text(if (r.until == null) "Plan kur" else "Planı değiştir", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
+                Spacer(Modifier.weight(1f))
+                if (!r.quran) TextButton(onClick = {
+                    val before = store.books()
+                    store.saveBooks(before.filter { it.name != r.id }); sel = 0; v++
+                    undoable("${r.title} silindi") { store.saveBooks(before) }
+                }) { Text("Sil", color = Pal.Muted) }
             }
         }
 
-        Row(Modifier.padding(start = Space.xl, end = Space.m, top = Space.l), verticalAlignment = Alignment.CenterVertically) {
-            Text("Kitaplarım", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = Type.body)
-            TextButton(onClick = { adding = true }) { Text("+ Kitap ekle", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
-        }
-        if (v.let { store.books() }.isEmpty()) {
-            EmptyState(
-                title = "Henüz kitap yok",
-                text = "Okuduğun kitabı ekle, sayfa sayısını yaz; ilerlemesini buradan takip et.",
-                actionLabel = "Kitap ekle",
-                onAction = { adding = true },
-                modifier = Modifier.padding(horizontal = Space.xl),
-            )
-        }
-        v.let { store.books() }.forEachIndexed { i, b ->
-            InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, bottom = Space.s).fillMaxWidth()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(b.name, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
-                    Text("${b.page} / ${b.total}", color = Pal.Muted, fontSize = Type.label)
-                    IconButton(onClick = { store.saveBooks(store.books().filterIndexed { j, _ -> j != i }); v++ }, Modifier.size(36.dp)) {
-                        Icon(Icons.Default.Close, "${b.name} kitabını sil", tint = Pal.Muted, modifier = Modifier.size(16.dp))
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val pct by animateFloatAsState(b.page / b.total.toFloat(), tween(500), label = "book")
-                    Box(Modifier.weight(1f).height(6.dp).clip(CircleShape).background(Pal.Track)) {
-                        Box(Modifier.fillMaxWidth(pct).fillMaxHeight().background(if (b.page >= b.total) Pal.Gold else Pal.Muted))
-                    }
-                    listOf(1, 10).forEach { n ->
-                        TextButton(onClick = {
-                            val p = minOf(b.total, b.page + n)
-                            store.saveBooks(store.books().mapIndexed { j, x -> if (j == i) x.copy(page = p) else x })
-                            store.logPages(p - b.page); v++
-                        }, enabled = b.page < b.total) { Text("+$n", color = if (b.page < b.total) Pal.Text else Pal.Muted) }
-                    }
+        // ---- 14 days, every reading together
+        val log = v.let { store.readLog() }
+        val days = (13 downTo 0).map { todayDate.minusDays(it.toLong()) }
+        val counts = days.map { log[it.toString()] ?: 0 }
+        Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l, bottom = Space.xl)) {
+            SectionLabel("SON 14 GÜN · ${counts.sum()} SAYFA", Modifier.padding(bottom = Space.s))
+            val maxN = counts.maxOrNull()?.coerceAtLeast(1) ?: 1
+            Row(Modifier.fillMaxWidth().height(64.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
+                counts.forEachIndexed { k, n ->
+                    val h by animateFloatAsState(n / maxN.toFloat(), tween(500), label = "bar$k")
+                    Box(Modifier.weight(1f).fillMaxHeight(h.coerceAtLeast(.04f)).clip(RoundedCornerShape(4.dp))
+                        .background(if (k == 13) Pal.Gold else Pal.Gold.copy(alpha = if (n > 0) .45f else .15f)))
                 }
             }
+            Row(Modifier.padding(top = Space.xs)) {
+                Text("14 gün önce", Modifier.weight(1f), color = Pal.Muted.copy(alpha = .7f), fontSize = Type.micro)
+                Text("bugün", color = Pal.Muted.copy(alpha = .7f), fontSize = Type.micro)
+            }
         }
-        Spacer(Modifier.height(Space.l))
+    }
+    SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = Space.m)) { data ->
+        Snackbar(snackbarData = data, containerColor = Pal.Card, contentColor = Pal.Text, actionColor = Pal.Gold)
+    }
     }
 
-    if (adding) {
-        var name by remember { mutableStateOf("") }
-        var total by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { adding = false }, containerColor = Pal.Card,
-            title = { Text("Kitap ekle", color = Pal.Text) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                    OutlinedTextField(name, { name = it }, label = { Text("Kitap adı") }, singleLine = true)
-                    OutlinedTextField(total, { total = it.filter(Char::isDigit) }, label = { Text("Sayfa sayısı") }, singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+    sheet?.let { id -> ReadingSheet(store, readings.firstOrNull { it.id == id }) { sheet = null; v++ } }
+}
+
+/** A book spine on the shelf: the fill rises with progress; the foot shows today's share and a tick that completes it. */
+@Composable
+private fun Spine(r: Reading, read: Int, share: Int, hatim: Int, selected: Boolean, onClick: () -> Unit, onTick: () -> Unit) {
+    val progress by animateFloatAsState(if (r.total == 0) 0f else r.page.toFloat() / r.total, tween(600), label = "spine")
+    val finished = !r.quran && r.page >= r.total
+    val shape = RoundedCornerShape(14.dp)
+    Box(
+        Modifier.size(104.dp, 168.dp).clip(shape).background(Pal.Card)
+            .border(if (selected) 2.dp else 1.dp, if (selected) Pal.Gold else Color.White.copy(alpha = .06f), shape)
+            .clickable(onClick = onClick).semantics { contentDescription = "${r.title}, ${r.page} / ${r.total}" },
+    ) {
+        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(progress.coerceIn(0f, 1f))
+            .background(Brush.verticalGradient(listOf(Pal.Gold.copy(alpha = .12f), Pal.Gold.copy(alpha = .55f)))))
+        Column(Modifier.fillMaxSize().padding(Space.s + 2.dp)) {
+            Text(
+                when { r.quran -> "HATİM ${hatim + 1}"; finished -> "BİTTİ"; r.until != null -> "PLANLI"; else -> "KİTAP" },
+                color = Pal.Gold, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp,
+            )
+            Text(if (r.quran) "Kur'an-ı Kerîm" else r.title, style = NumStyle, fontSize = 17.sp, lineHeight = 19.sp, color = Pal.Text, maxLines = 3)
+            if (r.quran && r.title != "Kur'an-ı Kerîm") Text(r.title, color = Pal.Muted, fontSize = Type.micro, maxLines = 1)
+            Spacer(Modifier.weight(1f))
+            if (share > 0) Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("$read", style = NumStyle, fontSize = 18.sp, color = Pal.Text)
+                Text("/$share", Modifier.weight(1f), color = Pal.Muted, fontSize = Type.micro)
+                val ok = read >= share
+                Box(
+                    Modifier.size(32.dp).clip(CircleShape).then(if (ok) Modifier.background(Pal.Gold) else Modifier.border(1.5.dp, Pal.Gold, CircleShape))
+                        .clickable(enabled = !ok, onClick = onTick).semantics { contentDescription = "${r.title}: bugünkünü tamamla" },
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Default.Check, null, tint = if (ok) Pal.Ground else Pal.Gold, modifier = Modifier.size(16.dp)) }
+            }
+        }
+    }
+}
+
+/** New reading, or the plan of an existing one ([edit]): presets, pages, dates; the daily pages are worked out live. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReadingSheet(store: Store, edit: Reading?, onClose: () -> Unit) {
+    val today = store.prayerDay()
+    var kind by remember { mutableIntStateOf(if (edit?.quran == true) 0 else if (edit != null) 2 else 0) }   // 0 hatim, 1 cüz, 2 kitap
+    val quran = kind == 0
+    var name by remember { mutableStateOf(edit?.let { if (it.quran) store.quranPlanName else it.title } ?: "") }
+    var total by remember { mutableStateOf(edit?.total?.toString() ?: "$QURAN_PAGES") }
+    var already by remember { mutableStateOf((edit?.page ?: store.quranPage).toString()) }
+    var until by remember { mutableStateOf(edit?.until) }
+    var picking by remember { mutableStateOf(false) }
+    val t = if (quran) QURAN_PAGES else total.toIntOrNull() ?: 0
+    val a = already.toIntOrNull() ?: 0
+    val clash = !quran && edit == null && (name.trim() == "quran" || store.books().any { it.name.equals(name.trim(), ignoreCase = true) })
+    val error = when {
+        !quran && edit == null && name.isBlank() -> "Ne okuyacağını yaz"
+        clash -> "Bu adla bir okuma zaten var"
+        t <= 0 -> "Toplam sayfa en az 1 olmalı"
+        a > t -> "Okunan, toplamdan fazla olamaz"
+        else -> null
+    }
+    val colors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = Pal.Gold, unfocusedBorderColor = Pal.Border, focusedLabelColor = Pal.Gold,
+        cursorColor = Pal.Gold, focusedTextColor = Pal.Text, unfocusedTextColor = Pal.Text, unfocusedLabelColor = Pal.Muted,
+        disabledTextColor = Pal.Muted, disabledBorderColor = Pal.Border, disabledLabelColor = Pal.Muted,
+    )
+    val num = KeyboardOptions(keyboardType = KeyboardType.Number)
+
+    ModalBottomSheet(onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
+        Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().imePadding().padding(bottom = Space.l).verticalScroll(rememberScrollState())) {
+            Text(if (edit == null) "Yeni okuma" else "Plan · ${edit.title}", style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+            if (edit == null) Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                listOf("Hatim · 604", "1 cüz · 20", "Kitap").forEachIndexed { k, label ->
+                    val on = kind == k
+                    Box(Modifier.heightIn(min = 36.dp).clip(RoundedCornerShape(Radius.s)).background(if (on) Pal.Track else Color.Transparent)
+                        .border(1.dp, if (on) Color.Transparent else Pal.Border, RoundedCornerShape(Radius.s))
+                        .clickable {
+                            kind = k
+                            when (k) {
+                                0 -> { total = "$QURAN_PAGES"; already = "${store.quranPage}" }
+                                1 -> { total = "20"; already = "0"; if (name.isBlank()) name = "Cüz okuması" }
+                                else -> { total = ""; already = "0" }
+                            }
+                        }.padding(horizontal = Space.m, vertical = Space.s), contentAlignment = Alignment.Center) {
+                        Text(label, color = if (on) Pal.Gold else Pal.Muted, fontSize = Type.body2, fontWeight = FontWeight.Medium)
+                    }
                 }
+            }
+            OutlinedTextField(name, { name = it.take(40) }, Modifier.padding(top = Space.m).fillMaxWidth(), singleLine = true, colors = colors,
+                enabled = quran || edit == null,
+                label = { Text(if (quran) "Planın adı (isteğe bağlı, ör. Ramazan hatmi)" else "Ne okuyacaksın?", fontSize = Type.label) })
+            Row(Modifier.padding(top = Space.s), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                OutlinedTextField(if (quran) "$QURAN_PAGES" else total, { total = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f),
+                    enabled = !quran, singleLine = true, keyboardOptions = num, colors = colors, label = { Text("Toplam sayfa", fontSize = Type.label) })
+                OutlinedTextField(already, { already = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f),
+                    singleLine = true, keyboardOptions = num, colors = colors, label = { Text("Okunan sayfa", fontSize = Type.label) })
+            }
+            // the end date is what turns a reading into a plan
+            Row(Modifier.padding(top = Space.m).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Bitiş", color = Pal.Muted, fontSize = Type.label)
+                    Text(until?.format(java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", java.util.Locale("tr"))) ?: "Tarih yok",
+                        color = Pal.Text, fontSize = Type.body)
+                }
+                if (until != null) TextButton(onClick = { until = null }) { Text("Kaldır", color = Pal.Muted) }
+                TextButton(onClick = { picking = true }) { Text("Tarih seç", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
+            }
+            if (error != null) Text(error, Modifier.padding(top = Space.s), color = Pal.Warn, fontSize = Type.label)
+            Column(Modifier.fillMaxWidth().padding(vertical = Space.l), horizontalAlignment = Alignment.CenterHorizontally) {
+                val u = until
+                if (u != null && error == null) {
+                    val per = todayShare(t, a, 0, today, u)
+                    val days = u.toEpochDay() - today.toEpochDay() + 1
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text("$per", style = NumStyle, fontSize = Type.display, lineHeight = Type.display, color = Pal.Text)
+                        Text("sayfa / gün", Modifier.padding(start = Space.xs, bottom = 7.dp), color = Pal.Muted, fontSize = Type.body)
+                    }
+                    Text("${t - a} sayfa · ${days.coerceAtLeast(1)} gün", color = Pal.Muted, fontSize = Type.body2)
+                } else Text(
+                    if (quran) "Tarih vermezsen günlük hedef (${store.readGoal} sayfa) kullanılır." else "Tarih vermezsen günlük hedefi olmaz; ilerlemesi yine tutulur.",
+                    color = Pal.Muted, fontSize = Type.body2, textAlign = TextAlign.Center,
+                )
+            }
+            GoldButton(if (edit == null) "Okumayı başlat" else "Kaydet", Modifier.fillMaxWidth().alpha(if (error == null) 1f else .4f), Icons.Default.Check) {
+                if (error != null) return@GoldButton
+                val from = if (until != null) today else null
+                if (quran) {
+                    store.quranPage = a
+                    store.setQuranPlan(name.trim(), a, from, until)
+                } else if (edit != null) {
+                    store.saveBooks(store.books().map { if (it.name == edit.id) it.copy(page = a, total = t, startPage = a, from = from, until = until) else it })
+                } else {
+                    store.saveBooks(store.books() + Book(name.trim(), a, t, a, from, until))
+                }
+                onClose()
+            }
+        }
+    }
+    if (picking) {
+        val state = rememberDatePickerState(
+            initialSelectedDateMillis = (until ?: today.plusDays(30)).atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli(),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis >= today.atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()
             },
-            confirmButton = {
-                TextButton(enabled = name.isNotBlank() && (total.toIntOrNull() ?: 0) > 0, onClick = {
-                    store.saveBooks(store.books() + Book(name.trim(), 0, total.toInt()))
-                    adding = false; v++
-                }) { Text("Ekle", color = Pal.Gold) }
-            },
-            dismissButton = { TextButton(onClick = { adding = false }) { Text("Vazgeç", color = Pal.Muted) } },
         )
+        DatePickerDialog(
+            onDismissRequest = { picking = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let { until = java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate() }
+                    picking = false
+                }) { Text("Tamam", color = Pal.Gold) }
+            },
+            dismissButton = { TextButton(onClick = { picking = false }) { Text("Vazgeç", color = Pal.Muted) } },
+            colors = DatePickerDefaults.colors(containerColor = Pal.Card),
+        ) {
+            DatePicker(state, colors = DatePickerDefaults.colors(
+                containerColor = Pal.Card, selectedDayContainerColor = Pal.Gold, selectedDayContentColor = Pal.Ground,
+                todayDateBorderColor = Pal.Gold, todayContentColor = Pal.Gold, dayContentColor = Pal.Text,
+                titleContentColor = Pal.Muted, headlineContentColor = Pal.Text, weekdayContentColor = Pal.Muted,
+                navigationContentColor = Pal.Text, yearContentColor = Pal.Text, selectedYearContainerColor = Pal.Gold,
+            ))
+        }
     }
 }
 
@@ -911,9 +1146,10 @@ private fun MuhasebeOzet() {
     val page = store.quranPage
     val totalKaza = Vakit.entries.sumOf { store.kaza(it) } + store.kaza("VITIR")
     val day = store.prayerDay()   // the rose's day runs imsak to imsak
+    val readToday = readingToday(store)   // the Sayfa petal: today's pages against today's target on the shelf
     val petals = gulPetals(
         slots(store.lat, store.lng, day), prayed, store::prayedAt,
-        pagesToday = log[day.toString()] ?: 0, readGoal = store.readGoal,
+        pagesToday = readToday.first, readGoal = readToday.second,
         kazaToday = store.kazaLog()[day.toString()] ?: 0, kazaRate = store.kazaRate, kazaOwed = totalKaza,
         zikirs = store.zikirs, zikirCounts = store.zikirCounts(day),
     )

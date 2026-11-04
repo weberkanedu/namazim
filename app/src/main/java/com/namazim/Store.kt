@@ -9,7 +9,17 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
 
-data class Book(val name: String, val page: Int, val total: Int)
+/** A book being read; [until] set = a dated plan that started at page [startPage] on [from]. The name is its id. */
+data class Book(
+    val name: String, val page: Int, val total: Int,
+    val startPage: Int = 0, val from: LocalDate? = null, val until: LocalDate? = null,
+)
+
+/** One reading on the Okuma shelf: the Kur'an (id "quran") or a book. */
+data class Reading(
+    val id: String, val title: String, val page: Int, val total: Int,
+    val startPage: Int, val from: LocalDate?, val until: LocalDate?, val quran: Boolean,
+)
 
 /** Bumped by Store on every write: screens read it so a change in Ayarlar shows up immediately. */
 object StoreRev {
@@ -173,12 +183,57 @@ class Store(context: Context) {
 
     fun books(): List<Book> {
         val a = JSONArray(p.getString("books", "[]"))
-        return (0 until a.length()).map { a.getJSONObject(it).run { Book(getString("name"), getInt("page"), getInt("total")) } }
+        return (0 until a.length()).map { a.getJSONObject(it).run {
+            Book(getString("name"), getInt("page"), getInt("total"), optInt("startPage"),
+                optString("from").takeIf { it.isNotEmpty() }?.let(LocalDate::parse), optString("until").takeIf { it.isNotEmpty() }?.let(LocalDate::parse))
+        } }
     }
     fun saveBooks(list: List<Book>) {
+        StoreRev.n++
         val a = JSONArray()
-        list.forEach { a.put(JSONObject().put("name", it.name).put("page", it.page).put("total", it.total)) }
+        list.forEach {
+            val o = JSONObject().put("name", it.name).put("page", it.page).put("total", it.total).put("startPage", it.startPage)
+            it.from?.let { d -> o.put("from", d.toString()) }; it.until?.let { d -> o.put("until", d.toString()) }
+            a.put(o)
+        }
         p.edit().putString("books", a.toString()).apply()
+    }
+
+    // Kur'an plan: absent = no date, the fixed daily goal (readGoal) applies
+    val quranPlanName get() = p.getString("quranPlanName", "") ?: ""
+    fun setQuranPlan(name: String, startPage: Int, from: LocalDate?, until: LocalDate?) {
+        StoreRev.n++
+        val e = p.edit().putString("quranPlanName", name).putInt("quranPlanStart", startPage)
+        if (from != null && until != null) e.putString("quranPlanFrom", from.toString()).putString("quranPlanUntil", until.toString())
+        else e.remove("quranPlanFrom").remove("quranPlanUntil")
+        e.apply()
+    }
+
+    /** The shelf: the Kur'an first, then the books in the order they were added. */
+    fun readings(): List<Reading> {
+        val from = p.getString("quranPlanFrom", null)?.let(LocalDate::parse)
+        val until = p.getString("quranPlanUntil", null)?.let(LocalDate::parse)
+        val quran = Reading("quran", quranPlanName.ifEmpty { "Kur'an-ı Kerîm" }, quranPage, QURAN_PAGES,
+            p.getInt("quranPlanStart", 0), from, until, true)
+        return listOf(quran) + books().map { Reading(it.name, it.name, it.page, it.total, it.startPage, it.from, it.until, false) }
+    }
+
+    /** Pages read per reading per day: "2026-11-01" -> (reading id -> count). */
+    fun readLogBy(day: LocalDate): Map<String, Int> {
+        val o = JSONObject(p.getString("readLogBy", "{}")!!).optJSONObject(day.toString())
+        val by = o?.keys()?.asSequence()?.associateWith { o.getInt(it) }.orEmpty()
+        // pages logged before per-reading logs existed (Nov 2026) came almost all from the Kur'an counter: count them there
+        val loose = (readLog()[day.toString()] ?: 0) - by.values.sum()
+        return if (loose > 0) by + ("quran" to (by["quran"] ?: 0) + loose) else by
+    }
+    /** Logs [n] pages (may be negative) both to the day's total and to the reading [id]. */
+    fun logPagesFor(id: String, n: Int) {
+        logPages(n)
+        val all = JSONObject(p.getString("readLogBy", "{}")!!)
+        val today = prayerDay().toString()
+        val o = all.optJSONObject(today) ?: JSONObject()
+        o.put(id, (o.optInt(id) + n).coerceAtLeast(0))
+        p.edit().putString("readLogBy", all.put(today, o).toString()).apply()
     }
 
     /** The user's zikir list; until it is first saved it is the tesbihat. */
