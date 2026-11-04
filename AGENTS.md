@@ -4,6 +4,8 @@ Android prayer app (Kotlin + Jetpack Compose). Goal: get the user to actually pr
 prayer time, then "kıldın mı?" nags until the user taps **Kıldım**. Missed prayers go to kaza automatically.
 All UI text is Turkish. The owner cares a lot about visuals and motion.
 
+**Handoff:** read `docs/superpowers/notes/2026-11-04-devir.md` first. It covers the open "rose invisible on the phone" bug, the owner's pending requests and the owner's working preferences.
+
 ## Build
 
 - JDK 17, Android SDK 34 (`C:/Users/lejyo/AppData/Local/Android/Sdk`, see `local.properties`), Gradle 8.7 wrapper, AGP 8.5.2, Kotlin 2.0.20.
@@ -36,6 +38,7 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
 | `MainActivity.kt` | Activity, bottom nav, Namaz (home) screen, full-screen "Kıldın mı?" (`ReminderScreen`, opened from the nag notification), permission card, location fetch. The home screen is a countdown plus a vertical **timeline**: one node per vakit with a tick that marks it prayed (tap again to undo, and the mark time shows under the name), ek vakitler hang under their vakit and open with the chevron. |
 | `Screens.kt` | Kıble (compass with magnetic declination fix, kıble saati), Kaza, Okuma (Kur'an pages/cüz/hatim, daily goal, books), Muhasebe (Özet + Kaza tabs, heatmap, streaks). |
 | `Ayarlar.kt` | Settings screen (theme, sky renderer, reminder cadence, snooze, goals, location, phone permissions). Opened from the gear in the home header (tab 4), not from the bottom nav; its title has a back arrow. |
+| `GulLogic.kt` / `GulView.kt` | Muhasebe › Özet 3D rose. Pure petal progress (Namaz, Vaktinde, Sayfa, Kaza, Zikir), prayer day = imsak to imsak; tests in `GulTest.kt`. `GulCard` hosts `assets/gul/gul.html` (three.js 0.170.0, vendored) in a WebView served from `https://gul.local/` via `shouldInterceptRequest`, and drives it through `gul.set` / `gul.spin`. Spec `docs/superpowers/specs/2026-11-04-gul-design.md`, approved look `design/gul/gul-3d.html`. |
 | `Theme.kt` | One palette, `SeherPalette` (navy + gold, Cormorant). Use `Pal.X` colors and `NumStyle` for big numbers. |
 | `Sky.kt` | Seher home header (340 dp): AGSL `RuntimeShader` sky — Rayleigh/Mie atmosphere, soft clouds, stars, the sun and the moon riding one arc across the sky by azimuth (moon phase is real), hazy hills, a mosque with lit windows, and a wind-blown wheat field that melts into the page. Long-press = fast preview. Falls back to a gradient below API 33 or if the shader fails. ~20 ms GPU/frame, capped at ~12 fps. |
 | `NamazimWidget.kt` | 1×1 home-screen "canlı ikon": sky gradient for the time of day, crescent, hand to the next prayer, dots fill as prayers are marked, label "İkindi 15:27". Redrawn from `Reminders.scheduleNext` and on widget updates. |
@@ -57,6 +60,7 @@ Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTe
 
 ## Open work (in rough priority)
 
+0. **Özet rose not visible on the phone.** WebGL draws (pixel readback confirms), but the WebView does not show the canvas. Full investigation log and next steps are in `docs/superpowers/notes/2026-11-04-devir.md`. After that: rose left with vertical Hatim / 30-day bars on the right, the Muhasebe top menu redesign, the "%200" rate bug, and then the zikir module.
 1. **Live icon widget**: built in `NamazimWidget.kt` (1×1, sky colour for the time of day, hand to the next prayer, dots fill,
    "İkindi 15:27"). Still to do: add it once to the home screen and judge it at real size; a widget picker label / preview image
    would be nice. Design: `design/canvas/Canli-Ikon.dc.html`.

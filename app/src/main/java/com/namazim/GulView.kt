@@ -17,6 +17,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -50,7 +53,11 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
     latest[0] = json
     // bumped when Android kills the WebView renderer: a fresh WebView replaces the dead one
     var gen by remember { mutableIntStateOf(0) }
+    // load problems shown on the card itself: on a phone without adb this is the only way to see why the rose is missing
+    var problem by remember { mutableStateOf("") }
     val web = remember(gen) {
+        // debug builds: inspect the page live from desktop Chrome (chrome://inspect) while the phone is on adb
+        if (ctx.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) WebView.setWebContentsDebuggingEnabled(true)
         WebView(ctx).apply {
             setBackgroundColor(0xFF121D33.toInt())
             settings.javaScriptEnabled = true
@@ -69,18 +76,30 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
                     return try {
                         WebResourceResponse(mime, "utf-8", context.assets.open("gul/$path"))
                     } catch (e: java.io.IOException) {
+                        post { problem += "eksik dosya: $path\n" }
                         WebResourceResponse("text/plain", "utf-8", 404, "Not Found", emptyMap(), null)
                     }
                 }
                 // a fresh page starts as a bud: give it today's values right away
-                override fun onPageFinished(view: WebView, url: String) { view.evaluateJavascript("gul.set(${latest[0]})", null) }
+                override fun onPageFinished(view: WebView, url: String) { view.evaluateJavascript("window.gul && gul.set(${latest[0]})", null) }
                 // without this, a killed renderer (low memory, heavy WebGL) takes the whole app down with it
                 override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean { gen++; return true }
+                override fun onReceivedError(view: WebView, req: WebResourceRequest, err: android.webkit.WebResourceError) {
+                    problem += "yükleme hatası: ${req.url.path} ${err.description}\n"
+                }
+            }
+            webChromeClient = object : android.webkit.WebChromeClient() {
+                override fun onConsoleMessage(m: android.webkit.ConsoleMessage): Boolean {
+                    android.util.Log.d("Gul", "${m.message()} @${m.sourceId()}:${m.lineNumber()}")
+                    if (m.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR)
+                        problem += "${m.message()} (${m.sourceId().substringAfterLast('/')}:${m.lineNumber()})\n"
+                    return true
+                }
             }
             loadUrl("https://$HOST/gul.html")
         }
     }
-    LaunchedEffect(json, web) { web.evaluateJavascript("gul.set($json)", null) }
+    LaunchedEffect(json, web) { web.evaluateJavascript("window.gul && gul.set($json)", null) }
 
     val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
     DisposableEffect(owner, web) {
@@ -94,9 +113,10 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
 
     Box(modifier.fillMaxWidth().height(300.dp)) {
         key(web) { AndroidView(factory = { web }, modifier = Modifier.fillMaxSize()) }
+        if (problem.isNotEmpty()) Text(problem.take(600), Modifier.padding(Space.s), color = Pal.Warn, fontSize = Type.micro)
         Box(Modifier.fillMaxSize().pointerInput(web) {
             // the page works in CSS px
-            detectHorizontalDragGestures { _, dx -> web.evaluateJavascript("gul.spin(${dx / density})", null) }
+            detectHorizontalDragGestures { _, dx -> web.evaluateJavascript("window.gul && gul.spin(${dx / density})", null) }
         })
     }
 }
