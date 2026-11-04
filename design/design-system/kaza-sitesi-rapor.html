@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaza sitesi · İnceleme</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* page chrome + layout glue only; screens use styles.css components */
+body{font-family:var(--font-body);color:var(--on-surface);background:var(--surface-container-lowest);padding:80px 24px 96px;display:flex;flex-direction:column;align-items:center}
+.wrap{width:100%;max-width:1180px}
+.kicker{font:600 11px var(--font-body);letter-spacing:.16em;text-transform:uppercase;color:var(--primary-ink)}
+h1{font:600 48px/1.05 var(--font-display);margin-top:6px}
+.lede{color:var(--on-surface-variant);font-size:15px;line-height:1.65;max-width:760px;margin-top:12px}
+h2{font:600 32px var(--font-display);margin:56px 0 6px}
+.h2sub{color:var(--on-surface-variant);font-size:14px;margin-bottom:20px;max-width:760px;line-height:1.6}
+.summary{display:flex;gap:0;margin-top:28px;border-top:1px solid var(--outline-variant);border-bottom:1px solid var(--outline-variant)}
+.summary .s{flex:1;padding:18px 8px;text-align:center}
+.summary .s+.s{border-left:1px solid var(--outline-variant)}
+.summary .v{font:600 40px/1 var(--font-display);font-feature-settings:var(--num)}
+.summary .k{font-size:12px;color:var(--on-surface-variant);margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font:500 11px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);text-align:left;padding:10px 12px;border-bottom:1px solid var(--outline)}
+td{padding:14px 12px;border-bottom:1px solid var(--outline-variant);vertical-align:top;line-height:1.5}
+td b{font-weight:600}
+td .muted{color:var(--on-surface-variant);font-size:13px}
+.tag{display:inline-block;padding:3px 10px;border-radius:var(--r-full);font:600 12px var(--font-body);white-space:nowrap}
+.tag.al{background:var(--primary);color:var(--on-primary)}
+.tag.uyarla{background:var(--primary-container);color:var(--on-primary-container)}
+.tag.var{background:var(--surface-container-high);color:var(--on-surface-variant)}
+.tag.yok{border:1px solid var(--outline);color:var(--subtle)}
+.pri{font:600 20px var(--font-display);color:var(--primary-ink);font-feature-settings:var(--num)}
+.ex{display:grid;grid-template-columns:360px 1fr;gap:40px;align-items:start;margin-top:8px}
+.ex+.ex{margin-top:56px}
+.ex .txt h3{font:600 26px var(--font-display);margin-bottom:8px}
+.ex .txt p{color:var(--on-surface-variant);font-size:14px;line-height:1.65;margin-bottom:10px}
+.ex .txt ul{color:var(--on-surface-variant);font-size:14px;line-height:1.65;margin:0 0 10px 18px}
+.ex .txt .where{font:500 12px var(--font-mono);color:var(--primary-ink)}
+.device{position:relative;width:360px;height:720px;background:var(--background);border:1px solid var(--outline);overflow:hidden}
+.scroll{position:absolute;inset:0;overflow:auto;padding-bottom:96px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.device .dock{position:absolute;left:var(--layout-gutter);right:var(--layout-gutter);bottom:var(--sp-16)}
+.statusbar{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:600 12px var(--font-body);font-feature-settings:var(--num)}
+.ttl{padding:var(--sp-12) var(--layout-gutter) 0}
+.pad{padding:0 var(--layout-gutter)}
+.hero{padding:var(--sp-24) var(--layout-gutter) 0}
+.big{font:600 44px/1.05 var(--font-display);font-feature-settings:var(--num)}
+.big small{font:500 15px var(--font-body);color:var(--on-surface-variant);margin-left:4px}
+.sub{font:400 13px var(--font-body);color:var(--on-surface-variant);margin-top:4px}
+.sec-label{font:500 11px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin:var(--sp-24) 0 var(--sp-8)}
+.stat{flex:1;text-align:center}
+.stat .v{font:600 24px/1.1 var(--font-display);font-feature-settings:var(--num)}
+.stat .k{font:400 11px var(--font-body);color:var(--on-surface-variant);margin-top:2px}
+.vsep{width:1px;align-self:stretch;background:var(--outline-variant)}
+.arabic{font:400 22px/1.7 'Amiri','Scheherazade New',serif;direction:rtl;text-align:right;color:var(--on-surface)}
+.note{max-width:1180px;margin-top:56px;font-size:13px;color:var(--on-surface-variant);line-height:1.7;border-top:1px solid var(--outline-variant);padding-top:18px}
+.note b{color:var(--on-surface)}
+.backlink{position:fixed;top:18px;left:18px;z-index:50;display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font-body);text-decoration:none;color:var(--primary-ink);background:var(--surface-container);border:1px solid var(--outline);border-radius:999px;padding:8px 14px}
+@media (max-width:820px){.ex{grid-template-columns:1fr}.summary{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<!-- icon sprite copied from icons.html -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- solid dock glyphs: taken from res/drawable/ic_nav_*.xml; cut-outs are even-odd holes so they work on any fill -->
+  <symbol id="i-namaz" viewBox="0 0 24 24"><path d="M4.6 12.4h1.6v8.2H4.6zM17.8 12.4h1.6v8.2h-1.6z"/><path fill-rule="evenodd" d="M6.6 12.6a5.4 5.4 0 0 1 10.8 0v8H6.6zM9.4 20.6v-4.4a2.6 2.6 0 0 1 5.2 0v4.4z"/><path d="M12 1.2a1.5 1.5 0 1 0 .9 2.7 1.9 1.9 0 0 1-1.4 2.6 2.2 2.2 0 0 0 2.4-2.9A2.2 2.2 0 0 0 12 1.2z"/></symbol>
+  <symbol id="i-zikir" viewBox="0 0 24 24"><circle cx="8.50" cy="15.26" r="1.55"/><circle cx="5.94" cy="12.70" r="1.55"/><circle cx="5.00" cy="9.20" r="1.55"/><circle cx="5.94" cy="5.70" r="1.55"/><circle cx="8.50" cy="3.14" r="1.55"/><circle cx="12.00" cy="2.20" r="1.55"/><circle cx="15.50" cy="3.14" r="1.55"/><circle cx="18.06" cy="5.70" r="1.55"/><circle cx="19.00" cy="9.20" r="1.55"/><circle cx="18.06" cy="12.70" r="1.55"/><circle cx="15.50" cy="15.26" r="1.55"/><rect x="10.9" y="15.3" width="2.2" height="4.4" rx="1.1"/><path d="M12 19.4l2.3 3.6H9.7z"/></symbol>
+  <symbol id="i-okuma" viewBox="0 0 24 24"><path d="M2.4 5.6c3-1.5 6.3-1.5 8.8.2v13.4c-2.5-1.7-5.8-1.7-8.8-.2zM21.6 5.6c-3-1.5-6.3-1.5-8.8.2v13.4c2.5-1.7 5.8-1.7 8.8-.2z"/></symbol>
+  <symbol id="i-muhasebe" viewBox="0 0 24 24"><path d="M3.4 13.2h4.2v7.6H3.4zM9.9 8.4h4.2v12.4H9.9zM16.4 3.6h4.2v17.2h-4.2z"/></symbol>
+  <symbol id="i-kible" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1.6a10.4 10.4 0 1 1 0 20.8 10.4 10.4 0 0 1 0-20.8zM12 3.9a8.1 8.1 0 1 0 0 16.2 8.1 8.1 0 0 0 0-16.2z"/><path fill-rule="evenodd" d="M12 5.6l4.6 11.2-4.6-2.6-4.6 2.6zM12 10.2l2.1 5.1-2.1-1.2-2.1 1.2z"/></symbol>
+  <!-- line glyphs: Lucide/Material-outlined style, stroke = --icon-stroke -->
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6"/><path d="M18.47 14.68L20.68 15.6M14.68 18.47l.92 2.21M9.32 18.47l-.92 2.21M5.53 14.68l-2.21.92M5.53 9.32L3.32 8.4M9.32 5.53L8.4 3.32M14.68 5.53l.92-2.21M18.47 9.32l2.21-.92"/></symbol>
+  <symbol id="i-place" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-snooze" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M22 6l-3-3"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.6L19.5 10.5 13.9 12.4 12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.4 1.4 1.3 2.8 2.5 2.8z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="i-more-v" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="i-vibrate" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9v6M21 9v6"/></symbol>
+</svg>
+<a class="backlink" href="index.html"><svg class="ico ico--sm"><use href="#i-back"/></svg> Stil rehberine dön</a>
+<div class="wrap">
+  <div class="kicker">İnceleme · 4 Kasım 2026</div>
+  <h1>kaza.erkanicil.me'den Namazım'a ne alınır?</h1>
+  <p class="lede">Site, telefona kurulabilen bir kaza takip çizelgesi: altı vakit (vitr dahil) için "Kıldım" düğmeleri, tesbih biçiminde tur halkaları, bir kaza borcu hesaplayıcısı, kaza yoğunluk takvimi, bitiş tarihine göre okuma planı, günün ayeti ve hadisi, bir de dosyayla yedekleme. Namazım'ın kazası bundan farklı çalışıyor: kılınmayan vakit kazaya <b>kendiliğinden</b> düşüyor. Bu yüzden asıl eksiğimiz geçmişten kalan borcu girmek, kılarken motive olmak ve verinin kaybolmaması. Aşağıda her özellik için kararım, en önemli altısı için de Seher dilinde örnek ekran var. Kayıt yazmamak için sitede hiçbir şeyi kaydetmedim; yalnızca gezindim.</p>
+
+  <div class="summary">
+    <div class="s"><div class="v">11</div><div class="k">özellik incelendi</div></div>
+    <div class="s"><div class="v">4</div><div class="k">doğrudan alınmalı</div></div>
+    <div class="s"><div class="v">3</div><div class="k">uyarlanarak alınmalı</div></div>
+    <div class="s"><div class="v">4</div><div class="k">bizde zaten var / gerek yok</div></div>
+  </div>
+
+  <h2>Özellik özellik</h2>
+  <p class="h2sub">Öncelik 1 en önce. "Al": aynı fikir, bizim tasarımımızla. "Uyarla": fikir iyi ama bizim akışımıza göre değişmeli.</p>
+  <table>
+    <tr><th>Özellik</th><th>Sitede nasıl</th><th>Namazım'da bugün</th><th>Karar</th><th>Öncelik</th></tr>
+    <tr><td><b>Kaza borcu hesaplayıcı</b></td><td class="muted">Borcun başladığı yaş, düzenli kılmaya başlanan yaş, ayda düşülecek özel hal günleri ve önceden kılınan kaza (gün/ay/yıl). Sonuç tahmini borç olarak çizelgeye eklenir.</td><td class="muted">Yok. Yalnızca vakit vakit elle "+" var; yıllık borcu girmek imkânsız.</td><td><span class="tag al">Al</span></td><td class="pri">1</td></tr>
+    <tr><td><b>Yedekleme ve hatırlatma</b></td><td class="muted">Dosyaya yedek al / dosyadan yükle, dosya çalışmazsa metin olarak kopyala. Ara ara "Yedek al · Sonra" bandı çıkar.</td><td class="muted">Yok. Her şey tek bir SharedPreferences dosyasında; telefon değişince kaza, okuma, zikir kayıtları gider.</td><td><span class="tag al">Al</span></td><td class="pri">1</td></tr>
+    <tr><td><b>Gün gün eda</b></td><td class="muted">"Eda edildi · Sıradaki gün": altı vakit tamamlanınca bir günlük kaza ödenmiş sayılır.</td><td class="muted">Yok. "412 vakit" soyut kalıyor.</td><td><span class="tag al">Al</span></td><td class="pri">2</td></tr>
+    <tr><td><b>Kaza özet bandı</b></td><td class="muted">Toplam · Bugün (dün) · 7 gün (seri) · Tur.</td><td class="muted">Kısmen: toplam ve "bu ay kılınan".</td><td><span class="tag al">Al</span></td><td class="pri">2</td></tr>
+    <tr><td><b>Okuma: bitiş tarihli plan</b></td><td class="muted">Ne okunacak, toplam sayfa, daha önce okunan, başlangıç ve bitiş tarihi. Günlük sayfa kendisi hesaplanır; birden çok okuma, "Bugünkünü tamamla", son 14 gün.</td><td class="muted">Sabit günlük sayfa hedefi + kitaplar. Tarih hedefi yok.</td><td><span class="tag uyarla">Uyarla</span></td><td class="pri">3</td></tr>
+    <tr><td><b>Kaza yoğunluk takvimi</b></td><td class="muted">Son 33 haftanın ısı haritası (az → çok).</td><td class="muted">Namaz için var (Gidişat › Yıl); kaza için yok.</td><td><span class="tag uyarla">Uyarla</span></td><td class="pri">3</td></tr>
+    <tr><td><b>Tur halkası</b></td><td class="muted">Her vakitte 10'luk (33/40/100 seçilebilir) tesbih halkası, "İlk tur sürüyor".</td><td class="muted">K2 sütunları kalanı gösteriyor; küçük hedef yok.</td><td><span class="tag uyarla">Uyarla</span></td><td class="pri">4</td></tr>
+    <tr><td><b>Günün ayeti ve hadisi</b></td><td class="muted">Arapça ayet + Diyanet meali, kaynaklı sahih hadis, "Okudum".</td><td class="muted">Yok.</td><td><span class="tag uyarla">Uyarla</span></td><td class="pri">4</td></tr>
+    <tr><td><b>Kıldım + geri al</b></td><td class="muted">Her vakitte büyük "Kıldım" ve ayrı geri al düğmesi.</td><td class="muted">Var: tik + "Geri al" snackbar'ı.</td><td><span class="tag var">Bizde var</span></td><td class="muted">–</td></tr>
+    <tr><td><b>Vakit bandı, hicri tarih</b></td><td class="muted">Konuma göre Diyanet vakitleri, hicri tarih.</td><td class="muted">Var, üstelik hatırlatma ve otomatik kaza ile.</td><td><span class="tag var">Bizde var</span></td><td class="muted">–</td></tr>
+    <tr><td><b>Telefona uygulama olarak kur</b></td><td class="muted">Web uygulaması (PWA) kurulumu.</td><td class="muted">Biz zaten yerel Android uygulamasıyız.</td><td><span class="tag yok">Gerek yok</span></td><td class="muted">–</td></tr>
+  </table>
+
+  <h2>Örnek ekranlar</h2>
+  <p class="h2sub">Hepsi Muhasebe'deki "Sahne" dilinde: ana görsel kartsız, büyük Cormorant sayılar, tek altın vurgu. Sayılar örnek.</p>
+
+  <div class="ex">
+    <div class="device"><div class="scroll" id="e1"></div></div>
+    <div class="txt"><div class="where">Kaza › Borcunu hesapla (alt sayfa)</div><h3>1 · Kaza borcu hesaplayıcı</h3>
+      <p>İlk açılışta ve Kaza boşken "Geçmişten kalan borcun var mı?" bağlantısı bu alt sayfayı açar. İki yaş girildiği anda sonuç canlı görünür; "Ekle" vakit vakit sayıları K2 sütunlarına yazar.</p>
+      <ul><li>Hesap: (düzenli başlama yaşı − borç başlangıcı) × 365 gün, eksi aylık özel hal günleri, eksi önceden kılınan; her gün 6 vakit (vitir dahil).</li><li>Sonuç "tahmin" diye yazılır; sonradan vakit vakit düzeltilebilir.</li><li>Bu bilgi telefondan çıkmaz.</li></ul></div>
+  </div>
+
+  <div class="ex">
+    <div class="device"><div class="scroll" id="e2"></div></div>
+    <div class="txt"><div class="where">Muhasebe › Kaza (K2'nin üstü)</div><h3>2 · Gün gün eda ve özet bandı</h3>
+      <p>"412 vakit" yerine "69 günlük kaza" demek daha somut. Altı vakitlik bir gün tamamlandıkça bir boncuk dolar. Üstteki bant günlük ritmi gösterir: bugün, son 7 gün, kaza serisi.</p>
+      <ul><li>Sıradaki gün: altı nokta, kılınan vakit altın.</li><li>Gün tamamlanınca uzun titreşim (zikirdeki gibi).</li></ul></div>
+  </div>
+
+  <div class="ex">
+    <div class="device"><div class="scroll" id="e3"></div></div>
+    <div class="txt"><div class="where">Muhasebe › Kaza (K2'nin altı)</div><h3>3 · Kaza takvimi</h3>
+      <p>Gidişat › Yıl'daki ısı haritasının aynısı, ama kılınan kaza sayısıyla. Planı tutan günler (günde 2) tam altın, az kılınan günler soluk. Haritanın altında tek cümle: "Son 30 günde planı 18 gün tuttun."</p></div>
+  </div>
+
+  <div class="ex">
+    <div class="device"><div class="scroll" id="e4"></div></div>
+    <div class="txt"><div class="where">Okuma › Yeni okuma</div><h3>4 · Bitiş tarihli okuma</h3>
+      <p>Sabit "günde 10 sayfa" yerine "Ramazan'a kadar bir hatim" gibi bir hedef. Toplam sayfa ve bitiş tarihinden günlük sayfa hesaplanır; geride kalınca ya da ilerleyince günlük sayı kendini düzeltir. Gülün Sayfa yaprağı bu günlük sayıya bağlanır.</p>
+      <ul><li>Hazır seçimler: Hatim 604, 1 cüz 20 sayfa.</li><li>Birden çok okuma yan yana; bugün okunacak toplam üstte.</li></ul></div>
+  </div>
+
+  <div class="ex">
+    <div class="device"><div class="scroll" id="e5"></div></div>
+    <div class="txt"><div class="where">Namaz › zaman çizgisinin altı</div><h3>5 · Günün ayeti</h3>
+      <p>Ana sayfada, vakitlerin altında sakin bir kart: Arapça ayet, meali, kaynağı. "Okudum" günün işaretidir; istersek gülün Sayfa yaprağına küçük bir katkı yapar.</p>
+      <ul><li>Dikkat: meal ve hadis metinleri telif ve doğruluk ister. Diyanet mealini kullanmak için izin ya da açık lisanslı bir kaynak lazım; hadisler kaynağıyla birlikte, elle seçilmiş küçük bir listeden gelmeli.</li></ul></div>
+  </div>
+
+  <div class="ex">
+    <div class="device"><div class="scroll" id="e6"></div></div>
+    <div class="txt"><div class="where">Ayarlar › Yedekleme + ana sayfa bandı</div><h3>6 · Yedekleme</h3>
+      <p>Tek dosya (JSON): kaza, kılınan namazlar, okuma, zikir, ayarlar. "Yedek al" Android'in paylaş ekranını açar (Drive, WhatsApp'ta kendine, Dosyalar). "Yedekten yükle" dosyayı seçtirir, önce ne geleceğini gösterir.</p>
+      <ul><li>Son yedek 30 günü geçince ana sayfada bir kez ince bir bant: "Yedek al · Sonra".</li><li>İstersek Android'in otomatik yedeği (Auto Backup) de açılabilir; ek kod istemez.</li></ul></div>
+  </div>
+
+  <div class="note">
+    <b>Önerim:</b> önce 1 (borç hesaplayıcı) ve 6 (yedekleme). Biri en büyük eksiği kapatıyor, öteki veri kaybını önlüyor. Ardından 2 ve 3, Kaza sekmesini motive edici hale getiriyor. 4, 5 ve tur halkası sonra gelebilir.<br>
+    <b>Almadıklarımız:</b> sitenin görsel kimliği (açık mavi düğmeler, desenli arka plan) alınmaz; yalnızca fikirler alınıp Seher diline çevrilir.
+  </div>
+</div>
+
+<script>
+const head=sel=>`<div class="statusbar"><span>22:10</span><span>%71</span></div><div class="ttl t-display-m">Muhasebe</div>
+ <div class="tabs primary" style="margin-top:var(--sp-8)">${['Özet','Gidişat','Kaza'].map((t,i)=>`<div class="tb${i===sel?' on':''}">${t}</div>`).join('')}</div>`;
+const dock=on=>`<div class="dock">${['namaz','zikir','okuma','muhasebe'].map((n,i)=>`<div class="ni${i===on?' on':''}"><svg class="ico ico--solid"><use href="#i-${n}"/></svg><span class="nm">${['Namaz','Zikir','Okuma','Muhasebe'][i]}</span></div>`).join('')}</div>`;
+const goldA=a=>`rgb(232 190 116 / ${a})`;
+
+/* 1 · borç hesaplayıcı: K2 behind a scrim, the sheet on top */
+e1.innerHTML=head(2)+`<div class="hero" style="text-align:center;opacity:.35"><div class="big">0<small>vakit kaldı</small></div></div>
+<div style="position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-end">
+ <div class="sheet" style="width:100%"><div class="grab"></div>
+  <div class="t-title-l">Geçmişten kalan kaza</div><div class="t-body-s ink-muted" style="margin:4px 0 16px">Ergenlikten düzenli kılmaya başladığın yaşa kadar her gün 6 vakit sayılır.</div>
+  <div class="row" style="gap:8px"><div class="field outlined up" style="flex:1;width:auto"><div class="box"><span class="val">13</span></div><span class="lbl" style="background:var(--surface-container-low)">Borcun başladığı yaş</span></div>
+   <div class="field outlined up focus" style="flex:1;width:auto"><div class="box"><span class="val">22<span class="caret"></span></span></div><span class="lbl" style="background:var(--surface-container-low)">Düzenli kılmaya</span></div></div>
+  <div class="row" style="gap:8px;margin-top:14px"><div class="field outlined up" style="flex:1;width:auto"><div class="box"><span class="val">0</span></div><span class="lbl" style="background:var(--surface-container-low)">Ayda özel hal günü</span></div>
+   <div class="field outlined up" style="flex:1;width:auto"><div class="box"><span class="val">1 yıl</span></div><span class="lbl" style="background:var(--surface-container-low)">Önceden kılınan</span></div></div>
+  <div style="text-align:center;margin:20px 0 4px"><div class="big" style="font-size:52px">17 520<small>vakit</small></div>
+   <div class="sub">≈ 8 yıl · her vakitten 2 920 · günde 2 ile ~24 yıl</div></div>
+  <div class="t-body-s ink-subtle" style="text-align:center;margin-bottom:14px">tahmindir; sonra vakit vakit düzeltebilirsin</div>
+  <div class="btn btn-filled" style="width:100%"><svg class="ico"><use href="#i-plus"/></svg>Kaza listeme ekle</div></div></div>`;
+
+/* 2 · gün gün eda + özet bandı */
+e2.innerHTML=head(2)+`<div class="row" style="margin:var(--sp-24) var(--layout-gutter) 0;gap:0;align-items:stretch">
+ <div class="stat"><div class="v">3</div><div class="k">bugün · dün 2</div></div><div class="vsep"></div>
+ <div class="stat"><div class="v">14</div><div class="k">son 7 gün</div></div><div class="vsep"></div>
+ <div class="stat"><div class="v">6</div><div class="k">gün seri</div></div></div>
+<div class="hero" style="text-align:center"><div class="big">69<small>günlük kaza</small></div><div class="sub">412 vakit · 3 gün eda edildi</div></div>
+<div class="pad" style="margin-top:var(--sp-24)"><div class="sec-label" style="text-align:center">Sıradaki gün · 4. gün</div>
+ <div class="row" style="justify-content:center;gap:14px">${['Sabah','Öğle','İkindi','Akşam','Yatsı','Vitir'].map((n,i)=>`<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:30px;height:30px;border-radius:50%;${i<2?'background:radial-gradient(circle at 35% 30%,#FFF1CF,#E8BE74 45%,#8A6420)':'background:radial-gradient(circle at 35% 30%,#3A4A68,#1C2943)'}"></span><span class="t-body-s ink-muted" style="font-size:11px">${n}</span></div>`).join('')}</div>
+ <div class="lin" style="margin-top:22px"><i style="width:${3/69*100}%"></i></div>
+ <div class="row" style="justify-content:space-between;margin-top:6px"><span class="t-body-s ink-subtle">3 / 69 gün</span><span class="t-body-s ink-gold">bitiş ~Haziran 2027</span></div></div>
+<div class="t-body-s ink-muted pad" style="margin-top:22px;text-align:center">↓ K2 sütunları burada devam eder</div>`+dock(3);
+
+/* 3 · kaza takvimi */
+let seed=11;const r=()=>((seed=(seed*16807)%2147483647)/2147483647);
+let heat='<svg viewBox="0 0 312 104" width="312" height="104">';const MON=['Haz','Tem','Ağu','Eyl','Eki','Kas'];
+for(let w=0;w<22;w++)for(let d=0;d<7;d++){const v=w<4?-1:r()<.15?0:r()<.6?2:1;heat+=`<rect x="${w*14}" y="${14+d*12.6}" width="11" height="10.5" rx="2" fill="${v<0?'rgb(28 41 67 / .35)':v===0?'#55657F':v===2?'var(--primary)':goldA(.4)}"/>`;}
+MON.forEach((m,i)=>heat+=`<text x="${i*56}" y="9" font-size="9" fill="var(--on-surface-variant)">${m}</text>`);heat+='</svg>';
+e3.innerHTML=head(2)+`<div class="hero"><div class="big">18<small>/ 30 gün plan tuttu</small></div><div class="sub">plan günde 2 · son 30 gün</div></div>
+<div class="pad" style="margin-top:var(--sp-24)"><div class="sec-label">Kaza takvimi</div>${heat}
+<div class="row" style="gap:6px;margin-top:8px"><span class="t-body-s ink-muted" style="font-size:11px">hiç</span><span style="width:10px;height:10px;border-radius:2px;background:#55657F"></span><span style="width:10px;height:10px;border-radius:2px;background:${goldA(.4)}"></span><span style="width:10px;height:10px;border-radius:2px;background:var(--primary)"></span><span class="t-body-s ink-muted" style="font-size:11px">plan tuttu</span></div>
+<div class="t-body-m" style="margin-top:18px">Son 30 günde planı <b class="ink-gold">18 gün</b> tuttun; en uzun seri 6 gün.</div></div>`+dock(3);
+
+/* 4 · bitiş tarihli okuma */
+e4.innerHTML=`<div class="statusbar"><span>22:10</span><span>%71</span></div><div class="ttl t-display-m">Okuma</div>
+<div class="hero"><div class="big">23<small>sayfa bugün</small></div><div class="sub">iki okumanın toplamı · 9'u okundu</div></div>
+<div class="pad" style="margin-top:var(--sp-24)">
+ <div class="card filled"><div class="row" style="justify-content:space-between"><span class="t-title-m">Ramazan hatmi</span><span class="t-body-s ink-gold">14 / gün</span></div>
+  <div class="t-body-s ink-muted" style="margin-top:2px">Kur'an · 604 sayfa · 18 Şubat'a kadar</div>
+  <div class="lin" style="margin-top:12px"><i style="width:35%"></i></div>
+  <div class="row" style="justify-content:space-between;margin-top:6px"><span class="t-body-s ink-subtle">212 / 604</span><span class="t-body-s ink-subtle">28 gün kaldı</span></div>
+  <div class="row" style="margin-top:12px;gap:8px"><span class="btn btn-filled" style="min-height:40px;flex:1"><svg class="ico"><use href="#i-check"/></svg>Bugünkünü tamamla</span><span class="icon-btn outlined" style="width:40px;height:40px"><svg class="ico ico--sm"><use href="#i-minus"/></svg></span><span class="icon-btn outlined" style="width:40px;height:40px"><svg class="ico ico--sm"><use href="#i-plus"/></svg></span></div></div>
+ <div class="card filled" style="margin-top:var(--gap-section)"><div class="row" style="justify-content:space-between"><span class="t-title-m">Riyâzü's-Sâlihîn</span><span class="t-body-s ink-gold">9 / gün</span></div>
+  <div class="t-body-s ink-muted" style="margin-top:2px">1 cilt · 420 sayfa · 31 Aralık'a kadar</div>
+  <div class="lin" style="margin-top:12px"><i style="width:62%"></i></div><div class="row" style="justify-content:space-between;margin-top:6px"><span class="t-body-s ink-subtle">260 / 420</span><span class="t-body-s ink-good" style="color:var(--success)">planın 2 gün önündesin</span></div></div>
+ <div class="btn btn-outlined" style="width:100%;margin-top:var(--gap-section)"><svg class="ico"><use href="#i-plus"/></svg>Yeni okuma · bitiş tarihiyle</div></div>`+dock(2);
+
+/* 5 · günün ayeti (short sample: Bakara 2:43) */
+e5.innerHTML=`<div class="statusbar"><span>22:10</span><span>%71</span></div>
+<div class="pad" style="margin-top:var(--sp-16)">
+ <div class="tl" style="opacity:.55"><div class="node done"><span class="dot"><svg class="ico"><use href="#i-check"/></svg></span><span class="nm">Akşam</span><span class="tm">17:24</span></div><div class="node now"><span class="dot"></span><span class="nm">Yatsı<small>şimdi</small></span><span class="tm">18:45</span></div></div>
+ <div class="sec-label" style="margin-top:var(--sp-32)">Günün ayeti</div>
+ <div class="arabic">وَاَق۪يمُوا الصَّلٰوةَ وَاٰتُوا الزَّكٰوةَ</div>
+ <div class="t-body-l" style="margin-top:10px;font-family:var(--font-display);font-size:22px;line-height:1.35">"Namazı dosdoğru kılın, zekâtı verin…"</div>
+ <div class="t-body-s ink-subtle" style="margin-top:8px">Bakara 43 · örnek, meal kaynağı netleşecek</div>
+ <div class="row" style="margin-top:16px;gap:8px"><span class="btn btn-tonal" style="min-height:40px"><svg class="ico"><use href="#i-check"/></svg>Okudum</span><span class="btn btn-text" style="min-height:40px">Hadisi göster</span></div></div>`+dock(0);
+
+/* 6 · yedekleme */
+e6.innerHTML=`<div class="statusbar"><span>22:10</span><span>%71</span></div>
+<div class="appbar"><span class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></span><span class="ttl">Ayarlar</span></div>
+<div class="hero" style="padding-top:var(--sp-8)"><div class="big" style="font-size:34px">Yedekleme</div><div class="sub">Son yedek: 12 gün önce · Drive</div></div>
+<div class="pad" style="margin-top:var(--sp-16)">
+ <div class="li two" style="padding:0"><div class="lead"><svg class="ico ico--sm"><use href="#i-share"/></svg></div><div class="txt"><div class="hl">Yedek al</div><div class="sup">Tek dosya: kaza, namaz, okuma, zikir, ayarlar</div></div><svg class="ico ico--sm ink-subtle"><use href="#i-chevron-right"/></svg></div>
+ <hr class="divider inset">
+ <div class="li two" style="padding:0"><div class="lead"><svg class="ico ico--sm"><use href="#i-refresh"/></svg></div><div class="txt"><div class="hl">Yedekten yükle</div><div class="sup">Önce ne geleceğini gösterir</div></div><svg class="ico ico--sm ink-subtle"><use href="#i-chevron-right"/></svg></div>
+ <hr class="divider inset">
+ <div class="li two" style="padding:0"><div class="lead"><svg class="ico ico--sm"><use href="#i-bell"/></svg></div><div class="txt"><div class="hl">Ayda bir hatırlat</div><div class="sup">Ana sayfada bir kez ince bant</div></div><span class="switch on"></span></div>
+ <div class="sec-label" style="margin-top:var(--sp-32)">Ana sayfada, 30 gün yedeksiz kalınca</div>
+ <div class="card outlined" style="display:flex;align-items:center;gap:12px;padding:12px 14px"><svg class="ico ico--sm ink-gold"><use href="#i-info"/></svg><span class="t-body-s" style="flex:1">Kayıtların yalnızca bu telefonda. Bir yedek al.</span><span class="btn btn-text" style="min-height:36px;padding:0 8px">Sonra</span><span class="btn btn-tonal" style="min-height:36px;padding:0 14px">Yedek al</span></div></div>`;
+</script>
+</body>
+</html>
