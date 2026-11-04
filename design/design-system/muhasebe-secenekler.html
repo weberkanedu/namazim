@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Muhasebe · Seçenekler</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* page chrome + layout glue only; screens use styles.css components */
+body{font-family:var(--font-body);color:var(--on-surface);background:var(--surface-container-lowest);padding:40px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.head{max-width:760px;text-align:center;margin-bottom:28px}
+.head h1{font:600 36px var(--font-display);color:var(--primary-ink)}
+.head p{color:var(--on-surface-variant);font-size:14px;margin-top:8px;line-height:1.6}
+.three{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px;width:360px}
+.col .label{font:600 22px var(--font-display);color:var(--primary-ink)}
+.col .why{font-size:13px;color:var(--on-surface-variant);line-height:1.55;text-align:center;min-height:60px}
+.device{position:relative;width:360px;height:780px;background:var(--background);border:1px solid var(--outline);overflow:hidden}
+.scroll{position:absolute;inset:0;overflow:auto;padding-bottom:96px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.device .dock{position:absolute;left:var(--layout-gutter);right:var(--layout-gutter);bottom:var(--sp-16)}
+.statusbar{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:600 12px var(--font-body);font-feature-settings:var(--num)}
+.ttl{padding:var(--sp-12) var(--layout-gutter) 0}
+iframe.rose3d{border:0;display:block;background:transparent}
+.stat{flex:1;text-align:center}
+.stat .v{font:600 28px/1.1 var(--font-display);font-feature-settings:var(--num)}
+.stat .v small{font:500 12px var(--font-body);color:var(--subtle)}
+.vsep{width:1px;align-self:stretch;background:var(--outline-variant)}
+.pet{display:flex;align-items:center;gap:var(--sp-12);height:36px}
+.pet .n{width:76px;font:500 13px var(--font-body)}
+.pet .lin{flex:1}
+.pet .c{width:34px;text-align:right;font:500 12px var(--font-body);color:var(--on-surface-variant);font-feature-settings:var(--num)}
+.orbit{position:relative;width:312px;height:312px;margin:var(--sp-8) auto 0}
+.orbit svg{position:absolute;inset:0}
+.orbit iframe{position:absolute;left:36px;top:36px}
+.chips{display:flex;flex-wrap:wrap;gap:var(--sp-8);justify-content:center}
+.legend{max-width:820px;margin-top:24px;font-size:13px;color:var(--on-surface-variant);line-height:1.7}
+.legend b{color:var(--on-surface)}
+.backlink{position:fixed;top:18px;left:18px;z-index:50;display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font-body);text-decoration:none;color:var(--primary-ink);background:var(--surface-container);border:1px solid var(--outline);border-radius:999px;padding:8px 14px}
+</style>
+</head>
+<body>
+<!-- icon sprite copied from icons.html -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- solid dock glyphs: taken from res/drawable/ic_nav_*.xml; cut-outs are even-odd holes so they work on any fill -->
+  <symbol id="i-namaz" viewBox="0 0 24 24"><path d="M4.6 12.4h1.6v8.2H4.6zM17.8 12.4h1.6v8.2h-1.6z"/><path fill-rule="evenodd" d="M6.6 12.6a5.4 5.4 0 0 1 10.8 0v8H6.6zM9.4 20.6v-4.4a2.6 2.6 0 0 1 5.2 0v4.4z"/><path d="M12 1.2a1.5 1.5 0 1 0 .9 2.7 1.9 1.9 0 0 1-1.4 2.6 2.2 2.2 0 0 0 2.4-2.9A2.2 2.2 0 0 0 12 1.2z"/></symbol>
+  <symbol id="i-zikir" viewBox="0 0 24 24"><circle cx="8.50" cy="15.26" r="1.55"/><circle cx="5.94" cy="12.70" r="1.55"/><circle cx="5.00" cy="9.20" r="1.55"/><circle cx="5.94" cy="5.70" r="1.55"/><circle cx="8.50" cy="3.14" r="1.55"/><circle cx="12.00" cy="2.20" r="1.55"/><circle cx="15.50" cy="3.14" r="1.55"/><circle cx="18.06" cy="5.70" r="1.55"/><circle cx="19.00" cy="9.20" r="1.55"/><circle cx="18.06" cy="12.70" r="1.55"/><circle cx="15.50" cy="15.26" r="1.55"/><rect x="10.9" y="15.3" width="2.2" height="4.4" rx="1.1"/><path d="M12 19.4l2.3 3.6H9.7z"/></symbol>
+  <symbol id="i-okuma" viewBox="0 0 24 24"><path d="M2.4 5.6c3-1.5 6.3-1.5 8.8.2v13.4c-2.5-1.7-5.8-1.7-8.8-.2zM21.6 5.6c-3-1.5-6.3-1.5-8.8.2v13.4c2.5-1.7 5.8-1.7 8.8-.2z"/></symbol>
+  <symbol id="i-muhasebe" viewBox="0 0 24 24"><path d="M3.4 13.2h4.2v7.6H3.4zM9.9 8.4h4.2v12.4H9.9zM16.4 3.6h4.2v17.2h-4.2z"/></symbol>
+  <symbol id="i-kible" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1.6a10.4 10.4 0 1 1 0 20.8 10.4 10.4 0 0 1 0-20.8zM12 3.9a8.1 8.1 0 1 0 0 16.2 8.1 8.1 0 0 0 0-16.2z"/><path fill-rule="evenodd" d="M12 5.6l4.6 11.2-4.6-2.6-4.6 2.6zM12 10.2l2.1 5.1-2.1-1.2-2.1 1.2z"/></symbol>
+  <!-- line glyphs: Lucide/Material-outlined style, stroke = --icon-stroke -->
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6"/><path d="M18.47 14.68L20.68 15.6M14.68 18.47l.92 2.21M9.32 18.47l-.92 2.21M5.53 14.68l-2.21.92M5.53 9.32L3.32 8.4M9.32 5.53L8.4 3.32M14.68 5.53l.92-2.21M18.47 9.32l2.21-.92"/></symbol>
+  <symbol id="i-place" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-snooze" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M22 6l-3-3"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.6L19.5 10.5 13.9 12.4 12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.4 1.4 1.3 2.8 2.5 2.8z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="i-more-v" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="i-vibrate" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9v6M21 9v6"/></symbol>
+</svg>
+<a class="backlink" href="index.html"><svg class="ico ico--sm"><use href="#i-back"/></svg> Stil rehberine dön</a>
+<div class="head">
+  <h1>Muhasebe › Özet · üç yön</h1>
+  <p>Üçünde de gülün kutusu yok: gül sayfanın laciverdi üstünde duruyor. A'da gölgesi zemine düşüyor, B ve C'de gölge de yok (gül havada). Gül gerçek (uygulamadaki <code>gul.html</code>'in tasarım kopyası); döner, parmakla çevrilir. Örnek gün: Namaz 3/5, Vaktinde 2/5, Sayfa tamam, Kaza 1/2, Zikir 3/4.</p>
+</div>
+
+<div class="three">
+  <!-- ============ A · SAHNE ============ -->
+  <div class="col">
+    <div class="label">A · Sahne</div>
+    <div class="why">Gül ekranın tam genişliğinde, kahraman. Etiketler gülün üstünde kalır. Altında üç sayı yan yana, tek çizgide.</div>
+    <div class="device"><div class="scroll">
+      <div class="statusbar"><span>21:40</span><span>%78</span></div>
+      <div class="ttl t-display-m">Muhasebe</div>
+      <div class="tabs primary" style="margin-top:var(--sp-8)"><div class="tb on">Özet</div><div class="tb">Gidişat</div><div class="tb">Kaza</div></div>
+      <iframe class="rose3d" src="../gul/gul-embed.html" title="3B gül" style="width:360px;height:360px" scrolling="no"></iframe>
+      <div style="text-align:center;margin-top:-8px" class="t-label-m ink-muted">Bugün · 1 yaprak tam açık</div>
+      <div class="row" style="margin:var(--gap-section) var(--layout-gutter) 0;gap:0;align-items:stretch">
+        <div class="stat"><div class="v">21<small>/604</small></div><div class="lin" style="margin:8px 16px"><i style="width:3.5%"></i></div><div class="t-body-s ink-muted">Hatim</div></div>
+        <div class="vsep"></div>
+        <div class="stat"><div class="v">21<small>/30</small></div><div class="lin" style="margin:8px 16px"><i style="width:70%"></i></div><div class="t-body-s ink-muted">Son 30 gün</div></div>
+        <div class="vsep"></div>
+        <div class="stat"><div class="v">12</div><div class="lin" style="margin:8px 16px;background:none"></div><div class="t-body-s ink-muted">gün seri</div></div>
+      </div>
+      <div class="card filled" style="margin:var(--gap-section) var(--layout-gutter) 0" ><span class="t-body-m">Namazlarını çoğunlukla vaktin başında kılıyorsun.</span></div>
+    </div>
+    <div class="dock"><div class="ni"><svg class="ico ico--solid"><use href="#i-namaz"/></svg><span class="nm">Namaz</span></div><div class="ni"><svg class="ico ico--solid"><use href="#i-zikir"/></svg><span class="nm">Zikir</span></div><div class="ni"><svg class="ico ico--solid"><use href="#i-okuma"/></svg><span class="nm">Okuma</span></div><div class="ni on"><svg class="ico ico--solid"><use href="#i-muhasebe"/></svg><span class="nm">Muhasebe</span></div></div>
+    </div>
+  </div>
+
+  <!-- ============ B · SÜTUNLAR ============ -->
+  <div class="col">
+    <div class="label">B · Sütunlar</div>
+    <div class="why">Gül ortada, iki yanında iki altın sütun: Hatim ve Son 30 gün, bir mihrap gibi. Yaprak etiketleri gülden iner, altta sade bir listeye dönüşür.</div>
+    <div class="device"><div class="scroll">
+      <div class="statusbar"><span>21:40</span><span>%78</span></div>
+      <div class="ttl t-display-m">Muhasebe</div>
+      <div class="tabs primary" style="margin-top:var(--sp-8)"><div class="tb on">Özet</div><div class="tb">Gidişat</div><div class="tb">Kaza</div></div>
+      <div class="row" style="padding:var(--sp-16) var(--sp-16) 0;gap:0;align-items:stretch;height:340px">
+        <div class="vbar"><span class="v">21<small>/604</small></span><div class="rail-v"><i style="height:3.5%"></i></div><span class="k">Hatim</span></div>
+        <iframe class="rose3d" src="../gul/gul-embed.html?labels=0&shadow=0" title="3B gül" style="flex:1;min-width:0;width:0;height:324px" scrolling="no"></iframe>
+        <div class="vbar"><span class="v">21<small>/30</small></span><div class="rail-v"><i style="height:70%"></i></div><span class="k">Son 30<br>gün</span></div>
+      </div>
+      <div style="padding:var(--gap-section) var(--layout-gutter) 0">
+        <div class="t-label-m ink-muted" style="margin-bottom:var(--sp-4)">Bugünün yaprakları</div>
+        <div class="pet"><span class="n">Namaz</span><div class="lin"><i style="width:60%"></i></div><span class="c">3/5</span></div>
+        <div class="pet"><span class="n">Vaktinde</span><div class="lin"><i style="width:40%"></i></div><span class="c">2/5</span></div>
+        <div class="pet"><span class="n">Sayfa</span><div class="lin"><i style="width:100%"></i></div><span class="c ink-gold">✓</span></div>
+        <div class="pet"><span class="n">Kaza</span><div class="lin"><i style="width:50%"></i></div><span class="c">1/2</span></div>
+        <div class="pet"><span class="n">Zikir</span><div class="lin"><i style="width:75%"></i></div><span class="c">3/4</span></div>
+      </div>
+    </div>
+    <div class="dock"><div class="ni"><svg class="ico ico--solid"><use href="#i-namaz"/></svg><span class="nm">Namaz</span></div><div class="ni"><svg class="ico ico--solid"><use href="#i-zikir"/></svg><span class="nm">Zikir</span></div><div class="ni"><svg class="ico ico--solid"><use href="#i-okuma"/></svg><span class="nm">Okuma</span></div><div class="ni on"><svg class="ico ico--solid"><use href="#i-muhasebe"/></svg><span class="nm">Muhasebe</span></div></div>
+    </div>
+  </div>
+
+  <!-- ============ C · YÖRÜNGE ============ -->
+  <div class="col">
+    <div class="label">C · Yörünge</div>
+    <div class="why">Gül iki ince altın yayın ortasında: dış yay Hatim, iç yay Son 30 gün. Uzun vadeli çaba bugünün gülünü sarar. Yapraklar altta çip olarak.</div>
+    <div class="device"><div class="scroll">
+      <div class="statusbar"><span>21:40</span><span>%78</span></div>
+      <div class="ttl t-display-m">Muhasebe</div>
+      <div class="tabs primary" style="margin-top:var(--sp-8)"><div class="tb on">Özet</div><div class="tb">Gidişat</div><div class="tb">Kaza</div></div>
+      <div class="orbit">
+        <svg viewBox="0 0 312 312" id="arcs"></svg>
+        <iframe class="rose3d" src="../gul/gul-embed.html?labels=0&shadow=0" title="3B gül" style="width:240px;height:240px" scrolling="no"></iframe>
+      </div>
+      <div class="row" style="justify-content:center;gap:var(--sp-24);margin-top:var(--sp-8)">
+        <div style="text-align:center"><div class="t-headline-m">21<span class="t-body-s ink-subtle">/604</span></div><div class="t-label-m ink-muted">Hatim · dış</div></div>
+        <div style="text-align:center"><div class="t-headline-m">21<span class="t-body-s ink-subtle">/30</span></div><div class="t-label-m ink-muted">30 gün · iç</div></div>
+      </div>
+      <div class="chips" style="padding:var(--gap-section) var(--sp-16) 0">
+        <span class="chip">Namaz 3/5</span><span class="chip">Vaktinde 2/5</span><span class="chip filter on"><svg class="ico"><use href="#i-check"/></svg>Sayfa</span><span class="chip">Kaza 1/2</span><span class="chip">Zikir 3/4</span>
+      </div>
+    </div>
+    <div class="dock"><div class="ni"><svg class="ico ico--solid"><use href="#i-namaz"/></svg><span class="nm">Namaz</span></div><div class="ni"><svg class="ico ico--solid"><use href="#i-zikir"/></svg><span class="nm">Zikir</span></div><div class="ni"><svg class="ico ico--solid"><use href="#i-okuma"/></svg><span class="nm">Okuma</span></div><div class="ni on"><svg class="ico ico--solid"><use href="#i-muhasebe"/></svg><span class="nm">Muhasebe</span></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <b>Ortak olanlar:</b> büyük "Muhasebe" başlığı ve altın çizgili sekmeler aynen kalır. Gülün kutusu ve koyu zemini kalkar. Kart içindeki "vaktin başında kılıyorsun" cümlesi ve aşağıdaki kartlar (Hatim takibi vb.) üçünde de gülün altında devam eder.<br>
+  <b>Teknik not:</b> şeffaf gülde bloom (bütün hedefler bitince yanan parıltı) kapalı çiziliyor; seçtiğin yönde bunu ayrıca çözerim.
+</div>
+<script>
+// C: two gold arcs around the rose (outer Hatim, inner Son 30 gün), drawn from 12 o'clock clockwise
+function arc(r,f,w,op){const c=156,a=f*2*Math.PI,x=c+r*Math.sin(a),y=c-r*Math.cos(a),big=f>.5?1:0;
+ return `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="var(--surface-container-high)" stroke-width="${w}"/>`+
+        (f>0?`<path d="M${c} ${c-r} A${r} ${r} 0 ${big} 1 ${x} ${y}" fill="none" stroke="var(--primary)" stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round"/><circle cx="${x}" cy="${y}" r="${w*1.1}" fill="var(--primary)"/>`:'');}
+arcs.innerHTML=arc(150,21/604,3,1)+arc(138,21/30,3,.75);
+</script>
+</body>
+</html>

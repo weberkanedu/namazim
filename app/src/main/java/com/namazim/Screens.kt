@@ -690,6 +690,11 @@ private fun MuhasebeOzet() {
     val (dueAll, keptAll, _) = stats(totalDays.coerceAtMost(400))
     val rate30 = if (due30 == 0) 0f else kept30.toFloat() / due30
     val rateAll = if (dueAll == 0) 0f else keptAll.toFloat() / dueAll
+    // seri: full days in a row back from today (today counts while nothing in it has been missed)
+    var streak = 0
+    for (i in 0 until totalDays.coerceAtMost(400)) {
+        if (daySlots(today.minusDays(i.toLong())).all { it.key in prayed || it.end > now }) streak++ else break
+    }
 
     // ne zaman kılıyorsun: vaktin başı / ortası / sonu
     var sumPos = 0f; var nPos = 0
@@ -717,15 +722,20 @@ private fun MuhasebeOzet() {
     val anim by animateFloatAsState(if (shown) 1f else 0f, tween(900), label = "radar")
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
-            // the rose is today's effort; long-term progress stands beside it
-            Row(Modifier.height(300.dp)) {
-                GulCard(petals, Modifier.weight(1f))
-                Spacer(Modifier.width(Space.s))
-                ProgressColumn("Hatim", "$page", "/604", page / 604f)
-                Spacer(Modifier.width(Space.s))
-                ProgressColumn("Son 30 gün", "$full30", "/30", full30 / 30f)
-            }
+        // design A "Sahne": the rose stands on the page itself, full width; long-term numbers sit in one row under it
+        GulCard(petals, Modifier.fillMaxWidth().height(360.dp))
+        val open = petals.count { it.progress >= 1f }
+        Text(
+            (if (open == petals.size) "Bugün · gül tam açtı" else "Bugün · $open yaprak tam açık").uppercase(java.util.Locale("tr")),
+            Modifier.fillMaxWidth(), color = Pal.Muted, fontSize = Type.label, letterSpacing = 1.sp, fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+        )
+        Row(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).fillMaxWidth().height(IntrinsicSize.Min)) {
+            StatColumn("$page", "/604", page / 604f, "Hatim")
+            Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
+            StatColumn("$full30", "/30", full30 / 30f, "Son 30 gün")
+            Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
+            StatColumn("$streak", "", null, "gün seri")
         }
 
         InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
@@ -1190,22 +1200,19 @@ private fun MuhasebeGidisat() {
     }
 }
 
-/** Thin labelled bar for a long-running goal (under the Özet rose). */
+/** One number under the Özet rose: big Cormorant value, small "/of", a thin bar (null = no bar), name. */
 @Composable
-private fun ProgressColumn(name: String, value: String, of: String, progress: Float) {
-    Column(Modifier.width(56.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = NumStyle, color = Pal.Text, fontSize = Type.h2, lineHeight = Type.h2)
-        Text(of, color = Pal.Muted, fontSize = Type.micro)
-        Spacer(Modifier.height(Space.s))
-        // fills from the bottom up, brightening toward the top
-        Box(Modifier.weight(1f).width(10.dp).clip(CircleShape).background(Pal.Track), contentAlignment = Alignment.BottomCenter) {
-            Box(
-                Modifier.fillMaxWidth().fillMaxHeight(progress.coerceIn(0f, 1f)).clip(CircleShape)
-                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Pal.Gold, Pal.Gold.copy(alpha = .55f)))),
-            )
+private fun RowScope.StatColumn(value: String, of: String, progress: Float?, name: String) {
+    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(value, style = NumStyle, color = Pal.Text, fontSize = Type.num, lineHeight = Type.num)
+            if (of.isNotEmpty()) Text(of, Modifier.padding(start = 2.dp, bottom = 3.dp), color = Pal.Muted, fontSize = Type.label)
         }
-        Spacer(Modifier.height(Space.xs))
-        Text(name, color = Pal.Muted, fontSize = Type.micro, textAlign = TextAlign.Center, lineHeight = Type.micro, minLines = 2)
+        Box(Modifier.padding(horizontal = Space.l, vertical = Space.s).fillMaxWidth().height(3.dp).clip(CircleShape)
+            .background(if (progress == null) Color.Transparent else Pal.Track)) {
+            if (progress != null) Box(Modifier.fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).clip(CircleShape).background(Pal.Gold))
+        }
+        Text(name, color = Pal.Muted, fontSize = Type.body2)
     }
 }
 /** Dokununca hafifçe küçülen tıklanabilir yüzey — hareket hissi. */

@@ -4,16 +4,18 @@
 <link rel="icon" href="data:,">
 <!-- Muhasebe › Özet rose. Derived from design/gul/gul-3d.html (the approved prototype); the app drives it via gul.set / gul.spin. -->
 <style>
-  html,body{margin:0;height:100%;background:#121D33;overflow:hidden;-webkit-user-select:none;user-select:none}
+  html,body{margin:0;height:100%;background:#0B1322;overflow:hidden;-webkit-user-select:none;user-select:none}
   /* fixed: in the app's WebView body's 100% height is 0 and its overflow:hidden would clip the canvas */
-  canvas{display:block;position:fixed;top:0;left:0}
-  #ov,#labs{position:absolute;inset:0;pointer-events:none;transition:opacity .9s}
+  canvas{display:block;position:fixed;top:0;left:0;z-index:1}
+  #halo{position:fixed;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:0;z-index:2;mix-blend-mode:screen;
+    background:radial-gradient(circle,rgba(255,206,130,.55),rgba(232,190,116,.2) 38%,rgba(232,190,116,0) 68%)}
+  #ov,#labs{position:absolute;inset:0;pointer-events:none;transition:opacity .9s;z-index:3}
   .lab,#ov line{transition:opacity .9s}
   .lab{position:absolute;transform:translate(-50%,-50%);font:600 12px system-ui,sans-serif;white-space:nowrap;color:#F3EEE3;text-align:center}
   .lab small{display:block;font:500 10px system-ui,sans-serif;color:#C9D1DC}
 </style></head>
 <body>
-<svg id="ov"></svg><div id="labs"></div>
+<div id="halo"></div><svg id="ov"></svg><div id="labs"></div>
 <script>
   // calls from Kotlin can arrive before the module has run: queue them
   window.gul = {ready:false, q:[], set(p){ this.q.push(['set', p]); }, spin(d){ this.q.push(['spin', d]); }};
@@ -24,10 +26,6 @@
 <script type="importmap">{"imports":{"three":"./three/build/three.module.min.js","three/addons/":"./three/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
-import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
-import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
-import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
-import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 
 // petals in the app's order: Namaz, Vaktinde, Sayfa, Kaza, Zikir
 let petals = Array.from({length:5}, () => ({name:'', progress:0, label:'', counts:true}));
@@ -36,13 +34,15 @@ let budC = 0;
 
 // ---------------- renderer / stage (teardown studio recipe: env softboxes, soft shadow, neutral tone map)
 let renderer;
-try { renderer = new THREE.WebGLRenderer({antialias:false, powerPreference:'high-performance'}); }
+try { renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'}); }
 catch (e) { console.error('WebGL açılamadı: ' + e.message); throw e; }
 renderer.toneMapping = THREE.NeutralToneMapping;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.prepend(renderer.domElement);
-const scene = new THREE.Scene(); scene.background = new THREE.Color('#121D33');
+// no visible backdrop: cleared to the page colour (Pal.Ground) and drawn without a tone-mapping pass, so the edge vanishes.
+// (A transparent canvas would be simpler, but the phone's WebView does not composite it: the rose disappears.)
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#0B1322');
 scene.environmentIntensity = .9;
 const cam = new THREE.PerspectiveCamera(30, 1, .05, 60);
 // camera orbit: the prototype's start position around target (0,1,0); drag + auto-rotate change only the azimuth
@@ -52,12 +52,6 @@ const RAD = Math.hypot(OFF.x, OFF.z), ELEV = OFF.y;
 let az = Math.atan2(OFF.x, OFF.z), lastSpin = -1e9;
 const AUTO = .0471;   // rad/s, the prototype's OrbitControls autoRotateSpeed .45
 
-const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType, samples:4}));
-composer.addPass(new RenderPass(scene, cam));
-// bloom only catches the reward glow (emissive): threshold high, strength low
-const bloom = new UnrealBloomPass(new THREE.Vector2(4,4), 0, .6, .82);
-composer.addPass(bloom);
-composer.addPass(new OutputPass());
 
 // environment: big top softbox, two side strips, a warm front kicker
 {
@@ -72,8 +66,9 @@ composer.addPass(new OutputPass());
 }
 const sun = new THREE.DirectionalLight('#fff4e6', 2.4);
 sun.position.set(-2.2, 6, 2.6); sun.castShadow = true;
-Object.assign(sun.shadow.camera, {left:-2.2,right:2.2,top:2.2,bottom:-2.2,near:1,far:14});
-sun.shadow.mapSize.set(1024,1024); sun.shadow.radius = 4; sun.shadow.bias = -.0004; sun.shadow.normalBias = .02;
+// wide enough that the shadow fades out on its own instead of ending in a straight edge
+Object.assign(sun.shadow.camera, {left:-3.6,right:3.6,top:3.6,bottom:-3.6,near:1,far:16});
+sun.shadow.mapSize.set(1536,1536); sun.shadow.radius = 4; sun.shadow.bias = -.0004; sun.shadow.normalBias = .02;
 scene.add(sun, new THREE.HemisphereLight('#ffffff', '#3a3030', .35));
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.ShadowMaterial({opacity:.42, color:'#05070c', polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-8}));
 floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
@@ -203,9 +198,9 @@ queued.forEach(([f, a]) => window.gul[f](a));
 // ---------------- loop
 function resize(){ const w = innerWidth, h = innerHeight, pr = Math.min(devicePixelRatio, 1.5);
   // css size in px from innerWidth/innerHeight: in the app's WebView 100vh resolves to 0
-  renderer.setPixelRatio(pr); renderer.setSize(w,h); composer.setPixelRatio(pr); composer.setSize(w,h);
-  ov.setAttribute('width',w); ov.setAttribute('height',h); cam.aspect = w/h;
-  cam.zoom = Math.min(1, cam.aspect / 1.07);   // narrower than the old 320x300 card: pull back so the rose keeps its width
+  renderer.setPixelRatio(pr); renderer.setSize(w,h);
+  ov.setAttribute('width',w); ov.setAttribute('height',h); halo.style.width = halo.style.height = Math.min(w,h)*.85 + 'px'; cam.aspect = w/h;
+  cam.zoom = Math.min(1, cam.aspect / 1.07) * .74;   // the rose stands free on the page: leave air around it and its shadow
   cam.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 let sizeW = innerWidth, sizeH = innerHeight;
@@ -222,7 +217,9 @@ function frame(now){
   head.rotation.x = Math.sin(now/2300)*.012;   // one thing always alive
   const allDone = minC > .985 ? 1 : 0; full += (allDone - full)*(1-Math.exp(-dt*1.2));
   heart.intensity = full*(2.2 + .5*Math.sin(now/700));
-  bloom.strength = .15 + full*.55;
+  // reward halo: a CSS glow screened over the canvas (replaces the bloom pass)
+  if (full > .01){ const [hx,hy] = proj(heart.position); halo.style.left = hx+'px'; halo.style.top = hy+'px'; }
+  halo.style.opacity = full*(.85 + .15*Math.sin(now/700));
   dustMat.opacity = full*.95;
   if (full > .01){ const t = now/1000;
     for (let i=0;i<NDUST;i++){ const [a,b,c] = dustSeed[i], life = (t*.12 + a) % 1, ang = b*6.283 + t*.4*(c-.5) + life*2.2, r = .12 + life*(.7 + c*.9);
@@ -233,7 +230,7 @@ function frame(now){
   if (now - lastSpin > 3000) az += AUTO*dt;
   cam.position.set(TGT.x + Math.sin(az)*RAD, TGT.y + ELEV, TGT.z + Math.cos(az)*RAD); cam.lookAt(TGT);
   if (innerWidth !== sizeW || innerHeight !== sizeH){ sizeW = innerWidth; sizeH = innerHeight; resize(); }   // WebView starts at 0x0
-  composer.render();
+  renderer.render(scene, cam);
   // labels: only unfinished goals keep theirs; once everything is done the rose stands alone
   const op = allDone ? '0' : '1'; labs.style.opacity = op; ov.style.opacity = op;
   petals.forEach((p,i) => {

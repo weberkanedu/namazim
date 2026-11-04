@@ -59,7 +59,7 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
         // debug builds: inspect the page live from desktop Chrome (chrome://inspect) while the phone is on adb
         if (ctx.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) WebView.setWebContentsDebuggingEnabled(true)
         WebView(ctx).apply {
-            setBackgroundColor(0xFF121D33.toInt())
+            setBackgroundColor(0xFF0B1322.toInt())   // Pal.Ground, the same colour the page clears to: no visible box
             settings.javaScriptEnabled = true
             settings.allowFileAccess = false
             settings.allowContentAccess = false
@@ -111,7 +111,7 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
         onDispose { owner.lifecycle.removeObserver(obs); web.destroy() }
     }
 
-    Box(modifier.fillMaxWidth().height(300.dp)) {
+    Box(modifier) {
         key(web) { AndroidView(factory = { web }, modifier = Modifier.fillMaxSize()) }
         if (problem.isNotEmpty()) Text(problem.take(600), Modifier.padding(Space.s), color = Pal.Warn, fontSize = Type.micro)
         Box(Modifier.fillMaxSize().pointerInput(web) {
