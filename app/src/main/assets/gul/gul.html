@@ -8,6 +8,7 @@
   /* fixed: in the app's WebView body's 100% height is 0 and its overflow:hidden would clip the canvas */
   canvas{display:block;position:fixed;top:0;left:0}
   #ov,#labs{position:absolute;inset:0;pointer-events:none;transition:opacity .9s}
+  .lab,#ov line{transition:opacity .9s}
   .lab{position:absolute;transform:translate(-50%,-50%);font:600 12px system-ui,sans-serif;white-space:nowrap;color:#F3EEE3;text-align:center}
   .lab small{display:block;font:500 10px system-ui,sans-serif;color:#C9D1DC}
 </style></head>
@@ -231,9 +232,10 @@ function frame(now){
   cam.position.set(TGT.x + Math.sin(az)*RAD, TGT.y + ELEV, TGT.z + Math.cos(az)*RAD); cam.lookAt(TGT);
   if (innerWidth !== sizeW || innerHeight !== sizeH){ sizeW = innerWidth; sizeH = innerHeight; resize(); }   // WebView starts at 0x0
   composer.render();
-  // labels: shown until everything is done, then they fade out and the rose stands alone
+  // labels: only unfinished goals keep theirs; once everything is done the rose stands alone
   const op = allDone ? '0' : '1'; labs.style.opacity = op; ov.style.opacity = op;
   petals.forEach((p,i) => {
+    const pop = p.progress >= 1 ? '0' : '1'; tags[i].style.opacity = pop; lines[i].style.opacity = pop;
     const [x,y] = proj(tips[i]), ring = proj(new THREE.Vector3(Math.cos(ANG(i))*1.4, 1.05, -Math.sin(ANG(i))*1.4));
     ring[0] = Math.min(innerWidth - 36, Math.max(36, ring[0])); ring[1] = Math.min(innerHeight - 16, Math.max(14, ring[1]));   // keep labels on the card
     const dx = ring[0]-x, dy = ring[1]-y, len = Math.hypot(dx,dy) || 1;
