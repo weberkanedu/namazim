@@ -26,6 +26,9 @@ class Store(context: Context) {
     val lat get() = Double.fromBits(p.getLong("lat", 0))
     val lng get() = Double.fromBits(p.getLong("lng", 0))
     val city get() = p.getString("city", "") ?: ""
+    /** The prayer day (imsak to imsak) the Özet rose and the daily logs count in. */
+    fun prayerDay(now: Long = System.currentTimeMillis()): LocalDate =
+        if (!hasLocation) LocalDate.now() else prayerDayOf(LocalDate.now(), now, dayTimes(lat, lng, LocalDate.now()).imsak)
     fun setLocation(lat: Double, lng: Double, city: String) {
         val e = p.edit().putLong("lat", lat.toRawBits()).putLong("lng", lng.toRawBits()).putString("city", city)
         if (!p.contains("since")) e.putLong("since", System.currentTimeMillis())
@@ -77,7 +80,7 @@ class Store(context: Context) {
 
     fun logKaza(n: Int) {
         val o = JSONObject(p.getString("kazaLog", "{}")!!)
-        val today = LocalDate.now().toString()
+        val today = prayerDay().toString()
         o.put(today, (o.optInt(today) + n).coerceAtLeast(0))
         p.edit().putString("kazaLog", o.toString()).apply()
         StoreRev.n++
@@ -179,7 +182,7 @@ class Store(context: Context) {
     fun logPages(n: Int) {
         StoreRev.n++
         val o = JSONObject(p.getString("readLog", "{}")!!)
-        val today = LocalDate.now().toString()
+        val today = prayerDay().toString()
         o.put(today, (o.optInt(today) + n).coerceAtLeast(0))
         p.edit().putString("readLog", o.toString()).apply()
     }
