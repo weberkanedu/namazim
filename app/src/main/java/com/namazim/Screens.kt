@@ -68,7 +68,7 @@ import java.time.ZoneId
 import kotlin.math.*
 
 @Composable
-fun NeedLocation() = Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+fun NeedLocation() = Box(Modifier.fillMaxSize().padding(Space.xxl), contentAlignment = Alignment.Center) {
     Text("Önce Namaz sekmesinden konumunu belirle.", color = Pal.Muted, textAlign = TextAlign.Center)
 }
 
@@ -155,7 +155,7 @@ fun KibleScreen() {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         ScreenTitle("Kıble", store.city.ifEmpty { null }) {
             Text(if (level) "Telefon düz" else "Telefonu yatay tut", color = if (level) okGreen else Pal.Muted,
-                fontSize = 12.sp, textAlign = TextAlign.End)
+                fontSize = Type.label, textAlign = TextAlign.End)
         }
         Box(Modifier.fillMaxWidth().height(340.dp), contentAlignment = Alignment.Center) {
             Box(Modifier.size(340.dp).background(Brush.radialGradient(
@@ -183,7 +183,7 @@ fun KibleScreen() {
                         }
                     }
                     listOf("K" to 0f, "D" to 90f, "G" to 180f, "B" to 270f).forEach { (t, a) ->
-                        val l = measurer.measure(t, TextStyle(color = if (t == "K") Pal.Warn else Pal.Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold))
+                        val l = measurer.measure(t, TextStyle(color = if (t == "K") Pal.Warn else Pal.Muted, fontSize = Type.body2, fontWeight = FontWeight.SemiBold))
                         val rr = r - 82.dp.toPx()
                         val p = Offset(c.x + rr * sin(Math.toRadians(a.toDouble())).toFloat(), c.y - rr * cos(Math.toRadians(a.toDouble())).toFloat())
                         drawText(l, topLeft = Offset(p.x - l.size.width / 2, p.y - l.size.height / 2))
@@ -218,11 +218,11 @@ fun KibleScreen() {
                 drawCircle(Pal.Text.copy(alpha = .05f), r * 0.36f, style = Stroke(1.dp.toPx()))
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("${hdg.roundToInt()}°", style = NumStyle, fontSize = 38.sp,
+                Text("${hdg.roundToInt()}°", style = NumStyle, fontSize = Type.title,
                     color = if (aligned) okGreen else Pal.Text)
-                Text("yönün", fontSize = 11.sp, color = Pal.Muted)
+                Text("yönün", fontSize = Type.micro, color = Pal.Muted)
                 // little spirit level: bubble centres when the phone lies flat
-                Canvas(Modifier.padding(top = 8.dp).size(96.dp, 14.dp)) {
+                Canvas(Modifier.padding(top = Space.s).size(96.dp, 14.dp)) {
                     drawRoundRect(Pal.Text.copy(alpha = .10f), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
                     val bx = (size.width / 2) + (rollDeg.coerceIn(-25f, 25f) / 25f) * (size.width / 2 - 9.dp.toPx())
                     drawCircle(if (level) okGreen else Pal.Muted, 5.dp.toPx(), Offset(bx, size.height / 2))
@@ -237,27 +237,27 @@ fun KibleScreen() {
                     diff > 0 -> "Sağa ${diff.roundToInt()}° dön"
                     else -> "Sola ${(-diff).roundToInt()}° dön"
                 },
-                color = if (aligned) okGreen else Pal.Text, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
+                color = if (aligned) okGreen else Pal.Text, fontSize = Type.h2, fontWeight = FontWeight.SemiBold,
             )
-            Text(if (aligned) "Telefon hafifçe titreşti" else "Altın çizgi kıbleye kalan açıyı gösterir", color = Pal.Muted, fontSize = 13.sp)
+            Text(if (aligned) "Telefon hafifçe titreşti" else "Altın çizgi kıbleye kalan açıyı gösterir", color = Pal.Muted, fontSize = Type.body2)
         }
-        Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
             InfoCard(Modifier.weight(1f)) {
-                Text("Kıble açısı", color = Pal.Muted, fontSize = 12.sp)
-                Text("${qibla.roundToInt()}°", style = NumStyle, fontSize = 28.sp, color = Pal.Text)
-                Text("Pusulada ${((qibla - declination + 360) % 360).roundToInt()}°", color = Pal.Muted, fontSize = 11.sp)
+                Text("Kıble açısı", color = Pal.Muted, fontSize = Type.label)
+                Text("${qibla.roundToInt()}°", style = NumStyle, fontSize = Type.num, color = Pal.Text)
+                Text("Pusulada ${((qibla - declination + 360) % 360).roundToInt()}°", color = Pal.Muted, fontSize = Type.micro)
             }
             InfoCard(Modifier.weight(1f)) {
-                Text("Kâbe'ye uzaklık", color = Pal.Muted, fontSize = 12.sp)
-                Text("≈ %,d km".format(java.util.Locale("tr"), (km / 10).roundToInt() * 10), style = NumStyle, fontSize = 28.sp, color = Pal.Text)
+                Text("Kâbe'ye uzaklık", color = Pal.Muted, fontSize = Type.label)
+                Text("≈ %,d km".format(java.util.Locale("tr"), (km / 10).roundToInt() * 10), style = NumStyle, fontSize = Type.num, color = Pal.Text)
             }
         }
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 20.dp).fillMaxWidth()) {
+        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.s, bottom = Space.l).fillMaxWidth()) {
             if (qTime != null) {
-                Text("Kıble saati ${hm(qTime)}", color = Pal.Gold, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                Text("Bugün bu saatte güneş tam kıble yönünde. Pusulasız da bulabilirsin.", color = Pal.Muted, fontSize = 13.sp)
+                Text("Kıble saati ${hm(qTime)}", color = Pal.Gold, fontWeight = FontWeight.SemiBold, fontSize = Type.body)
+                Text("Bugün bu saatte güneş tam kıble yönünde. Pusulasız da bulabilirsin.", color = Pal.Muted, fontSize = Type.body2)
             } else {
-                Text("Bugün güneş kıble yönünden geçmiyor.", color = Pal.Muted, fontSize = 13.sp)
+                Text("Bugün güneş kıble yönünden geçmiyor.", color = Pal.Muted, fontSize = Type.body2)
             }
         }
     }
@@ -294,9 +294,9 @@ fun KazaScreen(embedded: Boolean = false) {
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         if (!embedded) ScreenTitle("Kaza")
-        Text("Vaktinde kılınmayan namazlar buraya kendiliğinden eklenir", Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp),
-            color = Pal.Muted, fontSize = 13.sp)
-        Row(Modifier.padding(start = 24.dp, end = 24.dp, top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("Vaktinde kılınmayan namazlar buraya kendiliğinden eklenir", Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m),
+            color = Pal.Muted, fontSize = Type.body2)
+        Row(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(150.dp), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
                     val w = 10.dp.toPx(); val inset = w / 2
@@ -305,21 +305,21 @@ fun KazaScreen(embedded: Boolean = false) {
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     AnimatedContent(total, transitionSpec = { (scaleIn(initialScale = 1.3f) + fadeIn()) togetherWith fadeOut() }, label = "total") {
-                        Text("$it", style = NumStyle, fontSize = 48.sp, color = Pal.Text)
+                        Text("$it", style = NumStyle, fontSize = Type.display, color = Pal.Text)
                     }
-                    Text("kaldı", color = Pal.Muted, fontSize = 12.sp)
+                    Text("kaldı", color = Pal.Muted, fontSize = Type.label)
                 }
             }
-            Spacer(Modifier.width(20.dp))
+            Spacer(Modifier.width(Space.l))
             Column {
-                Text("Bu ay kılınan", color = Pal.Muted, fontSize = 13.sp)
-                Text("$paid", style = NumStyle, fontSize = 30.sp, color = Pal.Gold)
+                Text("Bu ay kılınan", color = Pal.Muted, fontSize = Type.body2)
+                Text("$paid", style = NumStyle, fontSize = Type.num, color = Pal.Gold)
             }
         }
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 20.dp).fillMaxWidth()) {
+        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).fillMaxWidth()) {
             SectionLabel("KAZA PLANI")
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(Space.s))
             val days = (total + rate - 1) / rate
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -336,26 +336,26 @@ fun KazaScreen(embedded: Boolean = false) {
                 }
                 Box(
                     Modifier.heightIn(min = TouchMin).clip(CircleShape).border(1.dp, Pal.Gold.copy(alpha = .45f), CircleShape)
-                        .clickable { openKazaRate = true }.padding(horizontal = 16.dp),
+                        .clickable { openKazaRate = true }.padding(horizontal = Space.l),
                     contentAlignment = Alignment.Center,
                 ) { Text("Planı değiştir", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
             }
         }
 
-        Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+        Column(Modifier.padding(horizontal = Space.xl, vertical = Space.m)) {
             KAZA_KEYS.forEach { (key, name) ->
                 Row(Modifier.fillMaxWidth().heightIn(min = 58.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(name, Modifier.weight(1f), color = Pal.Text, fontSize = 16.sp)
-                    Text("${v.let { store.kaza(key) }}", Modifier.widthIn(min = 32.dp), style = NumStyle, fontSize = 26.sp, color = Pal.Text, textAlign = TextAlign.End)
-                    Spacer(Modifier.width(10.dp))
+                    Text(name, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
+                    Text("${v.let { store.kaza(key) }}", Modifier.widthIn(min = 32.dp), style = NumStyle, fontSize = Type.num, color = Pal.Text, textAlign = TextAlign.End)
+                    Spacer(Modifier.width(Space.s))
                     Button(
                         onClick = {
                             store.payKaza(key); v++
                             undoable("$name kazası kılındı") { store.unpayKaza(key) }
                         }, contentPadding = PaddingValues(horizontal = 14.dp), modifier = Modifier.heightIn(min = TouchMin),
                         colors = ButtonDefaults.buttonColors(containerColor = Pal.Gold, contentColor = Pal.Ground),
-                    ) { Text("Kıldım", fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
-                    Spacer(Modifier.width(6.dp))
+                    ) { Text("Kıldım", fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
+                    Spacer(Modifier.width(Space.xs))
                     OutlinedIconButton(onClick = {
                             store.addKaza(key, 1); v++
                             undoable("$name kazası eklendi") { store.addKaza(key, -1) }
@@ -368,7 +368,7 @@ fun KazaScreen(embedded: Boolean = false) {
             }
         }
         }
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)) { data ->
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = Space.m)) { data ->
             Snackbar(snackbarData = data, containerColor = Pal.Card, contentColor = Pal.Text, actionColor = Pal.Gold)
         }
     }
@@ -382,7 +382,7 @@ fun KazaScreen(embedded: Boolean = false) {
             text = {
                 Column {
                     Text("Kaza planını günde kaç vakit kılacağını yazarak belirle.", color = Pal.Muted, fontSize = Type.body2, lineHeight = 18.sp)
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(Space.s))
                     OutlinedTextField(
                         draft, { draft = it }, singleLine = true,
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
@@ -436,10 +436,10 @@ fun OkumaScreen() {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         ScreenTitle("Okuma") {
             if (store.hatim > 0) Text("${store.hatim} hatim tamamlandı", Modifier.clip(CircleShape).background(Pal.Gold.copy(alpha = .14f))
-                .padding(horizontal = 12.dp, vertical = 6.dp), color = Pal.Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                .padding(horizontal = Space.m, vertical = Space.xs), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
         }
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp).fillMaxWidth()) {
-            Text("Kur'an-ı Kerîm", color = Pal.Gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).fillMaxWidth()) {
+            Text("Kur'an-ı Kerîm", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
             Box(Modifier.fillMaxWidth().height(140.dp), contentAlignment = Alignment.BottomCenter) {
                 Canvas(Modifier.size(240.dp, 130.dp)) {
                     val w = 12.dp.toPx()
@@ -457,31 +457,31 @@ fun OkumaScreen() {
             }
             Text(
                 if (page == 0) "İlk sayfayı okuyunca burada birikmeye başlar" else "${cuz(page)}. cüz · ${sureOf(page)} Sûresi",
-                Modifier.fillMaxWidth().padding(top = 8.dp), color = if (page == 0) Pal.Muted else Pal.Text,
+                Modifier.fillMaxWidth().padding(top = Space.s), color = if (page == 0) Pal.Muted else Pal.Text,
                 fontSize = Type.body2, textAlign = TextAlign.Center,
             )
-            Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.CenterVertically) {
                 GhostButton("−1", Modifier.width(64.dp)) { if (store.quranPage > 0) readQuran(-1) }
                 GoldButton("+1 sayfa", Modifier.weight(1f)) { readQuran(1) }
                 GhostButton("+1 cüz", color = Pal.Gold) { readQuran(20) }
             }
         }
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth()) {
+        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
             Row {
-                Text(if (today >= goal) "Bugünkü hedef tamam ✓" else "Bugün $today sayfa", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                Text(if (today >= goal) "Bugünkü hedef tamam ✓" else "Bugün $today sayfa", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = Type.body2)
                 // Tap to change the daily goal.
                 Text("Hedef $goal sayfa", Modifier.clickable {
                     val goals = listOf(5, 10, 15, 20, 30)
                     store.readGoal = goals[(goals.indexOf(goal) + 1) % goals.size]; v++
-                }, color = Pal.Muted, fontSize = 13.sp)
+                }, color = Pal.Muted, fontSize = Type.body2)
             }
-            Box(Modifier.padding(top = 10.dp).fillMaxWidth().height(8.dp).clip(CircleShape).background(Pal.Track)) {
+            Box(Modifier.padding(top = Space.s).fillMaxWidth().height(8.dp).clip(CircleShape).background(Pal.Track)) {
                 Box(Modifier.fillMaxWidth(goalBar).fillMaxHeight().clip(CircleShape).background(Pal.Gold))
             }
             val week = (6 downTo 0).map { todayDate.minusDays(it.toLong()) }
             val max = maxOf(goal, week.maxOf { log[it.toString()] ?: 0 }).toFloat()
-            Row(Modifier.padding(top = 14.dp).fillMaxWidth().height(80.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+            Row(Modifier.padding(top = Space.m).fillMaxWidth().height(80.dp), horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.Bottom) {
                 week.forEach { d ->
                     val n = log[d.toString()] ?: 0
                     val h by animateFloatAsState(n / max, tween(500), label = "bar")
@@ -494,8 +494,8 @@ fun OkumaScreen() {
             }
         }
 
-        Row(Modifier.padding(start = 24.dp, end = 12.dp, top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Kitaplarım", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+        Row(Modifier.padding(start = Space.xl, end = Space.m, top = Space.l), verticalAlignment = Alignment.CenterVertically) {
+            Text("Kitaplarım", Modifier.weight(1f), color = Pal.Text, fontWeight = FontWeight.SemiBold, fontSize = Type.body)
             TextButton(onClick = { adding = true }) { Text("+ Kitap ekle", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
         }
         if (v.let { store.books() }.isEmpty()) {
@@ -504,14 +504,14 @@ fun OkumaScreen() {
                 text = "Okuduğun kitabı ekle, sayfa sayısını yaz; ilerlemesini buradan takip et.",
                 actionLabel = "Kitap ekle",
                 onAction = { adding = true },
-                modifier = Modifier.padding(horizontal = 24.dp),
+                modifier = Modifier.padding(horizontal = Space.xl),
             )
         }
         v.let { store.books() }.forEachIndexed { i, b ->
-            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp).fillMaxWidth()) {
+            InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, bottom = Space.s).fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(b.name, Modifier.weight(1f), color = Pal.Text, fontSize = 14.sp)
-                    Text("${b.page} / ${b.total}", color = Pal.Muted, fontSize = 12.sp)
+                    Text(b.name, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
+                    Text("${b.page} / ${b.total}", color = Pal.Muted, fontSize = Type.label)
                     IconButton(onClick = { store.saveBooks(store.books().filterIndexed { j, _ -> j != i }); v++ }, Modifier.size(36.dp)) {
                         Icon(Icons.Default.Close, "${b.name} kitabını sil", tint = Pal.Muted, modifier = Modifier.size(16.dp))
                     }
@@ -531,7 +531,7 @@ fun OkumaScreen() {
                 }
             }
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(Space.l))
     }
 
     if (adding) {
@@ -541,7 +541,7 @@ fun OkumaScreen() {
             onDismissRequest = { adding = false }, containerColor = Pal.Card,
             title = { Text("Kitap ekle", color = Pal.Text) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     OutlinedTextField(name, { name = it }, label = { Text("Kitap adı") }, singleLine = true)
                     OutlinedTextField(total, { total = it.filter(Char::isDigit) }, label = { Text("Sayfa sayısı") }, singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
@@ -568,7 +568,7 @@ fun Segmented(options: List<String>, selected: Int, modifier: Modifier = Modifie
                 .background(if (selected == i) Pal.Gold else Color.Transparent)
                 .pressable { onSelect(i) }.padding(horizontal = if (stretch) 0.dp else 14.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center) {
-                Text(label, color = if (selected == i) Pal.Ground else Pal.Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(label, color = if (selected == i) Pal.Ground else Pal.Muted, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -580,7 +580,7 @@ fun MuhasebeScreen() {
     Column(Modifier.fillMaxSize()) {
         ScreenTitle("Muhasebe")
         Segmented(listOf("Özet", "Gidişat", "Kaza"), section,
-            Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth(), stretch = true) { section = it }
+            Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth(), stretch = true) { section = it }
         Box(Modifier.weight(1f).clipToBounds()) {
             when (section) {
                 0 -> MuhasebeOzet()
@@ -662,7 +662,7 @@ private fun MuhasebeOzet() {
     val anim by animateFloatAsState(if (shown) 1f else 0f, tween(900), label = "radar")
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp).fillMaxWidth()) {
+        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
             RadarChart(
                 axes = listOf(
                     "Namaz" to (prayedToday / 5f),
@@ -674,8 +674,8 @@ private fun MuhasebeOzet() {
                 colors = listOf(Pal.Gold, Color(0xFF6BC5B0), Color(0xFF8AA6D8), Pal.Warn, Color(0xFFC29B5A)),
                 anim = anim,
             )
-            Spacer(Modifier.height(4.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.height(Space.xs))
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalAlignment = Alignment.CenterVertically) {
                 listOf(
                     "$prayedToday/5 namaz" to Pal.Gold,
                     "$pagesToday/${store.readGoal} sayfa" to Color(0xFF6BC5B0),
@@ -684,42 +684,42 @@ private fun MuhasebeOzet() {
                 ).forEach { (label, color) ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(5.dp).clip(CircleShape).background(color))
-                        Spacer(Modifier.width(4.dp))
-                        Text(label, color = Pal.Muted, fontSize = 10.5.sp)
+                        Spacer(Modifier.width(Space.xs))
+                        Text(label, color = Pal.Muted, fontSize = Type.micro)
                     }
                 }
             }
-            Spacer(Modifier.height(10.dp))
-            Text("Hedefe ulaşılan gün: $full30/30", color = Pal.Muted, fontSize = 12.sp)
+            Spacer(Modifier.height(Space.s))
+            Text("Hedefe ulaşılan gün: $full30/30", color = Pal.Muted, fontSize = Type.label)
         }
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth()) {
+        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(22.dp).clip(CircleShape).background(Pal.Gold.copy(alpha = .15f)), contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.Person, null, tint = Pal.Gold, modifier = Modifier.size(13.dp))
                 }
-                Spacer(Modifier.width(10.dp))
-                Text(insight, Modifier.weight(1f), color = Pal.Text, fontSize = 13.5.sp, lineHeight = 19.sp)
+                Spacer(Modifier.width(Space.s))
+                Text(insight, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body2, lineHeight = 19.sp)
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(Space.m))
             Row {
                 Column(Modifier.weight(1f)) {
-                    Text("%${(rate30 * 100).roundToInt()}", style = NumStyle, fontSize = 30.sp, color = Pal.Text)
-                    Text("Son 30 gün", color = Pal.Muted, fontSize = 11.sp)
+                    Text("%${(rate30 * 100).roundToInt()}", style = NumStyle, fontSize = Type.num, color = Pal.Text)
+                    Text("Son 30 gün", color = Pal.Muted, fontSize = Type.micro)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("%${(rateAll * 100).roundToInt()}", style = NumStyle, fontSize = 30.sp, color = Pal.Text)
-                    Text("Tüm zamanlar", color = Pal.Muted, fontSize = 11.sp)
+                    Text("%${(rateAll * 100).roundToInt()}", style = NumStyle, fontSize = Type.num, color = Pal.Text)
+                    Text("Tüm zamanlar", color = Pal.Muted, fontSize = Type.micro)
                 }
             }
         }
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth()) {
+        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("HATIM TAKİBİ", Modifier.weight(1f), color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
-                Text(if (page >= 604) "BİTTİ" else "DEVAM EDİYOR", color = Color(0xFF6BC5B0), fontSize = 11.sp, letterSpacing = 1.sp)
+                Text("HATIM TAKİBİ", Modifier.weight(1f), color = Pal.Muted, fontSize = Type.micro, letterSpacing = 1.sp)
+                Text(if (page >= 604) "BİTTİ" else "DEVAM EDİYOR", color = Color(0xFF6BC5B0), fontSize = Type.micro, letterSpacing = 1.sp)
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(Space.s))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
                     Canvas(Modifier.fillMaxSize()) {
@@ -728,24 +728,24 @@ private fun MuhasebeOzet() {
                         drawArc(Color(0xFF8AA6D8), -90f, 360f * (page / 604f) * anim, false, Offset(w / 2, w / 2),
                             Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
                     }
-                    Text("%${(page * 100 / 604)}", color = Pal.Text, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("%${(page * 100 / 604)}", color = Pal.Text, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
                 }
-                Spacer(Modifier.width(14.dp))
+                Spacer(Modifier.width(Space.m))
                 Column(Modifier.weight(1f)) {
-                    Text("$page / 604 sayfa · ${sureOf(page)}", color = Pal.Text, fontSize = 13.sp)
-                    Text("${store.hatim} hatim tamam", color = Pal.Muted, fontSize = 12.sp)
+                    Text("$page / 604 sayfa · ${sureOf(page)}", color = Pal.Text, fontSize = Type.body2)
+                    Text("${store.hatim} hatim tamam", color = Pal.Muted, fontSize = Type.label)
                     Text(
                         if (eta != null) "Bu hızla ~${eta.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale("tr")))}"
                         else "Günde birkaç sayfa okuyunca tarih burada görünecek",
-                        color = Pal.Muted, fontSize = 11.5.sp,
+                        color = Pal.Muted, fontSize = Type.micro,
                     )
                 }
             }
         }
 
-        InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
-            Text("KAZA NAMAZI", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
-            Spacer(Modifier.height(10.dp))
+        InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m, bottom = Space.l).fillMaxWidth()) {
+            Text("KAZA NAMAZI", color = Pal.Muted, fontSize = Type.micro, letterSpacing = 1.sp)
+            Spacer(Modifier.height(Space.s))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
                     Canvas(Modifier.fillMaxSize()) {
@@ -755,16 +755,16 @@ private fun MuhasebeOzet() {
                         drawArc(Pal.Warn, -90f, 360f * prog * anim, false, Offset(w / 2, w / 2),
                             Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
                     }
-                    Text("${totalKaza}", color = Pal.Text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("${totalKaza}", color = Pal.Text, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
                 }
-                Spacer(Modifier.width(14.dp))
+                Spacer(Modifier.width(Space.m))
                 Column(Modifier.weight(1f)) {
-                    Text("$totalKaza vakit kaldı", style = NumStyle, fontSize = 26.sp, color = Pal.Text)
-                    Text("Bu ay ${store.kazaPaidThisMonth()} kaza kıldın · plan günde ${store.kazaRate}", color = Pal.Muted, fontSize = 12.sp)
+                    Text("$totalKaza vakit kaldı", style = NumStyle, fontSize = Type.num, color = Pal.Text)
+                    Text("Bu ay ${store.kazaPaidThisMonth()} kaza kıldın · plan günde ${store.kazaRate}", color = Pal.Muted, fontSize = Type.label)
                     Text(
                         if (monthsLeft != null) "Bu hızla ~${monthsLeft.roundToInt()} ay içinde tamamlanır, inşallah"
                         else "Kaza kalmadı, elhamdülillah",
-                        color = Pal.Muted, fontSize = 11.5.sp,
+                        color = Pal.Muted, fontSize = Type.micro,
                     )
                 }
             }
@@ -868,15 +868,15 @@ private fun MuhasebeGidisat() {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Segmented(
             listOf("Hafta", "Ay", "Yıl", "Tümü"), period,
-            Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth(), stretch = true,
+            Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth(), stretch = true,
         ) { period = it }
-        Text(range, Modifier.padding(start = 24.dp, top = 10.dp), color = Pal.Muted, fontSize = 12.sp)
+        Text(range, Modifier.padding(start = Space.xl, top = Space.s), color = Pal.Muted, fontSize = Type.label)
 
         // ---- Bugüne kadar: yalnızca "Tümü"de (tüm zamanların toplamı)
         if (period == 3) {
-            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp).fillMaxWidth()) {
-                Text("BUGÜNE KADAR", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
-                Spacer(Modifier.height(10.dp))
+            InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()) {
+                Text("BUGÜNE KADAR", color = Pal.Muted, fontSize = Type.micro, letterSpacing = 1.sp)
+                Spacer(Modifier.height(Space.s))
                 Row(Modifier.fillMaxWidth()) {
                     listOf(
                         "${data.allNamaz}" to "namaz" to Color(0xFF6BC5B0),
@@ -887,22 +887,22 @@ private fun MuhasebeGidisat() {
                         val (pair, color) = spec
                         val (value, unit) = pair
                         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(value, style = NumStyle, fontSize = 26.sp, color = color)
-                            Text(unit, color = Pal.Muted, fontSize = 10.sp, letterSpacing = .5.sp)
+                            Text(value, style = NumStyle, fontSize = Type.num, color = color)
+                            Text(unit, color = Pal.Muted, fontSize = Type.micro, letterSpacing = .5.sp)
                         }
                     }
                 }
             }
         }
 
-        Column(Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp)) {
+        Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m)) {
             Text(
                 "${data.elapsed} günün ${data.any}'inde ibadet işaretledin",
-                style = NumStyle, fontSize = 26.sp, lineHeight = 30.sp, color = Pal.Text,
+                style = NumStyle, fontSize = Type.num, lineHeight = 30.sp, color = Pal.Text,
             )
-            Spacer(Modifier.height(4.dp))
-            Text("önceki dönemde ${data.prevAny} gün", color = Pal.Muted, fontSize = 12.sp)
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(Space.xs))
+            Text("önceki dönemde ${data.prevAny} gün", color = Pal.Muted, fontSize = Type.label)
+            Spacer(Modifier.height(Space.xs))
             Text(
                 when {
                     data.any == 0 -> "İlk işareti koyunca burada birikmeye başlayacak."
@@ -910,18 +910,18 @@ private fun MuhasebeGidisat() {
                     data.any < data.prevAny -> "Bu dönem biraz aksadı. Bir vakit bile sayılır, bugün başla."
                     else -> "Geçen dönemle aynı tempodasın. Bir vakit daha ekleyelim."
                 },
-                color = Pal.Text.copy(alpha = .85f), fontSize = 14.sp, lineHeight = 20.sp,
+                color = Pal.Text.copy(alpha = .85f), fontSize = Type.body, lineHeight = 20.sp,
             )
         }
 
         // ---- harita: Hafta/Ay takvim ızgarası, Yıl tam takvim. Tümü'de harita yok.
         if (period != 3) {
-            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp).fillMaxWidth()) {
+            InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).fillMaxWidth()) {
                 Text(
                     if (period == 2) "NAMAZ HARİTASI · ${today.year}" else "NAMAZ HARİTASI",
-                    color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp,
+                    color = Pal.Muted, fontSize = Type.micro, letterSpacing = 1.sp,
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(Space.s))
                 if (period == 2) {
                     // yıl: 53 hafta × 7 gün, ay etiketleriyle
                     BoxWithConstraints {
@@ -1021,7 +1021,7 @@ private fun MuhasebeGidisat() {
                                             if (inRange) Text(
                                                 "${data.start.plusDays(idx.toLong()).dayOfMonth}",
                                                 color = if (n >= 3) Pal.Ground else Pal.Muted,
-                                                fontSize = 10.sp,
+                                                fontSize = Type.micro,
                                             )
                                         }
                                     }
@@ -1030,24 +1030,24 @@ private fun MuhasebeGidisat() {
                         }
                     }
                 }
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("hiç", color = Pal.Muted, fontSize = 10.sp)
+                Spacer(Modifier.height(Space.s))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    Text("hiç", color = Pal.Muted, fontSize = Type.micro)
                     heatRamp.forEach { Box(Modifier.size(9.dp).clip(CircleShape).background(it)) }
-                    Text("beş vakit", color = Pal.Muted, fontSize = 10.sp)
+                    Text("beş vakit", color = Pal.Muted, fontSize = Type.micro)
                 }
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(Space.xs))
                 Text(
                     if (data.full == 0) "${data.elapsed} günün hiçbirinde beş vaktin tamamını işaretlemedin." else "${data.elapsed} günün ${data.full}'inde beş vaktin tamamını işaretledin.",
-                    color = Pal.Muted, fontSize = 12.sp,
+                    color = Pal.Muted, fontSize = Type.label,
                 )
             }
         }
 
         // Tümü sekmesinde tür tablosu yok (yalnızca toplamlar ve zamanlama)
-        if (period != 3) InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
-            Text("TÜRLERE GÖRE", color = Pal.Muted, fontSize = 11.sp, letterSpacing = 1.sp)
-            Spacer(Modifier.height(8.dp))
+        if (period != 3) InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m, bottom = Space.l).fillMaxWidth()) {
+            Text("TÜRLERE GÖRE", color = Pal.Muted, fontSize = Type.micro, letterSpacing = 1.sp)
+            Spacer(Modifier.height(Space.s))
             val types = listOf(
                 Triple("Namaz", data.total to "vakit", Color(0xFF6BC5B0)),
                 Triple("Okuma", data.pages.sum() to "sayfa", Color(0xFF8AA6D8)),
@@ -1056,10 +1056,10 @@ private fun MuhasebeGidisat() {
             )
             types.forEach { (name, pair, color) ->
                 val (value, unit) = pair
-                Row(Modifier.padding(top = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.padding(top = Space.m).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(6.dp).clip(CircleShape).background(color))
-                    Spacer(Modifier.width(10.dp))
-                    Text(name, Modifier.weight(1f), color = Pal.Text, fontSize = 15.sp)
+                    Spacer(Modifier.width(Space.s))
+                    Text(name, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
                     // mini grafik: son 21 günün 3 günlük ortalaması
                     Canvas(Modifier.size(64.dp, 24.dp)) {
                         val n = minOf(21, data.elapsed)
@@ -1088,19 +1088,19 @@ private fun MuhasebeGidisat() {
                             drawPath(path, color, style = Stroke(1.8.dp.toPx(), cap = StrokeCap.Round))
                         }
                     }
-                    Spacer(Modifier.width(8.dp))
-                    Text("$value", style = NumStyle, fontSize = 22.sp, color = Pal.Text)
+                    Spacer(Modifier.width(Space.s))
+                    Text("$value", style = NumStyle, fontSize = Type.h2, color = Pal.Text)
                     Spacer(Modifier.width(3.dp))
-                    Text(unit, color = Pal.Muted, fontSize = 10.sp)
+                    Text(unit, color = Pal.Muted, fontSize = Type.micro)
                 }
             }
         }
 
         // ---- Namazları ne zaman kılıyoruz: yalnızca "Tümü"de (kısa dönemde ortalama yanıltır)
         if (period == 3) {
-            InfoCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp).fillMaxWidth()) {
-                Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = 11.sp, letterSpacing = .8.sp)
-                Spacer(Modifier.height(10.dp))
+            InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m, bottom = Space.l).fillMaxWidth()) {
+                Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = Type.micro, letterSpacing = .8.sp)
+                Spacer(Modifier.height(Space.s))
                 val vakitColors = mapOf(
                     "SABAH" to Color(0xFF8E7CC3), "OGLE" to Color(0xFF5B9BD5), "IKINDI" to Color(0xFF9AA5B1),
                     "AKSAM" to Color(0xFFE07A4F), "YATSI" to Color(0xFF5B9BD5),
@@ -1108,30 +1108,30 @@ private fun MuhasebeGidisat() {
                 Vakit.entries.forEach { vk ->
                     val fs = data.fracs[vk.name].orEmpty()
                     val avg = if (fs.isEmpty()) null else fs.average().toFloat()
-                    Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = 13.sp)
+                    Row(Modifier.padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
+                        Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = Type.body2)
                         Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Pal.Track)) {
                             if (avg != null) Box(
                                 Modifier.fillMaxWidth(avg).fillMaxHeight().clip(CircleShape)
                                     .background(vakitColors[vk.name] ?: Pal.Gold),
                             )
                         }
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(Space.s))
                         Text(
                             if (avg == null) "—" else "${(avg * 7).coerceIn(1f, 7f).roundToInt()}/7",
-                            color = if (avg == null) Pal.Muted else Pal.Text, fontSize = 12.sp,
+                            color = if (avg == null) Pal.Muted else Pal.Text, fontSize = Type.label,
                         )
                     }
                 }
-                Spacer(Modifier.height(6.dp))
-                Text("vaktin başı → sonraki vakit", color = Pal.Muted, fontSize = 10.sp)
+                Spacer(Modifier.height(Space.xs))
+                Text("vaktin başı → sonraki vakit", color = Pal.Muted, fontSize = Type.micro)
 
-                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = Pal.Line)
-                Text("Vakit girdikten kaç dakika sonra işaretliyorsun", color = Pal.Text, fontSize = 13.sp)
+                HorizontalDivider(Modifier.padding(vertical = Space.m), color = Pal.Line)
+                Text("Vakit girdikten kaç dakika sonra işaretliyorsun", color = Pal.Text, fontSize = Type.body2)
                 Vakit.entries.forEach { vk ->
                     val ms = data.mins[vk.name].orEmpty()
-                    Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = 13.sp)
+                    Row(Modifier.padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
+                        Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = Type.body2)
                         val avgMin = if (ms.isEmpty()) null else ms.average().toInt()
                         Text(
                             when {
@@ -1139,16 +1139,16 @@ private fun MuhasebeGidisat() {
                                 avgMin >= 60 -> "${avgMin / 60}sa ${avgMin % 60}dk"
                                 else -> "${avgMin}dk"
                             },
-                            Modifier.weight(1f), color = if (avgMin == null) Pal.Muted else Pal.Gold, fontSize = 15.sp,
+                            Modifier.weight(1f), color = if (avgMin == null) Pal.Muted else Pal.Gold, fontSize = Type.body,
                         )
-                        Text(if (ms.isEmpty()) "" else "${ms.size} namaz", color = Pal.Muted, fontSize = 11.sp)
+                        Text(if (ms.isEmpty()) "" else "${ms.size} namaz", color = Pal.Muted, fontSize = Type.micro)
                     }
                 }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(Space.s))
                 Text(
                     "Not: Bu sayı bir fazilet ölçüsü değil; kendi düzenini görmen için. " +
                         "Hanefi'de her vakitte erken kılmak daha faziletli sayılsa da, niyet ve istikrar öndedir.",
-                    color = Pal.Muted, fontSize = 11.sp, lineHeight = 16.sp,
+                    color = Pal.Muted, fontSize = Type.micro, lineHeight = 16.sp,
                 )
             }
         }
@@ -1159,7 +1159,7 @@ private fun MuhasebeGidisat() {
 @Composable
 private fun RadarChart(axes: List<Pair<String, Float>>, colors: List<Color>, anim: Float) {
     val measurer = rememberTextMeasurer()
-    val labelStyle = TextStyle(fontSize = 11.sp, color = Pal.Muted)
+    val labelStyle = TextStyle(fontSize = Type.micro, color = Pal.Muted)
     Canvas(Modifier.fillMaxWidth().height(250.dp)) {
         val c = Offset(size.width / 2f, size.height / 2f + 2.dp.toPx())
         val r = minOf(size.width, size.height) / 2f - 34.dp.toPx()

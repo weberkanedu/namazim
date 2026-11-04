@@ -164,7 +164,7 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
     )
     val haptic = LocalHapticFeedback.current
     // floating dock instead of a full-width bar: the photo keeps running underneath it
-    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp, vertical = 10.dp)) {
+    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.xl, vertical = Space.s)) {
         Row(
             Modifier.fillMaxWidth().height(62.dp)
                 .shadow(16.dp, RoundedCornerShape(31.dp))
@@ -176,7 +176,7 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
                     ),
                 )
                 .border(1.dp, Color.White.copy(alpha = .10f), RoundedCornerShape(31.dp))
-                .padding(horizontal = 6.dp),
+                .padding(horizontal = Space.xs),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
@@ -201,7 +201,7 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
                     AnimatedVisibility(on, enter = fadeIn(tween(180)) + expandHorizontally(tween(180)), exit = fadeOut(tween(120))) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Spacer(Modifier.width(7.dp))
-                            Text(name, color = Pal.Gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text(name, color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -217,14 +217,14 @@ fun LocationChip(city: String, locating: Boolean, onRefresh: () -> Unit) {
     val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 12f))
     Box {
         Row(
-            Modifier.clip(CircleShape).clickable(enabled = !locating) { open = true }.padding(horizontal = 8.dp, vertical = 6.dp),
+            Modifier.clip(CircleShape).clickable(enabled = !locating) { open = true }.padding(horizontal = Space.s, vertical = Space.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Default.Place, null, tint = Pal.Gold, modifier = Modifier.size(12.dp))
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(Space.xs))
             Text(
                 if (locating) "Konum alınıyor…" else city.ifEmpty { "Konumum" },
-                color = Pal.Text, fontSize = 12.5.sp, fontWeight = FontWeight.Medium, style = shadow, maxLines = 1,
+                color = Pal.Text, fontSize = Type.label, fontWeight = FontWeight.Medium, style = shadow, maxLines = 1,
             )
             Spacer(Modifier.width(1.dp))
             Icon(Icons.Default.KeyboardArrowDown, null, tint = Pal.Text.copy(alpha = .55f), modifier = Modifier.size(14.dp))
@@ -232,16 +232,16 @@ fun LocationChip(city: String, locating: Boolean, onRefresh: () -> Unit) {
         DropdownMenu(expanded = open, onDismissRequest = { open = false }, containerColor = Pal.Card, shape = RoundedCornerShape(16.dp)) {
             Text(
                 if (city.isEmpty()) "Konum belirlenmedi" else city,
-                Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 8.dp), color = Pal.Muted, fontSize = 12.sp,
+                Modifier.padding(start = Space.l, end = Space.l, top = Space.xs, bottom = Space.s), color = Pal.Muted, fontSize = Type.label,
             )
             HorizontalDivider(color = Pal.Line)
             DropdownMenuItem(
-                text = { Text("Konumu güncelle", color = Pal.Text, fontSize = 14.sp) },
+                text = { Text("Konumu güncelle", color = Pal.Text, fontSize = Type.body) },
                 leadingIcon = { Icon(Icons.Default.Refresh, null, tint = Pal.Gold, modifier = Modifier.size(18.dp)) },
                 onClick = { open = false; onRefresh() },
             )
             DropdownMenuItem(
-                text = { Text("Uygulama izinleri", color = Pal.Text, fontSize = 14.sp) },
+                text = { Text("Uygulama izinleri", color = Pal.Text, fontSize = Type.body) },
                 leadingIcon = { Icon(Icons.Default.Settings, null, tint = Pal.Muted, modifier = Modifier.size(18.dp)) },
                 onClick = {
                     open = false
@@ -284,12 +284,12 @@ fun WidgetPreview() {
         Modifier.fillMaxSize().background(Pal.Ground), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xl)) {
             Image(painterResource(R.drawable.ic_logo), "Logo", Modifier.size(108.dp))
             Image(bmp, "Canlı ikon", Modifier.size(144.dp))
         }
-        Spacer(Modifier.height(8.dp))
-        Text(NamazimWidget.label(ctx), color = Pal.Text, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+        Spacer(Modifier.height(Space.s))
+        Text(NamazimWidget.label(ctx), color = Pal.Text, fontSize = Type.micro, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -340,26 +340,26 @@ fun TimelineRow(
                 )
                 Spacer(Modifier.width(2.dp))
             } else if (!child) {
-                Spacer(Modifier.width(18.dp))
+                Spacer(Modifier.width(Space.l))
             }
             Column(Modifier.weight(1f).padding(start = if (child) 12.dp else 0.dp)) {
                 Text(name, color = color, fontSize = if (child) 13.sp else 15.sp,
                     fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1)
                 when {
-                    kaza -> Text("kaza", color = Pal.Warn, fontSize = 10.sp, letterSpacing = .4.sp)
+                    kaza -> Text("kaza", color = Pal.Warn, fontSize = Type.micro, letterSpacing = .4.sp)
                     !sub.isNullOrEmpty() -> Box(
                         Modifier.padding(top = 1.dp).clip(RoundedCornerShape(6.dp))
                             .border(1.dp, Pal.Gold.copy(alpha = .35f), RoundedCornerShape(6.dp))
                             .padding(horizontal = 5.dp, vertical = 1.dp),
                     ) {
-                        Text(sub, color = Pal.Gold.copy(alpha = .9f), fontSize = 10.sp, letterSpacing = .5.sp)
+                        Text(sub, color = Pal.Gold.copy(alpha = .9f), fontSize = Type.micro, letterSpacing = .5.sp)
                     }
                 }
             }
             Text(time, color = color, fontSize = if (child) 12.5.sp else 15.sp,
                 fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal)
         }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(Space.m))
         if (onToggle != null) TickButton(prayed, active, onToggle) else Spacer(Modifier.width(26.dp))
     }
 }
@@ -398,7 +398,7 @@ fun rememberNow(): Long {
 
 @Composable
 fun ScreenTitle(title: String, sub: String? = null, trailing: @Composable () -> Unit = {}) {
-    Column(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 24.dp, end = 24.dp, top = 18.dp)) {
+    Column(Modifier.fillMaxWidth().statusBarsPadding().padding(start = Space.xl, end = Space.xl, top = Space.l)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
                 Text(title, style = NumStyle, fontSize = Type.display, lineHeight = 46.sp, letterSpacing = (-0.5).sp, color = Pal.Text)
@@ -410,7 +410,7 @@ fun ScreenTitle(title: String, sub: String? = null, trailing: @Composable () -> 
             trailing()
         }
         // ince altın çizgi: başlığı gövdeden ayırır
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(Space.m))
         Box(
             Modifier.fillMaxWidth().height(1.dp).background(
                 androidx.compose.ui.graphics.Brush.horizontalGradient(
@@ -427,8 +427,8 @@ fun GoldButton(text: String, modifier: Modifier = Modifier, icon: ImageVector? =
         onClick = onClick, modifier = modifier.heightIn(min = 52.dp), shape = CircleShape,
         colors = ButtonDefaults.buttonColors(containerColor = Pal.Gold, contentColor = Pal.Ground),
     ) {
-        if (icon != null) { Icon(icon, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)) }
-        Text(text, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        if (icon != null) { Icon(icon, null, Modifier.size(20.dp)); Spacer(Modifier.width(Space.s)) }
+        Text(text, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -438,7 +438,7 @@ fun GhostButton(text: String, modifier: Modifier = Modifier, color: Color = Pal.
         onClick = onClick, modifier = modifier.heightIn(min = 48.dp), shape = CircleShape,
         border = androidx.compose.foundation.BorderStroke(1.dp, if (color == Pal.Text) Pal.Border else color),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = color),
-    ) { Text(text, fontSize = 14.sp) }
+    ) { Text(text, fontSize = Type.body) }
 }
 
 private val TR_DATE = DateTimeFormatter.ofPattern("d MMMM EEEE", Locale("tr"))
@@ -470,11 +470,11 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
 
     key(refresh) {
         if (!store.hasLocation) {
-            Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center) {
-                Text("Hoş geldin", style = NumStyle, fontSize = 44.sp, color = Pal.Text)
-                Spacer(Modifier.height(8.dp))
-                Text("Vakitleri hesaplamak için konumuna ihtiyacım var. Konum sadece telefonda kalır.", color = Pal.Muted, fontSize = 15.sp)
-                Spacer(Modifier.height(24.dp))
+            Column(Modifier.fillMaxSize().padding(Space.xxl), verticalArrangement = Arrangement.Center) {
+                Text("Hoş geldin", style = NumStyle, fontSize = Type.display, color = Pal.Text)
+                Spacer(Modifier.height(Space.s))
+                Text("Vakitleri hesaplamak için konumuna ihtiyacım var. Konum sadece telefonda kalır.", color = Pal.Muted, fontSize = Type.body)
+                Spacer(Modifier.height(Space.xl))
                 GoldButton(if (locating) "Konum alınıyor…" else "Konumumu bul", Modifier.fillMaxWidth(), Icons.Default.Place) { if (!locating) locate() }
             }
         } else {
@@ -521,7 +521,7 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                 )))
             val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 14f))
             Row(
-                Modifier.statusBarsPadding().fillMaxWidth().padding(start = 14.dp, end = 8.dp, top = 8.dp),
+                Modifier.statusBarsPadding().fillMaxWidth().padding(start = Space.m, end = Space.s, top = Space.s),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 LocationChip(store.city, locating) { if (!locating) locate() }
@@ -530,7 +530,7 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
             }
             // Date, hijri and the next mübarek gün: a small "1 KAS" tile like Vakit, then the details.
             Row(
-                Modifier.align(Alignment.BottomStart).padding(start = 20.dp, end = 96.dp, bottom = 14.dp),
+                Modifier.align(Alignment.BottomStart).padding(start = Space.l, end = 96.dp, bottom = Space.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
@@ -538,34 +538,34 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                         .padding(horizontal = 9.dp, vertical = 5.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text("${calDate.dayOfMonth}", style = NumStyle, fontSize = 19.sp, lineHeight = 20.sp, color = Pal.Text)
+                    Text("${calDate.dayOfMonth}", style = NumStyle, fontSize = Type.h2, lineHeight = 20.sp, color = Pal.Text)
                     Text(
                         calDate.format(DateTimeFormatter.ofPattern("MMM", Locale("tr"))).uppercase(Locale("tr")),
                         color = Pal.Gold, fontSize = 8.sp, letterSpacing = 1.sp, fontWeight = FontWeight.SemiBold,
                     )
                 }
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(Space.s))
                 Column {
-                    Text(calDate.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = 12.sp, style = shadow)
-                    Text(hijri(calDate), color = Pal.Text.copy(alpha = .70f), fontSize = 11.5.sp, style = shadow)
+                    Text(calDate.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = Type.label, style = shadow)
+                    Text(hijri(calDate), color = Pal.Text.copy(alpha = .70f), fontSize = Type.micro, style = shadow)
                     Spacer(Modifier.height(2.dp))
-                    Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = 11.sp,
+                    Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = Type.micro,
                         fontWeight = FontWeight.SemiBold, style = shadow)
                 }
             }
             if (fastSky) {
-                Text("Hızlı önizleme · bitirmek için basılı tut", Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
-                    .clip(CircleShape).background(Color(0x66000000)).padding(horizontal = 12.dp, vertical = 4.dp),
-                    color = Pal.Text, fontSize = 11.sp)
+                Text("Hızlı önizleme · bitirmek için basılı tut", Modifier.align(Alignment.BottomCenter).padding(bottom = Space.s)
+                    .clip(CircleShape).background(Color(0x66000000)).padding(horizontal = Space.m, vertical = Space.xs),
+                    color = Pal.Text, fontSize = Type.micro)
             }
         }
 
             // ---- geri sayım: uygulama açılır açılmaz görünsün
-            Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(heroLabel.uppercase(Locale("tr")), color = Pal.Gold, fontSize = 11.sp,
+            Column(Modifier.fillMaxWidth().padding(top = Space.s), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(heroLabel.uppercase(Locale("tr")), color = Pal.Gold, fontSize = Type.micro,
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
-                Text(heroTime, style = NumStyle, fontSize = 46.sp, lineHeight = 48.sp, color = Pal.Text)
-                Text(heroSub, color = Pal.Muted, fontSize = 13.sp)
+                Text(heroTime, style = NumStyle, fontSize = Type.display, lineHeight = 48.sp, color = Pal.Text)
+                Text(heroSub, color = Pal.Muted, fontSize = Type.body2)
             }
 
             val todaySlots = slots(store.lat, store.lng, today).associateBy { it.vakit }
@@ -598,7 +598,7 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
             val activeExtra = ex.firstOrNull { it.end != null && now in it.start until it.end }
             LaunchedEffect(Unit) { activeExtra?.let { expanded[it.group] = true } }
 
-            LazyColumn(Modifier.weight(1f).padding(horizontal = 24.dp)) {
+            LazyColumn(Modifier.weight(1f).padding(horizontal = Space.xl)) {
                 main.forEachIndexed { i, r ->
                     item("p$i") {
                         TimelineRow(
@@ -630,7 +630,7 @@ fun NamazScreen(onOpenSettings: () -> Unit) {
                         }
                     }
                 }
-                item { Spacer(Modifier.height(12.dp)); SetupCard(); Spacer(Modifier.height(12.dp)) }
+                item { Spacer(Modifier.height(Space.m)); SetupCard(); Spacer(Modifier.height(Space.m)) }
             }
         }
         }
@@ -658,13 +658,13 @@ fun ReminderScreen(key: String, onClose: () -> Unit) {
     val progress = ((now - slot.start).toFloat() / (slot.end - slot.start)).coerceIn(0f, 1f)
 
     Column(
-        Modifier.fillMaxSize().background(Pal.Ground).statusBarsPadding().navigationBarsPadding().padding(horizontal = 28.dp),
+        Modifier.fillMaxSize().background(Pal.Ground).statusBarsPadding().navigationBarsPadding().padding(horizontal = Space.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Kapat", tint = Pal.Muted) }
         }
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(Space.xl))
         androidx.compose.foundation.Canvas(Modifier.size(200.dp)) {
             val r = size.minDimension / 2
             drawCircle(Pal.Track, r - 2, style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
@@ -679,25 +679,25 @@ fun ReminderScreen(key: String, onClose: () -> Unit) {
             }
             drawPath(androidx.compose.ui.graphics.Path.combine(androidx.compose.ui.graphics.PathOperation.Difference, crescent, cut), Pal.Gold)
         }
-        Spacer(Modifier.height(32.dp))
-        Text("${slot.vakit.ad} vakti girdi".uppercase(Locale("tr")), color = Pal.Gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+        Spacer(Modifier.height(Space.xxl))
+        Text("${slot.vakit.ad} vakti girdi".uppercase(Locale("tr")), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
         Text("Kıldın mı?", style = NumStyle, fontSize = 60.sp, color = Pal.Text)
-        Text(NAGS[((now / 60_000) % NAGS.size).toInt()], color = Pal.Muted, fontSize = 17.sp, lineHeight = 26.sp, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(24.dp))
+        Text(NAGS[((now / 60_000) % NAGS.size).toInt()], color = Pal.Muted, fontSize = Type.body, lineHeight = 26.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(Space.xl))
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(countdown(slot.end - now), style = NumStyle, fontSize = 34.sp, color = Pal.Text)
-            Spacer(Modifier.width(10.dp))
-            Text("vaktin çıkmasına", color = Pal.Muted, fontSize = 14.sp, modifier = Modifier.padding(bottom = 6.dp))
+            Text(countdown(slot.end - now), style = NumStyle, fontSize = Type.title, color = Pal.Text)
+            Spacer(Modifier.width(Space.s))
+            Text("vaktin çıkmasına", color = Pal.Muted, fontSize = Type.body, modifier = Modifier.padding(bottom = Space.xs))
         }
         Spacer(Modifier.weight(1f))
         GoldButton("Kıldım", Modifier.fillMaxWidth().height(60.dp), Icons.Default.Check) {
             Reminders.markPrayed(ctx, slot.key, slot.vakit); onClose()
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(Space.s))
         GhostButton("${store.snoozeMin} dk sonra hatırlat", Modifier.fillMaxWidth()) {
             Reminders.snooze(ctx, slot.key, slot.vakit); onClose()
         }
-        Text("Kılana kadar hatırlatmaya devam edeceğim.", Modifier.padding(vertical = 14.dp), color = Pal.Muted, fontSize = 12.sp)
+        Text("Kılana kadar hatırlatmaya devam edeceğim.", Modifier.padding(vertical = Space.m), color = Pal.Muted, fontSize = Type.label)
     }
 }
 
@@ -717,8 +717,8 @@ fun SetupCard() {
     val askNotif = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     if (notifOk && batteryOk && !xiaomi) return
 
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Pal.Card).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.m)).background(Pal.Card).padding(Space.l),
+        verticalArrangement = Arrangement.spacedBy(Space.s)) {
         Text("Hatırlatmalar için", color = Pal.Text, fontWeight = FontWeight.SemiBold)
         if (!notifOk) GhostButton("Bildirimlere izin ver", color = Pal.Gold) { askNotif.launch(Manifest.permission.POST_NOTIFICATIONS) }
         if (!batteryOk) GhostButton("Pil kısıtlamasını kaldır", color = Pal.Gold) {
@@ -727,7 +727,7 @@ fun SetupCard() {
             ctx.startActivity(i)
         }
         if (xiaomi) {
-            Text("Xiaomi uygulamaları arka planda kapatır. Otomatik başlatmayı aç:", color = Pal.Muted, fontSize = 13.sp)
+            Text("Xiaomi uygulamaları arka planda kapatır. Otomatik başlatmayı aç:", color = Pal.Muted, fontSize = Type.body2)
             GhostButton("Otomatik başlatma", color = Pal.Gold) {
                 openAutostart(ctx)
                 prefs.edit().putBoolean("autostartSeen", true).apply()

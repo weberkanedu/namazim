@@ -38,20 +38,20 @@ import kotlinx.coroutines.launch
 
 @Composable
 private fun Section(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Text(title, Modifier.padding(start = 24.dp, end = 24.dp, top = 22.dp, bottom = 8.dp), color = Pal.Gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-    Column(Modifier.padding(horizontal = 24.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Pal.Card).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+    Text(title, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.s), color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
+    Column(Modifier.padding(horizontal = Space.xl).fillMaxWidth().clip(RoundedCornerShape(Radius.m)).background(Pal.Card).padding(Space.l),
+        verticalArrangement = Arrangement.spacedBy(Space.m), content = content)
 }
 
 @Composable
 private fun Chips(options: List<Int>, isOn: (Int) -> Boolean, label: (Int) -> String, onClick: (Int) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         options.forEach { n ->
             val on = isOn(n)
             Box(Modifier.heightIn(min = 36.dp).clip(CircleShape).background(if (on) Pal.Gold else Color.Transparent)
-                .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape).clickable { onClick(n) }.padding(horizontal = 12.dp, vertical = 8.dp),
+                .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape).clickable { onClick(n) }.padding(horizontal = Space.m, vertical = Space.s),
                 contentAlignment = Alignment.Center) {
-                Text(label(n), color = if (on) Pal.Ground else Pal.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(label(n), color = if (on) Pal.Ground else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -60,7 +60,7 @@ private fun Chips(options: List<Int>, isOn: (Int) -> Boolean, label: (Int) -> St
 @Composable
 private fun SwitchRow(text: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text, Modifier.weight(1f), color = Pal.Text, fontSize = 14.sp)
+        Text(text, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
         Switch(checked, onChange, colors = SwitchDefaults.colors(checkedTrackColor = Pal.Gold, checkedThumbColor = Pal.Ground,
             uncheckedTrackColor = Pal.Track, uncheckedThumbColor = Pal.Muted, uncheckedBorderColor = Pal.Border))
     }
@@ -69,8 +69,8 @@ private fun SwitchRow(text: String, checked: Boolean, onChange: (Boolean) -> Uni
 @Composable
 private fun StatusRow(text: String, ok: Boolean, action: String, onClick: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text, Modifier.weight(1f), color = Pal.Text, fontSize = 14.sp)
-        if (ok) Text("✓ Açık", color = Pal.Gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text(text, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
+        if (ok) Text("✓ Açık", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
         else TextButton(onClick = onClick) { Text(action, color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
     }
 }
@@ -106,13 +106,13 @@ fun AyarlarScreen(onBack: () -> Unit) {
         Section("Görünüm") {
             // Which sky the Seher header draws: the live shader, layed photo plates, or a looping clip.
             Text("Gökyüzü", color = Pal.Text, fontSize = Type.body)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 listOf("shader" to "Canlı", "photo" to "Fotoğraf", "video" to "Video").forEach { (id, label) ->
                     val on = store.skyMode == id
                     Box(Modifier.heightIn(min = 36.dp).clip(CircleShape).background(if (on) Pal.Gold else Color.Transparent)
                         .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape).clickable { store.skyMode = id; v++ }
-                        .padding(horizontal = 14.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
-                        Text(label, color = if (on) Pal.Ground else Pal.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        .padding(horizontal = Space.m, vertical = Space.s), contentAlignment = Alignment.Center) {
+                        Text(label, color = if (on) Pal.Ground else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -178,7 +178,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
 
         Section("Konum") {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Konum belirlenmedi" }, Modifier.weight(1f), color = Pal.Text, fontSize = 14.sp)
+                Text(if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Konum belirlenmedi" }, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
                 TextButton(onClick = { askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }) {
                     Text("Güncelle", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
                 }
@@ -196,13 +196,13 @@ fun AyarlarScreen(onBack: () -> Unit) {
             }
             if (Build.MANUFACTURER.equals("xiaomi", true)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Otomatik başlatma (Xiaomi)", Modifier.weight(1f), color = Pal.Text, fontSize = 14.sp)
+                    Text("Otomatik başlatma (Xiaomi)", Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
                     TextButton(onClick = { openAutostart(ctx) }) { Text("Aç", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
                 }
             }
         }
 
-        Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.padding(24.dp), color = Pal.Muted, fontSize = 12.sp)
+        Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.padding(Space.xl), color = Pal.Muted, fontSize = Type.label)
         }
     }
 
@@ -232,12 +232,12 @@ fun AyarlarScreen(onBack: () -> Unit) {
                             "goal" -> "Günde kaç sayfa okumayı hedefliyorsun?"
                             else -> "Günde kaç kaza namazı kılacaksın?"
                         },
-                        color = Pal.Muted, fontSize = 12.sp, lineHeight = 17.sp,
+                        color = Pal.Muted, fontSize = Type.label, lineHeight = 17.sp,
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Space.s))
                     // sayısal ayarlarda − / + ile hızlı ayar; yazmaya da devam edilebilir
                     val range = when (dialog) { "nag" -> Triple(5, 10, 180); "snooze" -> Triple(5, 5, 180); "goal" -> Triple(5, 5, 300); "kaza" -> Triple(1, 1, 50); else -> null }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                         if (range != null) {
                             val (step, lo, _) = range
                             val cur = draft.trim().toIntOrNull() ?: lo
@@ -277,16 +277,16 @@ fun AyarlarScreen(onBack: () -> Unit) {
 @Composable
 private fun ValueRow(label: String, value: String, onEdit: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).pressable(onClick = onEdit).padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.s)).pressable(onClick = onEdit).padding(vertical = Space.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(label, color = Pal.Text, fontSize = 14.sp, lineHeight = 18.sp)
+            Text(label, color = Pal.Text, fontSize = Type.body, lineHeight = 18.sp)
             Spacer(Modifier.height(2.dp))
-            Text(value, color = Pal.Gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(value, color = Pal.Gold, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
         }
-        Spacer(Modifier.width(12.dp))
-        Text("Değiştir", color = Pal.Muted, fontSize = 12.sp)
+        Spacer(Modifier.width(Space.m))
+        Text("Değiştir", color = Pal.Muted, fontSize = Type.label)
     }
 }
 @Composable
@@ -296,7 +296,7 @@ private fun StepButton(text: String, enabled: Boolean, onClick: () -> Unit) {
             .border(1.dp, if (enabled) Pal.Gold.copy(alpha = .45f) else Pal.Border, CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(text, color = if (enabled) Pal.Gold else Pal.Muted, fontSize = 20.sp) }
+    ) { Text(text, color = if (enabled) Pal.Gold else Pal.Muted, fontSize = Type.h2) }
 }
 
 /** Seçili bildirim sesini bir kez çalar. */

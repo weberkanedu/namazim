@@ -39,6 +39,7 @@ object Type {
     val display = 44.sp   // sayfa başlığı
     val title = 34.sp     // büyük sayı / ekran içi başlık
     val h2 = 22.sp        // kart başlığı
+    val num = 28.sp       // kart içi sayı (istatistik, sayaç)
     val body = 15.sp      // ana metin
     val body2 = 13.sp     // ikincil metin
     val label = 12.sp     // etiket, açıklama (en küçük)
@@ -87,7 +88,7 @@ fun AppCard(
         .border(1.dp, Color.White.copy(alpha = .055f), shape)
     if (label != null) m = m.semantics { contentDescription = label }
     if (onClick != null) m = m.clickable(onClick = onClick)
-    Column(m.padding(horizontal = 18.dp, vertical = 16.dp), content = content)
+    Column(m.padding(horizontal = Space.l, vertical = Space.l), content = content)
 }
 
 /** Kart içi küçük bölüm başlığı: "HATIM TAKİBİ", "BUGÜNE KADAR"… */
@@ -118,7 +119,7 @@ fun EmptyState(title: String, text: String, actionLabel: String? = null, onActio
             Spacer(Modifier.height(Space.l))
             Box(
                 Modifier.heightIn(min = TouchMin).clip(CircleShape).border(1.dp, Pal.Gold.copy(alpha = .55f), CircleShape)
-                    .clickable(onClick = onAction).padding(horizontal = 20.dp),
+                    .clickable(onClick = onAction).padding(horizontal = Space.l),
                 contentAlignment = Alignment.Center,
             ) { Text(actionLabel, color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
         }
