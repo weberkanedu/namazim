@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gül 3B v2</title>
+<style>
+  :root{--bg:#0B1322;--ink:#F3EEE3;--mut:#C9D1DC;--acc:#E8BE74;--panel:#121D33}
+  body.studio{--bg:#eceef0;--ink:#1c2230;--mut:#5d6573;--acc:#b8862f;--panel:#ffffff}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif;overflow-x:hidden;transition:background .4s}
+  #wrap{display:flex;flex-wrap:wrap;min-height:100vh}
+  #stage{flex:1 1 560px;min-height:600px;position:relative;overflow:hidden}
+  #stage canvas{display:block;width:100%;height:100%}
+  #ov{position:absolute;inset:0;pointer-events:none}
+  .lab{position:absolute;transform:translate(-50%,-50%);font:600 13px system-ui;white-space:nowrap;color:var(--ink);letter-spacing:.2px;transition:color .3s}
+  .lab small{display:block;font:500 11px system-ui;color:var(--mut);text-align:center}
+  .lab.hot{color:var(--acc)}
+  #panel{flex:0 0 300px;padding:22px 22px 30px;background:var(--panel);box-sizing:border-box;transition:background .4s}
+  h2{font:600 22px Georgia,serif;margin:0 0 6px;color:var(--acc)}
+  p{color:var(--mut);margin:0 0 14px;font-size:13px}
+  label{display:block;margin:10px 0 2px;font-size:13px}
+  input[type=range]{width:100%;accent-color:var(--acc)}
+  .row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}
+  button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:7px 12px;cursor:pointer;font-size:12px;opacity:.85}
+  button.on{background:var(--acc);color:var(--bg);opacity:1}
+  .hint{position:absolute;left:16px;bottom:12px;color:var(--mut);opacity:.6;font-size:12px}
+  #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#F4B08F;padding:30px;text-align:center}
+</style></head>
+<body>
+<div id="wrap">
+  <div id="stage"><svg id="ov"></svg><div id="labs"></div><div id="err">3B kütüphane yüklenemedi.</div><div class="hint">Sürükle: çevir · Tekerlek: yakınlaş</div></div>
+  <div id="panel">
+    <h2>Gül · 3B v2</h2>
+    <p>Gerçek gül gibi: iç gonca altın açıyla sarmal dizilir, dıştaki 5 büyük yaprak 5 hedefin. Hedefe yaklaştıkça yaprak dışa yatar, kenarları kıvrılır. Beşi tamamlanınca gonca da çözülür.</p>
+    <div class="row">
+      <button onclick="preset('hic')">Hiçbir şey</button>
+      <button onclick="preset('kismi')">Günün ortası</button>
+      <button onclick="preset('tam')">Her şey tamam</button>
+    </div>
+    <div id="sliders"></div>
+    <label style="margin-top:18px">Gül</label>
+    <div class="row" id="looks">
+      <button data-l="kizil" class="on">Kızıl</button>
+      <button data-l="pembe">Pembe</button>
+      <button data-l="krem">Krem</button>
+    </div>
+    <label>Sahne</label>
+    <div class="row" id="scenes">
+      <button data-s="gece" class="on">Gece (uygulama)</button>
+      <button data-s="studio">Stüdyo</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+window.__ready = true;
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const G = [
+  {k:'Namaz', steps:5}, {k:'Sayfa', steps:3}, {k:'Hatim', steps:0}, {k:'Kaza', steps:0}, {k:'Hedef', steps:0},
+];
+const target = [0,0,0,0,0], cur = [0,0,0,0,0];
+let budC = 0, hot = -1, hotT = 0;
+
+// ---------------- UI
+const sl = document.getElementById('sliders');
+G.forEach((g,i) => {
+  const max = g.steps || 10, w = document.createElement('div');
+  w.innerHTML = `<label>${g.k} <b id="v${i}"></b></label><input type="range" min="0" max="${max}" value="0" id="s${i}">`;
+  sl.appendChild(w);
+  w.querySelector('input').oninput = e => { target[i] = +e.target.value / max; label(i); hot = i; hotT = performance.now(); };
+});
+const val = i => { const g=G[i], max=g.steps||10, v=Math.round(target[i]*max); return g.steps ? `${v}/${g.steps}` : `%${v*10}`; };
+function label(i){ document.getElementById('v'+i).textContent = val(i); document.getElementById('s'+i).value = Math.round(target[i]*(G[i].steps||10)); }
+window.preset = p => { const v = p==='hic'?[0,0,0,0,0]:p==='tam'?[1,1,1,1,1]:[3/5,1/3,.4,.2,.6]; v.forEach((x,i)=>{target[i]=x;label(i);}); hot=-1; };
+G.forEach((_,i)=>label(i));
+
+// ---------------- renderer / stage (teardown studio recipe: env softboxes, GTAO, soft VSM shadow, neutral tone map)
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias:false, powerPreference:'high-performance'});
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(30, 1, .05, 60);
+cam.position.set(3.6, 5.0, 5.2);
+const ctl = new OrbitControls(cam, renderer.domElement);
+ctl.target.set(0, 1.0, 0); ctl.enableDamping = true; ctl.autoRotate = true; ctl.autoRotateSpeed = .45;
+ctl.minDistance = 2.4; ctl.maxDistance = 9; ctl.maxPolarAngle = 1.48; ctl.enablePan = false;
+
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType, samples:8}));
+composer.addPass(new RenderPass(scene, cam));
+// GTAO dropped: it paints the night floor as a black slab, and phones can't afford it; depth comes from baked vertex shading
+// bloom only catches the reward glow (emissive) — threshold high, strength low (teardown: keep emissive under 1)
+const bloom = new UnrealBloomPass(new THREE.Vector2(4,4), 0, .6, .82);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// environment: big top softbox, two side strips, a warm front kicker
+{
+  const env = new THREE.Scene(); env.background = new THREE.Color('#5a5e66');
+  const box = (w,h,pos,c,k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(k), side:THREE.DoubleSide})); m.position.copy(pos); m.lookAt(0,0,0); env.add(m); };
+  box(12,12,new THREE.Vector3(0,14,2),'#ffffff',2.4);
+  box(3,14,new THREE.Vector3(-12,4,6),'#ffffff',3.0);
+  box(3,14,new THREE.Vector3(12,4,-4),'#dfe8ff',2.0);
+  box(18,2,new THREE.Vector3(0,2,14),'#ffe6c8',1.4);
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(env, .02).texture; pm.dispose();
+}
+const sun = new THREE.DirectionalLight('#fff4e6', 2.4);
+sun.position.set(-2.2, 6, 2.6); sun.castShadow = true;
+Object.assign(sun.shadow.camera, {left:-2.2,right:2.2,top:2.2,bottom:-2.2,near:1,far:14});
+sun.shadow.mapSize.set(2048,2048); sun.shadow.radius = 4; sun.shadow.bias = -.0004; sun.shadow.normalBias = .02;
+scene.add(sun, new THREE.HemisphereLight('#ffffff', '#3a3030', .35));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.ShadowMaterial({opacity:.32, color:'#05070c', polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-8}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+
+const SCENES = {
+  gece:   {top:'#14203a', mid:'#0e1830', low:'#0B1322', shadow:.42, env:.9},
+  studio: {top:'#f3f3f4', mid:'#e9eaec', low:'#dfe1e4', shadow:.26, env:1.0},
+};
+function setScene(s){
+  const S = SCENES[s], c = document.createElement('canvas'); c.width = 4; c.height = 512;
+  const g = c.getContext('2d'), gr = g.createLinearGradient(0,0,0,512);
+  gr.addColorStop(0,S.top); gr.addColorStop(.55,S.mid); gr.addColorStop(1,S.low); g.fillStyle = gr; g.fillRect(0,0,4,512);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; scene.background = t;
+  floor.material.opacity = S.shadow; scene.environmentIntensity = S.env;
+  document.body.classList.toggle('studio', s==='studio');
+}
+document.querySelectorAll('#scenes button').forEach(b => b.onclick = () => { document.querySelectorAll('#scenes button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); setScene(b.dataset.s); });
+setScene('gece');
+
+// ---------------- petal: a surface along a bending spine, cupped across, margins rolled back near the rim
+const NU = 28, NV = 40;
+function petalGeo(){
+  const g = new THREE.BufferGeometry(), n = (NU+1)*(NV+1), idx = [];
+  for (let j=0;j<NV;j++) for (let i=0;i<NU;i++){ const a=j*(NU+1)+i, b=a+1, c=a+NU+1, d=c+1; idx.push(a,c,b, b,c,d); }
+  g.setIndex(idx);
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3),3));
+  g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n*3),3));
+  return g;
+}
+const C1 = new THREE.Color(), C2 = new THREE.Color();
+const ss = (a,b,x) => { const t = Math.min(1,Math.max(0,(x-a)/(b-a))); return t*t*(3-2*t); };
+const lerp = THREE.MathUtils.lerp;
+// p: {L, W, lean, curl, cup, roll, rb, y0, wave, col:{base,mid,edge}}
+function shape(geo, p){
+  const pos = geo.attributes.position.array, col = geo.attributes.color.array;
+  const ds = p.L / NV; let a = p.lean, r = p.rb, y = p.y0, k = 0;
+  for (let j=0;j<=NV;j++){
+    const v = j/NV;
+    if (j>0){ a += p.curl*ds*(.4 + 1.2*v); r += Math.sin(a)*ds; y += Math.cos(a)*ds; }
+    const Tr = Math.sin(a), Ty = Math.cos(a), Nr = -Ty, Ny = Tr;   // N: the inner/upper face
+    // obovate outline with a rounded rim
+    const w = p.W * (.16 + .84*Math.sin(Math.PI/2*Math.min(1, v/.66))) * (v>.66 ? Math.sqrt(Math.max(0, 1 - ((v-.66)/.34)**2)) : 1);
+    for (let i=0;i<=NU;i++){
+      const u = i/NU*2 - 1, au = Math.abs(u);
+      const cup = p.cup * p.W * u*u * (.35 + .65*Math.sin(Math.PI*Math.min(1,v*1.1)));
+      const roll = p.roll * p.W * Math.max(0, au - .35)**2 * ss(.35, 1, v) * 2.2;
+      const wav = p.wave * Math.sin(u*9.0 + j*.05) * ss(.75,1,v) * .03;
+      const xh = u * w * .5, hugD = Math.min(xh*xh / (2*Math.max(r, .07)), Math.max(r, .07));
+      const d = lerp(cup, hugD, p.hug || 0) - roll + wav;
+      const x = u * w * .5 * (1 - .18*roll/(p.W+1e-6));
+      pos[k] = r + Nr*d; pos[k+1] = y + Ny*d; pos[k+2] = x;
+      // colour: pale base → body → darker rim, a touch of variation
+      C1.copy(p.col.base).lerp(p.col.mid, ss(0, .32, v));
+      C2.copy(C1).lerp(p.col.edge, ss(.55, 1, Math.max(v, au*.95)) * .6);
+      const occ = (p.occ ?? .5) * (1 - ss(0, .45, v)) + .25*(p.hug||0)*(1-au);
+      const n = (.94 + .06*Math.sin(u*13 + v*7)) * (1 - Math.min(.7, occ));
+      col[k] = C2.r*n; col[k+1] = C2.g*n; col[k+2] = C2.b*n; k += 3;
+    }
+  }
+  geo.attributes.position.needsUpdate = true; geo.attributes.color.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
+  return {r, y};   // tip
+}
+
+const LOOKS = {
+  kizil: {base:'#f2d7a6', mid:'#b8123a', edge:'#4a0614', inner:'#7a0a22', sheen:'#ff8fa6', glow:'#ff3a5c'},
+  pembe: {base:'#fff1df', mid:'#f48fab', edge:'#c2506d', inner:'#d66e88', sheen:'#ffe0ea', glow:'#ff8fb5'},
+  krem:  {base:'#f6e7b8', mid:'#f7efe0', edge:'#e3cfae', inner:'#efdcb5', sheen:'#ffffff', glow:'#ffd9a0'},
+};
+let look = 'kizil', lookDirty = true;
+const petalMat = new THREE.MeshPhysicalMaterial({vertexColors:true, side:THREE.DoubleSide, roughness:.52, sheen:1, sheenRoughness:.45, envMapIntensity:.55});
+document.querySelectorAll('#looks button').forEach(b => b.onclick = () => { document.querySelectorAll('#looks button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); look = b.dataset.l; lookDirty = true; });
+
+const head = new THREE.Group(); head.position.y = 1.0; head.rotation.z = .06; scene.add(head);
+const mk = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; return m; };
+// 5 goal petals, outermost, 72° apart
+const outer = G.map((_,i) => { const m = mk(petalGeo(), petalMat.clone()); m.rotation.y = -(i*72 + 18) * Math.PI/180; head.add(m); return m; });
+// inner spiral by the golden angle, small and tight at the centre
+const NIN = 16;
+const inner = Array.from({length:NIN}, (_,i) => { const m = mk(petalGeo(), petalMat); m.rotation.y = -(i*137.508) * Math.PI/180; m.userData.k = i/(NIN-1); head.add(m); return m; });
+// 5 sepals and a stem
+const green = new THREE.MeshPhysicalMaterial({vertexColors:true, side:THREE.DoubleSide, roughness:.6, envMapIntensity:.5});
+const SEP = {base:new THREE.Color('#3e6b3a'), mid:new THREE.Color('#2f5a33'), edge:new THREE.Color('#1d3b22')};
+const sepals = Array.from({length:5}, (_,i) => { const m = mk(petalGeo(), green); m.rotation.y = -(i*72 + 54) * Math.PI/180; head.add(m); return m; });
+const stemCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(.0,1.0,0), new THREE.Vector3(.03,.6,.02), new THREE.Vector3(-.02,.25,0), new THREE.Vector3(0,0,0)]);
+const stemMat = new THREE.MeshPhysicalMaterial({color:'#2d5530', roughness:.55, envMapIntensity:.5});
+scene.add(mk(new THREE.TubeGeometry(stemCurve, 40, .035, 12), stemMat));
+const hip = mk(new THREE.SphereGeometry(.09, 24, 16), stemMat); hip.scale.set(1,.8,1); hip.position.y = .97; scene.add(hip);
+
+// ---------------- reward: a warm light in the heart and gold dust rising once every goal is done
+const heart = new THREE.PointLight('#ffc46b', 0, 3.2, 1.6); heart.position.set(0, 1.28, 0); scene.add(heart);
+const NDUST = 240, dustPos = new Float32Array(NDUST*3), dustSeed = Array.from({length:NDUST}, (_,i) => [Math.random(), Math.random(), Math.random()]);
+const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos,3));
+const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,240,200,1)'); gr.addColorStop(.35,'rgba(255,200,110,.55)'); gr.addColorStop(1,'rgba(255,190,90,0)');
+  g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const dustMat = new THREE.PointsMaterial({map:dotTex, size:.07, transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending, color:'#ffd38a'});
+scene.add(new THREE.Points(dustGeo, dustMat));
+let full = 0;   // 0..1, eases in when all five goals are complete
+window.__s = () => ({full, cur:[...cur], fps:__fps, dust:dustMat.opacity, heart:heart.intensity});
+let __fps = 0, __n = 0, __t0 = performance.now();
+
+// ---------------- labels with leader lines
+const ov = document.getElementById('ov'), labs = document.getElementById('labs');
+const lines = G.map(() => { const l = document.createElementNS('http://www.w3.org/2000/svg','line'); l.setAttribute('stroke-width','1'); ov.appendChild(l); return l; });
+const tags = G.map(g => { const d = document.createElement('div'); d.className = 'lab'; labs.appendChild(d); return d; });
+const tips = G.map(() => new THREE.Vector3());
+const vproj = new THREE.Vector3();
+function proj(v){ vproj.copy(v).project(cam); return [(vproj.x*.5+.5)*stage.clientWidth, (-vproj.y*.5+.5)*stage.clientHeight, vproj.z]; }
+
+// ---------------- pose
+// openness never goes past this: the user's chosen "fully open" look
+const OPEN_MAX = .6;
+const HSL = {};
+// t=0: greyed and dimmed, t=1: the true colour
+const muted = (c, t) => { c.getHSL(HSL); return new THREE.Color().setHSL(HSL.h, HSL.s*(.32 + .68*t), HSL.l*(.55 + .45*t)); };
+function pose(){
+  const L = LOOKS[look];
+  const col = {base:new THREE.Color(L.base), mid:new THREE.Color(L.mid), edge:new THREE.Color(L.edge)};
+  const colIn = {base:new THREE.Color(L.base), mid:new THREE.Color(L.inner), edge:new THREE.Color(L.edge)};
+  petalMat.sheenColor.set(L.sheen);
+  const avg = cur.reduce((a,b)=>a+b,0)/5;
+  outer.forEach((m,i) => {
+    const o = cur[i], oc = o*OPEN_MAX, e = oc*oc*(3-2*oc);
+    // closed petals are dull and dark; each step of progress brings the colour back
+    const pc = {base:muted(col.base, o), mid:muted(col.mid, o), edge:muted(col.edge, o)};
+    m.material.sheenColor.set(L.sheen);
+    m.material.emissive.set(L.glow).multiplyScalar(.10*o*o + (o > .98 ? .06 : 0));   // a finished goal glows
+    const tip = shape(m.geometry, {L:1.12, W:1.2, lean:lerp(.95, 1.32, e), curl:lerp(-2.05, 1.05, e), hug:1-e, cup:.2, roll:lerp(0, .55, e), rb:.13, y0:-.02, wave:e, col:pc});
+    tips[i].set(tip.r, tip.y, 0).applyEuler(m.rotation).add(head.position);
+  });
+  const ci = {base:muted(colIn.base, budC*.7+.3*avg), mid:muted(colIn.mid, budC*.7+.3*avg), edge:muted(colIn.edge, budC*.7+.3*avg)};
+  inner.forEach(m => {
+    const k = m.userData.k, b = budC*(.25 + .75*k)*OPEN_MAX/.6, e = b*b*(3-2*b);
+    shape(m.geometry, {L:.36 + .56*k, W:.55 + .7*k, lean:lerp(.85, .45 + .75*k, e), curl:lerp(-2.3/(.36 + .56*k), (-1.6 + 2.2*k)/(.36 + .56*k), e), hug:1 - e*.8, cup:.5, roll:lerp(0, .3*k, e), rb:.02 + .09*k, y0:.02*(1-k), wave:.4*e, col:ci});
+  });
+  sepals.forEach(m => shape(m.geometry, {L:.62, W:.3, lean:lerp(1.0, 2.1, avg), curl:lerp(-1.5, .8, avg), hug:1-avg, cup:.5, roll:0, rb:.12, y0:-.06, wave:0, col:SEP}));
+}
+
+// ---------------- loop
+function resize(){ const w = stage.clientWidth, h = Math.max(600, innerHeight); const pr = Math.min(devicePixelRatio,2);
+  renderer.setPixelRatio(pr); renderer.setSize(w,h,false); composer.setPixelRatio(pr); composer.setSize(w,h);
+  renderer.domElement.style.height = h+'px'; ov.setAttribute('width',w); ov.setAttribute('height',h); cam.aspect = w/h; cam.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+let prev = performance.now();
+function frame(now){
+  const dt = Math.min(.1, (now - prev)/1000); prev = now;
+  let moved = lookDirty; lookDirty = false;
+  for (let i=0;i<5;i++){ const d = target[i]-cur[i]; if (Math.abs(d)>.0008){ cur[i] += d*(1-Math.exp(-dt*2.6)); moved = true; } else cur[i] = target[i]; }
+  const bt = Math.min(...target), db = bt - budC; if (Math.abs(db)>.0008){ budC += db*(1-Math.exp(-dt*1.6)); moved = true; } else budC = bt;
+  if (moved) pose();
+  __n++; if (now - __t0 > 1000){ __fps = __n; __n = 0; __t0 = now; }
+  head.rotation.x = Math.sin(now/2300)*.012;   // one thing always alive
+  const allDone = Math.min(...cur) > .985 ? 1 : 0; full += (allDone - full)*(1-Math.exp(-dt*1.2));
+  heart.intensity = full*(2.2 + .5*Math.sin(now/700));
+  bloom.strength = .15 + full*.55;
+  dustMat.opacity = full*.95;
+  if (full > .01){ const t = now/1000;
+    for (let i=0;i<NDUST;i++){ const [a,b,c] = dustSeed[i], life = (t*.12 + a) % 1, ang = b*6.283 + t*.4*(c-.5) + life*2.2, r = .12 + life*(.7 + c*.9);
+      dustPos[i*3] = Math.cos(ang)*r; dustPos[i*3+1] = 1.15 + life*(1.4 + b*.8); dustPos[i*3+2] = Math.sin(ang)*r; }
+    dustGeo.attributes.position.needsUpdate = true; }
+  if (full > .01 && !moved) outer.forEach(m => m.material.emissiveIntensity = 1 + full*(.6 + .4*Math.sin(now/900)));
+  ctl.update(); composer.render();
+  // labels
+  const acc = getComputedStyle(document.body).getPropertyValue('--acc'), mut = getComputedStyle(document.body).getPropertyValue('--mut');
+  const ctr = proj(new THREE.Vector3(0,1.1,0));
+  G.forEach((g,i) => {
+    const [x,y,z] = proj(tips[i]);
+    const az = -(i*72 + 18) * Math.PI/180, ring = proj(new THREE.Vector3(Math.cos(az)*1.75, 1.05, -Math.sin(az)*1.75));
+    const dx = ring[0]-x, dy = ring[1]-y, len = Math.hypot(dx,dy) || 1, lx = ring[0], ly = ring[1];
+    const isHot = hot === i && now - hotT < 2500;
+    tags[i].style.left = lx+'px'; tags[i].style.top = ly+'px';
+    tags[i].innerHTML = `${g.k}<small>${val(i)}</small>`; tags[i].classList.toggle('hot', isHot);
+    lines[i].setAttribute('x1',x); lines[i].setAttribute('y1',y); lines[i].setAttribute('x2',lx - dx/len*14); lines[i].setAttribute('y2',ly - dy/len*12);
+    lines[i].setAttribute('stroke', isHot ? acc : mut); lines[i].setAttribute('stroke-opacity', isHot ? .9 : .45);
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+setTimeout(() => { if (cur.every(x => x === 0) && target.every(x => x === 0)) preset('kismi'); }, 900);
+</script>
+<script>setTimeout(()=>{ if(!document.querySelector('#stage canvas')) document.getElementById('err').style.display='flex'; }, 5000);</script>
+</body></html>
