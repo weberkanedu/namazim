@@ -100,6 +100,13 @@ class MainActivity : ComponentActivity() {
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
         SkyDebug.mSection = intent.getIntExtra("msection", 0) // `--ei msection 1` opens Muhasebe > Gidişat
         SkyDebug.zSection = intent.getIntExtra("zsection", 0) // `--ei zsection 1` opens Zikir > Takip
+        // `--ez backuptest true` (debug builds): export → parse → compare with the live prefs, log only, writes nothing
+        if (intent.getBooleanExtra("backuptest", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            val live = getSharedPreferences("namazim", MODE_PRIVATE).all
+            val parsed = Store(this).let { it.readBackup(it.exportBackup()).values }
+            val bad = live.keys.filter { k -> live[k] != parsed[k] }
+            android.util.Log.i("Backup", "round trip: ${live.size} keys, ${parsed.size} parsed, mismatched=$bad")
+        }
         SkyDebug.gPeriod = intent.getIntExtra("gperiod", 2) // `--ei gperiod 0..3` opens Gidişat on Hafta/Ay/Yıl/Tümü
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
@@ -600,6 +607,18 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
                     fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
                 Text(heroTime, style = NumStyle, fontSize = Type.display, lineHeight = 48.sp, color = Pal.Text)
                 Text(heroSub, color = Pal.Muted, fontSize = Type.body2)
+            }
+
+            // once a month without a backup: one quiet band, "Sonra" hides it for another 30 days
+            if (store.backupDue(now)) Row(
+                Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()
+                    .border(1.dp, Pal.Border, RoundedCornerShape(Radius.s)).padding(start = Space.m),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.Info, null, tint = Pal.Gold, modifier = Modifier.size(16.dp))
+                Text("Kayıtların yalnızca bu telefonda.", Modifier.weight(1f).padding(start = Space.s), color = Pal.Text, fontSize = Type.label)
+                TextButton(onClick = { store.backupNagUntil = now + 30L * 86_400_000; refresh++ }) { Text("Sonra", color = Pal.Muted, fontSize = Type.label) }
+                TextButton(onClick = onOpenSettings) { Text("Yedek al", color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold) }
             }
 
             val todaySlots = slots(store.lat, store.lng, today).associateBy { it.vakit }

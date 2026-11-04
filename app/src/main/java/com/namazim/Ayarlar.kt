@@ -95,6 +95,26 @@ fun AyarlarScreen(onBack: () -> Unit) {
         }
     }
     val askNotif = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { v++ }
+
+    // yedek: dosyayı kullanıcı seçtiği yere yazar (Drive, İndirilenler…); geri yüklemeden önce içeriği gösterilir
+    var backupMsg by remember { mutableStateOf("") }
+    var pending by remember { mutableStateOf<Store.Backup?>(null) }
+    val saveBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        backupMsg = try {
+            ctx.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(store.exportBackup().toByteArray()) }
+            store.markBackedUp(); "Yedek kaydedildi."
+        } catch (e: Exception) { "Yedek yazılamadı: ${e.message}" }
+    }
+    val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        try {
+            val bytes = ctx.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
+            require(bytes.size < 5_000_000) { "Dosya çok büyük; bu bir Namazım yedeği değil." }
+            pending = store.readBackup(String(bytes))
+        } catch (e: IllegalArgumentException) { backupMsg = e.message ?: "Yedek okunamadı." }
+        catch (e: Exception) { backupMsg = "Yedek okunamadı: ${e.message}" }
+    }
     rememberNow() // re-check permission states after coming back from system settings
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -202,8 +222,64 @@ fun AyarlarScreen(onBack: () -> Unit) {
             }
         }
 
+        Section("Yedekleme") {
+            v.let { }
+            val last = store.lastBackup
+            Text(
+                if (last == 0L) "Henüz yedek alınmadı. Kayıtların yalnızca bu telefonda."
+                else "Son yedek: ${java.time.Instant.ofEpochMilli(last).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", java.util.Locale("tr")))}",
+                color = Pal.Muted, fontSize = Type.body2,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Yedek al", color = Pal.Text, fontSize = Type.body)
+                    Text("Tek dosya: kaza, namazlar, okuma, zikir, ayarlar", color = Pal.Muted, fontSize = Type.label)
+                }
+                TextButton(onClick = { saveBackup.launch("namazim-yedek-${java.time.LocalDate.now()}.json") }) {
+                    Text("Kaydet", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Yedekten yükle", color = Pal.Text, fontSize = Type.body)
+                    Text("Önce ne geleceğini gösterir", color = Pal.Muted, fontSize = Type.label)
+                }
+                TextButton(onClick = { openBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) {
+                    Text("Seç", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            if (backupMsg.isNotEmpty()) Text(backupMsg, color = Pal.Gold, fontSize = Type.label)
+        }
+
         Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.padding(Space.xl), color = Pal.Muted, fontSize = Type.label)
         }
+    }
+
+    pending?.let { b ->
+        val tr = java.util.Locale("tr")
+        val at = if (b.at > 0) java.time.Instant.ofEpochMilli(b.at).atZone(java.time.ZoneId.systemDefault())
+            .format(java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy HH:mm", tr)) else "tarihsiz"
+        AlertDialog(
+            onDismissRequest = { pending = null },
+            containerColor = Pal.Card,
+            title = { Text("Yedek yüklensin mi?", color = Pal.Text) },
+            text = {
+                Text(
+                    "Yedek: $at\n${b.prayedCount} işaretli namaz · ${b.kazaTotal} kaza" +
+                        (if (b.city.isNotEmpty()) " · ${b.city}" else "") +
+                        "\n\nBu telefondaki bütün kayıtların yerine geçecek.",
+                    color = Pal.Muted, fontSize = Type.body2, lineHeight = 19.sp,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    backupMsg = if (store.restore(b)) "Yedek yüklendi." else "Yedek yüklenemedi; kayıtların değişmedi."
+                    pending = null; changed()
+                }) { Text("Yükle", color = Pal.Gold) }
+            },
+            dismissButton = { TextButton(onClick = { pending = null }) { Text("Vazgeç", color = Pal.Muted) } },
+        )
     }
 
     if (dialog.isNotEmpty()) {

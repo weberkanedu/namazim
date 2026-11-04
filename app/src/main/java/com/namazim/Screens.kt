@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.filled.Close
@@ -52,6 +53,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
@@ -284,6 +286,86 @@ fun KibleScreen(onBack: () -> Unit) {
 
 private val KAZA_KEYS = listOf("SABAH" to "Sabah", "OGLE" to "Öğle", "IKINDI" to "İkindi", "AKSAM" to "Akşam", "YATSI" to "Yatsı", "VITIR" to "Vitir")
 
+/**
+ * Estimated kaza owed, in days (each day = one of every vakit, vitir included): the years between the age the debt
+ * started and the age regular prayer began, minus excused days each month (özel hal) and what was already made up.
+ */
+fun kazaDebtDays(fromAge: Int, toAge: Int, excusedPerMonth: Int, alreadyDays: Int): Int {
+    if (toAge <= fromAge) return 0
+    val years = toAge - fromAge
+    return (years * 365 - years * 12 * excusedPerMonth - alreadyDays).coerceAtLeast(0)
+}
+
+/** Kaza › "Geçmişten kalan borcunu hesapla": four numbers in, a live estimate out; [onAdd] gets the days to add per vakit. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun KazaDebtSheet(rate: Int, onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
+    var from by remember { mutableStateOf("") }
+    var to by remember { mutableStateOf("") }
+    var excused by remember { mutableStateOf("0") }
+    var already by remember { mutableStateOf("0") }
+    var unit by remember { mutableIntStateOf(0) } // 0 gün, 1 ay, 2 yıl
+    val f = from.toIntOrNull(); val t = to.toIntOrNull()
+    val ex = excused.toIntOrNull() ?: 0
+    val al = (already.toIntOrNull() ?: 0) * listOf(1, 30, 365)[unit]
+    val error = when {
+        f == null || t == null -> null
+        f !in 7..60 -> "Borcun başladığı yaş 7 ile 60 arasında olmalı"
+        t !in 8..100 -> "Düzenli kılmaya başladığın yaş 8 ile 100 arasında olmalı"
+        t <= f -> "Düzenli kılmaya başladığın yaş, borcun başladığı yaştan büyük olmalı"
+        ex > 15 -> "Ayda en fazla 15 gün düşülebilir"
+        else -> null
+    }
+    val days = if (f != null && t != null && error == null) kazaDebtDays(f, t, ex, al) else null
+    val tr = java.util.Locale("tr")
+    val colors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = Pal.Gold, unfocusedBorderColor = Pal.Border, focusedLabelColor = Pal.Gold,
+        cursorColor = Pal.Gold, focusedTextColor = Pal.Text, unfocusedTextColor = Pal.Text, unfocusedLabelColor = Pal.Muted,
+    )
+    val num = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+    @Composable fun field(value: String, set: (String) -> Unit, label: String, m: Modifier) =
+        OutlinedTextField(value, { s -> set(s.filter(Char::isDigit).take(4)) }, m, label = { Text(label, fontSize = Type.label) },
+            singleLine = true, keyboardOptions = num, colors = colors)
+
+    ModalBottomSheet(onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
+        Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().imePadding().padding(bottom = Space.l).verticalScroll(rememberScrollState())) {
+            Text("Geçmişten kalan kaza", style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+            Text("Borcun başladığı yaştan düzenli kılmaya başladığın yaşa kadar her gün, vitir dahil 6 vakit sayılır.",
+                Modifier.padding(top = Space.xs), color = Pal.Muted, fontSize = Type.body2, lineHeight = 19.sp)
+            Row(Modifier.padding(top = Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                field(from, { from = it }, "Borcun başladığı yaş", Modifier.weight(1f))
+                field(to, { to = it }, "Düzenli kılmaya başladığın yaş", Modifier.weight(1f))
+            }
+            field(excused, { excused = it }, "Ayda düşülecek gün (özel hal)", Modifier.padding(top = Space.s).fillMaxWidth())
+            Row(Modifier.padding(top = Space.s), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                field(already, { already = it }, "Daha önce kıldığın kaza", Modifier.weight(1f))
+                Segmented(listOf("gün", "ay", "yıl"), unit, Modifier.padding(top = Space.s)) { unit = it }
+            }
+            if (error != null) Text(error, Modifier.padding(top = Space.s), color = Pal.Warn, fontSize = Type.label)
+            Column(Modifier.fillMaxWidth().padding(vertical = Space.l), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (days == null) {
+                    Text("İki yaşı yazınca tahmin burada görünür.", color = Pal.Muted, fontSize = Type.body2)
+                } else {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text("%,d".format(tr, days * 6), style = NumStyle, fontSize = Type.display, lineHeight = Type.display, color = Pal.Text)
+                        Text("vakit", Modifier.padding(start = Space.xs, bottom = 7.dp), color = Pal.Muted, fontSize = Type.body)
+                    }
+                    val yearsAtRate = if (rate <= 0) null else days * 6f / rate / 365f
+                    Text(
+                        "≈ ${"%.1f".format(tr, days / 365f)} yıl · her vakitten ${"%,d".format(tr, days)}" +
+                            (yearsAtRate?.let { " · günde $rate ile ~${"%.1f".format(tr, it)} yıl" } ?: ""),
+                        color = Pal.Muted, fontSize = Type.body2, textAlign = TextAlign.Center,
+                    )
+                    Text("Tahmindir; sonra vakit vakit düzeltebilirsin.", Modifier.padding(top = Space.xs), color = Pal.Muted.copy(alpha = .7f), fontSize = Type.label)
+                }
+            }
+            GoldButton("Kaza listeme ekle", Modifier.fillMaxWidth().alpha(if ((days ?: 0) > 0) 1f else .4f), Icons.Default.Add) {
+                if ((days ?: 0) > 0) onAdd(days!!)
+            }
+        }
+    }
+}
+
 @Composable
 fun KazaScreen(embedded: Boolean = false) {
     StoreRev.n.let { } // refresh when any setting or count changes
@@ -296,6 +378,7 @@ fun KazaScreen(embedded: Boolean = false) {
     val paid = v.let { store.kazaPaidThisMonth() }
     val rate = v.let { store.kazaRate }
     var openKazaRate by remember { mutableStateOf(false) }
+    var openDebt by remember { mutableStateOf(false) }
 
     // yanlış dokunuşu geri almak için: her işlemden sonra kısa bir "Geri al" fırsatı
     val snackbar = remember { SnackbarHostState() }
@@ -326,6 +409,12 @@ fun KazaScreen(embedded: Boolean = false) {
                 if (total == 0) "Kaza borcun yok · Allah kabul etsin." else "günde $rate · bu hızla ~$eta",
                 color = Pal.Muted, fontSize = Type.body2,
             )
+            // with nothing owed yet, the likely reason is that the past was never entered
+            if (total == 0) Box(
+                Modifier.padding(top = Space.m).heightIn(min = TouchMin).clip(CircleShape).border(1.dp, Pal.Gold.copy(alpha = .55f), CircleShape)
+                    .clickable { openDebt = true }.padding(horizontal = Space.l),
+                contentAlignment = Alignment.Center,
+            ) { Text("Geçmişten kalan borcunu hesapla", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
         }
         Row(Modifier.fillMaxWidth().padding(start = Space.m, end = Space.m, top = Space.xl), verticalAlignment = Alignment.Bottom) {
             KAZA_KEYS.forEachIndexed { i, (key, name) ->
@@ -400,12 +489,32 @@ fun KazaScreen(embedded: Boolean = false) {
                     contentAlignment = Alignment.Center,
                 ) { Text("Planı değiştir", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
             }
+            // kaza from before the app: the app only adds what it saw, so the past has to be estimated once
+            Row(
+                Modifier.padding(top = Space.m).fillMaxWidth().heightIn(min = TouchMin).clip(RoundedCornerShape(Radius.s))
+                    .clickable { openDebt = true }.padding(horizontal = Space.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Geçmişten kalan borcunu hesapla", color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium)
+                    Text("Yaşlarına göre tahmini kaza, listene eklenir", color = Pal.Muted, fontSize = Type.label)
+                }
+                Icon(Icons.Default.KeyboardArrowRight, null, tint = Pal.Muted, modifier = Modifier.size(20.dp))
+            }
             Text("Vaktinde kılınmayan namazlar buraya kendiliğinden eklenir.", Modifier.padding(top = Space.l, bottom = Space.xl),
                 color = Pal.Muted.copy(alpha = .8f), fontSize = Type.label)
         }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = Space.m)) { data ->
             Snackbar(snackbarData = data, containerColor = Pal.Card, contentColor = Pal.Text, actionColor = Pal.Gold)
+        }
+    }
+
+    if (openDebt) KazaDebtSheet(rate, onDismiss = { openDebt = false }) { days ->
+        openDebt = false
+        KAZA_KEYS.forEach { store.addKaza(it.first, days) }; v++
+        undoable("%,d vakit kaza eklendi".format(java.util.Locale("tr"), days * KAZA_KEYS.size)) {
+            KAZA_KEYS.forEach { store.addKaza(it.first, -days) }
         }
     }
 
