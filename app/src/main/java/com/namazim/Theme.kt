@@ -54,6 +54,8 @@ object Pal {
     val Muted get() = current.muted
     val Warn get() = current.warn
     val Border get() = current.border
+    /** "Better than before": the up arrow in Gidişat (design token --success), never a fill. */
+    val Good = Color(0xFF9CCFA8)
 }
 
 /** Display font with lining figures (Cormorant's default old-style "0" reads like the letter "O"). */

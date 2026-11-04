@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gidişat ve Kaza · Seçenekler</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* page chrome + layout glue only; screens use styles.css components */
+body{font-family:var(--font-body);color:var(--on-surface);background:var(--surface-container-lowest);padding:40px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.head{max-width:780px;text-align:center;margin-bottom:24px}
+.head h1{font:600 36px var(--font-display);color:var(--primary-ink)}
+.head p{color:var(--on-surface-variant);font-size:14px;margin-top:8px;line-height:1.6}
+h2.part{font:600 30px var(--font-display);margin:36px 0 18px;color:var(--on-surface)}
+.three{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px;width:360px}
+.col .label{font:600 22px var(--font-display);color:var(--primary-ink)}
+.col .why{font-size:13px;color:var(--on-surface-variant);line-height:1.55;text-align:center;min-height:62px}
+.device{position:relative;width:360px;height:780px;background:var(--background);border:1px solid var(--outline);overflow:hidden}
+.scroll{position:absolute;inset:0;overflow:auto;padding-bottom:96px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.device .dock{position:absolute;left:var(--layout-gutter);right:var(--layout-gutter);bottom:var(--sp-16)}
+.statusbar{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:600 12px var(--font-body);font-feature-settings:var(--num)}
+.ttl{padding:var(--sp-12) var(--layout-gutter) 0}
+.pad{padding:0 var(--layout-gutter)}
+.tabs.secondary .tb{height:40px;font-size:13px}
+.hero{padding:var(--sp-24) var(--layout-gutter) 0}
+.hero .big{font:600 44px/1.05 var(--font-display);font-feature-settings:var(--num)}
+.hero .big small{font:500 15px var(--font-body);color:var(--on-surface-variant);margin-left:4px}
+.hero .sub{font:400 13px var(--font-body);color:var(--on-surface-variant);margin-top:4px}
+.delta{color:var(--success)} .delta.down{color:var(--tertiary)}
+.stat{flex:1;text-align:center}
+.stat .v{font:600 26px/1.1 var(--font-display);font-feature-settings:var(--num)}
+.stat .k{font:400 12px var(--font-body);color:var(--on-surface-variant);margin-top:2px}
+.vsep{width:1px;align-self:stretch;background:var(--outline-variant)}
+.vr{display:flex;align-items:center;gap:var(--sp-12);height:34px}
+.vr .n{width:64px;font:500 13px var(--font-body)} .vr .lin{flex:1} .vr .c{width:40px;text-align:right;font:500 12px var(--font-body);color:var(--on-surface-variant);font-feature-settings:var(--num)}
+.sec-label{font:500 11px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin:var(--sp-24) 0 var(--sp-8)}
+svg text{font-family:var(--font-body)}
+.krow{display:flex;align-items:center;gap:var(--sp-12);min-height:56px;border-bottom:1px solid var(--outline-variant)}
+.krow .n{flex:1;font:500 15px var(--font-body)}
+.krow .c{font:600 24px var(--font-display);font-feature-settings:var(--num);min-width:40px;text-align:right}
+.pill-s{height:36px;padding:0 var(--sp-16);border-radius:var(--r-full);display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font-body)}
+.legend{max-width:860px;margin-top:22px;font-size:13px;color:var(--on-surface-variant);line-height:1.7}
+.legend b{color:var(--on-surface)}
+.backlink{position:fixed;top:18px;left:18px;z-index:50;display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font-body);text-decoration:none;color:var(--primary-ink);background:var(--surface-container);border:1px solid var(--outline);border-radius:999px;padding:8px 14px}
+</style>
+</head>
+<body>
+<!-- icon sprite copied from icons.html -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- solid dock glyphs: taken from res/drawable/ic_nav_*.xml; cut-outs are even-odd holes so they work on any fill -->
+  <symbol id="i-namaz" viewBox="0 0 24 24"><path d="M4.6 12.4h1.6v8.2H4.6zM17.8 12.4h1.6v8.2h-1.6z"/><path fill-rule="evenodd" d="M6.6 12.6a5.4 5.4 0 0 1 10.8 0v8H6.6zM9.4 20.6v-4.4a2.6 2.6 0 0 1 5.2 0v4.4z"/><path d="M12 1.2a1.5 1.5 0 1 0 .9 2.7 1.9 1.9 0 0 1-1.4 2.6 2.2 2.2 0 0 0 2.4-2.9A2.2 2.2 0 0 0 12 1.2z"/></symbol>
+  <symbol id="i-zikir" viewBox="0 0 24 24"><circle cx="8.50" cy="15.26" r="1.55"/><circle cx="5.94" cy="12.70" r="1.55"/><circle cx="5.00" cy="9.20" r="1.55"/><circle cx="5.94" cy="5.70" r="1.55"/><circle cx="8.50" cy="3.14" r="1.55"/><circle cx="12.00" cy="2.20" r="1.55"/><circle cx="15.50" cy="3.14" r="1.55"/><circle cx="18.06" cy="5.70" r="1.55"/><circle cx="19.00" cy="9.20" r="1.55"/><circle cx="18.06" cy="12.70" r="1.55"/><circle cx="15.50" cy="15.26" r="1.55"/><rect x="10.9" y="15.3" width="2.2" height="4.4" rx="1.1"/><path d="M12 19.4l2.3 3.6H9.7z"/></symbol>
+  <symbol id="i-okuma" viewBox="0 0 24 24"><path d="M2.4 5.6c3-1.5 6.3-1.5 8.8.2v13.4c-2.5-1.7-5.8-1.7-8.8-.2zM21.6 5.6c-3-1.5-6.3-1.5-8.8.2v13.4c2.5-1.7 5.8-1.7 8.8-.2z"/></symbol>
+  <symbol id="i-muhasebe" viewBox="0 0 24 24"><path d="M3.4 13.2h4.2v7.6H3.4zM9.9 8.4h4.2v12.4H9.9zM16.4 3.6h4.2v17.2h-4.2z"/></symbol>
+  <symbol id="i-kible" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1.6a10.4 10.4 0 1 1 0 20.8 10.4 10.4 0 0 1 0-20.8zM12 3.9a8.1 8.1 0 1 0 0 16.2 8.1 8.1 0 0 0 0-16.2z"/><path fill-rule="evenodd" d="M12 5.6l4.6 11.2-4.6-2.6-4.6 2.6zM12 10.2l2.1 5.1-2.1-1.2-2.1 1.2z"/></symbol>
+  <!-- line glyphs: Lucide/Material-outlined style, stroke = --icon-stroke -->
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6"/><path d="M18.47 14.68L20.68 15.6M14.68 18.47l.92 2.21M9.32 18.47l-.92 2.21M5.53 14.68l-2.21.92M5.53 9.32L3.32 8.4M9.32 5.53L8.4 3.32M14.68 5.53l.92-2.21M18.47 9.32l2.21-.92"/></symbol>
+  <symbol id="i-place" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-snooze" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M22 6l-3-3"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.6L19.5 10.5 13.9 12.4 12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.4 1.4 1.3 2.8 2.5 2.8z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="i-more-v" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="i-vibrate" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9v6M21 9v6"/></symbol>
+</svg>
+<a class="backlink" href="index.html"><svg class="ico ico--sm"><use href="#i-back"/></svg> Stil rehberine dön</a>
+<div class="head">
+  <h1>Gidişat ve Kaza · seçenekler</h1>
+  <p>Özet'teki "Sahne" dili: ana görsel kartsız, doğrudan sayfada; büyük Cormorant sayılar, ince altın çizgiler. Altın hap seçici yerine ince sekmeler. Gidişat'ta <b>Hafta / Ay / Yıl / Tümü</b>'ye dokununca görünüm değişir. Örnek veri: 3 aydır kullanan biri.</p>
+</div>
+
+<h2 class="part">Gidişat</h2>
+<div class="three">
+  <div class="col"><div class="label">G1 · Takvim</div>
+    <div class="why">Her dönem kendi takvim biçiminde: hafta = günler ve beş vakit noktası, ay = takvim, yıl = 12 ay halkası, tümü = ay ay şerit.</div>
+    <div class="device"><div class="scroll" id="g1"></div><div class="dock">DOCK</div></div></div>
+  <div class="col"><div class="label">G2 · Nabız</div>
+    <div class="why">Tek büyük oran ve onun altında yumuşak bir altın eğri: dönem boyunca kılınan vakitlerin seyri. Altında vakit vakit oranlar.</div>
+    <div class="device"><div class="scroll" id="g2"></div><div class="dock">DOCK</div></div></div>
+  <div class="col"><div class="label">G3 · Halkalar</div>
+    <div class="why">Beş vakit beş iç içe halka: hangi vakit güçlü, hangisi zayıf tek bakışta. Halkaların altında "ne zaman kılıyorsun" çizgisi.</div>
+    <div class="device"><div class="scroll" id="g3"></div><div class="dock">DOCK</div></div></div>
+</div>
+
+<h2 class="part">Kaza</h2>
+<div class="three">
+  <div class="col"><div class="label">K1 · Dağ</div>
+    <div class="why">Kalan kaza tek büyük sayı; altında planın gidişi ve tahmini bitiş. Vakit satırları sade: sayı, tek dokunuşla "kıldım", yanında "+".</div>
+    <div class="device"><div class="scroll" id="k1"></div><div class="dock">DOCK</div></div></div>
+  <div class="col"><div class="label">K2 · Sütunlar</div>
+    <div class="why">Altı vakit altı altın sütun; boyları kalan kazayla orantılı. Her sütunun altında kendi "kıldım" düğmesi, en uzun sütun öne çıkar.</div>
+    <div class="device"><div class="scroll" id="k2"></div><div class="dock">DOCK</div></div></div>
+  <div class="col"><div class="label">K3 · Halka ve takvim</div>
+    <div class="why">Vakitlere bölünmüş tek halka; ortada toplam ve bitiş tahmini. Altında bu ayın kaza takvimi: plan tuttuğun günler altın.</div>
+    <div class="device"><div class="scroll" id="k3"></div><div class="dock">DOCK</div></div></div>
+</div>
+
+<div class="legend">
+  <b>Üçünde de ortak:</b> başlık, Özet / Gidişat / Kaza sekmeleri ve dock aynı kalır. Bugünkü "Yıl"da başlamadan önceki günler de sayılıyor ("308 günün 1'i"); seçtiğin yönde dönem, ilk gününden başlar.<br>
+  <b>Renk:</b> tek altın vurgu korunur. Şeftali yalnız kaza ve geri düşüş için, yeşil yalnız "öncekinden iyi" oku için.
+</div>
+
+<script>
+/* ---------------- sample data: 92 days of use, seeded so every reload looks the same ---------------- */
+let seed=7;const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647);
+const TODAY=new Date(2026,10,4), DAYS=92;
+const VAK=['Sabah','Öğle','İkindi','Akşam','Yatsı'];
+const day=[]; // oldest → today; each: {d, v:[bool x5], pages, kaza, pos:[0..1 or null]}
+for(let i=DAYS-1;i>=0;i--){const d=new Date(TODAY);d.setDate(d.getDate()-i);
+  const p=[.72,.93,.88,.95,.9].map((b,k)=>rnd()<b+(DAYS-i)/DAYS*.06-(k===0&&d.getDay()===6?.2:0));
+  day.push({d,v:p,pages:Math.round(rnd()*9),kaza:rnd()<.6?Math.round(1+rnd()*2):0,pos:p.map(x=>x?Math.min(1,Math.max(0,rnd()*.7+(rnd()<.3?.25:0))):null)});}
+const MON=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const WD=['Pz','Pt','Sa','Ça','Pe','Cu','Ct'];
+const cnt=x=>x.v.filter(Boolean).length;
+function periodDays(p){return p===0?day.slice(-7):p===1?day.slice(-30):p===2?day.filter(x=>x.d.getFullYear()===2026):day;}
+function prevDays(p){const n=p===0?7:30;return p<2?day.slice(-2*n,-n):[];}
+function sumUp(ds){const tot=ds.length*5,k=ds.reduce((a,x)=>a+cnt(x),0);return{tot,k,rate:tot?k/tot:0,full:ds.filter(x=>cnt(x)===5).length,pages:ds.reduce((a,x)=>a+x.pages,0),kaza:ds.reduce((a,x)=>a+x.kaza,0),
+  per:VAK.map((_,i)=>ds.filter(x=>x.v[i]).length/(ds.length||1)),pos:VAK.map((_,i)=>{const a=ds.map(x=>x.pos[i]).filter(y=>y!=null);return a.length?a.reduce((s,y)=>s+y,0)/a.length:0;})};}
+const RANGE=['Bu hafta','Son 30 gün','2026','Başladığından beri'];
+const pct=x=>'%'+Math.round(x*100);
+
+/* ---------------- shared bits ---------------- */
+function muhasebeHead(sel){return `<div class="statusbar"><span>21:52</span><span>%74</span></div><div class="ttl t-display-m">Muhasebe</div>
+ <div class="tabs primary" style="margin-top:var(--sp-8)">${['Özet','Gidişat','Kaza'].map((t,i)=>`<div class="tb${i===sel?' on':''}">${t}</div>`).join('')}</div>`;}
+function periodTabs(id,p){return `<div class="tabs secondary pad" style="border:0;margin-top:var(--sp-8);overflow:hidden">${['Hafta','Ay','Yıl','Tümü'].map((t,i)=>`<div class="tb sl${i===p?' on':''}" onclick="render('${id}',${i})">${t}</div>`).join('')}</div><div class="divider" style="margin:0 var(--layout-gutter)"></div>`;}
+function deltaLine(p,s){if(p>1)return `<span class="ink-muted">${RANGE[p]}</span>`;const q=sumUp(prevDays(p)),d=Math.round((s.rate-q.rate)*100);
+ return `${RANGE[p]} · <span class="delta${d<0?' down':''}">${d>=0?'▲':'▼'} ${Math.abs(d)} puan</span> önceki döneme göre`;}
+function statRow(s){return `<div class="row" style="margin:var(--gap-section) var(--layout-gutter) 0;gap:0;align-items:stretch">
+ <div class="stat"><div class="v">${s.k}</div><div class="k">vakit kılındı</div></div><div class="vsep"></div>
+ <div class="stat"><div class="v">${s.pages}</div><div class="k">sayfa okundu</div></div><div class="vsep"></div>
+ <div class="stat"><div class="v">${s.kaza}</div><div class="k">kaza kılındı</div></div></div>`;}
+const goldA=a=>`rgb(232 190 116 / ${a})`;
+
+/* ---------------- G1 · Takvim ---------------- */
+function g1Hero(p,ds){
+  if(p===0){const w=312,cw=w/7;let s=`<svg viewBox="0 0 ${w} 200" width="${w}" height="200">`;
+    ds.forEach((x,i)=>{const cx=cw*i+cw/2,isT=i===ds.length-1;s+=`<text x="${cx}" y="14" text-anchor="middle" font-size="11" fill="${isT?'var(--primary)':'var(--on-surface-variant)'}" font-weight="600">${WD[x.d.getDay()]}</text><text x="${cx}" y="32" text-anchor="middle" font-size="15" fill="${isT?'var(--primary)':'var(--on-surface)'}" font-family="Cormorant" font-weight="600">${x.d.getDate()}</text>`;
+      x.v.forEach((ok,k)=>{const cy=56+k*28;s+=ok?`<circle cx="${cx}" cy="${cy}" r="9" fill="var(--primary)"/>`:`<circle cx="${cx}" cy="${cy}" r="8" fill="none" stroke="var(--tertiary)" stroke-opacity=".7" stroke-width="1.5"/>`;});});
+    return s+'</svg><div class="t-body-s ink-muted" style="margin-top:4px">dolu = kılındı · şeftali halka = kazaya kaldı</div>';}
+  if(p===1){const first=ds[0].d,off=(first.getDay()+6)%7,cw=44;let s=`<svg viewBox="0 0 308 ${Math.ceil((ds.length+off)/7)*44+20}" width="308">`;
+    ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].forEach((w,i)=>s+=`<text x="${i*cw+22}" y="12" text-anchor="middle" font-size="11" fill="var(--on-surface-variant)">${w}</text>`);
+    ds.forEach((x,i)=>{const j=i+off,cx=(j%7)*cw+22,cy=Math.floor(j/7)*44+40,c=cnt(x);
+      s+=c===5?`<circle cx="${cx}" cy="${cy}" r="17" fill="var(--primary)"/>`:`<circle cx="${cx}" cy="${cy}" r="17" fill="${goldA(c*.13)}" stroke="var(--outline)"/>`;
+      s+=`<text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="14" font-family="Cormorant" font-weight="600" fill="${c===5?'var(--on-primary)':'var(--on-surface)'}">${x.d.getDate()}</text>`;});
+    return s+'</svg>';}
+  if(p===2){let s='<svg viewBox="0 0 312 250" width="312" height="250">';
+    for(let m=0;m<12;m++){const ms=day.filter(x=>x.d.getMonth()===m&&x.d.getFullYear()===2026),cx=(m%4)*78+39,cy=Math.floor(m/4)*82+36,r=26,c=2*Math.PI*r;
+      const f=ms.length?ms.filter(x=>cnt(x)===5).length/new Date(2026,m+1,0).getDate():0,fut=m>10;
+      s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface-container-high)" stroke-width="5" ${fut?'stroke-dasharray="2 5"':''}/>`;
+      if(f>0)s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--primary)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 ${cx} ${cy})"/>`;
+      s+=`<text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="14" font-family="Cormorant" font-weight="600" fill="${ms.length?'var(--on-surface)':'var(--subtle)'}">${ms.length?ms.filter(x=>cnt(x)===5).length:'–'}</text><text x="${cx}" y="${cy+46}" text-anchor="middle" font-size="11" fill="${m===10?'var(--primary)':'var(--on-surface-variant)'}">${MON[m]}</text>`;}
+    return s+'</svg><div class="t-body-s ink-muted">halkanın içi: o ay tam kılınan gün</div>';}
+  const months=[...new Set(day.map(x=>x.d.getMonth()))];let s=`<svg viewBox="0 0 312 ${months.length*44}" width="312">`;
+  months.forEach((m,r)=>{const ms=day.filter(x=>x.d.getMonth()===m);s+=`<text x="0" y="${r*44+20}" font-size="12" fill="var(--on-surface-variant)">${MON[m]}</text>`;
+    ms.forEach(x=>{const c=cnt(x),i=x.d.getDate()-1;s+=`<rect x="${40+i*8.6}" y="${r*44+6}" width="7" height="20" rx="2" fill="${c===5?'var(--primary)':goldA(.1+c*.12)}"/>`;});
+    s+=`<text x="312" y="${r*44+40}" text-anchor="end" font-size="11" fill="var(--subtle)">${ms.filter(x=>cnt(x)===5).length} tam gün</text>`;});
+  return s+'</svg>';}
+function g1(p){const ds=periodDays(p),s=sumUp(ds);
+  return muhasebeHead(1)+periodTabs('g1',p)+`<div class="hero"><div class="big">${s.full}<small>/ ${ds.length} gün tam</small></div><div class="sub">${deltaLine(p,s)}</div></div>
+  <div class="pad" style="margin-top:var(--gap-section)">${g1Hero(p,ds)}</div>`+statRow(s);}
+
+/* ---------------- G2 · Nabız ---------------- */
+function series(p,ds){if(p===0)return ds.map(x=>cnt(x)/5);
+  // a month of single days is noisy: show a 5-day running average
+  if(p===1)return ds.map((_,i)=>{const w=ds.slice(Math.max(0,i-4),i+1);return w.reduce((a,x)=>a+cnt(x),0)/(w.length*5);});
+  const step=p===2?7:7,out=[];for(let i=0;i<ds.length;i+=step){const c=ds.slice(i,i+step);out.push(c.reduce((a,x)=>a+cnt(x),0)/(c.length*5));}return out;}
+function area(vals,w,h){const n=vals.length,X=i=>n<2?w/2:i*w/(n-1),Y=v=>h-8-v*(h-24);
+  let d=`M${X(0)} ${Y(vals[0])}`;for(let i=1;i<n;i++){const x0=X(i-1),x1=X(i),xm=(x0+x1)/2;d+=` C${xm} ${Y(vals[i-1])},${xm} ${Y(vals[i])},${x1} ${Y(vals[i])}`;}
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="display:block"><defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8BE74" stop-opacity=".38"/><stop offset="1" stop-color="#E8BE74" stop-opacity="0"/></linearGradient></defs>
+   <line x1="0" x2="${w}" y1="${Y(1)}" y2="${Y(1)}" stroke="var(--outline-variant)" stroke-dasharray="3 5"/><text x="${w-4}" y="${Y(1)-6}" text-anchor="end" font-size="10" fill="var(--subtle)">beş vakit</text>
+   <path d="${d} L${X(n-1)} ${h} L${X(0)} ${h}Z" fill="url(#ga)"/><path d="${d}" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round"/>
+   <circle cx="${X(n-1)}" cy="${Y(vals[n-1])}" r="5" fill="var(--primary)"/><circle cx="${X(n-1)}" cy="${Y(vals[n-1])}" r="10" fill="var(--primary)" fill-opacity=".2"/></svg>`;}
+function g2(p){const ds=periodDays(p),s=sumUp(ds);
+  const axis=p===0?ds.map(x=>WD[x.d.getDay()]):p===1?['30 gün önce','','','bugün']:p===2?['Ağu','Eyl','Eki','Kas']:['başlangıç','','','bugün'];
+  return muhasebeHead(1)+periodTabs('g2',p)+`<div class="hero"><div class="big">${pct(s.rate)}<small>vakit kılındı</small></div><div class="sub">${deltaLine(p,s)}</div></div>
+  <div style="margin-top:var(--sp-16)">${area(series(p,ds),360,170)}</div>
+  <div class="row pad" style="justify-content:space-between;margin-top:4px">${axis.map(a=>`<span class="t-body-s ink-subtle" style="font-size:11px">${a}</span>`).join('')}</div>
+  <div class="pad"><div class="sec-label">Vakit vakit</div>${VAK.map((v,i)=>`<div class="vr"><span class="n">${v}</span><div class="lin"><i style="width:${s.per[i]*100}%;${s.per[i]<.8?'background:var(--tertiary)':''}"></i></div><span class="c">${pct(s.per[i])}</span></div>`).join('')}</div>`+statRow(s);}
+
+/* ---------------- G3 · Halkalar ---------------- */
+function g3(p){const ds=periodDays(p),s=sumUp(ds);let svg='<svg viewBox="0 0 260 260" width="260" height="260">';
+  VAK.forEach((v,i)=>{const r=118-i*19,c=2*Math.PI*r,f=s.per[i];svg+=`<circle cx="130" cy="130" r="${r}" fill="none" stroke="var(--surface-container-high)" stroke-width="12"/>
+    <circle cx="130" cy="130" r="${r}" fill="none" stroke="var(--primary)" stroke-opacity="${1-i*.13}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 130 130)"/>`;});
+  svg+=`<text x="130" y="136" text-anchor="middle" font-size="30" font-family="Cormorant" font-weight="600" fill="var(--on-surface)">${pct(s.rate)}</text><text x="130" y="156" text-anchor="middle" font-size="11" fill="var(--on-surface-variant)">${RANGE[p].toLowerCase()}</text></svg>`;
+  const pos=VAK.map((v,i)=>`<div class="vr"><span class="n">${v}</span><svg viewBox="0 0 160 14" style="flex:1;height:14px"><rect x="0" y="6" width="160" height="2" rx="1" fill="var(--surface-container-high)"/><rect x="0" y="5" width="53" height="4" rx="2" fill="var(--primary)" fill-opacity=".25"/><circle cx="${s.pos[i]*160}" cy="7" r="5" fill="var(--primary)"/></svg><span class="c">${pct(s.per[i])}</span></div>`).join('');
+  return muhasebeHead(1)+periodTabs('g3',p)+`<div style="display:flex;justify-content:center;margin-top:var(--sp-24)">${svg}</div>
+  <div class="t-body-s ink-muted" style="text-align:center;margin-top:4px">dıştan içe: ${VAK.join(' · ')}</div>
+  <div class="pad"><div class="sec-label">Ne zaman kılıyorsun · vaktin başı ← → sonu</div>${pos}
+  <div class="t-body-s ink-subtle" style="margin-top:6px">açık altın bölge: vaktin ilk üçte biri ("vaktinde")</div></div>`+statRow(s);}
+
+/* ---------------- Kaza ---------------- */
+const KZ=[['Sabah',118],['Öğle',74],['İkindi',69],['Akşam',51],['Yatsı',62],['Vitir',38]],KT=KZ.reduce((a,x)=>a+x[1],0),RATE=2,MONTH=18;
+const eta=()=>{const d=new Date(TODAY);d.setDate(d.getDate()+Math.ceil(KT/RATE));return `${MON[d.getMonth()]} ${d.getFullYear()}`;};
+function kRows(style){return KZ.map(([n,c])=>`<div class="krow"><span class="n">${n}</span><span class="c">${c}</span>
+  <span class="pill-s ${style==='gold'?'':''}" style="background:var(--primary-container);color:var(--primary-ink)"><svg class="ico" style="--icon-size:16px"><use href="#i-check"/></svg>Kıldım</span>
+  <span class="icon-btn outlined" style="width:36px;height:36px"><svg class="ico ico--sm"><use href="#i-plus"/></svg></span></div>`).join('');}
+function k1(){return muhasebeHead(2)+`<div style="text-align:center;padding-top:var(--sp-32)"><div style="font:600 96px/1 var(--font-display);font-feature-settings:var(--num)">${KT}</div>
+  <div class="t-body-m ink-muted">vakit kaza kaldı</div></div>
+  <div class="pad" style="margin-top:var(--gap-section)"><div class="row" style="justify-content:space-between"><span class="t-body-s ink-muted">Bu ay ${MONTH} / ${RATE*30}</span><span class="t-body-s ink-gold">günde ${RATE} · bitiş ~${eta()}</span></div>
+  <div class="lin" style="margin-top:8px"><i style="width:${MONTH/(RATE*30)*100}%"></i></div>
+  <div class="row" style="justify-content:flex-end;margin-top:4px"><span class="btn btn-text" style="min-height:36px">Planı değiştir</span></div>
+  <div class="sec-label" style="margin-top:var(--sp-8)">Vakit vakit</div>${kRows()}</div>
+  <div class="t-body-s ink-subtle pad" style="margin-top:var(--sp-12)">Vaktinde kılınmayan namazlar buraya kendiliğinden eklenir.</div>`;}
+function k2(){const max=Math.max(...KZ.map(x=>x[1]));let bars='';
+  KZ.forEach(([n,c],i)=>{const h=Math.round(c/max*190),top=c===max;bars+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+    <span style="font:600 20px var(--font-display);font-feature-settings:var(--num);color:${top?'var(--primary-ink)':'var(--on-surface)'}">${c}</span>
+    <div style="width:30px;height:200px;display:flex;align-items:flex-end;background:var(--surface-container-low);border-radius:15px"><div style="width:100%;height:${h}px;border-radius:15px;background:linear-gradient(180deg,${top?'#E8BE74':'rgb(232 190 116 / .75)'},rgb(232 190 116 / .3))"></div></div>
+    <span class="t-body-s" style="color:var(--on-surface-variant)">${n}</span>
+    <span class="icon-btn ${top?'filled':'tonal'}" style="width:40px;height:40px"><svg class="ico ico--sm"><use href="#i-check"/></svg></span></div>`;});
+  return muhasebeHead(2)+`<div class="hero" style="text-align:center"><div class="big">${KT}<small>vakit kaldı</small></div><div class="sub">günde ${RATE} · bu hızla ~${eta()}</div></div>
+  <div class="row" style="padding:var(--sp-24) var(--sp-12) 0;gap:0;align-items:flex-end">${bars}</div>
+  <div class="t-body-s ink-muted" style="text-align:center;margin-top:var(--sp-12)">sütunun altındaki tik = o vakitten bir kaza kıldım</div>
+  <div class="pad" style="margin-top:var(--gap-section)"><div class="row" style="justify-content:space-between"><span class="t-body-s ink-muted">Bu ay kılınan</span><span style="font:600 22px var(--font-display)">${MONTH}</span></div>
+  <div class="row" style="justify-content:space-between;margin-top:var(--sp-8)"><span class="btn btn-outlined" style="min-height:40px"><svg class="ico"><use href="#i-plus"/></svg>Kaza ekle</span><span class="btn btn-text" style="min-height:40px">Planı değiştir</span></div></div>`;}
+function k3(){const r=96,c=2*Math.PI*r;let a=0,ring='';
+  KZ.forEach(([n,v],i)=>{const f=v/KT,g=.012;ring+=`<circle cx="130" cy="130" r="${r}" fill="none" stroke="var(--primary)" stroke-opacity="${1-i*.13}" stroke-width="18" stroke-dasharray="${c*(f-g)} ${c}" stroke-dashoffset="${-c*a}" transform="rotate(-90 130 130)"/>`;
+   const mid=(a+f/2)*2*Math.PI-Math.PI/2;ring+=`<text x="${130+124*Math.cos(mid)}" y="${130+124*Math.sin(mid)+4}" text-anchor="middle" font-size="11" fill="var(--on-surface-variant)">${n}</text>`;a+=f;});
+  const cal=Array.from({length:30},(_,i)=>{const dd=i+1,fut=dd>4+26?1:0,k=day[day.length-30+i]?day[day.length-30+i].kaza:0;
+    return `<span style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:600 13px var(--font-display);${k>=RATE?'background:var(--primary);color:var(--on-primary)':k>0?'background:rgb(232 190 116 / .25)':'border:1px solid var(--outline);color:var(--subtle)'}">${dd}</span>`;}).join('');
+  return muhasebeHead(2)+`<div style="display:flex;justify-content:center;margin-top:var(--sp-16)"><svg viewBox="0 0 260 260" width="260" height="260">${ring}
+   <text x="130" y="132" text-anchor="middle" font-size="42" font-family="Cormorant" font-weight="600" fill="var(--on-surface)">${KT}</text><text x="130" y="154" text-anchor="middle" font-size="11" fill="var(--on-surface-variant)">kaldı · ~${eta()}</text></svg></div>
+  <div class="pad"><div class="sec-label">Kasım · plan günde ${RATE}</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;justify-items:center">${cal}</div>
+  <div class="t-body-s ink-subtle" style="margin-top:8px">altın = plan tuttu · soluk = biraz kılındı</div>
+  <div class="sec-label">Kıl</div><div class="chips" style="display:flex;flex-wrap:wrap;gap:8px">${KZ.map(([n,v])=>`<span class="chip assist"><svg class="ico"><use href="#i-check"/></svg>${n} · ${v}</span>`).join('')}</div></div>`;}
+
+/* ---------------- render ---------------- */
+const R={g1,g2,g3};
+function render(id,p){document.getElementById(id).innerHTML=R[id](p);}
+render('g1',1);render('g2',1);render('g3',1);
+</script>
+<script>
+document.getElementById('k1').innerHTML=k1();document.getElementById('k2').innerHTML=k2();document.getElementById('k3').innerHTML=k3();
+const dockHTML=sel=>['namaz','zikir','okuma','muhasebe'].map((n,i)=>`<div class="ni${i===3?' on':''}"><svg class="ico ico--solid"><use href="#i-${n}"/></svg><span class="nm">${['Namaz','Zikir','Okuma','Muhasebe'][i]}</span></div>`).join('');
+document.querySelectorAll('.dock').forEach(d=>{d.innerHTML=dockHTML();});
+</script>
+</body>
+</html>

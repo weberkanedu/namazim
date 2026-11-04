@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gidişat · Dönemler</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* page chrome + layout glue only; screens use styles.css components */
+body{font-family:var(--font-body);color:var(--on-surface);background:var(--surface-container-lowest);padding:40px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.head{max-width:780px;text-align:center;margin-bottom:24px}
+.head h1{font:600 36px var(--font-display);color:var(--primary-ink)}
+.head p{color:var(--on-surface-variant);font-size:14px;margin-top:8px;line-height:1.6}
+h2.part{font:600 30px var(--font-display);margin:36px 0 18px;color:var(--on-surface)}
+.three{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px;width:360px}
+.col .label{font:600 22px var(--font-display);color:var(--primary-ink)}
+.col .why{font-size:13px;color:var(--on-surface-variant);line-height:1.55;text-align:center;min-height:62px}
+.device{position:relative;width:360px;height:780px;background:var(--background);border:1px solid var(--outline);overflow:hidden}
+.scroll{position:absolute;inset:0;overflow:auto;padding-bottom:96px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.device .dock{position:absolute;left:var(--layout-gutter);right:var(--layout-gutter);bottom:var(--sp-16)}
+.statusbar{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:600 12px var(--font-body);font-feature-settings:var(--num)}
+.ttl{padding:var(--sp-12) var(--layout-gutter) 0}
+.pad{padding:0 var(--layout-gutter)}
+.tabs.secondary .tb{height:40px;font-size:13px}
+.hero{padding:var(--sp-24) var(--layout-gutter) 0}
+.hero .big{font:600 44px/1.05 var(--font-display);font-feature-settings:var(--num)}
+.hero .big small{font:500 15px var(--font-body);color:var(--on-surface-variant);margin-left:4px}
+.hero .sub{font:400 13px var(--font-body);color:var(--on-surface-variant);margin-top:4px}
+.delta{color:var(--success)} .delta.down{color:var(--tertiary)}
+.stat{flex:1;text-align:center}
+.stat .v{font:600 26px/1.1 var(--font-display);font-feature-settings:var(--num)}
+.stat .k{font:400 12px var(--font-body);color:var(--on-surface-variant);margin-top:2px}
+.vsep{width:1px;align-self:stretch;background:var(--outline-variant)}
+.vr{display:flex;align-items:center;gap:var(--sp-12);height:34px}
+.vr .n{width:64px;font:500 13px var(--font-body)} .vr .lin{flex:1} .vr .c{width:40px;text-align:right;font:500 12px var(--font-body);color:var(--on-surface-variant);font-feature-settings:var(--num)}
+.sec-label{font:500 11px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin:var(--sp-24) 0 var(--sp-8)}
+svg text{font-family:var(--font-body)}
+.krow{display:flex;align-items:center;gap:var(--sp-12);min-height:56px;border-bottom:1px solid var(--outline-variant)}
+.krow .n{flex:1;font:500 15px var(--font-body)}
+.krow .c{font:600 24px var(--font-display);font-feature-settings:var(--num);min-width:40px;text-align:right}
+.pill-s{height:36px;padding:0 var(--sp-16);border-radius:var(--r-full);display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font-body)}
+.legend{max-width:860px;margin-top:22px;font-size:13px;color:var(--on-surface-variant);line-height:1.7}
+.legend b{color:var(--on-surface)}
+.backlink{position:fixed;top:18px;left:18px;z-index:50;display:inline-flex;align-items:center;gap:6px;font:600 13px var(--font-body);text-decoration:none;color:var(--primary-ink);background:var(--surface-container);border:1px solid var(--outline);border-radius:999px;padding:8px 14px}
+</style>
+<style>
+.four{display:flex;gap:32px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.mile{display:flex;align-items:center;gap:var(--sp-12);min-height:52px;border-bottom:1px solid var(--outline-variant)}
+.mile .ic{width:32px;height:32px;border-radius:50%;background:var(--primary-container);color:var(--primary-ink);display:flex;align-items:center;justify-content:center;flex:none}
+.mile .t{flex:1;font:500 14px var(--font-body)} .mile .t small{display:block;font:400 12px var(--font-body);color:var(--on-surface-variant)}
+.mile .v{font:600 22px var(--font-display);font-feature-settings:var(--num)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-16) var(--sp-8);margin-top:var(--sp-8)}
+.grid2 .v{font:600 26px/1.1 var(--font-display);font-feature-settings:var(--num)} .grid2 .k{font:400 12px var(--font-body);color:var(--on-surface-variant)}
+</style>
+</head>
+<body>
+<!-- icon sprite copied from icons.html -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- solid dock glyphs: taken from res/drawable/ic_nav_*.xml; cut-outs are even-odd holes so they work on any fill -->
+  <symbol id="i-namaz" viewBox="0 0 24 24"><path d="M4.6 12.4h1.6v8.2H4.6zM17.8 12.4h1.6v8.2h-1.6z"/><path fill-rule="evenodd" d="M6.6 12.6a5.4 5.4 0 0 1 10.8 0v8H6.6zM9.4 20.6v-4.4a2.6 2.6 0 0 1 5.2 0v4.4z"/><path d="M12 1.2a1.5 1.5 0 1 0 .9 2.7 1.9 1.9 0 0 1-1.4 2.6 2.2 2.2 0 0 0 2.4-2.9A2.2 2.2 0 0 0 12 1.2z"/></symbol>
+  <symbol id="i-zikir" viewBox="0 0 24 24"><circle cx="8.50" cy="15.26" r="1.55"/><circle cx="5.94" cy="12.70" r="1.55"/><circle cx="5.00" cy="9.20" r="1.55"/><circle cx="5.94" cy="5.70" r="1.55"/><circle cx="8.50" cy="3.14" r="1.55"/><circle cx="12.00" cy="2.20" r="1.55"/><circle cx="15.50" cy="3.14" r="1.55"/><circle cx="18.06" cy="5.70" r="1.55"/><circle cx="19.00" cy="9.20" r="1.55"/><circle cx="18.06" cy="12.70" r="1.55"/><circle cx="15.50" cy="15.26" r="1.55"/><rect x="10.9" y="15.3" width="2.2" height="4.4" rx="1.1"/><path d="M12 19.4l2.3 3.6H9.7z"/></symbol>
+  <symbol id="i-okuma" viewBox="0 0 24 24"><path d="M2.4 5.6c3-1.5 6.3-1.5 8.8.2v13.4c-2.5-1.7-5.8-1.7-8.8-.2zM21.6 5.6c-3-1.5-6.3-1.5-8.8.2v13.4c2.5-1.7 5.8-1.7 8.8-.2z"/></symbol>
+  <symbol id="i-muhasebe" viewBox="0 0 24 24"><path d="M3.4 13.2h4.2v7.6H3.4zM9.9 8.4h4.2v12.4H9.9zM16.4 3.6h4.2v17.2h-4.2z"/></symbol>
+  <symbol id="i-kible" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1.6a10.4 10.4 0 1 1 0 20.8 10.4 10.4 0 0 1 0-20.8zM12 3.9a8.1 8.1 0 1 0 0 16.2 8.1 8.1 0 0 0 0-16.2z"/><path fill-rule="evenodd" d="M12 5.6l4.6 11.2-4.6-2.6-4.6 2.6zM12 10.2l2.1 5.1-2.1-1.2-2.1 1.2z"/></symbol>
+  <!-- line glyphs: Lucide/Material-outlined style, stroke = --icon-stroke -->
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6"/><path d="M18.47 14.68L20.68 15.6M14.68 18.47l.92 2.21M9.32 18.47l-.92 2.21M5.53 14.68l-2.21.92M5.53 9.32L3.32 8.4M9.32 5.53L8.4 3.32M14.68 5.53l.92-2.21M18.47 9.32l2.21-.92"/></symbol>
+  <symbol id="i-place" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-snooze" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M22 6l-3-3"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.6L19.5 10.5 13.9 12.4 12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.4 1.4 1.3 2.8 2.5 2.8z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="i-more-v" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
+  <symbol id="i-vibrate" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9v6M21 9v6"/></symbol>
+</svg>
+<a class="backlink" href="gidisat-kaza-secenekler.html"><svg class="ico ico--sm"><use href="#i-back"/></svg> Seçeneklere dön</a>
+<div class="head">
+  <h1>Gidişat · her dönem kendi biçiminde</h1>
+  <p>Hepsi G2'nin dilini konuşuyor (büyük oran, önceki döneme göre ok, ince altın çizgiler), ama ana görsel dönemin içeriğine göre değişiyor: <b>hafta</b> ayrıntı, <b>ay</b> nabız, <b>yıl</b> aylar, <b>tümü</b> yolculuk. Örnek veri: 3 aydır kullanan biri.</p>
+</div>
+<div class="four">
+  <div class="col"><div class="label">Hafta · Vakit haritası</div>
+    <div class="why">7 gün × 5 vakit = 35 namaz; hepsi tek tek görünür. Hangi gün hangi vakit kaçtı, okuma günlere göre.</div>
+    <div class="device"><div class="scroll" id="w"></div><div class="dock"></div></div></div>
+  <div class="col"><div class="label">Ay · Nabız (G2)</div>
+    <div class="why">30 gün tek tek okunmaz; 5 günlük ortalama eğrisi gidişi gösterir. Altında vakit vakit oranlar.</div>
+    <div class="device"><div class="scroll" id="m"></div><div class="dock"></div></div></div>
+  <div class="col"><div class="label">Yıl · Isı haritası</div>
+    <div class="why">Yılın her günü bir kare (sahibinin seçimi): ne kadar altın, o kadar çok vakit. En iyi ay ve yılın toplamları.</div>
+    <div class="device"><div class="scroll" id="y"></div><div class="dock"></div></div></div>
+  <div class="col"><div class="label">Tümü · Yolculuk</div>
+    <div class="why">Başlangıçtan bugüne biriken toplam yükselen bir eğri; altında kilometre taşları: ilk tam gün, en uzun seri, okunan sayfa.</div>
+    <div class="device"><div class="scroll" id="a"></div><div class="dock"></div></div></div>
+</div>
+<div class="legend">
+  <b>Ortak:</b> başlık, sekmeler ve dock aynı. Dönem seçici ince ikincil sekmeler. "Önceki döneme göre" oku hafta ve ayda var; yıl ve tümünde yerini toplamlara bırakıyor. Yıl, bugünkü hatanın tersine, ilk kullanım gününden önceki günleri saymıyor.
+</div>
+<script>
+/* ---------------- sample data: 92 days of use, seeded so every reload looks the same ---------------- */
+let seed=7;const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647);
+const TODAY=new Date(2026,10,4), DAYS=92;
+const VAK=['Sabah','Öğle','İkindi','Akşam','Yatsı'];
+const day=[]; // oldest → today; each: {d, v:[bool x5], pages, kaza, pos:[0..1 or null]}
+for(let i=DAYS-1;i>=0;i--){const d=new Date(TODAY);d.setDate(d.getDate()-i);
+  const p=[.72,.93,.88,.95,.9].map((b,k)=>rnd()<b+(DAYS-i)/DAYS*.06-(k===0&&d.getDay()===6?.2:0));
+  day.push({d,v:p,pages:Math.round(rnd()*9),kaza:rnd()<.6?Math.round(1+rnd()*2):0,pos:p.map(x=>x?Math.min(1,Math.max(0,rnd()*.7+(rnd()<.3?.25:0))):null)});}
+const MON=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const WD=['Pz','Pt','Sa','Ça','Pe','Cu','Ct'];
+const cnt=x=>x.v.filter(Boolean).length;
+function periodDays(p){return p===0?day.slice(-7):p===1?day.slice(-30):p===2?day.filter(x=>x.d.getFullYear()===2026):day;}
+function prevDays(p){const n=p===0?7:30;return p<2?day.slice(-2*n,-n):[];}
+function sumUp(ds){const tot=ds.length*5,k=ds.reduce((a,x)=>a+cnt(x),0);return{tot,k,rate:tot?k/tot:0,full:ds.filter(x=>cnt(x)===5).length,pages:ds.reduce((a,x)=>a+x.pages,0),kaza:ds.reduce((a,x)=>a+x.kaza,0),
+  per:VAK.map((_,i)=>ds.filter(x=>x.v[i]).length/(ds.length||1)),pos:VAK.map((_,i)=>{const a=ds.map(x=>x.pos[i]).filter(y=>y!=null);return a.length?a.reduce((s,y)=>s+y,0)/a.length:0;})};}
+const RANGE=['Bu hafta','Son 30 gün','2026','Başladığından beri'];
+const pct=x=>'%'+Math.round(x*100);
+
+function muhasebeHead(sel){return `<div class="statusbar"><span>21:52</span><span>%74</span></div><div class="ttl t-display-m">Muhasebe</div>
+ <div class="tabs primary" style="margin-top:var(--sp-8)">${['Özet','Gidişat','Kaza'].map((t,i)=>`<div class="tb${i===sel?' on':''}">${t}</div>`).join('')}</div>`;}
+function periodTabs(p){return `<div class="tabs secondary pad" style="border:0;margin-top:var(--sp-8);overflow:hidden">${['Hafta','Ay','Yıl','Tümü'].map((t,i)=>`<div class="tb${i===p?' on':''}">${t}</div>`).join('')}</div><div class="divider" style="margin:0 var(--layout-gutter)"></div>`;}
+function deltaLine(p,s){const q=sumUp(prevDays(p)),d=Math.round((s.rate-q.rate)*100);
+ return `${RANGE[p]} · <span class="delta${d<0?' down':''}">${d>=0?'▲':'▼'} ${Math.abs(d)} puan</span> önceki döneme göre`;}
+function statRow(s){return `<div class="row" style="margin:var(--gap-section) var(--layout-gutter) 0;gap:0;align-items:stretch">
+ <div class="stat"><div class="v">${s.k}</div><div class="k">vakit kılındı</div></div><div class="vsep"></div>
+ <div class="stat"><div class="v">${s.pages}</div><div class="k">sayfa okundu</div></div><div class="vsep"></div>
+ <div class="stat"><div class="v">${s.kaza}</div><div class="k">kaza kılındı</div></div></div>`;}
+const goldA=a=>`rgb(232 190 116 / ${a})`;
+const fmt=n=>n.toLocaleString('tr-TR');
+function smooth(vals,w,h,id,cum){const n=vals.length,mx=cum?Math.max(...vals):1,X=i=>n<2?w/2:i*w/(n-1),Y=v=>h-8-v/mx*(h-24);
+  let d=`M${X(0)} ${Y(vals[0])}`;for(let i=1;i<n;i++){const x0=X(i-1),x1=X(i),xm=(x0+x1)/2;d+=` C${xm} ${Y(vals[i-1])},${xm} ${Y(vals[i])},${x1} ${Y(vals[i])}`;}
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="display:block"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8BE74" stop-opacity=".38"/><stop offset="1" stop-color="#E8BE74" stop-opacity="0"/></linearGradient></defs>
+   ${cum?'':`<line x1="0" x2="${w}" y1="${Y(1)}" y2="${Y(1)}" stroke="var(--outline-variant)" stroke-dasharray="3 5"/><text x="${w-4}" y="${Y(1)-6}" text-anchor="end" font-size="10" fill="var(--subtle)">beş vakit</text>`}
+   <path d="${d} L${X(n-1)} ${h} L${X(0)} ${h}Z" fill="url(#${id})"/><path d="${d}" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round"/>
+   <circle cx="${X(n-1)}" cy="${Y(vals[n-1])}" r="5" fill="var(--primary)"/><circle cx="${X(n-1)}" cy="${Y(vals[n-1])}" r="10" fill="var(--primary)" fill-opacity=".2"/></svg>`;}
+
+/* ---- Hafta: 5 vakit × 7 gün, every prayer visible ---- */
+function week(){const ds=periodDays(0),s=sumUp(ds);const x0=72,cw=(312-x0)/7;let g=`<svg viewBox="0 0 312 230" width="312" height="230">`;
+  ds.forEach((x,i)=>{const cx=x0+i*cw+cw/2,t=i===6;g+=`<text x="${cx}" y="12" text-anchor="middle" font-size="11" font-weight="600" fill="${t?'var(--primary)':'var(--on-surface-variant)'}">${WD[x.d.getDay()]}</text><text x="${cx}" y="30" text-anchor="middle" font-size="15" font-family="Cormorant" font-weight="600" fill="${t?'var(--primary)':'var(--on-surface)'}">${x.d.getDate()}</text>`;
+    if(t)g+=`<rect x="${cx-16}" y="40" width="32" height="186" rx="16" fill="var(--primary)" fill-opacity=".07"/>`;});
+  VAK.forEach((v,k)=>{const cy=60+k*36;g+=`<text x="0" y="${cy+4}" font-size="12" fill="var(--on-surface)">${v}</text>`;
+    ds.forEach((x,i)=>{const cx=x0+i*cw+cw/2;g+=x.v[k]?`<circle cx="${cx}" cy="${cy}" r="10" fill="var(--primary)"/><path d="M${cx-4} ${cy} l3 3 l5 -6" stroke="var(--on-primary)" stroke-width="2" fill="none" stroke-linecap="round"/>`:`<circle cx="${cx}" cy="${cy}" r="9" fill="none" stroke="var(--tertiary)" stroke-width="1.5"/>`;});});
+  g+='</svg>';
+  const miss=VAK.map((v,k)=>[v,ds.filter(x=>!x.v[k]).length]).sort((a,b)=>b[1]-a[1])[0];
+  const maxp=Math.max(...ds.map(x=>x.pages),1);
+  const bars=ds.map(x=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="height:44px;display:flex;align-items:flex-end"><div style="width:14px;height:${Math.max(2,x.pages/maxp*44)}px;border-radius:7px;background:${goldA(.7)}"></div></div><span style="font:500 11px var(--font-body);color:var(--subtle)">${x.pages}</span></div>`).join('');
+  return muhasebeHead(1)+periodTabs(0)+`<div class="hero"><div class="big">${s.k}<small>/ 35 vakit</small></div><div class="sub">${deltaLine(0,s)}</div></div>
+   <div class="pad" style="margin-top:var(--gap-section)">${g}
+   <div class="t-body-s ink-muted" style="margin-top:4px">${miss[1]?`Bu hafta en çok <b class="ink-warn">${miss[0]}</b> kaçtı (${miss[1]} gün).`:'Bu hafta hiç vakit kaçmadı, elhamdülillah.'}</div>
+   <div class="sec-label">Okuma · ${s.pages} sayfa</div><div class="row" style="gap:0;padding-left:72px">${bars}</div></div>`;}
+
+/* ---- Ay: G2 pulse ---- */
+function month(){const ds=periodDays(1),s=sumUp(ds);
+  const vals=ds.map((_,i)=>{const w=ds.slice(Math.max(0,i-4),i+1);return w.reduce((a,x)=>a+cnt(x),0)/(w.length*5);});
+  return muhasebeHead(1)+periodTabs(1)+`<div class="hero"><div class="big">${pct(s.rate)}<small>vakit kılındı</small></div><div class="sub">${deltaLine(1,s)}</div></div>
+  <div style="margin-top:var(--sp-16)">${smooth(vals,360,170,'gm')}</div>
+  <div class="row pad" style="justify-content:space-between;margin-top:4px"><span class="t-body-s ink-subtle" style="font-size:11px">${ds[0].d.getDate()} ${MON[ds[0].d.getMonth()]}</span><span class="t-body-s ink-subtle" style="font-size:11px">bugün</span></div>
+  <div class="pad"><div class="sec-label">Vakit vakit</div>${VAK.map((v,i)=>`<div class="vr"><span class="n">${v}</span><div class="lin"><i style="width:${s.per[i]*100}%;${s.per[i]<.8?'background:var(--tertiary)':''}"></i></div><span class="c">${pct(s.per[i])}</span></div>`).join('')}</div>`+statRow(s);}
+
+/* ---- Yıl: the year as a heatmap (owner's pick), 53 weeks × 7 days ---- */
+function year(){const ds=periodDays(2),s=sumUp(ds);const y0=new Date(2026,0,1),off=(y0.getDay()+6)%7,c=9,g=2;
+  const byDate=new Map(ds.map(x=>[x.d.toDateString(),cnt(x)]));let svg=`<svg viewBox="0 0 ${53*(c+g)} ${7*(c+g)+16}" width="100%" style="display:block">`;
+  for(let i=0;i<365;i++){const d=new Date(2026,0,1+i),j=i+off,w=Math.floor(j/7),r=j%7,x=w*(c+g),y=16+r*(c+g);
+    if(d.getDate()===1)svg+=`<text x="${x}" y="10" font-size="8" fill="var(--on-surface-variant)">${MON[d.getMonth()]}</text>`;
+    const v=byDate.get(d.toDateString());svg+=`<rect x="${x}" y="${y}" width="${c}" height="${c}" rx="2" fill="${v==null?'rgb(28 41 67 / .35)':v===0?'#55657F':v===5?'var(--primary)':goldA(.15+v*.15)}" ${d.toDateString()===TODAY.toDateString()?'stroke="var(--on-surface)"':''}/>`;}
+  svg+='</svg>';let best=null;MON.forEach((m,i)=>{const ms=ds.filter(x=>x.d.getMonth()===i);if(ms.length){const r=ms.reduce((a,x)=>a+cnt(x),0)/(ms.length*5);if(!best||r>best[1])best=[m,r];}});
+  return muhasebeHead(1)+periodTabs(2)+`<div class="hero"><div class="big">${s.full}<small>gün tam · 2026</small></div><div class="sub">${ds.length} gün · vakitlerin ${pct(s.rate)}'i kılındı</div></div>
+  <div class="pad" style="margin-top:var(--gap-section)">${svg}</div>
+  <div class="t-body-s ink-muted pad" style="margin-top:var(--sp-12)">En iyi ay <b class="ink-gold">${best[0]}</b> · ${pct(best[1])}</div>
+  <div class="pad"><div class="sec-label">Bu yıl</div><div class="grid2">
+   <div><div class="v">${fmt(s.k)}</div><div class="k">vakit namaz</div></div><div><div class="v">${fmt(s.pages)}</div><div class="k">sayfa okundu</div></div>
+   <div><div class="v">0</div><div class="k">hatim</div></div><div><div class="v">${s.kaza}</div><div class="k">kaza kılındı</div></div></div></div>`;}
+
+/* ---- Tümü: the journey ---- */
+function all(){const ds=periodDays(3),s=sumUp(ds);let acc=0;const cum=ds.map(x=>acc+=cnt(x));
+  let run=0,best=0,firstFull=null;ds.forEach(x=>{if(cnt(x)===5){run++;best=Math.max(best,run);firstFull=firstFull||x.d;}else run=0;});
+  const f=d=>`${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+  const m=(ic,t,sub,v)=>`<div class="mile"><span class="ic"><svg class="ico ico--sm"><use href="#i-${ic}"/></svg></span><span class="t">${t}<small>${sub}</small></span><span class="v">${v}</span></div>`;
+  return muhasebeHead(1)+periodTabs(3)+`<div class="hero"><div class="big">${fmt(s.k)}<small>vakit namaz</small></div><div class="sub">${ds.length} gündür seninle · ${f(ds[0].d)}'ten beri</div></div>
+  <div style="margin-top:var(--sp-16)">${smooth(cum,360,150,'ga2',true)}</div>
+  <div class="row pad" style="justify-content:space-between;margin-top:4px"><span class="t-body-s ink-subtle" style="font-size:11px">başlangıç</span><span class="t-body-s ink-subtle" style="font-size:11px">bugün</span></div>
+  <div class="pad"><div class="sec-label">Kilometre taşları</div>
+   ${m('sparkle','İlk tam gün',firstFull?f(firstFull):'henüz yok','✓')}
+   ${m('flame','En uzun seri','üst üste beş vakit',best+' gün')}
+   ${m('book','Okunan',"Kur'an ve kitaplar",fmt(s.pages)+' s.')}
+   ${m('check','Kılınan kaza','plan: günde 2',s.kaza)}</div>`;}
+
+// sample week with two missed Sabah and one missed Akşam, so the map shows a miss
+[[DAYS-2,0],[DAYS-5,0],[DAYS-4,3]].forEach(([i,k])=>{day[i].v[k]=false;day[i].pos[k]=null;});
+w.innerHTML=week();m.innerHTML=month();y.innerHTML=year();a.innerHTML=all();
+document.querySelectorAll('.dock').forEach(d=>d.innerHTML=['namaz','zikir','okuma','muhasebe'].map((n,i)=>`<div class="ni${i===3?' on':''}"><svg class="ico ico--solid"><use href="#i-${n}"/></svg><span class="nm">${['Namaz','Zikir','Okuma','Muhasebe'][i]}</span></div>`).join(''));
+</script>
+</body>
+</html>
