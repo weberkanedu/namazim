@@ -1,6 +1,7 @@
 package com.namazim
 
 import android.annotation.SuppressLint
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -13,6 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -43,7 +48,9 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
     val json = petalsJson(petals)
     val latest = remember { arrayOf(json) }
     latest[0] = json
-    val web = remember {
+    // bumped when Android kills the WebView renderer: a fresh WebView replaces the dead one
+    var gen by remember { mutableIntStateOf(0) }
+    val web = remember(gen) {
         WebView(ctx).apply {
             setBackgroundColor(0xFF121D33.toInt())
             settings.javaScriptEnabled = true
@@ -67,14 +74,16 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
                 }
                 // a fresh page starts as a bud: give it today's values right away
                 override fun onPageFinished(view: WebView, url: String) { view.evaluateJavascript("gul.set(${latest[0]})", null) }
+                // without this, a killed renderer (low memory, heavy WebGL) takes the whole app down with it
+                override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean { gen++; return true }
             }
             loadUrl("https://$HOST/gul.html")
         }
     }
-    LaunchedEffect(json) { web.evaluateJavascript("gul.set($json)", null) }
+    LaunchedEffect(json, web) { web.evaluateJavascript("gul.set($json)", null) }
 
     val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
-    DisposableEffect(owner) {
+    DisposableEffect(owner, web) {
         val obs = LifecycleEventObserver { _, e ->
             if (e == Lifecycle.Event.ON_PAUSE) web.onPause()
             if (e == Lifecycle.Event.ON_RESUME) web.onResume()
@@ -84,8 +93,8 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
     }
 
     Box(modifier.fillMaxWidth().height(300.dp)) {
-        AndroidView(factory = { web }, modifier = Modifier.fillMaxSize())
-        Box(Modifier.fillMaxSize().pointerInput(Unit) {
+        key(web) { AndroidView(factory = { web }, modifier = Modifier.fillMaxSize()) }
+        Box(Modifier.fillMaxSize().pointerInput(web) {
             // the page works in CSS px
             detectHorizontalDragGestures { _, dx -> web.evaluateJavascript("gul.spin(${dx / density})", null) }
         })

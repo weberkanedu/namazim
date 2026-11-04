@@ -19,6 +19,11 @@ class GulTest {
         assertEquals(day, prayerDayOf(day, now = 2_000, imsakToday = 2_000))
     }
 
+    @Test fun refreshAtNextImsak() {   // the rose resets at imsak, not at midnight
+        assertEquals(2_000L, nextImsakAt(now = 1_000, imsakToday = 2_000, imsakTomorrow = 9_000))
+        assertEquals(9_000L, nextImsakAt(now = 2_000, imsakToday = 2_000, imsakTomorrow = 9_000))
+    }
+
     @Test fun firstThirdBoundaries() {   // window 0..90 min → first third is [0, 30)
         val s = Slot(Vakit.OGLE, day, 0, 90 * min, 90 * min)
         assertTrue(inFirstThird(s, 0)); assertTrue(inFirstThird(s, 30 * min - 1))

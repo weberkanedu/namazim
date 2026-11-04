@@ -9,6 +9,9 @@ data class Petal(val name: String, val progress: Float, val label: String, val c
 fun prayerDayOf(today: LocalDate, now: Long, imsakToday: Long): LocalDate =
     if (now < imsakToday) today.minusDays(1) else today
 
+/** When the open screen must refresh by itself: the next imsak, where the prayer day turns. */
+fun nextImsakAt(now: Long, imsakToday: Long, imsakTomorrow: Long): Long = if (now < imsakToday) imsakToday else imsakTomorrow
+
 /** "Vaktinde": marked within the first third of the prayer's window. */
 fun inFirstThird(slot: Slot, at: Long?): Boolean =
     at != null && at >= slot.start && at < slot.start + (slot.end - slot.start) / 3

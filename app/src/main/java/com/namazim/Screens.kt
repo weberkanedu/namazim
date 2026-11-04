@@ -418,7 +418,7 @@ fun OkumaScreen() {
     var adding by remember { mutableStateOf(false) }
     val page = v.let { store.quranPage }
     val log = v.let { store.readLog() }
-    val todayDate = LocalDate.now()
+    val todayDate = store.prayerDay()   // logPages writes to the prayer day (imsak to imsak)
     val today = log[todayDate.toString()] ?: 0
     val goal = v.let { store.readGoal }
     val gauge by animateFloatAsState(page / QURAN_PAGES.toFloat(), tween(600), label = "gauge")
@@ -596,6 +596,16 @@ private fun MuhasebeOzet() {
     StoreRev.n.let { } // refresh when any setting or count changes
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
+    // also refresh when the prayer day turns (imsak) and when the app comes back to the foreground
+    var tick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(tick) { kotlinx.coroutines.delay((store.nextImsak() - System.currentTimeMillis()).coerceAtLeast(1_000)); tick++ }
+    val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(owner) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) tick++ }
+        owner.lifecycle.addObserver(obs)
+        onDispose { owner.lifecycle.removeObserver(obs) }
+    }
+    tick.let { }
     if (!store.hasLocation) return NeedLocation()
     val today = LocalDate.now()
     val now = System.currentTimeMillis()

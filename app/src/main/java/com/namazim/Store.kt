@@ -29,6 +29,10 @@ class Store(context: Context) {
     /** The prayer day (imsak to imsak) the Özet rose and the daily logs count in. */
     fun prayerDay(now: Long = System.currentTimeMillis()): LocalDate =
         if (!hasLocation) LocalDate.now() else prayerDayOf(LocalDate.now(), now, dayTimes(lat, lng, LocalDate.now()).imsak)
+    /** Next moment the prayer day turns over; without a location, check again in an hour. */
+    fun nextImsak(now: Long = System.currentTimeMillis()): Long =
+        if (!hasLocation) now + 3_600_000L
+        else nextImsakAt(now, dayTimes(lat, lng, LocalDate.now()).imsak, dayTimes(lat, lng, LocalDate.now().plusDays(1)).imsak)
     fun setLocation(lat: Double, lng: Double, city: String) {
         val e = p.edit().putLong("lat", lat.toRawBits()).putLong("lng", lng.toRawBits()).putString("city", city)
         if (!p.contains("since")) e.putLong("since", System.currentTimeMillis())
