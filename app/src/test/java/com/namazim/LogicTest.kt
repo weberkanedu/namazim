@@ -20,4 +20,12 @@ class LogicTest {
         assertEquals(1, cuz(1)); assertEquals(1, cuz(21)); assertEquals(2, cuz(22))
         assertEquals(29, cuz(581)); assertEquals(30, cuz(582)); assertEquals(30, cuz(604))
     }
+
+    @Test fun keptOnlyCountsEndedPrayers() {
+        // two ended and prayed, the current one prayed early: 2/2, not 3/2 (the "%200" bug)
+        val d = LocalDate.of(2026, 11, 4)
+        val s = (0..2).map { Slot(Vakit.entries[it], d, it * 60 * min, (it + 1) * 60 * min, (it + 1) * 60 * min) }
+        assertEquals(2 to 2, dueKept(s, s.map { it.key }.toSet(), now = 150 * min))
+        assertEquals(2 to 1, dueKept(s, setOf(s[0].key), now = 150 * min))
+    }
 }

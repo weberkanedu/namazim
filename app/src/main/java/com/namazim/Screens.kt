@@ -591,6 +591,12 @@ fun MuhasebeScreen() {
 }
 
 /** "Bugün ne durumdayım": dört halka (namaz, okuma, hatim, kaza) + tek cümlelik değerlendirme. */
+/** (vakti çıkmış, bunlardan kılınmış): a prayer marked before its time ends counts once its time is out, so the rate stays ≤ 100%. */
+fun dueKept(list: List<Slot>, prayed: Set<String>, now: Long): Pair<Int, Int> {
+    val ended = list.filter { it.end <= now }
+    return ended.size to ended.count { it.key in prayed }
+}
+
 @Composable
 private fun MuhasebeOzet() {
     StoreRev.n.let { } // refresh when any setting or count changes
@@ -631,8 +637,8 @@ private fun MuhasebeOzet() {
             val d = today.minusDays(i.toLong())
             if (d.isBefore(first)) break
             val list = daySlots(d)
-            due += list.count { it.end <= now }
-            kept += list.count { it.key in prayed }
+            val (dd, kk) = dueKept(list, prayed, now)
+            due += dd; kept += kk
             if (list.all { it.key in prayed || it.end > now }) full++
         }
         return Triple(due, kept, full)
