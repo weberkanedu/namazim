@@ -93,6 +93,7 @@ class MainActivity : ComponentActivity() {
     // Uygulama açılır açılmaz kaçan vakitleri kazaya yaz (Kaza sekmesini açmayı bekleme)
     Thread {
         runCatching { Store(this).settleKaza() }
+        runCatching { Store(this).migrateTesbihatLog() }
         runCatching { Reminders.scheduleNext(this) }
     }.apply { isDaemon = true }.start()
         reminderKey = intent.getStringExtra(EXTRA_SLOT)

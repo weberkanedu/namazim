@@ -257,13 +257,38 @@ class Store(context: Context) {
 
     /** Counts on the given prayer day (imsak to imsak): zikir name -> count. */
     fun zikirCounts(day: LocalDate = prayerDay()): Map<String, Int> {
-        val o = JSONObject(p.getString("zikirLog", "{}")!!).optJSONObject(day.toString()) ?: return emptyMap()
-        return o.keys().asSequence().associateWith { o.getInt(it) }
+        val o = JSONObject(p.getString("zikirLog", "{}")!!).optJSONObject(day.toString())
+        val raw = o?.keys()?.asSequence()?.associateWith { o.getInt(it) } ?: emptyMap()
+        if (!tesbihatCounts) return raw
+        // "Tesbihat günlük zikrime sayılsın": added on read, so flipping the setting changes Takip and the rose at once
+        val add = tesbihatOn(day)
+        return raw.toMutableMap().apply { DEFAULT_ZIKIRS.forEachIndexed { i, z -> if (add[i] > 0) merge(z.name, add[i], Int::plus) } }
     }
-    fun addZikir(name: String, n: Int) {
+    /** What the day's namaz sonrası tesbihat said: marked ones count in full, the one under way in Zikirhane as far as it got. */
+    fun tesbihatOn(day: LocalDate): List<Int> {
+        val marked = p.all.keys.count { it.startsWith("tesbihat_$day|") }
+        val sum = MutableList(DEFAULT_ZIKIRS.size) { marked * DEFAULT_ZIKIRS[it].target }
+        val f = (p.getString("tesbihProgress", "") ?: "").split('|')
+        if (f.size == 5 && f[0] == day.toString() && tesbihat("${f[0]}|${f[1]}") == null)
+            f.drop(2).forEachIndexed { i, s -> sum[i] += s.toIntOrNull() ?: 0 }
+        return sum
+    }
+    /** Before Nov 5 2026 (one build) the tesbihat was written into zikirLog itself; take it out once, it is added on read now. */
+    fun migrateTesbihatLog() {
+        if (p.getBoolean("tesbihLogV2", false)) return
+        p.all.keys.filter { it.startsWith("tesbihat_") }.forEach { k ->
+            val day = k.removePrefix("tesbihat_").substringBefore('|')
+            DEFAULT_ZIKIRS.forEach { addZikir(it.name, -it.target, day) }
+        }
+        val f = (p.getString("tesbihProgress", "") ?: "").split('|')
+        if (f.size == 5 && tesbihat("${f[0]}|${f[1]}") == null)
+            f.drop(2).forEachIndexed { i, s -> addZikir(DEFAULT_ZIKIRS[i].name, -(s.toIntOrNull() ?: 0), f[0]) }
+        p.edit().putBoolean("tesbihLogV2", true).apply()
+    }
+    fun addZikir(name: String, n: Int, day: String = prayerDay().toString()) {
         StoreRev.n++
         val all = JSONObject(p.getString("zikirLog", "{}")!!)
-        val today = prayerDay().toString()
+        val today = day
         val o = all.optJSONObject(today) ?: JSONObject()
         o.put(name, (o.optInt(name) + n).coerceAtLeast(0))
         p.edit().putString("zikirLog", all.put(today, o).toString()).apply()
@@ -275,14 +300,7 @@ class Store(context: Context) {
     fun setTesbihat(key: String, kind: String?) {
         val was = tesbihat(key)
         if (was == kind) return
-        // With [tesbihatCounts] the 99 also fills the daily zikir log: an app one was added tap by tap, a hand one is
-        // added here; taking a mark back takes the 99 out again.
-        // shortcut: flipping the setting after marking leaves the already logged counts as they were.
-        if (tesbihatCounts) {
-            if (kind == "el" && was == null) DEFAULT_ZIKIRS.forEach { addZikir(it.name, it.target) }
-            if (kind == null) DEFAULT_ZIKIRS.forEach { addZikir(it.name, -it.target) }
-        }
-        StoreRev.n++
+        StoreRev.n++   // the zikir log is not touched: zikirCounts adds the tesbihat on read
         p.edit().apply { if (kind == null) remove("tesbihat_$key") else putString("tesbihat_$key", kind) }.apply()
         if (kind == null) setTesbihProgress(key, listOf(0, 0, 0))
     }
@@ -336,7 +354,7 @@ class Store(context: Context) {
     fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
         val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
             "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired",
-            "askTesbihat", "tesbihatCounts", "ogutIndex")
+            "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2")
         val e = p.edit()
         p.all.keys.filter { it !in keep }.forEach { e.remove(it) }
         val ok = e.putLong("since", startAt).putLong("settledUntil", startAt).commit()

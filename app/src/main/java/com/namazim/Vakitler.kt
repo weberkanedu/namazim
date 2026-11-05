@@ -158,9 +158,9 @@ fun VakitlerBody(
                 when (m) {
                     0 -> GoldButton(ACCUSATIVE[cur] + " kıldım" + if (now < thirdEnd(c)) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }
                     1 -> TesbihatCard(c.vakit.ad, onEl = { tesbihEl(c.key) }, onApp = { onTesbihat(c.key) },
-                        onLater = { later = later + c.key }, onUndo = { toggle(cur) })
-                    else -> GhostButton("${c.vakit.ad} ${if (cs == VState.VAKTINDE) "vaktinde " else ""}kılındı" +
-                        (if (store.tesbihat(c.key) != null) " · tesbihat ✓" else "") + " · geri al", Modifier.fillMaxWidth(), Pal.Gold) { toggle(cur) }
+                        onLater = { later = later + c.key })
+                    // no undo button here: one stray touch would take the prayer back. Undo is in the vakit sheet (petal or row).
+                    else -> Spacer(Modifier.fillMaxWidth())
                 }
             }
         }
@@ -251,7 +251,7 @@ fun VakitlerBody(
 
 /** After Kıldım: the tesbihat of that vakit, done by hand / with the cemaat, or said in Zikirhane. */
 @Composable
-private fun TesbihatCard(vakit: String, onEl: () -> Unit, onApp: () -> Unit, onLater: () -> Unit, onUndo: () -> Unit) {
+private fun TesbihatCard(vakit: String, onEl: () -> Unit, onApp: () -> Unit, onLater: () -> Unit) {
     val turn by rememberInfiniteTransition(label = "tesbih").animateFloat(0f, 360f,
         infiniteRepeatable(tween(14_000, easing = androidx.compose.animation.core.LinearEasing)), label = "turn")
     Column(
@@ -277,10 +277,7 @@ private fun TesbihatCard(vakit: String, onEl: () -> Unit, onApp: () -> Unit, onL
             GhostButton("Yaptım", Modifier.weight(1f), Pal.Gold, onEl)
             GoldButton("Zikirhanede çek", Modifier.weight(1f), onClick = onApp)
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onLater) { Text("Sonra", color = Pal.Muted, fontSize = Type.body2) }
-            TextButton(onUndo) { Text("Kıldım'ı geri al", color = Pal.Muted, fontSize = Type.body2) }
-        }
+        TextButton(onLater, Modifier.align(Alignment.CenterHorizontally)) { Text("Sonra", color = Pal.Muted, fontSize = Type.body2) }
     }
 }
 

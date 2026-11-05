@@ -247,7 +247,7 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
                     val n = counts.toMutableList().also { it[step]++ }
                     counts = n
                     store.setTesbihProgress(key, n)
-                    if (store.tesbihatCounts) store.addZikir(DEFAULT_ZIKIRS[step].name, 1)
+                    StoreRev.n++   // the progress counts toward today's zikir on read
                     if (n[step] == DEFAULT_ZIKIRS[step].target) {
                         buzz(320)
                         if (tesbihStep(n) < 0) {
