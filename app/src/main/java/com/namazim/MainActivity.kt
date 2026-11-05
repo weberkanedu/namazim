@@ -100,6 +100,12 @@ class MainActivity : ComponentActivity() {
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
         SkyDebug.mSection = intent.getIntExtra("msection", 0) // `--ei msection 1` opens Muhasebe > Gidişat
         SkyDebug.zSection = intent.getIntExtra("zsection", 0) // `--ei zsection 1` opens Zikir > Takip
+        // `--ez resetentries true` (debug builds): Ayarlar › Kayıtları sıfırla without tapping; tracking restarts at the next imsak
+        if (intent.getBooleanExtra("resetentries", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            val s = Store(this)
+            android.util.Log.i("Reset", "entries reset: ${s.resetEntries(s.nextImsak())}")
+            Reminders.scheduleNext(this)
+        }
         // `--ez backuptest true` (debug builds): export → parse → compare with the live prefs, log only, writes nothing
         if (intent.getBooleanExtra("backuptest", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
             val live = getSharedPreferences("namazim", MODE_PRIVATE).all

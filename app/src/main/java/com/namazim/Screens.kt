@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -1210,11 +1211,15 @@ private fun MuhasebeOzet() {
         // design A "Sahne": the rose stands on the page itself, full width; long-term numbers sit in one row under it
         GulCard(petals, Modifier.fillMaxWidth().height(360.dp))
         val open = petals.count { it.progress >= 1f }
-        Text(
-            (if (open == petals.size) "Bugün · gül tam açtı" else "Bugün · $open yaprak tam açık").uppercase(java.util.Locale("tr")),
-            Modifier.fillMaxWidth(), color = Pal.Muted, fontSize = Type.label, letterSpacing = 1.sp, fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-        )
+        var roseInfo by remember { mutableStateOf(false) }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                (if (open == petals.size) "Bugün · gül tam açtı" else "Bugün · $open yaprak tam açık").uppercase(java.util.Locale("tr")),
+                color = Pal.Muted, fontSize = Type.label, letterSpacing = 1.sp, fontWeight = FontWeight.Medium,
+            )
+            IconButton(onClick = { roseInfo = true }) { Icon(Icons.Default.Info, "Gül nasıl açar?", tint = Pal.Gold, modifier = Modifier.size(18.dp)) }
+        }
+        if (roseInfo) RoseInfoSheet(petals, store.kazaRate) { roseInfo = false }
         Row(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).fillMaxWidth().height(IntrinsicSize.Min)) {
             StatColumn("$page", "/604", page / 604f, "Hatim")
             Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
@@ -1716,6 +1721,39 @@ private fun Milestone(icon: ImageVector, title: String, sub: String, value: Stri
         Text(value, style = NumStyle, fontSize = Type.h2, color = Pal.Text)
     }
     HorizontalDivider(color = Pal.Line)
+}
+
+/** Özet › ⓘ: how each petal of the rose opens, with today's numbers beside each one. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RoseInfoSheet(petals: List<Petal>, kazaRate: Int, onClose: () -> Unit) {
+    val how = mapOf(
+        "Namaz" to "Beş vaktin her biri için \"Kıldım\" dedikçe açılır. Beşi de kılınınca tam açık.",
+        "Vaktinde" to "\"Kıldım\"a vaktin ilk üçte birinde basılan namazları sayar. Erken kılınan her vakit yaprağı biraz daha açar.",
+        "Sayfa" to "Okuma'daki bugünkü hedefe göre açılır: planlı okumaların bugünkü payı ya da Kur'an'ın günlük hedefi.",
+        "Kaza" to "Kaza planına göre açılır (günde $kazaRate kaza). Kaza borcun yoksa yaprak hep açıktır.",
+        "Zikir" to "Zikir listendeki her zikrin bugünkü tamamlanma oranının ortalamasıyla açılır. Serbest zikir ve hedef sonrası ekstralar sayılmaz.",
+    )
+    ModalBottomSheet(onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
+        Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().padding(bottom = Space.l).verticalScroll(rememberScrollState())) {
+            Text("Gül nasıl açar?", style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+            Text("Gülün beş yaprağı bugünün beş işidir. Gün imsakta başlar ve gül her imsakta yeniden gonca olur.",
+                Modifier.padding(top = Space.xs, bottom = Space.s), color = Pal.Muted, fontSize = Type.body2, lineHeight = 19.sp)
+            petals.forEach { p ->
+                Row(Modifier.padding(top = Space.m)) {
+                    Column(Modifier.weight(1f)) {
+                        Text(p.name, color = Pal.Text, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
+                        Text(how[p.name] ?: "", color = Pal.Muted, fontSize = Type.body2, lineHeight = 19.sp)
+                    }
+                    Text(if (p.progress >= 1f) "✓" else p.label, Modifier.padding(start = Space.m),
+                        style = NumStyle, fontSize = Type.h2, color = if (p.progress >= 1f) Pal.Gold else Pal.Text)
+                }
+            }
+            HorizontalDivider(Modifier.padding(vertical = Space.l), color = Pal.Line)
+            Text("Beş yaprağın hepsi açılınca gonca da çözülür; gülün kalbinde altın bir ışık yanar ve tozlar yükselir. Tamamlanan yaprağın etiketi kaybolur, yalnız eksik işler etiketli kalır. Gülü parmağınla çevirebilirsin.",
+                color = Pal.Muted, fontSize = Type.body2, lineHeight = 19.sp)
+        }
+    }
 }
 
 /** One number under the Özet rose: big Cormorant value, small "/of", a thin bar (null = no bar), name. */

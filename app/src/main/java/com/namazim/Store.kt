@@ -290,6 +290,20 @@ class Store(context: Context) {
         }
         return JSONObject().put("app", "namazim").put("v", 1).put("at", now).put("prefs", prefs).toString(1)
     }
+    /**
+     * Wipes what the user entered (prayers marked, kaza, reading, zikir counts) and starts tracking again from now.
+     * Location, every setting, the zikir list and the reminder chain's state stay. Tracking restarts at [startAt].
+     */
+    fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
+        val keep = setOf("lat", "lng", "city", "skyMode", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
+            "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired")
+        val e = p.edit()
+        p.all.keys.filter { it !in keep }.forEach { e.remove(it) }
+        val ok = e.putLong("since", startAt).putLong("settledUntil", startAt).commit()
+        StoreRev.n++
+        return ok
+    }
+
     fun markBackedUp(now: Long = System.currentTimeMillis()) { StoreRev.n++; p.edit().putLong("lastBackup", now).apply() }
 
     /** A parsed backup file, checked before anything is written. */

@@ -27,6 +27,7 @@ All UI text is Turkish. The owner cares a lot about visuals and motion.
 - More test extras: `--el skytime <ms>` shifts the sky clock (e.g. `-19800000` shows noon at 18:30),
   `--ez keepawake true` pins the screen on, `--ez widgetpreview true` shows the widget art big,
   `--es skymode shader|photo|video` switches the header renderer.
+  `--ez resetentries true` (debug) runs Ayarlar › Kayıtları sıfırla (`Store.resetEntries`: prayers, kaza, reading, zikir counts go; location, settings, zikir list, `lastFired` stay) with tracking restarting at the next imsak.
   `--ez backuptest true` (debug) exports a backup, parses it back and logs `Backup: round trip … mismatched=[]` (writes nothing).
 - The screen sleeps after 60 s; without a wake key the screenshots come out black.
 
