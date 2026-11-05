@@ -1152,7 +1152,7 @@ private fun MuhasebeOzet() {
         slots(store.lat, store.lng, day), prayed, store::prayedAt,
         pagesToday = readToday.first, readGoal = readToday.second,
         kazaToday = store.kazaLog()[day.toString()] ?: 0, kazaRate = store.kazaRate, kazaOwed = totalKaza,
-        zikirs = store.zikirs, zikirCounts = store.zikirCounts(day),
+        zikirs = dailyZikirs(store.zikirs, store.tesbihatCounts), zikirCounts = store.zikirCounts(day),
     )
 
     val slotCache = remember { mutableMapOf<LocalDate, List<Slot>>() }

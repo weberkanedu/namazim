@@ -25,6 +25,12 @@ data class Zikir(val name: String, val target: Int)
 /** The tesbihat the list starts with; the user may edit or empty it. */
 val DEFAULT_ZIKIRS = listOf(Zikir("Sübhânallah", 33), Zikir("Elhamdülillah", 33), Zikir("Allâhu ekber", 33))
 
+/** The zikirs of the day's list. With "tesbihat günlük zikrime sayılsın" off, the three 33s of the tesbihat are said
+ *  after each prayer and kept apart, so they leave the list (Zikirhane chips, Takip, rose). A zikir the user set to
+ *  another target (e.g. Sübhânallah 100) is their own and stays. */
+fun dailyZikirs(all: List<Zikir>, tesbihatCounts: Boolean): List<Zikir> =
+    if (tesbihatCounts) all else all.filterNot { it in DEFAULT_ZIKIRS }
+
 /** Fifth petal: the average of each zikir's completion; an empty list counts as done. */
 fun zikirPetal(zikirs: List<Zikir>, counts: Map<String, Int>): Petal {
     val r = zikirs.map { ratio(counts[it.name] ?: 0, it.target) }

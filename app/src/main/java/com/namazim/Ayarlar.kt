@@ -207,7 +207,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         SwitchRow("Tesbihat günlük zikrime sayılsın", store.tesbihatCounts) { store.tesbihatCounts = it; changed() }
                         Text(
                             if (store.tesbihatCounts) "Açık: namazdan sonra çektiğin 33·33·33, günlük Sübhânallah / Elhamdülillah / Allâhu ekber hedefini doldurur."
-                            else "Kapalı: tesbihat ayrı tutulur; günlük zikir listen onun üstüne ayrıca çekilir.",
+                            else "Kapalı: tesbihat ayrı tutulur; 33·33·33 zikirleri Zikirhane ve Takip listesinden çıkar. Ekstra zikir istersen Zikir sayfasındaki kalemle ekle.",
                             color = Pal.Muted, fontSize = Type.body2,
                         )
                     }

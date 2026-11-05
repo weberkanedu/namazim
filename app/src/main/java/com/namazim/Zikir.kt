@@ -91,7 +91,8 @@ fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
         TesbihatMode(store, key, onClose = { TesbihatNav.key = null }) { TesbihatNav.key = null; onTesbihatDone() }
         return
     }
-    val zikirs = store.zikirs
+    val all = store.zikirs
+    val zikirs = dailyZikirs(all, store.tesbihatCounts)
     var section by rememberSaveable { mutableIntStateOf(SkyDebug.zSection) }
     var editing by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
@@ -101,7 +102,7 @@ fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
         PageTabs(listOf("Zikirhane", "Takip"), section) { section = it }
         if (section == 0) { Zikirhane(store, zikirs); Spacer(Modifier.height(LocalDockPad.current)) } else ZikirTakip(store, zikirs)
     }
-    if (editing) ZikirSheet(store, zikirs) { editing = false }
+    if (editing) ZikirSheet(store, all) { editing = false }   // the editor always shows the whole list
 }
 
 @Composable
