@@ -1,0 +1,395 @@
+package com.namazim
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import java.util.Locale
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.roundToInt
+import kotlin.math.sin
+
+// Home "Vakitler" (design V7, design/design-system/vakitler-secenekler.html): the logo rose on top (outer petal = prayed,
+// inner petal = prayed in the first third, the gül's "Vaktinde" petal), the current vakit as a three-part strip,
+// one big "kıldım", then the day's list with the ek vakitler as chips. Any other vakit opens a sheet.
+
+enum class VState { VAKTINDE, KILINDI, KAZA, ACIK, SONRA, GECTI }
+
+/** End of the "vaktinde" slice: the first third of the window, the same rule as the rose (`inFirstThird`). */
+fun thirdEnd(s: Slot): Long = s.start + (s.end - s.start) / 3
+
+fun vakitState(s: Slot, now: Long, prayed: Boolean, at: Long?, tracked: Boolean): VState = when {
+    prayed -> if (inFirstThird(s, at)) VState.VAKTINDE else VState.KILINDI
+    now < s.start -> VState.SONRA
+    now < s.end -> VState.ACIK
+    tracked -> VState.KAZA
+    else -> VState.GECTI   // before tracking started: neither kaza nor owed
+}
+
+private val ROW_NAME = listOf("İmsak", "Öğle", "İkindi", "Akşam", "Yatsı")
+private val ACCUSATIVE = listOf("Sabahı", "Öğleyi", "İkindiyi", "Akşamı", "Yatsıyı")
+private val EXTRA_GROUP = listOf("GÜNEŞ", "ÖĞLE", "İKİNDİ", "AKŞAM", "YATSI")
+private val Cream = Color(0xFFFFF4DC)
+private val InnerGold = Color(0xFFF6D899)
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun VakitlerBody(
+    slots: List<Slot>, now: Long, gunes: Long, ex: List<Extra>, next: Pair<Long, String>,
+    between: @Composable () -> Unit,
+) {
+    val ctx = LocalContext.current
+    val store = remember { Store(ctx) }
+    StoreRev.n.let { } // marking bumps the rev: redraw at once, without resetting the animations
+    val haptic = LocalHapticFeedback.current
+    val st = slots.map { vakitState(it, now, store.isPrayed(it.key), store.prayedAt(it.key), store.tracked(it)) }
+    val cur = slots.indexOfFirst { now in it.start until it.end }   // -1 between güneş and öğle
+    val c = slots.getOrNull(cur)
+    val cs = st.getOrNull(cur)
+    var sheet by remember { mutableStateOf<Int?>(null) }
+    val toggle = { i: Int ->
+        val s = slots[i]
+        if (store.isPrayed(s.key)) Reminders.unmarkPrayed(ctx, s.key)
+        else if (now >= s.start) {
+            Reminders.markPrayed(ctx, s.key, s.vakit)
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+    val kerahat = ex.firstOrNull { it.kerahat && it.group == "İKİNDİ" }?.start
+    val inKerahat = c?.vakit == Vakit.IKINDI && cs == VState.ACIK && kerahat != null && now >= kerahat
+
+    val (label, time, sub) = when {
+        c != null && cs == VState.ACIK && now < thirdEnd(c) ->
+            Triple("Vaktinde kılmak için", countdown(thirdEnd(c) - now), "son ${hm(thirdEnd(c))} · sonra da kılınır, vakit ${hm(c.end)} çıkar")
+        inKerahat -> Triple("Kerahat vakti", countdown(c!!.end - now), "geciktirme · vakit ${hm(c.end)} çıkar")
+        c != null && cs == VState.ACIK -> Triple("Vakit çıkmadan", countdown(c.end - now), "vaktinde dilimi ${hm(thirdEnd(c))} bitti")
+        else -> Triple(
+            if (next.second == "Güneş doğuşuna") next.second else "${next.second} vaktine", countdown(next.first - now),
+            when (cs) {
+                VState.VAKTINDE -> "${c!!.vakit.ad} vaktinde kılındı"
+                VState.KILINDI -> "${c!!.vakit.ad} kılındı"
+                else -> "kaldı"
+            },
+        )
+    }
+    val accent = if (inKerahat) Pal.Warn else Pal.Gold
+
+    Column(Modifier.fillMaxWidth()) {
+        VakitGul(st, cur, slots, now, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp)) { i ->
+            if (i == cur && st[i] == VState.ACIK) toggle(i) else sheet = i
+        }
+        Column(Modifier.fillMaxWidth().padding(horizontal = Space.xl), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(label.uppercase(Locale("tr")), color = accent, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Text(time, style = NumStyle, fontSize = Type.display, lineHeight = 48.sp, color = if (inKerahat) Pal.Warn else Pal.Text)
+            Text(sub, color = Pal.Muted, fontSize = Type.body2, textAlign = TextAlign.Center)
+        }
+        if (c != null && cs != null) {
+            VakitSerit(c, store.prayedAt(c.key).takeIf { store.isPrayed(c.key) }, kerahat.takeIf { c.vakit == Vakit.IKINDI }, now,
+                Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m))
+            AnimatedContent(cs == VState.ACIK, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m),
+                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) }, label = "kildim") { open ->
+                if (open) GoldButton(ACCUSATIVE[cur] + " kıldım" + if (now < thirdEnd(c)) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }
+                else GhostButton("${c.vakit.ad} ${if (cs == VState.VAKTINDE) "vaktinde " else ""}kılındı · geri al", Modifier.fillMaxWidth(), Pal.Gold) { toggle(cur) }
+            }
+        }
+        between()
+        Text("BUGÜN", Modifier.padding(start = Space.xl, top = Space.l, bottom = Space.xs), color = Pal.Muted,
+            fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+        slots.forEachIndexed { i, s ->
+            val on = i == cur
+            Row(
+                Modifier.fillMaxWidth()
+                    .background(if (on) Brush.horizontalGradient(listOf(accent.copy(alpha = .10f), Color.Transparent)) else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent)))
+                    .clickable { sheet = i }.heightIn(min = 52.dp).padding(horizontal = Space.xl),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Bead(st[i], on, Modifier.size(20.dp))
+                Spacer(Modifier.width(Space.m))
+                Column(Modifier.weight(1f)) {
+                    Text(ROW_NAME[i], color = if (on) Pal.Gold else Pal.Text, fontSize = 15.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                    val at = store.prayedAt(s.key)?.let { " · " + hm(it) } ?: ""
+                    when (st[i]) {
+                        VState.VAKTINDE -> Text("vaktinde$at", color = Pal.Gold, fontSize = Type.micro)
+                        VState.KILINDI -> Text("kılındı$at", color = Pal.Muted, fontSize = Type.micro)
+                        VState.KAZA -> Text("kaza", color = Pal.Warn, fontSize = Type.micro)
+                        VState.ACIK -> Text("şimdi · ${hm(s.start)}–${hm(s.end)}", color = accent, fontSize = Type.micro)
+                        else -> {}
+                    }
+                }
+                Text(hm(s.start), style = NumStyle, fontSize = 20.sp, color = if (on) Pal.Text else Pal.Muted)
+            }
+            val chips = rowExtras(i, ex, gunes)
+            if (chips.isNotEmpty()) FlowRow(
+                Modifier.padding(start = Space.xl + 32.dp, end = Space.xl, bottom = Space.s),
+                horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) { chips.forEach { ExtraChip(it, now) } }
+        }
+        Spacer(Modifier.height(Space.xl))
+    }
+
+    sheet?.let { i ->
+        val s = slots[i]
+        val x = st[i]
+        val at = store.prayedAt(s.key)?.let { " · " + hm(it) } ?: ""
+        ModalBottomSheet({ sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
+            Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().padding(bottom = Space.xl), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                Text("${s.vakit.ad} namazı", style = NumStyle, fontSize = Type.title, color = Pal.Text)
+                Text("${hm(s.start)} – ${hm(s.end)} · vaktinde dilimi ${hm(s.start)}–${hm(thirdEnd(s))}", color = Pal.Muted, fontSize = Type.body2)
+                val (msg, col) = when (x) {
+                    VState.VAKTINDE -> "Vaktinde kılındı$at" to Pal.Gold
+                    VState.KILINDI -> "Kılındı$at · vaktinde dilimi geçmişti" to Pal.Text
+                    VState.KAZA -> "Kılınmadı · kazaya yazıldı" to Pal.Warn
+                    VState.ACIK -> "Vakit şimdi" to Pal.Gold
+                    VState.SONRA -> "Henüz girmedi" to Pal.Muted
+                    VState.GECTI -> "Takip başlamadan önceydi" to Pal.Muted
+                }
+                Text(msg, color = col, fontSize = Type.body, fontWeight = FontWeight.Medium)
+                val chips = rowExtras(i, ex, gunes)
+                if (chips.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    chips.forEach { ExtraChip(it, now) }
+                }
+                Spacer(Modifier.height(Space.xs))
+                when {
+                    store.isPrayed(s.key) -> GhostButton("Geri al", Modifier.fillMaxWidth()) { toggle(i); sheet = null }
+                    x == VState.SONRA -> Text("Vakit girince işaretlenir", color = Pal.Muted, fontSize = Type.body2)
+                    else -> GoldButton("Kıldım", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(i); sheet = null }
+                }
+            }
+        }
+    }
+}
+
+/** Ek vakitler under row [i]; the İmsak row also carries Güneş, since güneş–öğle has no prayer of its own. */
+private fun rowExtras(i: Int, ex: List<Extra>, gunes: Long): List<Extra> =
+    (if (i == 0) listOf(Extra("Güneş", gunes, null, false, "GÜNEŞ")) else emptyList()) + ex.filter { it.group == EXTRA_GROUP[i] }
+
+@Composable
+private fun ExtraChip(e: Extra, now: Long) {
+    val live = e.end != null && now in e.start until e.end
+    val col = when {
+        e.kerahat -> Pal.Warn
+        live -> Pal.Gold
+        else -> Pal.Muted
+    }
+    Row(
+        Modifier.border(1.dp, if (live || e.kerahat) col.copy(alpha = if (live) .9f else .45f) else Pal.Border, RoundedCornerShape(50))
+            .padding(horizontal = 9.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(e.name, color = col, fontSize = 11.sp)
+        Spacer(Modifier.width(4.dp))
+        Text(hm(e.start), style = NumStyle, fontSize = 13.sp, color = Pal.Text)
+    }
+}
+
+/** A shaded tesbih bead: gold when prayed (a cream heart when on time), peach for kaza, the current one beats. */
+@Composable
+private fun Bead(state: VState, live: Boolean, modifier: Modifier) {
+    val beat = if (live && state == VState.ACIK) heartbeat() else null
+    Canvas(modifier) {
+        val r = size.minDimension / 2
+        val stops = when (state) {
+            VState.VAKTINDE, VState.KILINDI -> listOf(Color(0xFFFFF1CF), Pal.Gold, Color(0xFF8A6420))
+            VState.KAZA -> listOf(Color(0xFFFFD9C4), Pal.Warn, Color(0xFF9A5A3E))
+            else -> listOf(Color(0xFF3A4A68), Color(0xFF1C2943), Color(0xFF1C2943))
+        }
+        beat?.let { b -> drawCircle(Pal.Gold.copy(alpha = .15f + .3f * b.value), r * (1.25f + .45f * b.value), style = Stroke(1.5.dp.toPx())) }
+        drawCircle(Brush.radialGradient(stops, center = Offset(size.width * .35f, size.height * .3f), radius = r * 1.5f), r)
+        if (state == VState.VAKTINDE) drawCircle(Color(0xFFFFF8E6), r * .32f)
+        if (state == VState.ACIK) drawCircle(Pal.Gold, r - 1.dp.toPx(), style = Stroke(2.dp.toPx()))
+    }
+}
+
+/** The logo rose: petal i = vakit i clockwise from the top. Outer petal fills gold when prayed, the inner one opens
+ *  when it was on time; over the current petal a gold arc shrinks with the time left for "vaktinde". */
+@Composable
+private fun VakitGul(st: List<VState>, cur: Int, slots: List<Slot>, now: Long, kerahat: Boolean, modifier: Modifier, onPetal: (Int) -> Unit) {
+    val measurer = rememberTextMeasurer()
+    val fill = st.map { animateFloatAsState(if (it == VState.VAKTINDE || it == VState.KILINDI) 1f else 0f, spring(.45f, 220f), label = "fill").value }
+    val inner = st.map { animateFloatAsState(if (it == VState.VAKTINDE) 1f else 0f, spring(.4f, 150f), label = "inner").value }
+    val breathe by rememberInfiniteTransition(label = "gul").animateFloat(.35f, 1f, infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "breathe")
+    val c = slots.getOrNull(cur)
+    val arc = if (c != null && st[cur] == VState.ACIK && now < thirdEnd(c)) (thirdEnd(c) - now).toFloat() / (thirdEnd(c) - c.start) else null
+    val tap by rememberUpdatedState(onPetal)
+    val curNow by rememberUpdatedState(cur)
+    Canvas(modifier.pointerInput(Unit) {
+        detectTapGestures { o ->
+            val dx = o.x - size.width / 2f
+            val dy = o.y - size.height / 2f
+            if (hypot(dx, dy) < size.width * .07f && curNow >= 0) { tap(curNow); return@detectTapGestures }
+            var deg = Math.toDegrees(atan2(dx.toDouble(), -dy.toDouble()))
+            if (deg < 0) deg += 360.0
+            tap((deg / 72.0).roundToInt() % 5)
+        }
+    }) {
+        val k = size.minDimension / 222f   // room around the petals for the labels
+        fun pt(r: Float, a: Float): Offset {
+            val t = Math.toRadians(a - 90.0)
+            return Offset(center.x + r * k * cos(t).toFloat(), center.y + r * k * sin(t).toFloat())
+        }
+        fun petal(r0: Float, r1: Float, a0: Float, a1: Float, close: Boolean) = Path().apply {
+            val w = a1 - a0
+            val s0 = pt(r0, a0); moveTo(s0.x, s0.y)
+            val c1 = pt(r1 * 1.02f, a0 - w * .08f); val c2 = pt(r1 * 1.16f, a0 + w * .34f); val m = pt(r1, a0 + w * .5f)
+            cubicTo(c1.x, c1.y, c2.x, c2.y, m.x, m.y)
+            val c3 = pt(r1 * 1.16f, a1 - w * .34f); val c4 = pt(r1 * 1.02f, a1 + w * .08f); val e0 = pt(r0, a1)
+            cubicTo(c3.x, c3.y, c4.x, c4.y, e0.x, e0.y)
+            if (close) close()
+        }
+        val dash = PathEffect.dashPathEffect(floatArrayOf(3f * k, 3f * k))
+        // the current petal goes last so nothing covers its edge
+        for (i in (0 until 5).filter { it != cur } + listOfNotNull(cur.takeIf { it >= 0 })) {
+            val a = i * 72f
+            val x = st[i]
+            val open = i == cur && x == VState.ACIK
+            val outer = petal(24f, 70f, a - 40f, a + 40f, true)
+            drawPath(outer, Pal.Card)
+            if (fill[i] > .01f) scale(.8f + .2f * fill[i], pivot = pt(24f, a)) { drawPath(outer, Pal.Gold.copy(alpha = .42f * fill[i].coerceIn(0f, 1f))) }
+            if (x == VState.KAZA) drawPath(outer, Pal.Warn.copy(alpha = .38f))
+            val edge = when {
+                x == VState.KAZA || (open && kerahat) -> Pal.Warn
+                open -> Pal.Text
+                else -> Pal.Gold
+            }
+            drawPath(petal(24f, 70f, a - 40f, a + 40f, false), edge.copy(alpha = if (open && kerahat) breathe else 1f),
+                style = Stroke((if (open) 2.6f else 1.8f) * k, join = StrokeJoin.Round))
+            if (inner[i] > .01f) scale(inner[i], pivot = pt(12f, a)) { drawPath(petal(12f, 46f, a - 26f, a + 26f, true), InnerGold) }
+            if (x != VState.VAKTINDE) drawPath(petal(12f, 46f, a - 26f, a + 26f, false),
+                Pal.Gold.copy(alpha = if (open && arc != null) breathe else .45f),
+                style = Stroke(1.2f * k, pathEffect = if (open && arc != null) dash else null))
+            if (i == cur && arc != null) {
+                val r = 79f * k
+                drawArc(Pal.Gold, a - 38f - 90f, 76f * arc, false, Offset(center.x - r, center.y - r), Size(2 * r, 2 * r),
+                    style = Stroke(3.5f * k, cap = StrokeCap.Round))
+                drawCircle(Cream, 3.5f * k, pt(79f, a - 38f + 76f * arc))
+            }
+            val col = when {
+                i == cur -> if (kerahat) Pal.Warn else Pal.Gold
+                x == VState.KAZA -> Pal.Warn
+                else -> Pal.Muted
+            }
+            val l = measurer.measure(ROW_NAME[i], TextStyle(color = col, fontSize = 11.sp, fontWeight = FontWeight.SemiBold))
+            val p = pt(91f, a)
+            drawText(l, topLeft = Offset(p.x - l.size.width / 2f, p.y - l.size.height / 2f))
+        }
+        val bud = Path()
+        for (j in 0..60) {
+            val th = j / 60.0 * Math.PI * 3.2
+            val r = 9f * k * (1 - j / 68f)
+            val px = center.x + r * cos(th).toFloat(); val py = center.y + r * sin(th).toFloat()
+            if (j == 0) bud.moveTo(px, py) else bud.lineTo(px, py)
+        }
+        drawPath(bud, Pal.Gold, style = Stroke(1.4f * k))
+    }
+}
+
+/** The current vakit as a strip: vaktinde (gold) · vakit · kerahat (hatched peach, İkindi only); a light walks with the clock. */
+@Composable
+private fun VakitSerit(s: Slot, prayedAt: Long?, kerahat: Long?, now: Long, modifier: Modifier) {
+    val beat = heartbeat()
+    val third = thirdEnd(s)
+    val ker = kerahat?.takeIf { it in third until s.end }
+    val len = (s.end - s.start).toFloat()
+    fun f(t: Long) = ((t - s.start) / len).coerceIn(0f, 1f)
+    Column(modifier) {
+        Canvas(Modifier.fillMaxWidth().height(24.dp)) {
+            val h = 12.dp.toPx()
+            val y0 = (size.height - h) / 2
+            val gap = 3.dp.toPx()
+            val w = size.width
+            val rr = CornerRadius(h / 2)
+            val bounds = listOf(0f, f(third)) + listOfNotNull(ker?.let { f(it) }) + 1f
+            for (j in 0 until bounds.size - 1) {
+                val x0 = bounds[j] * w + if (j > 0) gap / 2 else 0f
+                val x1 = bounds[j + 1] * w - if (j < bounds.size - 2) gap / 2 else 0f
+                val hatched = ker != null && j == 2
+                val col = when {
+                    j == 0 -> if (now >= third || prayedAt != null) Pal.Gold.copy(alpha = .28f) else Pal.Gold
+                    hatched -> Pal.Warn.copy(alpha = .18f)
+                    else -> Pal.Track
+                }
+                drawRoundRect(col, Offset(x0, y0), Size(x1 - x0, h), rr)
+                if (hatched) clipPath(Path().apply { addRoundRect(RoundRect(x0, y0, x1, y0 + h, rr)) }) {
+                    var x = x0 - h
+                    while (x < x1) { drawLine(Pal.Warn.copy(alpha = .55f), Offset(x, y0 + h), Offset(x + h, y0), 2.dp.toPx()); x += 6.dp.toPx() }
+                }
+            }
+            val nx = f(now) * w
+            drawRoundRect(Pal.Ground.copy(alpha = .62f), Offset(0f, y0), Size(nx, h), rr)   // the part already gone
+            val cy = size.height / 2
+            if (prayedAt != null) {
+                val px = f(prayedAt) * w
+                drawCircle(Pal.Gold, 8.dp.toPx(), Offset(px, cy))
+                val u = 1.dp.toPx()
+                drawPath(Path().apply { moveTo(px - 3.5f * u, cy); lineTo(px - 1f * u, cy + 2.5f * u); lineTo(px + 3.5f * u, cy - 2.5f * u) },
+                    Pal.Ground, style = Stroke(1.8f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+            if (now < s.end && prayedAt == null) {
+                drawCircle(Pal.Gold.copy(alpha = .22f + .25f * beat.value), (11f + 5f * beat.value) * 1.dp.toPx(), Offset(nx, cy))
+                drawCircle(Cream, 8.dp.toPx(), Offset(nx, cy))
+            }
+        }
+        val labels = listOfNotNull(
+            Triple(0f, hm(s.start), Pal.Muted), Triple(f(third), hm(third), Pal.Gold),
+            ker?.let { Triple(f(it), "kerahat " + hm(it), Pal.Warn) }, Triple(1f, hm(s.end), Pal.Muted),
+        )
+        Layout({ labels.forEach { Text(it.second, color = it.third, fontSize = Type.micro, fontWeight = if (it.third == Pal.Muted) FontWeight.Normal else FontWeight.SemiBold) } },
+            Modifier.fillMaxWidth().padding(top = 2.dp)) { ms, cons ->
+            val ps = ms.map { it.measure(Constraints()) }
+            layout(cons.maxWidth, ps.maxOf { it.height }) {
+                ps.forEachIndexed { i, p -> p.place((labels[i].first * cons.maxWidth - p.width / 2f).toInt().coerceIn(0, cons.maxWidth - p.width), 0) }
+            }
+        }
+    }
+}

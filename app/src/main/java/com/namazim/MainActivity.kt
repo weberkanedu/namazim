@@ -39,6 +39,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -317,82 +319,9 @@ fun WidgetPreview() {
     }
 }
 
-/** One node of the day's timeline: rail + dot, name, time, and the "kıldım" tick.
- *  Extra times hang under their vakit as children, opened with the chevron. */
-@Composable
-fun TimelineRow(
-    name: String, time: String, sub: String?, main: Boolean, active: Boolean, prayed: Boolean, kaza: Boolean,
-    color: Color, isFirst: Boolean, isLast: Boolean, onToggle: (() -> Unit)?,
-    hasChildren: Boolean = false, expanded: Boolean = false, onExpand: (() -> Unit)? = null, child: Boolean = false,
-) {
-    val h = when {
-        child -> 34.dp
-        main -> 52.dp
-        else -> 40.dp
-    }
-    val beat = if (active) heartbeat() else null
-    Row(Modifier.fillMaxWidth().height(h), verticalAlignment = Alignment.CenterVertically) {
-        androidx.compose.foundation.Canvas(Modifier.width(28.dp).fillMaxHeight()) {
-            val b = beat?.value ?: 0f   // read in draw only: the beat redraws the dot, not the row
-            val cx = size.width / 2f
-            val cy = size.height / 2f
-            val lw = 1.5.dp.toPx()
-            val rail = Pal.Text.copy(alpha = .18f)
-            if (!isFirst) drawLine(rail, Offset(cx, 0f), Offset(cx, cy - 7.dp.toPx()), lw)
-            if (!isLast) drawLine(rail, Offset(cx, cy + 7.dp.toPx()), Offset(cx, size.height), lw)
-            val node = when {
-                prayed || active -> Pal.Gold
-                kaza -> Pal.Warn
-                else -> Pal.Border
-            }
-            if (active) drawCircle(Pal.Gold.copy(alpha = .20f + .22f * b), radius = 10.dp.toPx() * (1f + .45f * b), center = Offset(cx, cy))
-            val r = when {
-                active -> 5.5.dp.toPx() * (1f + .2f * b)
-                child -> 2.5.dp.toPx()
-                else -> 4.dp.toPx()
-            }
-            drawCircle(node, radius = r, center = Offset(cx, cy))
-        }
-        Row(
-            Modifier.weight(1f).fillMaxHeight()
-                .clickable(enabled = hasChildren && onExpand != null) { onExpand?.invoke() },
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (hasChildren) {
-                Icon(
-                    Icons.Default.KeyboardArrowDown, if (expanded) "Kapat" else "Ek vakitler",
-                    tint = if (active) Pal.Gold else Pal.Muted,
-                    modifier = Modifier.size(16.dp).rotate(if (expanded) 180f else 0f),
-                )
-                Spacer(Modifier.width(2.dp))
-            } else if (!child) {
-                Spacer(Modifier.width(Space.l))
-            }
-            Column(Modifier.weight(1f).padding(start = if (child) 12.dp else 0.dp)) {
-                Text(name, color = color, fontSize = if (child) 13.sp else 15.sp,
-                    fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1)
-                when {
-                    kaza -> Text("kaza", color = Pal.Warn, fontSize = Type.micro, letterSpacing = .4.sp)
-                    !sub.isNullOrEmpty() -> Box(
-                        Modifier.padding(top = 1.dp).clip(RoundedCornerShape(6.dp))
-                            .border(1.dp, Pal.Gold.copy(alpha = .35f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 5.dp, vertical = 1.dp),
-                    ) {
-                        Text(sub, color = Pal.Gold.copy(alpha = .9f), fontSize = Type.micro, letterSpacing = .5.sp)
-                    }
-                }
-            }
-            Text(time, color = color, fontSize = if (child) 12.5.sp else 15.sp,
-                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal)
-        }
-        Spacer(Modifier.width(Space.m))
-        if (onToggle != null) TickButton(prayed, active, onToggle) else Spacer(Modifier.width(26.dp))
-    }
-}
-
 /** Heartbeat strength 0..1: a "lub-dub" double beat, then rest; one cycle ≈ 1.2 s (about 50 bpm, calm). */
 @Composable
-private fun heartbeat(): androidx.compose.runtime.State<Float> =
+internal fun heartbeat(): androidx.compose.runtime.State<Float> =
     androidx.compose.animation.core.rememberInfiniteTransition(label = "beat").animateFloat(
         0f, 0f,
         androidx.compose.animation.core.infiniteRepeatable(
@@ -407,21 +336,6 @@ private fun heartbeat(): androidx.compose.runtime.State<Float> =
         ),
         label = "beat",
     )
-
-@Composable
-fun TickButton(on: Boolean, active: Boolean, onClick: () -> Unit) {
-    // 44 dp touch target around a small, thin ring
-    Box(Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
-        Box(
-            Modifier.size(22.dp).clip(CircleShape)
-                .background(if (on) Pal.Gold else Color.Transparent)
-                .border(if (on) 0.dp else 1.dp, if (active) Pal.Gold.copy(alpha = .85f) else Pal.Border, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (on) Icon(Icons.Default.Check, "Kılındı", tint = Pal.Ground, modifier = Modifier.size(13.dp))
-        }
-    }
-}
 
 // ---------------------------------------------------------------- helpers shared by the screens
 
@@ -526,27 +440,13 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
         val calDate = LocalDate.now()
         val imsakToday = slots(store.lat, store.lng, calDate).first().start
         val today = if (now < imsakToday) calDate.minusDays(1) else calDate
-        val near = (-1L..1L).flatMap { slots(store.lat, store.lng, today.plusDays(it)) }
         val d = dayTimes(store.lat, store.lng, today)
         val tomorrow = dayTimes(store.lat, store.lng, today.plusDays(1))
-        val current = near.firstOrNull { now in it.start until it.end }
-        val owed = current != null && !store.isPrayed(current.key) && store.tracked(current)
         val events = listOf(d.imsak to "İmsak", d.gunes to "Güneş doğuşuna", d.ogle to "Öğle", d.ikindi to "İkindi",
             d.aksam to "Akşam", d.yatsi to "Yatsı", tomorrow.imsak to "İmsak")
         val next = events.first { it.first > now }
         val ex = extras(d, tomorrow.imsak)
         val holy = remember(today) { nextHolyDay(today) }
-        val heroLabel = when {
-            owed -> "${current!!.vakit.ad} vakti · henüz kılmadın"
-            next.second == "Güneş doğuşuna" -> "Güneş doğuşuna"
-            else -> "${next.second} vaktine"
-        }
-        val heroTime = countdown(if (owed) current!!.end - now else next.first - now)
-        val heroSub = when {
-            owed -> "vaktin çıkmasına"
-            current != null && store.isPrayed(current.key) -> "${current.vakit.ad} kılındı"
-            else -> "kaldı"
-        }
 
         Column(Modifier.fillMaxSize()) {
         // the Harem clips are the showcase: a 240dp header, all of it moving picture
@@ -578,86 +478,19 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
             color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
         )
 
-            // ---- geri sayım: uygulama açılır açılmaz görünsün
-            Column(Modifier.fillMaxWidth().padding(top = Space.s), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(heroLabel.uppercase(Locale("tr")), color = Pal.Gold, fontSize = Type.micro,
-                    fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
-                Text(heroTime, style = NumStyle, fontSize = Type.display, lineHeight = 48.sp, color = Pal.Text)
-                Text(heroSub, color = Pal.Muted, fontSize = Type.body2)
-            }
-
-            // once a month without a backup: one quiet band, "Sonra" hides it for another 30 days
-            if (store.backupDue(now)) Row(
-                Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()
-                    .border(1.dp, Pal.Border, RoundedCornerShape(Radius.s)).padding(start = Space.m),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Default.Info, null, tint = Pal.Gold, modifier = Modifier.size(16.dp))
-                Text("Kayıtların yalnızca bu telefonda.", Modifier.weight(1f).padding(start = Space.s), color = Pal.Text, fontSize = Type.label)
-                TextButton(onClick = { store.backupNagUntil = now + 30L * 86_400_000; refresh++ }) { Text("Sonra", color = Pal.Muted, fontSize = Type.label) }
-                TextButton(onClick = onOpenSettings) { Text("Yedek al", color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold) }
-            }
-
-            val todaySlots = slots(store.lat, store.lng, today).associateBy { it.vakit }
-            data class Row_(
-                val name: String, val time: String, val start: Long, val active: Boolean, val main: Boolean,
-                val slot: Slot?, val prayed: Boolean, val kaza: Boolean, val sub: String?, val color: Color,
-                val group: String, val children: List<Extra>,
-            )
-            val groups = listOf(
-                Triple("İmsak", d.imsak, Vakit.SABAH), Triple("Güneş", d.gunes, null), Triple("Öğle", d.ogle, Vakit.OGLE),
-                Triple("İkindi", d.ikindi, Vakit.IKINDI), Triple("Akşam", d.aksam, Vakit.AKSAM), Triple("Yatsı", d.yatsi, Vakit.YATSI),
-            )
-            val main = groups.map { (name, t, v) ->
-                val slot = v?.let { todaySlots[it] }
-                val active = if (slot != null) now in slot.start until slot.end else now in d.gunes until d.ogle
-                val prayed = slot != null && store.isPrayed(slot.key)
-                val kaza = slot != null && !prayed && now >= slot.end && store.tracked(slot)
-                val at = slot?.let { store.prayedAt(it.key) }
-                val sub = when {
-                    prayed -> at?.let { hm(it) } ?: ""
-                    kaza -> "kaza"
-                    else -> null
-                }
-                Row_(name, hm(t), t, active, true, slot, prayed, kaza, sub, if (active) Pal.Gold else Pal.Text,
-                    name.uppercase(Locale("tr")), ex.filter { it.group == name.uppercase(Locale("tr")) })
-            }
-
-            // ek vakitler ağaç gibi: vaktin altında açılır/kapanır
-            val expanded = remember { mutableStateMapOf<String, Boolean>() }
-            val activeExtra = ex.firstOrNull { it.end != null && now in it.start until it.end }
-            LaunchedEffect(Unit) { activeExtra?.let { expanded[it.group] = true } }
-
-            LazyColumn(Modifier.weight(1f).padding(horizontal = Space.xl)) {
-                main.forEachIndexed { i, r ->
-                    item("p$i") {
-                        TimelineRow(
-                            r.name, r.time, r.sub, r.main, r.active, r.prayed, r.kaza, r.color,
-                            isFirst = i == 0, isLast = i == main.lastIndex && r.children.isEmpty(),
-                            onToggle = r.slot?.let { slot ->
-                                {
-                                    if (r.prayed) Reminders.unmarkPrayed(ctx, slot.key)
-                                    else Reminders.markPrayed(ctx, slot.key, slot.vakit)
-                                    refresh++
-                                }
-                            },
-                            hasChildren = r.children.isNotEmpty(),
-                            expanded = expanded[r.group] == true,
-                            onExpand = { expanded[r.group] = expanded[r.group] != true },
-                        )
-                    }
-                    if (expanded[r.group] == true) {
-                        r.children.forEachIndexed { j, e ->
-                            item("c$i-$j") {
-                                TimelineRow(
-                                    e.name, if (e.end == null) hm(e.start) else "${hm(e.start)}–${hm(e.end)}", null,
-                                    false, e.end != null && now in e.start until e.end, false, false,
-                                    if (e.kerahat) Pal.Warn else Pal.Muted,
-                                    isFirst = false, isLast = i == main.lastIndex && j == r.children.lastIndex,
-                                    onToggle = null, child = true,
-                                )
-                            }
-                        }
+            val todaySlots = slots(store.lat, store.lng, today)
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                VakitlerBody(todaySlots, now, d.gunes, ex, next) {
+                    // once a month without a backup: one quiet band, "Sonra" hides it for another 30 days
+                    if (store.backupDue(now)) Row(
+                        Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()
+                            .border(1.dp, Pal.Border, RoundedCornerShape(Radius.s)).padding(start = Space.m),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Default.Info, null, tint = Pal.Gold, modifier = Modifier.size(16.dp))
+                        Text("Kayıtların yalnızca bu telefonda.", Modifier.weight(1f).padding(start = Space.s), color = Pal.Text, fontSize = Type.label)
+                        TextButton(onClick = { store.backupNagUntil = now + 30L * 86_400_000; refresh++ }) { Text("Sonra", color = Pal.Muted, fontSize = Type.label) }
+                        TextButton(onClick = onOpenSettings) { Text("Yedek al", color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold) }
                     }
                 }
             }
