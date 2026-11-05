@@ -116,9 +116,9 @@ class Store(context: Context) {
         set(v) { StoreRev.n++; p.edit().putInt("kazaRate", v).apply() }
 
     // --- Settings
-    /** Which renderer the Seher header uses: "photo" (plates), "video" (looping clip) or "shader" (live). */
+    /** Which renderer the Seher header uses: "harem" (Mekke/Medine clips by vakit), "photo" (plates), "video" (one clip) or "shader" (live). */
     var skyMode: String
-        get() = p.getString("skyMode", "photo")!!
+        get() = p.getString("skyMode", "harem")!!
         set(v) { StoreRev.n++; p.edit().putString("skyMode", v).apply() }
     /** Minutes before a prayer time for the "hazırlan" notifications. */
     var prepOffsets: Set<Int>

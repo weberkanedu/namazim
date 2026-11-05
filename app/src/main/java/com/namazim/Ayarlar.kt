@@ -127,7 +127,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
             // Which sky the Seher header draws: the live shader, layed photo plates, or a looping clip.
             Text("Gökyüzü", color = Pal.Text, fontSize = Type.body)
             Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                listOf("shader" to "Canlı", "photo" to "Fotoğraf", "video" to "Video").forEach { (id, label) ->
+                listOf("harem" to "Harem", "shader" to "Canlı", "photo" to "Fotoğraf", "video" to "Video").forEach { (id, label) ->
                     val on = store.skyMode == id
                     Box(Modifier.heightIn(min = 36.dp).clip(CircleShape).background(if (on) Pal.Gold else Color.Transparent)
                         .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape).clickable { store.skyMode = id; v++ }

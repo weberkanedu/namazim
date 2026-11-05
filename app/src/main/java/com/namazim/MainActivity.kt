@@ -545,8 +545,11 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
         }
 
         Column(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxWidth().height(340.dp)) {
-            when (SkyAssets.mode(ctx)) {
+        val skyMode = SkyAssets.mode(ctx)
+        // the Harem clips are the showcase: a narrower header, all of it moving picture
+        Box(Modifier.fillMaxWidth().height(if (skyMode == SkyMode.Harem) 240.dp else 340.dp)) {
+            when (skyMode) {
+                SkyMode.Harem -> HaremSky(store.lat, store.lng, Modifier.fillMaxSize())
                 SkyMode.Video -> {
                     SkyVideo("sky/scene.mp4", Modifier.fillMaxSize())
                     SkyArc(store.lat, store.lng, Modifier.fillMaxSize())
@@ -554,7 +557,8 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
                 SkyMode.Photo -> SkyPhoto(store.lat, store.lng, Modifier.fillMaxSize())
                 else -> SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
             }
-            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(150.dp)
+            // the Harem clips keep their subject low in the frame: only a short fade, nothing drawn over it
+            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(if (skyMode == SkyMode.Harem) 56.dp else 150.dp)
                 .background(Brush.verticalGradient(
                     0f to Color.Transparent, 0.45f to Pal.Ground.copy(alpha = .72f), 1f to Pal.Ground,
                 )))
@@ -570,7 +574,7 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
                 GearButton(onOpenSettings)
             }
             // Date, hijri and the next mübarek gün: a small "1 KAS" tile like Vakit, then the details.
-            Row(
+            if (skyMode != SkyMode.Harem) Row(
                 Modifier.align(Alignment.BottomStart).padding(start = Space.l, end = 96.dp, bottom = Space.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -600,6 +604,15 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
                     color = Pal.Text, fontSize = Type.micro)
             }
         }
+        // Harem: the date sits under the picture as one quiet line
+        if (skyMode == SkyMode.Harem) Text(
+            "${calDate.format(TR_DATE)} · ${hijri(calDate)}",
+            Modifier.fillMaxWidth().padding(top = Space.xs), color = Pal.Muted, fontSize = Type.label, textAlign = TextAlign.Center,
+        )
+        if (skyMode == SkyMode.Harem) Text(
+            "✦ ${holy.first.name} · ${holy.second}", Modifier.fillMaxWidth(),
+            color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+        )
 
             // ---- geri sayım: uygulama açılır açılmaz görünsün
             Column(Modifier.fillMaxWidth().padding(top = Space.s), horizontalAlignment = Alignment.CenterHorizontally) {

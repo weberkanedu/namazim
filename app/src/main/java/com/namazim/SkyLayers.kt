@@ -9,6 +9,7 @@ import android.media.MediaPlayer
 import android.view.Surface
 import android.view.TextureView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -39,9 +40,10 @@ import kotlin.math.sin
  *   day.webp, dusk.webp, night.webp   full-frame plates (same framing, no sun/moon drawn in)
  *   wheat.webp                        looping animated WebP of the field, drawn over the bottom part
  *   scene.mp4                         one looping clip of the whole scene (video mode)
+ *   mekke-gece/mekke-gun/medine-safak/medine-aksam.mp4   photoreal loops picked by the time of day (harem mode)
  * The arc, the sun and the moon (with its real phase) are drawn on top, so they still move.
  */
-enum class SkyMode { Shader, Photo, Video }
+enum class SkyMode { Shader, Photo, Video, Harem }
 
 object SkyAssets {
     fun has(ctx: Context, name: String) = runCatching { ctx.assets.open("sky/$name").use { } }.isSuccess
@@ -49,6 +51,7 @@ object SkyAssets {
     fun mode(ctx: Context): SkyMode {
         val requested = SkyDebug.mode ?: Store(ctx).skyMode
         return when {
+            requested == "harem" && has(ctx, "mekke-gece.mp4") -> SkyMode.Harem
             requested == "video" && has(ctx, "scene.mp4") -> SkyMode.Video
             requested == "photo" && has(ctx, "day.webp") -> SkyMode.Photo
             else -> SkyMode.Shader
@@ -208,13 +211,47 @@ private fun lerpColor(a: Color, b: Color, t: Float) = Color(
     blue = a.blue + (b.blue - a.blue) * t, alpha = 1f,
 )
 
-/** Plays sky/scene.mp4 on a TextureView, muted and looping. */
+/** Harem header clip for the moment: Medine at dawn, Mekke by day, Medine at sunset, Mekke at night. */
+fun haremClip(now: Long, imsak: Long, gunes: Long, ikindi: Long, aksam: Long): String = when {
+    now in imsak until gunes -> "medine-safak.mp4"
+    now in gunes until ikindi -> "mekke-gun.mp4"
+    now in ikindi until aksam -> "medine-aksam.mp4"
+    else -> "mekke-gece.mp4"
+}
+
+/** Mekke/Medine header: a photoreal loop chosen by the time of day, cross-fading into the next when the vakit turns. */
+@Composable
+fun HaremSky(lat: Double, lng: Double, modifier: Modifier = Modifier) {
+    val now = rememberNow() + SkyDebug.offsetMs   // `--el skytime` previews the other clips
+    val d = dayTimes(lat, lng, java.time.LocalDate.now())
+    val clip = haremClip(now, d.imsak, d.gunes, d.ikindi, d.aksam)
+    androidx.compose.animation.Crossfade(clip, modifier, androidx.compose.animation.core.tween(1500), label = "harem") {
+        SkyVideo("sky/$it", Modifier.fillMaxSize())
+    }
+}
+
+/** Plays a clip from assets on a TextureView: muted, looping, center-cropped, paused while the app is in the background. */
 @Composable
 fun SkyVideo(name: String, modifier: Modifier = Modifier) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val view = remember { TextureView(ctx) }
-    DisposableEffect(Unit) {
+    val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(owner) {
         val mp = MediaPlayer()
+        var ready = false
+        // fill the view like centerCrop: TextureView stretches the frame to its own size by default
+        fun crop(w: Int, h: Int) {
+            if (!ready || mp.videoWidth == 0 || w == 0 || h == 0) return
+            val v = mp.videoWidth / mp.videoHeight.toFloat(); val s = w / h.toFloat()
+            view.setTransform(android.graphics.Matrix().apply {
+                if (v > s) setScale(v / s, 1f, w / 2f, h / 2f) else setScale(1f, s / v, w / 2f, h / 2f)
+            })
+        }
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_PAUSE && ready) runCatching { mp.pause() }
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME && ready) runCatching { mp.start() }
+        }
+        owner.lifecycle.addObserver(obs)
         var surface: Surface? = null
         // assets are compressed in the APK, so MediaPlayer needs a real file. Always re-copy: the asset
         // changes whenever the sky is replaced, and a cached file would silently keep playing the old clip.
@@ -229,10 +266,12 @@ fun SkyVideo(name: String, modifier: Modifier = Modifier) {
                     mp.isLooping = true
                     mp.setVolume(0f, 0f)
                     mp.prepare()
+                    ready = true
+                    crop(w, h)
                     mp.start()
                 }
             }
-            override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {}
+            override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) = crop(w, h)
             override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean {
                 runCatching { mp.release() }
                 surface?.release()
@@ -242,6 +281,8 @@ fun SkyVideo(name: String, modifier: Modifier = Modifier) {
             override fun onSurfaceTextureUpdated(st: SurfaceTexture) {}
         }
         onDispose {
+            owner.lifecycle.removeObserver(obs)
+            ready = false
             runCatching { mp.release() }
             surface?.release()
             surface = null
