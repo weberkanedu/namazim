@@ -107,6 +107,8 @@ class MainActivity : ComponentActivity() {
             android.util.Log.i("Reset", "entries reset: ${s.resetEntries(s.nextImsak())}")
             Reminders.scheduleNext(this)
         }
+        // `--es tesbihat "2026-11-05|SABAH" --ei tab 5` (debug builds): Zikirhane opens on that vakit's tesbihat
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) intent.getStringExtra("tesbihat")?.let { TesbihatNav.key = it }
         // `--ez testnotif true` (debug builds): the same sample "Kıldın mı?" as Ayarlar › Deneme bildirimi
         if (intent.getBooleanExtra("testnotif", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) Reminders.test(this)
         // `--ez backuptest true` (debug builds): export → parse → compare with the live prefs, log only, writes nothing
@@ -164,11 +166,11 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
                 label = "tab",
             ) { t ->
                 when (t) {
-                    0 -> NamazScreen(onOpenKible = { tab = 1 }) { tab = 4 }
+                    0 -> NamazScreen(onOpenKible = { tab = 1 }, onOpenSettings = { tab = 4 }) { TesbihatNav.key = it; tab = 5 }
                     1 -> KibleScreen { tab = 0 }
                     2 -> OkumaScreen()
                     3 -> MuhasebeScreen()
-                    5 -> ZikirScreen()
+                    5 -> ZikirScreen { tab = 0 }
                     else -> AyarlarScreen { tab = 0 }
                 }
             }
@@ -407,7 +409,7 @@ private val TR_DATE = DateTimeFormatter.ofPattern("d MMMM EEEE", Locale("tr"))
 // ---------------------------------------------------------------- Namaz (home)
 
 @Composable
-fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
+fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat: (String) -> Unit = {}) {
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     val now = rememberNow()
@@ -487,7 +489,7 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
 
             val todaySlots = slots(store.lat, store.lng, today)
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
-                VakitlerBody(todaySlots, now, d.gunes, ex, next) {
+                VakitlerBody(todaySlots, now, d.gunes, ex, next, onTesbihat) {
                     // once a month without a backup: one quiet band, "Sonra" hides it for another 30 days
                     if (store.backupDue(now)) Row(
                         Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth()

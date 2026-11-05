@@ -11,6 +11,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -87,6 +94,7 @@ private val InnerGold = Color(0xFFF6D899)
 @Composable
 fun VakitlerBody(
     slots: List<Slot>, now: Long, gunes: Long, ex: List<Extra>, next: Pair<Long, String>,
+    onTesbihat: (String) -> Unit = {},
     between: @Composable () -> Unit,
 ) {
     val ctx = LocalContext.current
@@ -100,7 +108,7 @@ fun VakitlerBody(
     var sheet by remember { mutableStateOf<Int?>(null) }
     val toggle = { i: Int ->
         val s = slots[i]
-        if (store.isPrayed(s.key)) Reminders.unmarkPrayed(ctx, s.key)
+        if (store.isPrayed(s.key)) { Reminders.unmarkPrayed(ctx, s.key); store.setTesbihat(s.key, null) }
         else if (now >= s.start) {
             Reminders.markPrayed(ctx, s.key, s.vakit)
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -124,6 +132,9 @@ fun VakitlerBody(
         )
     }
     val accent = if (inKerahat) Pal.Warn else Pal.Gold
+    // the tesbihat card waits under a prayed vakit until it is marked or put off with "Sonra" (for this session)
+    var later by rememberSaveable { mutableStateOf(listOf<String>()) }
+    val tesbihEl = { key: String -> store.setTesbihat(key, "el"); haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
 
     Column(Modifier.fillMaxWidth()) {
         VakitGul(st, cur, slots, now, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp)) { i ->
@@ -137,10 +148,20 @@ fun VakitlerBody(
         if (c != null && cs != null) {
             VakitSerit(c, store.prayedAt(c.key).takeIf { store.isPrayed(c.key) }, kerahat.takeIf { c.vakit == Vakit.IKINDI }, now,
                 Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m))
-            AnimatedContent(cs == VState.ACIK, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m),
-                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) }, label = "kildim") { open ->
-                if (open) GoldButton(ACCUSATIVE[cur] + " kıldım" + if (now < thirdEnd(c)) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }
-                else GhostButton("${c.vakit.ad} ${if (cs == VState.VAKTINDE) "vaktinde " else ""}kılındı · geri al", Modifier.fillMaxWidth(), Pal.Gold) { toggle(cur) }
+            val mode = when {
+                cs == VState.ACIK -> 0
+                (cs == VState.VAKTINDE || cs == VState.KILINDI) && store.askTesbihat && store.tesbihat(c.key) == null && c.key !in later -> 1
+                else -> 2
+            }
+            AnimatedContent(mode, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m),
+                transitionSpec = { (fadeIn(tween(350)) + slideInVertically(tween(350)) { it / 3 }) togetherWith fadeOut(tween(200)) }, label = "kildim") { m ->
+                when (m) {
+                    0 -> GoldButton(ACCUSATIVE[cur] + " kıldım" + if (now < thirdEnd(c)) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }
+                    1 -> TesbihatCard(c.vakit.ad, onEl = { tesbihEl(c.key) }, onApp = { onTesbihat(c.key) },
+                        onLater = { later = later + c.key }, onUndo = { toggle(cur) })
+                    else -> GhostButton("${c.vakit.ad} ${if (cs == VState.VAKTINDE) "vaktinde " else ""}kılındı" +
+                        (if (store.tesbihat(c.key) != null) " · tesbihat ✓" else "") + " · geri al", Modifier.fillMaxWidth(), Pal.Gold) { toggle(cur) }
+                }
             }
         }
         between()
@@ -166,6 +187,10 @@ fun VakitlerBody(
                         VState.ACIK -> Text("şimdi · ${hm(s.start)}–${hm(s.end)}", color = accent, fontSize = Type.micro)
                         else -> {}
                     }
+                }
+                if (store.askTesbihat && (st[i] == VState.VAKTINDE || st[i] == VState.KILINDI)) {
+                    TesbihIcon(store.tesbihat(s.key)) { sheet = i }
+                    Spacer(Modifier.width(Space.m))
                 }
                 Text(hm(s.start), style = NumStyle, fontSize = 20.sp, color = if (on) Pal.Text else Pal.Muted)
             }
@@ -199,14 +224,77 @@ fun VakitlerBody(
                 if (chips.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     chips.forEach { ExtraChip(it, now) }
                 }
+                if (store.askTesbihat && store.isPrayed(s.key)) {
+                    val tk = store.tesbihat(s.key)
+                    Row(Modifier.padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
+                        TesbihIcon(tk) {}
+                        Spacer(Modifier.width(Space.m))
+                        Text(when (tk) { "el" -> "Tesbihat yapıldı (elle / cemaatle)"; "app" -> "Tesbihat uygulamada çekildi"; else -> "Tesbihat · 33 · 33 · 33" },
+                            Modifier.weight(1f), color = if (tk != null) Pal.Gold else Pal.Text, fontSize = Type.body)
+                        if (tk != null) TextButton({ store.setTesbihat(s.key, null) }) { Text("geri al", color = Pal.Muted, fontSize = Type.body2) }
+                    }
+                    if (tk == null) Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                        GhostButton("Yaptım", Modifier.weight(1f), Pal.Gold) { tesbihEl(s.key); sheet = null }
+                        GoldButton("Zikirhanede çek", Modifier.weight(1f)) { sheet = null; onTesbihat(s.key) }
+                    }
+                }
                 Spacer(Modifier.height(Space.xs))
                 when {
-                    store.isPrayed(s.key) -> GhostButton("Geri al", Modifier.fillMaxWidth()) { toggle(i); sheet = null }
+                    store.isPrayed(s.key) -> GhostButton("Namazı geri al", Modifier.fillMaxWidth()) { toggle(i); sheet = null }
                     x == VState.SONRA -> Text("Vakit girince işaretlenir", color = Pal.Muted, fontSize = Type.body2)
                     else -> GoldButton("Kıldım", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(i); sheet = null }
                 }
             }
         }
+    }
+}
+
+/** After Kıldım: the tesbihat of that vakit, done by hand / with the cemaat, or said in Zikirhane. */
+@Composable
+private fun TesbihatCard(vakit: String, onEl: () -> Unit, onApp: () -> Unit, onLater: () -> Unit, onUndo: () -> Unit) {
+    val turn by rememberInfiniteTransition(label = "tesbih").animateFloat(0f, 360f,
+        infiniteRepeatable(tween(14_000, easing = androidx.compose.animation.core.LinearEasing)), label = "turn")
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.l)).background(Pal.Card)
+            .border(1.dp, Pal.Gold.copy(alpha = .45f), RoundedCornerShape(Radius.l)).padding(Space.l),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Canvas(Modifier.size(46.dp)) {
+                val r = size.minDimension / 2 - 3.dp.toPx()
+                for (b in 0 until 33) {
+                    val a = Math.toRadians((b * 360.0 / 33) + turn - 90)
+                    drawCircle(if (b % 11 == 0) Pal.Gold else Pal.Gold.copy(alpha = .35f), 2.2.dp.toPx(),
+                        Offset(center.x + r * cos(a).toFloat(), center.y + r * sin(a).toFloat()))
+                }
+            }
+            Spacer(Modifier.width(Space.m))
+            Column(Modifier.weight(1f)) {
+                Text("$vakit tesbihatı", color = Pal.Text, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
+                Text("33 Sübhânallah · 33 Elhamdülillah · 33 Allâhu ekber", color = Pal.Muted, fontSize = Type.label)
+            }
+        }
+        Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+            GhostButton("Yaptım", Modifier.weight(1f), Pal.Gold, onEl)
+            GoldButton("Zikirhanede çek", Modifier.weight(1f), onClick = onApp)
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            TextButton(onLater) { Text("Sonra", color = Pal.Muted, fontSize = Type.body2) }
+            TextButton(onUndo) { Text("Kıldım'ı geri al", color = Pal.Muted, fontSize = Type.body2) }
+        }
+    }
+}
+
+/** The tesbih mark on a prayed row: dashed = not yet, gold ring = by hand, filled gold = said in the app. */
+@Composable
+private fun TesbihIcon(kind: String?, onClick: () -> Unit) {
+    Box(
+        Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onClick)
+            .background(if (kind == "app") Pal.Gold else if (kind == "el") Pal.Gold.copy(alpha = .14f) else Color.Transparent)
+            .border(1.dp, if (kind == null) Pal.Border else Pal.Gold.copy(alpha = .7f), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(painterResource(R.drawable.ic_nav_zikir), when (kind) { "el" -> "Tesbihat yapıldı"; "app" -> "Tesbihat uygulamada"; else -> "Tesbihat bekliyor" },
+            Modifier.size(16.dp), tint = if (kind == "app") Pal.Ground else if (kind == "el") Pal.Gold else Pal.Muted)
     }
 }
 

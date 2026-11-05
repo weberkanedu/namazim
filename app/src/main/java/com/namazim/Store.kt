@@ -269,6 +269,39 @@ class Store(context: Context) {
         p.edit().putString("zikirLog", all.put(today, o).toString()).apply()
     }
 
+    // --- Namaz sonrası tesbihat (33 Sübhânallah · 33 Elhamdülillah · 33 Allâhu ekber after each farz)
+    /** "el" = done by hand or with the cemaat, "app" = counted in Zikirhane, null = not yet. Key = slot key. */
+    fun tesbihat(key: String): String? = p.getString("tesbihat_$key", null)
+    fun setTesbihat(key: String, kind: String?) {
+        val was = tesbihat(key)
+        if (was == kind) return
+        // With [tesbihatCounts] the 99 also fills the daily zikir log: an app one was added tap by tap, a hand one is
+        // added here; taking a mark back takes the 99 out again.
+        // shortcut: flipping the setting after marking leaves the already logged counts as they were.
+        if (tesbihatCounts) {
+            if (kind == "el" && was == null) DEFAULT_ZIKIRS.forEach { addZikir(it.name, it.target) }
+            if (kind == null) DEFAULT_ZIKIRS.forEach { addZikir(it.name, -it.target) }
+        }
+        StoreRev.n++
+        p.edit().apply { if (kind == null) remove("tesbihat_$key") else putString("tesbihat_$key", kind) }.apply()
+        if (kind == null) setTesbihProgress(key, listOf(0, 0, 0))
+    }
+    /** Ask for the tesbihat after Kıldım (card on home, icon on the row). */
+    var askTesbihat: Boolean
+        get() = p.getBoolean("askTesbihat", true)
+        set(v) { StoreRev.n++; p.edit().putBoolean("askTesbihat", v).apply() }
+    /** The tesbihat counts toward the daily zikir targets (on), or the daily list comes on top of it (off). */
+    var tesbihatCounts: Boolean
+        get() = p.getBoolean("tesbihatCounts", true)
+        set(v) { StoreRev.n++; p.edit().putBoolean("tesbihatCounts", v).apply() }
+    /** Counts of the tesbihat being said in Zikirhane, kept so leaving the page does not lose them. One at a time. */
+    fun tesbihProgress(key: String): List<Int> {
+        val f = (p.getString("tesbihProgress", "") ?: "").split('|')
+        // stored as "yyyy-mm-dd|VAKIT|a|b|c" (the slot key itself holds one '|')
+        return if (f.size == 5 && "${f[0]}|${f[1]}" == key) f.drop(2).map { it.toIntOrNull() ?: 0 } else listOf(0, 0, 0)
+    }
+    fun setTesbihProgress(key: String, c: List<Int>) = p.edit().putString("tesbihProgress", "$key|${c.joinToString("|")}").apply()
+
     // --- Backup: the whole preferences file as one JSON document (kaza, prayed, reading, zikir, settings)
     /** When a backup file was last written; 0 = never. */
     val lastBackup get() = p.getLong("lastBackup", 0)
@@ -302,7 +335,8 @@ class Store(context: Context) {
      */
     fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
         val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
-            "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired")
+            "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired",
+            "askTesbihat", "tesbihatCounts", "ogutIndex")
         val e = p.edit()
         p.all.keys.filter { it !in keep }.forEach { e.remove(it) }
         val ok = e.putLong("since", startAt).putLong("settledUntil", startAt).commit()

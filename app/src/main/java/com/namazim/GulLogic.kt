@@ -40,6 +40,9 @@ fun nextOpenZikir(zikirs: List<Zikir>, counts: Map<String, Int>, from: Int): Int
 /** Log key of the free counter: no target, never part of the daily goal or the rose. */
 const val FREE_ZIKIR = "#serbest"
 
+/** Namaz sonrası tesbihat in Zikirhane: which of the three 33s is being said, or -1 when all 99 are done. */
+fun tesbihStep(counts: List<Int>): Int = DEFAULT_ZIKIRS.indices.firstOrNull { (counts.getOrNull(it) ?: 0) < DEFAULT_ZIKIRS[it].target } ?: -1
+
 /** One Takip cell: [done] = target reached; [text] = the count while short, "+extra" past the target, "" for nothing. */
 data class ZikirCell(val done: Boolean, val text: String)
 

@@ -202,6 +202,14 @@ fun AyarlarScreen(onBack: () -> Unit) {
                     "hedef" -> {
                         ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
                         ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
+                        Text("Namaz sonrası tesbihat", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
+                        SwitchRow("Kıldım'dan sonra tesbihatı sor", store.askTesbihat) { store.askTesbihat = it; changed() }
+                        SwitchRow("Tesbihat günlük zikrime sayılsın", store.tesbihatCounts) { store.tesbihatCounts = it; changed() }
+                        Text(
+                            if (store.tesbihatCounts) "Açık: namazdan sonra çektiğin 33·33·33, günlük Sübhânallah / Elhamdülillah / Allâhu ekber hedefini doldurur."
+                            else "Kapalı: tesbihat ayrı tutulur; günlük zikir listen onun üstüne ayrıca çekilir.",
+                            color = Pal.Muted, fontSize = Type.body2,
+                        )
                     }
                     "konum" -> Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Konum belirlenmedi" }, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)

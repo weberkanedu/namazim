@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,6 +35,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,10 +83,14 @@ private data class Counter(val key: String, val label: String, val target: Int?)
 
 /** Zikir tab: Zikirhane (the counter) and Takip (last five days as a grid). */
 @Composable
-fun ZikirScreen() {
+fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
     StoreRev.n.let { } // recompose on every count / list change
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
+    TesbihatNav.key?.let { key ->
+        TesbihatMode(store, key, onClose = { TesbihatNav.key = null }) { TesbihatNav.key = null; onTesbihatDone() }
+        return
+    }
     val zikirs = store.zikirs
     var section by rememberSaveable { mutableIntStateOf(SkyDebug.zSection) }
     var editing by remember { mutableStateOf(false) }
@@ -189,6 +195,84 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>) {
             Text("Bugün ", color = Pal.Muted, fontSize = Type.body2)
             Text("%${(zikirPetal(zikirs, counts).progress * 100).toInt()}", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
         }
+    }
+}
+
+/** Set by the home screen ("Zikirhanede çek"): Zikirhane opens on that vakit's tesbihat. */
+object TesbihatNav { var key by mutableStateOf<String?>(null) }
+
+/** Namaz sonrası tesbihat: 33 Sübhânallah → 33 Elhamdülillah → 33 Allâhu ekber, the whole body is the tap target.
+ *  At 99 the vakit's tesbihat is marked "app" and the page goes back home. */
+@Composable
+private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone: () -> Unit) {
+    val ctx = LocalContext.current
+    val vibrator = remember { ctx.getSystemService(VibratorManager::class.java)?.defaultVibrator }
+    val scope = rememberCoroutineScope()
+    val glow = remember { Animatable(0f) }
+    val vakit = runCatching { Vakit.valueOf(key.substringAfter('|')).ad }.getOrDefault("")
+    var counts by remember(key) { mutableStateOf(if (store.tesbihat(key) != null) DEFAULT_ZIKIRS.map { it.target } else store.tesbihProgress(key)) }
+    val step = tesbihStep(counts)
+    val shown = if (step < 0) DEFAULT_ZIKIRS.lastIndex else step
+    fun buzz(ms: Long) {
+        vibrator?.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
+        scope.launch { glow.snapTo(1f); glow.animateTo(0f, tween(900)) }
+    }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = Space.xl, end = Space.s, top = Space.l), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("NAMAZ SONRASI", color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+                Text("$vakit tesbihatı", style = NumStyle, fontSize = Type.title, color = Pal.Text)
+            }
+            IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Kapat", tint = Pal.Muted) }
+        }
+        Row(Modifier.fillMaxWidth().padding(horizontal = Space.xl, vertical = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+            DEFAULT_ZIKIRS.forEachIndexed { i, z ->
+                val done = counts[i] >= z.target
+                val on = i == step
+                Column(
+                    Modifier.weight(1f).clip(RoundedCornerShape(Radius.s))
+                        .background(if (on) Pal.Gold.copy(alpha = .14f) else Color.Transparent)
+                        .border(1.dp, if (on) Pal.Gold else Pal.Border, RoundedCornerShape(Radius.s)).padding(vertical = Space.s),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(z.name, color = if (on || done) Pal.Gold else Pal.Muted, fontSize = 11.sp, maxLines = 1)
+                    Text(if (done) "✓ ${z.target}" else "${counts[i]}/${z.target}", style = NumStyle, fontSize = 18.sp, color = if (done) Pal.Gold else Pal.Text)
+                }
+            }
+        }
+        Box(
+            Modifier.weight(1f).fillMaxWidth()
+                .semantics { contentDescription = "$vakit tesbihatı, ${DEFAULT_ZIKIRS[shown].name} ${counts[shown]}. Saymak için dokun." }
+                .clickable(remember { MutableInteractionSource() }, indication = null, enabled = step >= 0) {
+                    val n = counts.toMutableList().also { it[step]++ }
+                    counts = n
+                    store.setTesbihProgress(key, n)
+                    if (store.tesbihatCounts) store.addZikir(DEFAULT_ZIKIRS[step].name, 1)
+                    if (n[step] == DEFAULT_ZIKIRS[step].target) {
+                        buzz(320)
+                        if (tesbihStep(n) < 0) {
+                            store.setTesbihat(key, "app")
+                            scope.launch { delay(1400); onDone() }
+                        }
+                    } else vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(if (step < 0) "Tesbihat tamam" else DEFAULT_ZIKIRS[shown].name, style = NumStyle, fontSize = Type.h2, color = if (step < 0) Pal.Gold else Pal.Text)
+                Spacer(Modifier.height(Space.l))
+                Box(contentAlignment = Alignment.Center) {
+                    TesbihRing(counts[shown], DEFAULT_ZIKIRS[shown].target, glow.value, Modifier.size(270.dp))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(if (step < 0) "99" else "${counts[shown]}", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
+                        Text(if (step < 0) "Allah kabul etsin" else "/ ${DEFAULT_ZIKIRS[shown].target}", color = Pal.Muted, fontSize = Type.body)
+                    }
+                }
+                Spacer(Modifier.height(Space.s))
+                Text(if (step < 0) "ana sayfaya dönülüyor" else "her yere dokun", color = Pal.Muted.copy(alpha = .6f), fontSize = Type.label)
+            }
+        }
+        Spacer(Modifier.height(LocalDockPad.current))
     }
 }
 
