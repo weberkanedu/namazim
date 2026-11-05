@@ -107,6 +107,8 @@ class MainActivity : ComponentActivity() {
             android.util.Log.i("Reset", "entries reset: ${s.resetEntries(s.nextImsak())}")
             Reminders.scheduleNext(this)
         }
+        // `--ez testnotif true` (debug builds): the same sample "Kıldın mı?" as Ayarlar › Deneme bildirimi
+        if (intent.getBooleanExtra("testnotif", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) Reminders.test(this)
         // `--ez backuptest true` (debug builds): export → parse → compare with the live prefs, log only, writes nothing
         if (intent.getBooleanExtra("backuptest", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
             val live = getSharedPreferences("namazim", MODE_PRIVATE).all
@@ -506,12 +508,6 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
 
 // ---------------------------------------------------------------- "Kıldın mı?" full screen
 
-private val NAGS = listOf(
-    "Dünya işi bekler, namaz beklemez.\nBirkaç dakikanı ayır, kıl gel.",
-    "Kalk kıl, vakit geçiyor.\nSevaptan mahrum kalma.",
-    "Seccade seni bekliyor.\nHadi, şimdi tam zamanı.",
-)
-
 @Composable
 fun ReminderScreen(key: String, onClose: () -> Unit) {
     val ctx = LocalContext.current
@@ -532,24 +528,23 @@ fun ReminderScreen(key: String, onClose: () -> Unit) {
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Kapat", tint = Pal.Muted) }
         }
         Spacer(Modifier.height(Space.xl))
-        androidx.compose.foundation.Canvas(Modifier.size(200.dp)) {
+        Box(Modifier.size(200.dp), contentAlignment = Alignment.Center) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
             val r = size.minDimension / 2
             drawCircle(Pal.Track, r - 2, style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
             drawArc(Pal.Gold, -90f, 360f * progress, false, topLeft = androidx.compose.ui.geometry.Offset(2f, 2f),
                 size = androidx.compose.ui.geometry.Size(size.width - 4, size.height - 4),
                 style = androidx.compose.ui.graphics.drawscope.Stroke(4f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-            val crescent = androidx.compose.ui.graphics.Path().apply {
-                addOval(androidx.compose.ui.geometry.Rect(center, r * 0.42f))
-            }
-            val cut = androidx.compose.ui.graphics.Path().apply {
-                addOval(androidx.compose.ui.geometry.Rect(center + androidx.compose.ui.geometry.Offset(r * 0.2f, -r * 0.14f), r * 0.36f))
-            }
-            drawPath(androidx.compose.ui.graphics.Path.combine(androidx.compose.ui.graphics.PathOperation.Difference, crescent, cut), Pal.Gold)
+        }
+        Image(painterResource(R.drawable.ic_logo_mono), null, Modifier.size(150.dp))   // the "Beş vakit gülü"
         }
         Spacer(Modifier.height(Space.xxl))
         Text("${slot.vakit.ad} vakti girdi".uppercase(Locale("tr")), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
         Text("Kıldın mı?", style = NumStyle, fontSize = 60.sp, color = Pal.Text)
-        Text(NAGS[((now / 60_000) % NAGS.size).toInt()], color = Pal.Muted, fontSize = Type.body, lineHeight = 26.sp, textAlign = TextAlign.Center)
+        // one öğüt per opening of this page, the next in turn
+        val ogut = remember(key) { nextOgut(store) }
+        Text(ogut.text, color = Pal.Text.copy(alpha = .85f), fontSize = Type.body, lineHeight = 24.sp, textAlign = TextAlign.Center)
+        Text(ogut.source, Modifier.padding(top = Space.xs), color = Pal.Gold.copy(alpha = .8f), fontSize = Type.label, textAlign = TextAlign.Center)
         Spacer(Modifier.height(Space.xl))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(countdown(slot.end - now), style = NumStyle, fontSize = Type.title, color = Pal.Text)

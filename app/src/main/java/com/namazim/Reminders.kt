@@ -163,13 +163,6 @@ object Reminders {
 
     fun channelFor(kind: String, ctx: Context) = "${kind}_${Store(ctx).notifSound}"
 
-    private val nags = listOf(
-        "Kalk kıl, vakit geçiyor!",
-        "Hadi, sevaptan mahrum kalma.",
-        "Dünya işi bekler, namaz beklemez.",
-        "Birkaç dakikanı ayır, kıl gel.",
-        "Seccade seni bekliyor. Hadi kalk.",
-    )
 
     private fun notify(ctx: Context, r: Reminder, now: Long) {
         val v = r.slot.vakit
@@ -179,7 +172,8 @@ object Reminders {
         } else if (r.slot.nagEnd - now <= 30 * MIN) {
             Triple(channelFor("israr", ctx), "${v.ad} vakti çıkıyor!", "Son $left dakika. Kazaya bırakma, hemen kıl.")
         } else {
-            Triple(channelFor("israr", ctx), "${v.ad} vakti — kıldın mı?", nags[((now / MIN) % nags.size).toInt()])
+            val o = nextOgut(Store(ctx))
+            Triple(channelFor("israr", ctx), "${v.ad} vakti — kıldın mı?", "${o.text}\n— ${o.source}")
         }
         val done = PendingIntent.getBroadcast(
             ctx, v.ordinal + 1,
@@ -195,6 +189,7 @@ object Reminders {
             .setSmallIcon(R.drawable.ic_notif)
             .setContentTitle(title)
             .setContentText(text)
+            .setStyle(Notification.BigTextStyle().bigText(text))   // the öğüt is longer than one line
             .setContentIntent(if (r.prep) openApp(ctx) else openReminder(ctx, r.slot))
             .setCategory(if (r.prep) Notification.CATEGORY_REMINDER else Notification.CATEGORY_ALARM)
             .setAutoCancel(false)

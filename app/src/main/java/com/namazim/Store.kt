@@ -130,6 +130,16 @@ class Store(context: Context) {
     var nagBurst: Boolean
         get() = p.getBoolean("nagBurst", true)
         set(v) { StoreRev.n++; p.edit().putBoolean("nagBurst", v).apply() }
+    /** Which öğüt (ayet/hadis) the next reminder shows; no StoreRev bump, nothing on screen depends on it. */
+    var ogutIndex: Int
+        get() = p.getInt("ogutIndex", 0)
+        set(v) { p.edit().putInt("ogutIndex", v).apply() }
+
+    /** Feedback sends today (date "yyyy-mm-dd|count") and the last send time, for the anti-spam limit. */
+    var feedbackLog: String
+        get() = p.getString("feedbackLog", "") ?: ""
+        set(v) { p.edit().putString("feedbackLog", v).apply() }
+
     var snoozeMin: Int
         get() = p.getInt("snoozeMin", 15)
         set(v) { StoreRev.n++; p.edit().putInt("snoozeMin", v).apply() }
