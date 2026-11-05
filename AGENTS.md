@@ -81,6 +81,7 @@ Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTe
    plates with the same framing and **no sun/moon drawn in** (photo mode draws the arc and the discs itself), an optional looping
    `wheat.webp`, or a `scene.mp4` clip. Shader open ends: the wheat reads a bit like corduroy, the horizon has a light band, and the
    sun blows out at midday. `design/sky-test/sky.js` is one revision behind `Sky.kt`.
+4a. **Feedback via a small server (before any public release, owner asked 2026-11-05):** today the Telegram bot token ships in the APK (`Feedback.kt`). Move `sendMessage` behind the same tiny server planned for Diyanet: the app posts the text there, the server holds the token and rate-limits per device/IP. Then drop `telegram.token` from `local.properties`/`BuildConfig` and revoke the old token in BotFather.
 4. **Diyanet Awqat Salah API** (owner is applying for an account at awqatsalah.diyanet.gov.tr): district picker + yearly times,
    via a tiny server so credentials are not in the APK (the terms forbid sharing them; quota is ~5 requests/day/endpoint).
    Until then times are computed (`Prayers.kt`).
