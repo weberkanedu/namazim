@@ -178,7 +178,7 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
     // (tab, name, icon): Kıble (1) and Ayarlar (4) open from the home header, not from the dock
     val tabs = listOf(
         Triple(0, "Namaz", R.drawable.ic_nav_namaz), Triple(5, "Zikir", R.drawable.ic_nav_zikir),
-        Triple(2, "Okuma", R.drawable.ic_nav_okuma), Triple(3, "Muhasebe", R.drawable.ic_nav_muhasebe),
+        Triple(2, "Okuma", R.drawable.ic_nav_okuma), Triple(3, "Defter", R.drawable.ic_nav_muhasebe),
     )
     val haptic = LocalHapticFeedback.current
     // floating dock instead of a full-width bar: the photo keeps running underneath it

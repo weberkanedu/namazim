@@ -1104,8 +1104,8 @@ fun PageTabs(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
 fun MuhasebeScreen() {
     var section by remember { mutableIntStateOf(SkyDebug.mSection) }
     Column(Modifier.fillMaxSize()) {
-        ScreenTitle("Muhasebe", rule = false)
-        PageTabs(listOf("Özet", "Gidişat", "Kaza"), section) { section = it }
+        ScreenTitle("Defter", rule = false)
+        PageTabs(listOf("Özet", "İstikrar", "Kaza"), section) { section = it }
         Box(Modifier.weight(1f).clipToBounds()) {
             when (section) {
                 0 -> MuhasebeOzet()
