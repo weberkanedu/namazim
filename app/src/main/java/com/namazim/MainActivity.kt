@@ -135,6 +135,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** Bottom space a page leaves so its last row can scroll clear of the floating dock. */
+val LocalDockPad = compositionLocalOf { 0.dp }
+
 @Composable
 fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
     var tab by remember { mutableIntStateOf(startTab) }
@@ -144,33 +147,31 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
     val subPage = tab == 1 || tab == 4
     BackHandler(subPage) { tab = 0 }
     Box(Modifier.fillMaxSize().background(Pal.Ground)) {
-        Scaffold(
-            containerColor = Pal.Ground,
-            contentWindowInsets = WindowInsets(0),
-            bottomBar = { if (!subPage) SeherNav(tab) { tab = it } },
-        ) { pad ->
-            Box(Modifier.padding(pad).fillMaxSize()) {
-                // sekmeler arası yumuşak geçiş: hafif kayma + solma
-                AnimatedContent(
-                    targetState = tab,
-                    transitionSpec = {
-                        (androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(240)) +
-                            androidx.compose.animation.slideInVertically { it / 28 }) togetherWith
-                            androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(150))
-                    },
-                    label = "tab",
-                ) { t ->
-                    when (t) {
-                        0 -> NamazScreen(onOpenKible = { tab = 1 }) { tab = 4 }
-                        1 -> KibleScreen { tab = 0 }
-                        2 -> OkumaScreen()
-                        3 -> MuhasebeScreen()
-                        5 -> ZikirScreen()
-                        else -> AyarlarScreen { tab = 0 }
-                    }
+        // floating dock: pages run under it (they end with LocalDockPad of space), only the island covers them
+        val dockPad = if (subPage) 0.dp else 62.dp + Space.s * 2 + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+        CompositionLocalProvider(LocalDockPad provides dockPad) {
+            // sekmeler arası yumuşak geçiş: hafif kayma + solma
+            AnimatedContent(
+                targetState = tab,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    (androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(240)) +
+                        androidx.compose.animation.slideInVertically { it / 28 }) togetherWith
+                        androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(150))
+                },
+                label = "tab",
+            ) { t ->
+                when (t) {
+                    0 -> NamazScreen(onOpenKible = { tab = 1 }) { tab = 4 }
+                    1 -> KibleScreen { tab = 0 }
+                    2 -> OkumaScreen()
+                    3 -> MuhasebeScreen()
+                    5 -> ZikirScreen()
+                    else -> AyarlarScreen { tab = 0 }
                 }
             }
         }
+        if (!subPage) Box(Modifier.align(Alignment.BottomCenter)) { SeherNav(tab) { tab = it } }
         if (reminderKey != null) ReminderScreen(reminderKey, onReminderClosed)
     }
 }
@@ -189,7 +190,7 @@ fun SeherNav(selected: Int, onSelect: (Int) -> Unit) {
             Modifier.fillMaxWidth().height(62.dp)
                 .shadow(16.dp, RoundedCornerShape(31.dp))
                 .clip(RoundedCornerShape(31.dp))
-                .background(Pal.Nav.copy(alpha = .88f))
+                .background(Pal.Nav.copy(alpha = .74f))
                 .background(
                     androidx.compose.ui.graphics.Brush.verticalGradient(
                         listOf(Color.White.copy(alpha = .07f), Color.White.copy(alpha = .015f), Color.Transparent),
@@ -468,18 +469,22 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
                 GearButton(onOpenSettings)
             }
         }
-        // the date sits under the picture as one quiet line
+        // the two dates under the picture: miladi in the text colour, hicri in gold, one line
         Text(
-            "${calDate.format(TR_DATE)} · ${hijri(calDate)}",
-            Modifier.fillMaxWidth().padding(top = Space.xs), color = Pal.Muted, fontSize = Type.label, textAlign = TextAlign.Center,
+            androidx.compose.ui.text.buildAnnotatedString {
+                pushStyle(androidx.compose.ui.text.SpanStyle(color = Pal.Text, fontWeight = FontWeight.Medium)); append(calDate.format(TR_DATE)); pop()
+                pushStyle(androidx.compose.ui.text.SpanStyle(color = Pal.Muted)); append("  ·  "); pop()
+                pushStyle(androidx.compose.ui.text.SpanStyle(color = Pal.Gold, fontWeight = FontWeight.Medium)); append(hijri(calDate)); pop()
+            },
+            Modifier.fillMaxWidth().padding(top = Space.xs), fontSize = Type.body, textAlign = TextAlign.Center,
         )
         Text(
             "✦ ${holy.first.name} · ${holy.second}", Modifier.fillMaxWidth(),
-            color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+            color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
         )
 
             val todaySlots = slots(store.lat, store.lng, today)
-            Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
                 VakitlerBody(todaySlots, now, d.gunes, ex, next) {
                     // once a month without a backup: one quiet band, "Sonra" hides it for another 30 days
                     if (store.backupDue(now)) Row(

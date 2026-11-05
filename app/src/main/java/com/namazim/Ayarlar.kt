@@ -156,6 +156,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
                 Triple("izin", if (missing > 0) Icons.Default.Warning else Icons.Default.Lock,
                     "İzinler" to (if (missing > 0) "$missing eksik · düzelt" else "Hepsi açık")),
                 Triple("veri", Icons.Default.Share, "Veri" to lastText),
+                Triple("geri", Icons.Default.Email, "Geri bildirim" to "Hata, istek ya da fikir gönder"),
             )
             Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 tiles.chunked(2).forEach { pair ->
@@ -173,7 +174,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
 
     open?.let { id ->
         SettingSheet(
-            when (id) { "hatirlatma" -> "Hatırlatmalar"; "ses" -> "Bildirim sesi"; "hedef" -> "Hedefler"; "konum" -> "Konum"; "izin" -> "Telefon izinleri"; else -> "Veri" },
+            when (id) { "hatirlatma" -> "Hatırlatmalar"; "ses" -> "Bildirim sesi"; "hedef" -> "Hedefler"; "konum" -> "Konum"; "izin" -> "Telefon izinleri"; "geri" -> "Geri bildirim"; else -> "Veri" },
             onClose = { open = null },
         ) {
             key(v) {
@@ -220,6 +221,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
                             TextButton(onClick = { openAutostart(ctx) }) { Text("Aç", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
                         }
                     }
+                    "geri" -> FeedbackForm()
                     else -> {
                         Text(if (lastBackup == 0L) "Henüz yedek alınmadı. Kayıtların yalnızca bu telefonda." else "$lastText.",
                             color = Pal.Muted, fontSize = Type.body2)

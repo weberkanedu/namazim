@@ -470,7 +470,7 @@ fun KazaScreen(embedded: Boolean = false) {
         }
     }
     Box(Modifier.fillMaxSize()) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
         if (!embedded) ScreenTitle("Kaza")
         // design K2: one total, then six columns whose heights are what is left for each vakit
         val counts = KAZA_KEYS.map { v.let { _ -> store.kaza(it.first) } }
@@ -752,7 +752,7 @@ fun OkumaScreen() {
     }
 
     Box(Modifier.fillMaxSize()) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
         ScreenTitle("Okuma") {
             if (store.hatim > 0) Text("${store.hatim} hatim", Modifier.clip(CircleShape).background(Pal.Gold.copy(alpha = .14f))
                 .padding(horizontal = Space.m, vertical = Space.xs), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
@@ -1207,7 +1207,7 @@ private fun MuhasebeOzet() {
     LaunchedEffect(Unit) { shown = true }
     val anim by animateFloatAsState(if (shown) 1f else 0f, tween(900), label = "radar")
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
         // design A "Sahne": the rose stands on the page itself, full width; long-term numbers sit in one row under it
         GulCard(petals, Modifier.fillMaxWidth().height(360.dp))
         val open = petals.count { it.progress >= 1f }
@@ -1391,7 +1391,7 @@ private fun MuhasebeGidisat() {
     val dayFmt = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", tr)
     fun pct(f: Float) = "%${(f * 100).roundToInt()}"
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
         SubTabs(listOf("Hafta", "Ay", "Yıl", "Tümü"), period) { period = it }
 
         // ---- hero: one big number, what it means under it

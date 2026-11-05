@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -14,6 +16,10 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1"
+        // feedback bot, kept out of git: telegram.token / telegram.chat in local.properties
+        val local = Properties().apply { rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) } }
+        buildConfigField("String", "TG_TOKEN", "\"${local.getProperty("telegram.token", "")}\"")
+        buildConfigField("String", "TG_CHAT", "\"${local.getProperty("telegram.chat", "")}\"")
     }
 
     compileOptions {
@@ -21,7 +27,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
 }
 
 dependencies {

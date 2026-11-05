@@ -93,7 +93,7 @@ fun ZikirScreen() {
             IconButton(onClick = { editing = true }) { Icon(Icons.Default.Edit, "Zikirleri düzenle", tint = Pal.Muted) }
         }
         PageTabs(listOf("Zikirhane", "Takip"), section) { section = it }
-        if (section == 0) Zikirhane(store, zikirs) else ZikirTakip(store, zikirs)
+        if (section == 0) { Zikirhane(store, zikirs); Spacer(Modifier.height(LocalDockPad.current)) } else ZikirTakip(store, zikirs)
     }
     if (editing) ZikirSheet(store, zikirs) { editing = false }
 }
@@ -201,7 +201,7 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>) {
     val days = (0L until 5L).map { store.prayerDay().minusDays(it) }
     val logs = days.map { store.zikirCounts(it) }
     val rows = zikirs.map { Counter(it.name, it.name, it.target) } + Counter(FREE_ZIKIR, "Serbest", null)
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Space.l, vertical = Space.m)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current).padding(horizontal = Space.l, vertical = Space.m)) {
         Row(Modifier.fillMaxWidth().padding(start = Space.l, end = Space.l, bottom = Space.s), verticalAlignment = Alignment.CenterVertically) {
             Spacer(Modifier.weight(1f))
             days.forEachIndexed { k, d ->
