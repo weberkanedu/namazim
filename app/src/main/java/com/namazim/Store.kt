@@ -116,10 +116,6 @@ class Store(context: Context) {
         set(v) { StoreRev.n++; p.edit().putInt("kazaRate", v).apply() }
 
     // --- Settings
-    /** Which renderer the Seher header uses: "harem" (Mekke/Medine clips by vakit), "photo" (plates), "video" (one clip) or "shader" (live). */
-    var skyMode: String
-        get() = p.getString("skyMode", "harem")!!
-        set(v) { StoreRev.n++; p.edit().putString("skyMode", v).apply() }
     /** Minutes before a prayer time for the "hazırlan" notifications. */
     var prepOffsets: Set<Int>
         get() = p.getStringSet("prepOffsets", null)?.map { it.toInt() }?.toSet() ?: setOf(30, 15, 5)
@@ -295,7 +291,7 @@ class Store(context: Context) {
      * Location, every setting, the zikir list and the reminder chain's state stay. Tracking restarts at [startAt].
      */
     fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
-        val keep = setOf("lat", "lng", "city", "skyMode", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
+        val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
             "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired")
         val e = p.edit()
         p.all.keys.filter { it !in keep }.forEach { e.remove(it) }

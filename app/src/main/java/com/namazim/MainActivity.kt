@@ -96,7 +96,6 @@ class MainActivity : ComponentActivity() {
         reminderKey = intent.getStringExtra(EXTRA_SLOT)
         startTab = intent.getIntExtra("tab", 0) // lets `adb shell am start -e tab N` open a tab for testing
         SkyDebug.offsetMs = intent.getLongExtra("skytime", 0L) // `--el skytime` previews another hour of the sky
-        SkyDebug.mode = intent.getStringExtra("skymode") // `--es skymode photo|video` switches the header renderer
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
         SkyDebug.mSection = intent.getIntExtra("msection", 0) // `--ei msection 1` opens Muhasebe > Gidişat
         SkyDebug.zSection = intent.getIntExtra("zsection", 0) // `--ei zsection 1` opens Zikir > Takip
@@ -498,7 +497,6 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
     var refresh by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     var locating by remember { mutableStateOf(false) }
-    var fastSky by remember { mutableStateOf(false) }
 
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) {
@@ -551,24 +549,14 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
         }
 
         Column(Modifier.fillMaxSize()) {
-        val skyMode = SkyAssets.mode(ctx)
-        // the Harem clips are the showcase: a narrower header, all of it moving picture
-        Box(Modifier.fillMaxWidth().height(if (skyMode == SkyMode.Harem) 240.dp else 340.dp)) {
-            when (skyMode) {
-                SkyMode.Harem -> HaremSky(store.lat, store.lng, Modifier.fillMaxSize())
-                SkyMode.Video -> {
-                    SkyVideo("sky/scene.mp4", Modifier.fillMaxSize())
-                    SkyArc(store.lat, store.lng, Modifier.fillMaxSize())
-                }
-                SkyMode.Photo -> SkyPhoto(store.lat, store.lng, Modifier.fillMaxSize())
-                else -> SkyView(store.lat, store.lng, Modifier.fillMaxSize()) { fastSky = it }
-            }
-            // the Harem clips keep their subject low in the frame: only a short fade, nothing drawn over it
-            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(if (skyMode == SkyMode.Harem) 56.dp else 150.dp)
+        // the Harem clips are the showcase: a 240dp header, all of it moving picture
+        Box(Modifier.fillMaxWidth().height(240.dp)) {
+            HaremSky(store.lat, store.lng, Modifier.fillMaxSize())
+            // the clips keep their subject low in the frame: only a short fade, nothing drawn over it
+            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(56.dp)
                 .background(Brush.verticalGradient(
                     0f to Color.Transparent, 0.45f to Pal.Ground.copy(alpha = .72f), 1f to Pal.Ground,
                 )))
-            val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 14f))
             Row(
                 Modifier.statusBarsPadding().fillMaxWidth().padding(start = Space.m, end = Space.s, top = Space.s),
                 verticalAlignment = Alignment.CenterVertically,
@@ -579,43 +567,13 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit) {
                 Spacer(Modifier.width(Space.s))
                 GearButton(onOpenSettings)
             }
-            // Date, hijri and the next mübarek gün: a small "1 KAS" tile like Vakit, then the details.
-            if (skyMode != SkyMode.Harem) Row(
-                Modifier.align(Alignment.BottomStart).padding(start = Space.l, end = 96.dp, bottom = Space.m),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    Modifier.clip(RoundedCornerShape(10.dp)).background(Color(0x59000000))
-                        .padding(horizontal = 9.dp, vertical = 5.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text("${calDate.dayOfMonth}", style = NumStyle, fontSize = Type.h2, lineHeight = 20.sp, color = Pal.Text)
-                    Text(
-                        calDate.format(DateTimeFormatter.ofPattern("MMM", Locale("tr"))).uppercase(Locale("tr")),
-                        color = Pal.Gold, fontSize = 8.sp, letterSpacing = 1.sp, fontWeight = FontWeight.SemiBold,
-                    )
-                }
-                Spacer(Modifier.width(Space.s))
-                Column {
-                    Text(calDate.format(TR_DATE), color = Pal.Text.copy(alpha = .95f), fontSize = Type.label, style = shadow)
-                    Text(hijri(calDate), color = Pal.Text.copy(alpha = .70f), fontSize = Type.micro, style = shadow)
-                    Spacer(Modifier.height(2.dp))
-                    Text("✦ ${holy.first.name} · ${holy.second}", color = Pal.Gold, fontSize = Type.micro,
-                        fontWeight = FontWeight.SemiBold, style = shadow)
-                }
-            }
-            if (fastSky) {
-                Text("Hızlı önizleme · bitirmek için basılı tut", Modifier.align(Alignment.BottomCenter).padding(bottom = Space.s)
-                    .clip(CircleShape).background(Color(0x66000000)).padding(horizontal = Space.m, vertical = Space.xs),
-                    color = Pal.Text, fontSize = Type.micro)
-            }
         }
-        // Harem: the date sits under the picture as one quiet line
-        if (skyMode == SkyMode.Harem) Text(
+        // the date sits under the picture as one quiet line
+        Text(
             "${calDate.format(TR_DATE)} · ${hijri(calDate)}",
             Modifier.fillMaxWidth().padding(top = Space.xs), color = Pal.Muted, fontSize = Type.label, textAlign = TextAlign.Center,
         )
-        if (skyMode == SkyMode.Harem) Text(
+        Text(
             "✦ ${holy.first.name} · ${holy.second}", Modifier.fillMaxWidth(),
             color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
         )

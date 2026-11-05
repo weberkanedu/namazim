@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,23 +37,36 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.launch
 
+/** An Ayarlar tile: icon, topic, and where it stands right now; [warn] tints it peach when something needs fixing. */
 @Composable
-private fun Section(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Text(title, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.s), color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
-    Column(Modifier.padding(horizontal = Space.xl).fillMaxWidth().clip(RoundedCornerShape(Radius.m)).background(Pal.Card).padding(Space.l),
-        verticalArrangement = Arrangement.spacedBy(Space.m), content = content)
+private fun SettingTile(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, summary: String, warn: Boolean,
+                        modifier: Modifier, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(Radius.l)
+    Column(
+        modifier.heightIn(min = 124.dp).clip(shape).background(Pal.Card)
+            .border(1.dp, if (warn) Pal.Warn.copy(alpha = .5f) else Color.White.copy(alpha = .06f), shape)
+            .clickable(onClick = onClick).padding(Space.l),
+        verticalArrangement = Arrangement.spacedBy(Space.xs),
+    ) {
+        Box(Modifier.size(36.dp).clip(RoundedCornerShape(Radius.s)).background((if (warn) Pal.Warn else Pal.Gold).copy(alpha = .15f)),
+            contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = if (warn) Pal.Warn else Pal.Gold, modifier = Modifier.size(18.dp))
+        }
+        Spacer(Modifier.height(Space.xs))
+        Text(title, color = Pal.Text, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
+        Text(summary, color = if (warn) Pal.Warn else Pal.Muted, fontSize = Type.label, lineHeight = 16.sp, maxLines = 3)
+    }
 }
 
+/** The rows of one Ayarlar topic, in a sheet over the tiles. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Chips(options: List<Int>, isOn: (Int) -> Boolean, label: (Int) -> String, onClick: (Int) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        options.forEach { n ->
-            val on = isOn(n)
-            Box(Modifier.heightIn(min = 36.dp).clip(CircleShape).background(if (on) Pal.Gold else Color.Transparent)
-                .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape).clickable { onClick(n) }.padding(horizontal = Space.m, vertical = Space.s),
-                contentAlignment = Alignment.Center) {
-                Text(label(n), color = if (on) Pal.Ground else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
-            }
+private fun SettingSheet(title: String, onClose: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    ModalBottomSheet(onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
+        Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().padding(bottom = Space.xl).verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(Space.m)) {
+            Text(title, style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+            content()
         }
     }
 }
@@ -118,149 +132,126 @@ fun AyarlarScreen(onBack: () -> Unit) {
     }
     rememberNow() // re-check permission states after coming back from system settings
 
+    // design A3 "Kutucuklar": six tiles that each say where things stand; a tap opens that topic's rows in a sheet
+    var open by remember { mutableStateOf<String?>(null) }
+    val notifOk = ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    val batteryOk = ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName)
+    val missing = listOf(notifOk, batteryOk).count { !it }
+    val lastBackup = v.let { store.lastBackup }
+    val lastText = if (lastBackup == 0L) "Henüz yedek alınmadı"
+        else "Son yedek " + java.time.Instant.ofEpochMilli(lastBackup).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+            .format(java.time.format.DateTimeFormatter.ofPattern("d MMMM", java.util.Locale("tr")))
+
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        ScreenTitle("Ayarlar", trailing = {
+        ScreenTitle("Ayarlar", store.city.ifEmpty { "Konum belirlenmedi" } + " · Diyanet vakitleri", rule = false, trailing = {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = Pal.Text) }
         })
-        // key(v): chip'lerin seçimi her dokunuşta yeniden çizilsin (lambda'lar Compose'da hatırlanıyor)
         key(v) {
-        Section("Görünüm") {
-            // Which sky the Seher header draws: the live shader, layed photo plates, or a looping clip.
-            Text("Gökyüzü", color = Pal.Text, fontSize = Type.body)
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                listOf("harem" to "Harem", "shader" to "Canlı", "photo" to "Fotoğraf", "video" to "Video").forEach { (id, label) ->
-                    val on = store.skyMode == id
-                    Box(Modifier.heightIn(min = 36.dp).clip(CircleShape).background(if (on) Pal.Gold else Color.Transparent)
-                        .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape).clickable { store.skyMode = id; v++ }
-                        .padding(horizontal = Space.m, vertical = Space.s), contentAlignment = Alignment.Center) {
-                        Text(label, color = if (on) Pal.Ground else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            }
-        }
-
-        Section("Hatırlatmalar") {
-            ValueRow(
-                "Vakitten önce hazırlan bildirimi",
-                if (store.prepOffsets.isEmpty()) "kapalı" else store.prepOffsets.sortedDescending().joinToString(", ") { "$it dk" },
-            ) { openDialog("prep", store.prepOffsets.sortedDescending().joinToString(", ")) }
-            ValueRow("\"Kıldın mı?\" sıklığı", "${store.nagEvery} dk") { openDialog("nag", "${store.nagEvery}") }
-            SwitchRow("Vaktin son yarım saatinde 5 dakikada bir", v.let { store.nagBurst }) { store.nagBurst = it; changed() }
-            ValueRow("Ertele süresi", "${store.snoozeMin} dk") { openDialog("snooze", "${store.snoozeMin}") }
-            GhostButton("Deneme bildirimi gönder", Modifier.fillMaxWidth(), color = Pal.Gold) { Reminders.test(ctx) }
-        }
-
-        Section("Bildirim sesi") {
-            var soundOpen by remember { mutableStateOf(false) }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Ses", color = Pal.Text, fontSize = Type.body)
-                    Spacer(Modifier.height(2.dp))
-                    Text(Reminders.soundLabel(store.notifSound), color = Pal.Gold, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
-                }
-                TextButton(onClick = { playTone(ctx, store.notifSound) }) { Text("Dinle", color = Pal.Muted, fontWeight = FontWeight.SemiBold) }
-                Box {
-                    OutlinedButton(
-                        onClick = { soundOpen = true },
-                        shape = CircleShape,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Pal.Gold.copy(alpha = .5f)),
-                    ) { Text("Değiştir", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
-                    DropdownMenu(expanded = soundOpen, onDismissRequest = { soundOpen = false }) {
-                        Reminders.SOUNDS.forEach { (id, spec) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        spec.first,
-                                        color = if (store.notifSound == id) Pal.Gold else Pal.Text,
-                                        fontWeight = if (store.notifSound == id) FontWeight.SemiBold else FontWeight.Normal,
-                                        fontSize = Type.body,
-                                    )
-                                },
-                                onClick = {
-                                    store.notifSound = id
-                                    Reminders.createChannels(ctx)
-                                    soundOpen = false
-                                    v++
-                                    playTone(ctx, id)
-                                },
-                            )
+            val prep = if (store.prepOffsets.isEmpty()) "Vakit öncesi kapalı" else store.prepOffsets.sortedDescending().joinToString("·") + " dk önce"
+            val tiles = listOf(
+                Triple("hatirlatma", Icons.Default.Notifications, "Hatırlatmalar" to "$prep · her ${store.nagEvery} dk \"Kıldın mı?\""),
+                Triple("ses", Icons.Default.PlayArrow, "Ses" to Reminders.soundLabel(store.notifSound)),
+                Triple("hedef", Icons.Default.Star, "Hedefler" to "Günde ${store.readGoal} sayfa · ${store.kazaRate} kaza"),
+                Triple("konum", Icons.Default.Place, "Konum" to (if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Belirlenmedi" })),
+                Triple("izin", if (missing > 0) Icons.Default.Warning else Icons.Default.Lock,
+                    "İzinler" to (if (missing > 0) "$missing eksik · düzelt" else "Hepsi açık")),
+                Triple("veri", Icons.Default.Share, "Veri" to lastText),
+            )
+            Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                tiles.chunked(2).forEach { pair ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                        pair.forEach { (id, icon, text) ->
+                            SettingTile(icon, text.first, text.second, warn = id == "izin" && missing > 0, Modifier.weight(1f)) { open = id }
                         }
                     }
                 }
             }
         }
+        Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.fillMaxWidth().padding(Space.xl), color = Pal.Muted,
+            fontSize = Type.label, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    }
 
-
-
-        Section("Okuma ve kaza") {
-            ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
-            ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
-        }
-
-        Section("Konum") {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Konum belirlenmedi" }, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
-                TextButton(onClick = { askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }) {
-                    Text("Güncelle", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
+    open?.let { id ->
+        SettingSheet(
+            when (id) { "hatirlatma" -> "Hatırlatmalar"; "ses" -> "Bildirim sesi"; "hedef" -> "Hedefler"; "konum" -> "Konum"; "izin" -> "Telefon izinleri"; else -> "Veri" },
+            onClose = { open = null },
+        ) {
+            key(v) {
+                when (id) {
+                    "hatirlatma" -> {
+                        ValueRow(
+                            "Vakitten önce hazırlan bildirimi",
+                            if (store.prepOffsets.isEmpty()) "kapalı" else store.prepOffsets.sortedDescending().joinToString(", ") { "$it dk" },
+                        ) { openDialog("prep", store.prepOffsets.sortedDescending().joinToString(", ")) }
+                        ValueRow("\"Kıldın mı?\" sıklığı", "${store.nagEvery} dk") { openDialog("nag", "${store.nagEvery}") }
+                        SwitchRow("Vaktin son yarım saatinde 5 dakikada bir", store.nagBurst) { store.nagBurst = it; changed() }
+                        ValueRow("Ertele süresi", "${store.snoozeMin} dk") { openDialog("snooze", "${store.snoozeMin}") }
+                        GhostButton("Deneme bildirimi gönder", Modifier.fillMaxWidth(), color = Pal.Gold) { Reminders.test(ctx) }
+                    }
+                    "ses" -> Reminders.SOUNDS.forEach { (sid, spec) ->
+                        val on = store.notifSound == sid
+                        Row(Modifier.fillMaxWidth().heightIn(min = TouchMin).clip(RoundedCornerShape(Radius.s)).clickable {
+                            store.notifSound = sid; Reminders.createChannels(ctx); v++; playTone(ctx, sid)
+                        }.padding(horizontal = Space.s), verticalAlignment = Alignment.CenterVertically) {
+                            Text(spec.first, Modifier.weight(1f), color = if (on) Pal.Gold else Pal.Text, fontSize = Type.body,
+                                fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                            if (on) Icon(Icons.Default.Check, "seçili", tint = Pal.Gold, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                    "hedef" -> {
+                        ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
+                        ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
+                    }
+                    "konum" -> Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Konum belirlenmedi" }, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
+                        TextButton(onClick = { askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }) {
+                            Text("Güncelle", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    "izin" -> {
+                        StatusRow("Bildirimler", notifOk, "İzin ver") { askNotif.launch(Manifest.permission.POST_NOTIFICATIONS) }
+                        StatusRow("Pil kısıtlaması yok", batteryOk, "Kaldır") {
+                            @SuppressLint("BatteryLife")
+                            val i = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}"))
+                            ctx.startActivity(i)
+                        }
+                        if (Build.MANUFACTURER.equals("xiaomi", true)) Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Otomatik başlatma (Xiaomi)", Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
+                            TextButton(onClick = { openAutostart(ctx) }) { Text("Aç", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
+                        }
+                    }
+                    else -> {
+                        Text(if (lastBackup == 0L) "Henüz yedek alınmadı. Kayıtların yalnızca bu telefonda." else "$lastText.",
+                            color = Pal.Muted, fontSize = Type.body2)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Yedek al", color = Pal.Text, fontSize = Type.body)
+                                Text("Tek dosya: kaza, namazlar, okuma, zikir, ayarlar", color = Pal.Muted, fontSize = Type.label)
+                            }
+                            TextButton(onClick = { saveBackup.launch("namazim-yedek-${java.time.LocalDate.now()}.json") }) {
+                                Text("Kaydet", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Yedekten yükle", color = Pal.Text, fontSize = Type.body)
+                                Text("Önce ne geleceğini gösterir", color = Pal.Muted, fontSize = Type.label)
+                            }
+                            TextButton(onClick = { openBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) {
+                                Text("Seç", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Kayıtları sıfırla", color = Pal.Text, fontSize = Type.body)
+                                Text("Namaz, kaza, okuma ve zikir kayıtları silinir; ayarlar kalır", color = Pal.Muted, fontSize = Type.label)
+                            }
+                            TextButton(onClick = { confirmReset = true }) { Text("Sıfırla", color = Pal.Warn, fontWeight = FontWeight.SemiBold) }
+                        }
+                        if (backupMsg.isNotEmpty()) Text(backupMsg, color = Pal.Gold, fontSize = Type.label)
+                    }
                 }
             }
-        }
-
-        Section("Telefon izinleri") {
-            val notifOk = ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-            val batteryOk = ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName)
-            StatusRow("Bildirimler", notifOk, "İzin ver") { askNotif.launch(Manifest.permission.POST_NOTIFICATIONS) }
-            StatusRow("Pil kısıtlaması yok", batteryOk, "Kaldır") {
-                @SuppressLint("BatteryLife")
-                val i = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}"))
-                ctx.startActivity(i)
-            }
-            if (Build.MANUFACTURER.equals("xiaomi", true)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Otomatik başlatma (Xiaomi)", Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
-                    TextButton(onClick = { openAutostart(ctx) }) { Text("Aç", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
-                }
-            }
-        }
-
-        Section("Yedekleme") {
-            v.let { }
-            val last = store.lastBackup
-            Text(
-                if (last == 0L) "Henüz yedek alınmadı. Kayıtların yalnızca bu telefonda."
-                else "Son yedek: ${java.time.Instant.ofEpochMilli(last).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                    .format(java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", java.util.Locale("tr")))}",
-                color = Pal.Muted, fontSize = Type.body2,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Yedek al", color = Pal.Text, fontSize = Type.body)
-                    Text("Tek dosya: kaza, namazlar, okuma, zikir, ayarlar", color = Pal.Muted, fontSize = Type.label)
-                }
-                TextButton(onClick = { saveBackup.launch("namazim-yedek-${java.time.LocalDate.now()}.json") }) {
-                    Text("Kaydet", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Yedekten yükle", color = Pal.Text, fontSize = Type.body)
-                    Text("Önce ne geleceğini gösterir", color = Pal.Muted, fontSize = Type.label)
-                }
-                TextButton(onClick = { openBackup.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) {
-                    Text("Seç", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Kayıtları sıfırla", color = Pal.Text, fontSize = Type.body)
-                    Text("Namaz, kaza, okuma ve zikir kayıtları silinir; ayarlar kalır", color = Pal.Muted, fontSize = Type.label)
-                }
-                TextButton(onClick = { confirmReset = true }) { Text("Sıfırla", color = Pal.Warn, fontWeight = FontWeight.SemiBold) }
-            }
-            if (backupMsg.isNotEmpty()) Text(backupMsg, color = Pal.Gold, fontSize = Type.label)
-        }
-
-        Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.padding(Space.xl), color = Pal.Muted, fontSize = Type.label)
         }
     }
 
