@@ -4,6 +4,11 @@ import android.os.VibrationEffect
 import android.os.VibratorManager
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -75,7 +80,7 @@ import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** Beads on one turn of the ring; bigger targets (and the free counter) fill it in turns of 33. */
+/** The free counter (no target) buzzes every 33, one turn of a hand tesbih. Targets fill once, no turns. */
 private const val TURN = 33
 
 /** A chip in Zikirhane: the free counter (target null) or one of the user's zikirs. */
@@ -95,18 +100,21 @@ fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
     val zikirs = dailyZikirs(all, store.tesbihatCounts)
     var section by rememberSaveable { mutableIntStateOf(SkyDebug.zSection) }
     var editing by remember { mutableStateOf(false) }
+    // a zikir picked in Takip: Zikirhane opens on it
+    var pick by rememberSaveable { mutableStateOf<String?>(null) }
     Column(Modifier.fillMaxSize()) {
         ScreenTitle("Zikir", rule = false) {
             IconButton(onClick = { editing = true }) { Icon(Icons.Default.Edit, "Zikirleri düzenle", tint = Pal.Muted) }
         }
         PageTabs(listOf("Zikirhane", "Takip"), section) { section = it }
-        if (section == 0) { Zikirhane(store, zikirs); Spacer(Modifier.height(LocalDockPad.current)) } else ZikirTakip(store, zikirs)
+        if (section == 0) { Zikirhane(store, zikirs, pick) { pick = null }; Spacer(Modifier.height(LocalDockPad.current)) }
+        else ZikirTakip(store, zikirs) { pick = it; section = 0 }
     }
     if (editing) ZikirSheet(store, all) { editing = false }   // the editor always shows the whole list
 }
 
 @Composable
-private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>) {
+private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: String?, onPicked: () -> Unit) {
     val ctx = LocalContext.current
     val vibrator = remember { ctx.getSystemService(VibratorManager::class.java)?.defaultVibrator }
     val scope = rememberCoroutineScope()
@@ -114,9 +122,12 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>) {
     val counts = store.zikirCounts()
     val items = listOf(Counter(FREE_ZIKIR, "Serbest", null)) + zikirs.map { Counter(it.name, it.name, it.target) }
     // opens on the first unfinished zikir (else the first one); the free counter sits first among the chips
-    var sel by rememberSaveable {
-        mutableIntStateOf(if (zikirs.isEmpty()) 0 else zikirs.indexOfFirst { (counts[it.name] ?: 0) < it.target }.coerceAtLeast(0) + 1)
+    var sel by rememberSaveable(pick) {
+        mutableIntStateOf(pick?.let { k -> items.indexOfFirst { it.key == k }.takeIf { it >= 0 } }
+            ?: if (zikirs.isEmpty()) 0 else zikirs.indexOfFirst { (counts[it.name] ?: 0) < it.target }.coerceAtLeast(0) + 1)
     }
+    val bursts = remember { mutableStateListOf<Burst>() }
+    var tapAt by remember { mutableStateOf(Offset.Zero) }
     val i = sel.coerceIn(0, items.size - 1)
     val z = items[i]
     val c = counts[z.key] ?: 0
@@ -129,13 +140,17 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>) {
         contentPadding = PaddingValues(horizontal = Space.xl, vertical = Space.m),
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
-        itemsIndexed(items) { idx, it -> ZikirChip(it, counts[it.key] ?: 0, idx == i) { sel = idx } }
+        itemsIndexed(items) { idx, it -> ZikirChip(it, counts[it.key] ?: 0, idx == i) { sel = idx; onPicked() } }
     }
     // the whole body is the tap target, so counting works without looking
     Box(
         Modifier.weight(1f).fillMaxWidth()
+            // the light grows with the progress
+            .background(Brush.radialGradient(listOf(Pal.Gold.copy(alpha = .04f + .14f * zikirProgress(c, z.target)), Color.Transparent)))
             .semantics { contentDescription = "${z.label}, $c${z.target?.let { " / $it" } ?: ""}. Saymak için dokun." }
+            .pointerInput(Unit) { awaitEachGesture { tapAt = awaitFirstDown(requireUnconsumed = false).position } }
             .clickable(remember { MutableInteractionSource() }, indication = null) {
+                bursts += Burst(tapAt, frameClock(), List(6) { (Math.random().toFloat() - .5f) * 160f })
                 store.addZikir(z.key, 1)
                 val n = c + 1
                 when {
@@ -151,34 +166,28 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>) {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(z.label, style = NumStyle, fontSize = Type.h2, color = Pal.Text)
-            Spacer(Modifier.height(Space.l))
+            NurHead(z.label)
+            Spacer(Modifier.height(Space.m))
             Box(contentAlignment = Alignment.Center) {
-                TesbihRing(c, z.target, glow.value, Modifier.size(280.dp))
+                NurRing(c, z.target, glow.value, Modifier.size(260.dp))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("$c", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
                     val t = z.target
+                    Text("${if (t == null) c else c.coerceAtMost(t)}", style = NumStyle, fontSize = 80.sp, lineHeight = 80.sp, color = Pal.Text)
+                    Text(if (t == null) "serbest" else "/ $t", color = Pal.Muted, fontSize = Type.body)
                     when {
-                        t == null -> Text(if (c > 0) "${c / TURN + 1}. tur · serbest" else "serbest", color = Pal.Muted, fontSize = Type.body2)
-                        c > t -> {
-                            Text("/ $t", color = Pal.Muted, fontSize = Type.body)
-                            Text("+${c - t} ekstra", color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
-                        }
-                        else -> {
-                            Text("/ $t", color = Pal.Muted, fontSize = Type.body)
-                            if (t > TURN) Text("${(c / TURN + 1).coerceAtMost((t + TURN - 1) / TURN)}. tur", color = Pal.Gold, fontSize = Type.label)
-                        }
+                        t != null && c > t -> Text("+${c - t} ekstra", color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
+                        t != null && c == t -> Text("tamam", color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
             Spacer(Modifier.height(Space.s))
-            val t = z.target
-            Text(
-                when { c == 0 -> "her yere dokun"; t == null -> "hedefe sayılmaz"; c >= t -> "hedef tamam, fazlası ekstra"; else -> " " },
-                color = Pal.Muted.copy(alpha = .6f), fontSize = Type.label,
-            )
+            Text(if (c == 0) "her yere dokun" else " ", color = Pal.Muted.copy(alpha = .6f), fontSize = Type.label)
         }
+        NurBursts(bursts, Modifier.matchParentSize())
     }
+    val (ayet, kaynak) = ayetOfDay()
+    Text("\"$ayet\" $kaynak", Modifier.fillMaxWidth().padding(horizontal = Space.xl), color = Pal.Muted.copy(alpha = .75f),
+        fontSize = Type.label, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     Row(
         Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.xl, bottom = Space.s),
         verticalAlignment = Alignment.CenterVertically,
@@ -260,10 +269,10 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(if (step < 0) "Tesbihat tamam" else DEFAULT_ZIKIRS[shown].name, style = NumStyle, fontSize = Type.h2, color = if (step < 0) Pal.Gold else Pal.Text)
+                if (step < 0) Text("Tesbihat tamam", style = NumStyle, fontSize = Type.h2, color = Pal.Gold) else NurHead(DEFAULT_ZIKIRS[shown].name)
                 Spacer(Modifier.height(Space.l))
                 Box(contentAlignment = Alignment.Center) {
-                    TesbihRing(counts[shown], DEFAULT_ZIKIRS[shown].target, glow.value, Modifier.size(270.dp))
+                    NurRing(counts[shown], DEFAULT_ZIKIRS[shown].target, glow.value, Modifier.size(260.dp))
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(if (step < 0) "99" else "${counts[shown]}", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
                         Text(if (step < 0) "Allah kabul etsin" else "/ ${DEFAULT_ZIKIRS[shown].target}", color = Pal.Muted, fontSize = Type.body)
@@ -281,7 +290,7 @@ private val CELL = 42.dp
 
 /** Takip: rows are the zikirs (+ Serbest), columns the last five prayer days, today first. */
 @Composable
-private fun ZikirTakip(store: Store, zikirs: List<Zikir>) {
+private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Unit) {
     val tr = Locale("tr")
     val days = (0L until 5L).map { store.prayerDay().minusDays(it) }
     val logs = days.map { store.zikirCounts(it) }
@@ -301,8 +310,11 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>) {
             rows.forEachIndexed { r, z ->
                 if (r > 0) HorizontalDivider(Modifier.padding(vertical = Space.xs), color = Pal.Line)
                 Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(z.label, color = if (z.target == null) Pal.Muted else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium, maxLines = 2)
+                    Column(Modifier.weight(1f).clip(RoundedCornerShape(Radius.s)).clickable { onOpen(z.key) }.padding(vertical = Space.xs)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(z.label, Modifier.weight(1f, fill = false), color = if (z.target == null) Pal.Muted else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium, maxLines = 2)
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Zikirhane'de aç", tint = Pal.Gold, modifier = Modifier.size(16.dp))
+                        }
                         Text(z.target?.let { "hedef $it" } ?: "hedef dışı", color = Pal.Muted.copy(alpha = .6f), fontSize = Type.micro)
                     }
                     logs.forEach { log -> TakipCell(zikirCell(log[z.key] ?: 0, z.target)) }
@@ -310,7 +322,7 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>) {
             }
         }
         Spacer(Modifier.height(Space.m))
-        Text("Zikirhane'de saydıkça bugünün sütunu kendiliğinden dolar. Serbest zikir ve hedef sonrası ekstralar hedefe sayılmaz.",
+        Text("Zikir adına dokununca Zikirhane o zikirle açılır. Zikirhane'de saydıkça bugünün sütunu kendiliğinden dolar. Serbest zikir ve hedef sonrası ekstralar hedefe sayılmaz.",
             Modifier.padding(horizontal = Space.s), color = Pal.Muted.copy(alpha = .7f), fontSize = Type.label, lineHeight = 17.sp)
     }
 }
@@ -343,34 +355,6 @@ private fun ZikirChip(z: Counter, count: Int, on: Boolean, onClick: () -> Unit) 
         if (done) { Icon(Icons.Default.Check, null, tint = Pal.Gold, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(Space.xs)) }
         Text(if (t == null) "${z.label} · $count" else "${z.label} · ${count.coerceAtMost(t)}/$t", color = if (on) Pal.Gold else Pal.Muted,
             fontSize = Type.body2, fontWeight = FontWeight.Medium)
-    }
-}
-
-/** Shaded beads on a circle: counted ones gold, the rest dark; [glow] flashes the ring when a target is reached. */
-@Composable
-private fun TesbihRing(count: Int, target: Int?, glow: Float, modifier: Modifier) {
-    val beads = target?.coerceAtMost(TURN) ?: TURN
-    val filled = when {
-        target == null -> if (count > 0 && count % TURN == 0) TURN else count % TURN
-        count >= target -> beads
-        target <= TURN -> count
-        else -> count % TURN
-    }
-    Canvas(modifier) {
-        val r = 7.5.dp.toPx()
-        val ring = size.minDimension / 2 - r - 4.dp.toPx()
-        if (glow > 0f) drawCircle(Pal.Gold.copy(alpha = .16f * glow), ring + r * 2.4f, center)
-        for (k in 0 until beads) {
-            val a = 2 * Math.PI * k / beads - Math.PI / 2
-            val p = Offset(center.x + ring * cos(a).toFloat(), center.y + ring * sin(a).toFloat())
-            val lit = k < filled
-            // light from the upper left, like the rose's scene
-            val brush = Brush.radialGradient(
-                if (lit) listOf(Color(0xFFFFF1CF), Pal.Gold, Color(0xFF8A6420)) else listOf(Color(0xFF3A4A68), Pal.Track),
-                center = p + Offset(-r * .35f, -r * .45f), radius = r * 1.6f,
-            )
-            drawCircle(brush, if (lit) r else r * .92f, p)
-        }
     }
 }
 
