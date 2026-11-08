@@ -202,6 +202,12 @@ fun AyarlarScreen(onBack: () -> Unit) {
                     "hedef" -> {
                         ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
                         ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
+                        ValueRow("Mezhep (faziletli vakit dilimleri)", if (store.hanefi) "Hanefî" else "Şâfiî") { store.hanefi = !store.hanefi; changed() }
+                        Text(
+                            if (store.hanefi) "Hanefî: sabah ortalık aydınlanınca, öğle kışın erken / yazın sıcak kırılınca, ikindi güneş sararmadan, akşam hemen, yatsı gecenin ilk üçte birinde faziletli; gece yarısından sonrası mekruh."
+                            else "Şâfiî: her vakitte vaktin başı faziletli.",
+                            color = Pal.Muted, fontSize = Type.body2,
+                        )
                         Text("Namaz sonrası tesbihat", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
                         SwitchRow("Kıldım'dan sonra tesbihatı sor", store.askTesbihat) { store.askTesbihat = it; changed() }
                         SwitchRow("Tesbihat günlük zikrime sayılsın", store.tesbihatCounts) { store.tesbihatCounts = it; changed() }

@@ -78,11 +78,9 @@ import kotlin.math.sin
 
 enum class VState { VAKTINDE, KILINDI, KAZA, ACIK, SONRA, GECTI }
 
-/** End of the "vaktinde" slice: the first third of the window, the same rule as the rose (`inFirstThird`). */
-fun thirdEnd(s: Slot): Long = s.start + (s.end - s.start) / 3
-
-fun vakitState(s: Slot, now: Long, prayed: Boolean, at: Long?, tracked: Boolean): VState = when {
-    prayed -> if (inFirstThird(s, at)) VState.VAKTINDE else VState.KILINDI
+/** [onTime]: prayed in a faziletli slice of the chosen mezhep (`Store.onTime`, `Fazilet.kt`). */
+fun vakitState(s: Slot, now: Long, prayed: Boolean, onTime: Boolean, tracked: Boolean): VState = when {
+    prayed -> if (onTime) VState.VAKTINDE else VState.KILINDI
     now < s.start -> VState.SONRA
     now < s.end -> VState.ACIK
     tracked -> VState.KAZA
@@ -110,7 +108,7 @@ fun VakitlerBody(
     val store = remember { Store(ctx) }
     StoreRev.n.let { } // marking bumps the rev: redraw at once, without resetting the animations
     val haptic = LocalHapticFeedback.current
-    val st = slots.map { vakitState(it, now, store.isPrayed(it.key), store.prayedAt(it.key), store.tracked(it)) }
+    val st = slots.map { vakitState(it, now, store.isPrayed(it.key), store.onTime(it), store.tracked(it)) }
     val cur = slots.indexOfFirst { now in it.start until it.end }   // -1 between güneş and öğle
     val c = slots.getOrNull(cur)
     val cs = st.getOrNull(cur)
@@ -123,14 +121,21 @@ fun VakitlerBody(
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         }
     }
-    val kerahat = ex.firstOrNull { it.kerahat && it.group == "İKİNDİ" }?.start
-    val inKerahat = c?.vakit == Vakit.IKINDI && cs == VState.ACIK && kerahat != null && now >= kerahat
+    // the current vakit in seven slices; the faziletli ones depend on the mezhep (Fazilet.kt)
+    val dl = c?.let { store.dilimler(it) }
+    val band = if (c != null && dl != null) faziletBand(c, dl) else null
+    val open = cs == VState.ACIK
+    val inBand = open && band != null && now >= band.first && now < band.second
+    val beforeBand = open && band != null && now < band.first
+    val inKerahat = open && dl != null && dl[dilimOf(c!!, now)] == Dilim.KERAHAT
+    val bandText = band?.let { "faziletli dilim ${hm(it.first)}–${hm(it.second)}" } ?: ""
 
     val (label, time, sub) = when {
-        c != null && cs == VState.ACIK && now < thirdEnd(c) ->
-            Triple("Vaktinde kılmak için", countdown(thirdEnd(c) - now), "son ${hm(thirdEnd(c))} · sonra da kılınır, vakit ${hm(c.end)} çıkar")
+        inBand -> Triple("Vaktinde kılmak için", countdown(band!!.second - now), "son ${hm(band.second)} · sonra da kılınır, vakit ${hm(c!!.end)} çıkar")
+        beforeBand -> Triple("Faziletli vakte", countdown(band!!.first - now), "şimdi de kılınır · $bandText")
+        inKerahat && c!!.vakit == Vakit.YATSI -> Triple("Gece yarısı geçti", countdown(c.end - now), "mekruh vakit · vakit ${hm(c.end)} çıkar")
         inKerahat -> Triple("Kerahat vakti", countdown(c!!.end - now), "geciktirme · vakit ${hm(c.end)} çıkar")
-        c != null && cs == VState.ACIK -> Triple("Vakit çıkmadan", countdown(c.end - now), "vaktinde dilimi ${hm(thirdEnd(c))} bitti")
+        open -> Triple("Vakit çıkmadan", countdown(c!!.end - now), "faziletli dilim bitti · vakit ${hm(c.end)} çıkar")
         else -> Triple(
             if (next.second == "Güneş doğuşuna") next.second else "${next.second} vaktine", countdown(next.first - now),
             when (cs) {
@@ -146,7 +151,8 @@ fun VakitlerBody(
     val tesbihEl = { key: String -> store.setTesbihat(key, "el"); haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
 
     Column(Modifier.fillMaxWidth()) {
-        VakitGul(st, cur, slots, now, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp)) { i ->
+        val arc = if (inBand) (band!!.second - now).toFloat() / (band.second - band.first) else null
+        VakitGul(st, cur, arc, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp)) { i ->
             if (i == cur && st[i] == VState.ACIK) toggle(i) else sheet = i
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = Space.xl), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -155,7 +161,7 @@ fun VakitlerBody(
             Text(sub, color = Pal.Muted, fontSize = Type.body2, textAlign = TextAlign.Center)
         }
         if (c != null && cs != null) {
-            VakitSerit(c, store.prayedAt(c.key).takeIf { store.isPrayed(c.key) }, kerahat.takeIf { c.vakit == Vakit.IKINDI }, now,
+            VakitSerit(c, store.prayedAt(c.key).takeIf { store.isPrayed(c.key) }, dl!!, now,
                 Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m))
             val mode = when {
                 cs == VState.ACIK -> 0
@@ -165,7 +171,7 @@ fun VakitlerBody(
             AnimatedContent(mode, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m),
                 transitionSpec = { (fadeIn(tween(350)) + slideInVertically(tween(350)) { it / 3 }) togetherWith fadeOut(tween(200)) }, label = "kildim") { m ->
                 when (m) {
-                    0 -> GoldButton(ACCUSATIVE[cur] + " kıldım" + if (now < thirdEnd(c)) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }
+                    0 -> GoldButton(ACCUSATIVE[cur] + " kıldım" + if (inBand) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }
                     1 -> TesbihatCard(c.vakit.ad, onEl = { tesbihEl(c.key) }, onApp = { onTesbihat(c.key) },
                         onLater = { later = later + c.key })
                     // no undo button here: one stray touch would take the prayer back. Undo is in the vakit sheet (petal or row).
@@ -219,7 +225,8 @@ fun VakitlerBody(
         ModalBottomSheet({ sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
             Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().padding(bottom = Space.xl), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 Text("${s.vakit.ad} namazı", style = NumStyle, fontSize = Type.title, color = Pal.Text)
-                Text("${hm(s.start)} – ${hm(s.end)} · vaktinde dilimi ${hm(s.start)}–${hm(thirdEnd(s))}", color = Pal.Muted, fontSize = Type.body2)
+                Text("${hm(s.start)} – ${hm(s.end)}" + (faziletBand(s, store.dilimler(s))?.let { " · faziletli dilim ${hm(it.first)}–${hm(it.second)}" } ?: ""),
+                    color = Pal.Muted, fontSize = Type.body2)
                 val (msg, col) = when (x) {
                     VState.VAKTINDE -> "Vaktinde kılındı$at" to Pal.Gold
                     VState.KILINDI -> "Kılındı$at · vaktinde dilimi geçmişti" to Pal.Text
@@ -348,13 +355,11 @@ private fun Bead(state: VState, live: Boolean, modifier: Modifier) {
 /** The logo rose: petal i = vakit i clockwise from the top. Outer petal fills gold when prayed, the inner one opens
  *  when it was on time; over the current petal a gold arc shrinks with the time left for "vaktinde". */
 @Composable
-private fun VakitGul(st: List<VState>, cur: Int, slots: List<Slot>, now: Long, kerahat: Boolean, modifier: Modifier, onPetal: (Int) -> Unit) {
+private fun VakitGul(st: List<VState>, cur: Int, arc: Float?, kerahat: Boolean, modifier: Modifier, onPetal: (Int) -> Unit) {
     val measurer = rememberTextMeasurer()
     val fill = st.map { animateFloatAsState(if (it == VState.VAKTINDE || it == VState.KILINDI) 1f else 0f, spring(.45f, 220f), label = "fill").value }
     val inner = st.map { animateFloatAsState(if (it == VState.VAKTINDE) 1f else 0f, spring(.4f, 150f), label = "inner").value }
     val breathe by rememberInfiniteTransition(label = "gul").animateFloat(.35f, 1f, infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "breathe")
-    val c = slots.getOrNull(cur)
-    val arc = if (c != null && st[cur] == VState.ACIK && now < thirdEnd(c)) (thirdEnd(c) - now).toFloat() / (thirdEnd(c) - c.start) else null
     val tap by rememberUpdatedState(onPetal)
     val curNow by rememberUpdatedState(cur)
     val shade = remember { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG) }
@@ -476,14 +481,14 @@ private fun VakitGul(st: List<VState>, cur: Int, slots: List<Slot>, now: Long, k
     }
 }
 
-/** The current vakit as a strip: vaktinde (gold) · vakit · kerahat (hatched peach, İkindi only); a light walks with the clock. */
+/** The current vakit in seven slices: faziletli gold, güzel half gold, the rest dark, kerahat / mekruh hatched peach;
+ *  a light walks with the clock and the slice it is in is named under the strip. */
 @Composable
-private fun VakitSerit(s: Slot, prayedAt: Long?, kerahat: Long?, now: Long, modifier: Modifier) {
+private fun VakitSerit(s: Slot, prayedAt: Long?, dl: List<Dilim>, now: Long, modifier: Modifier) {
     val beat = heartbeat()
-    val third = thirdEnd(s)
-    val ker = kerahat?.takeIf { it in third until s.end }
     val len = (s.end - s.start).toFloat()
     fun f(t: Long) = ((t - s.start) / len).coerceIn(0f, 1f)
+    val nowIn = dilimOf(s, now)
     Column(modifier) {
         Canvas(Modifier.fillMaxWidth().height(24.dp)) {
             val h = 12.dp.toPx()
@@ -491,24 +496,24 @@ private fun VakitSerit(s: Slot, prayedAt: Long?, kerahat: Long?, now: Long, modi
             val gap = 3.dp.toPx()
             val w = size.width
             val rr = CornerRadius(h / 2)
-            val bounds = listOf(0f, f(third)) + listOfNotNull(ker?.let { f(it) }) + 1f
-            for (j in 0 until bounds.size - 1) {
-                val x0 = bounds[j] * w + if (j > 0) gap / 2 else 0f
-                val x1 = bounds[j + 1] * w - if (j < bounds.size - 2) gap / 2 else 0f
-                val hatched = ker != null && j == 2
-                val col = when {
-                    j == 0 -> if (now >= third || prayedAt != null) Pal.Gold.copy(alpha = .28f) else Pal.Gold
-                    hatched -> Pal.Warn.copy(alpha = .18f)
-                    else -> Pal.Track
+            for (j in 0 until 7) {
+                val x0 = j * w / 7 + if (j > 0) gap / 2 else 0f
+                val x1 = (j + 1) * w / 7 - if (j < 6) gap / 2 else 0f
+                val past = prayedAt != null || j < nowIn
+                val col = when (dl[j]) {
+                    Dilim.FAZILET -> Pal.Gold.copy(alpha = if (past) .28f else 1f)
+                    Dilim.GUZEL -> Pal.Gold.copy(alpha = if (past) .16f else .45f)
+                    Dilim.KERAHAT -> Pal.Warn.copy(alpha = .18f)
+                    Dilim.VAKIT -> Pal.Track
                 }
                 drawRoundRect(col, Offset(x0, y0), Size(x1 - x0, h), rr)
-                if (hatched) clipPath(Path().apply { addRoundRect(RoundRect(x0, y0, x1, y0 + h, rr)) }) {
+                if (dl[j] == Dilim.KERAHAT) clipPath(Path().apply { addRoundRect(RoundRect(x0, y0, x1, y0 + h, rr)) }) {
                     var x = x0 - h
                     while (x < x1) { drawLine(Pal.Warn.copy(alpha = .55f), Offset(x, y0 + h), Offset(x + h, y0), 2.dp.toPx()); x += 6.dp.toPx() }
                 }
             }
             val nx = f(now) * w
-            drawRoundRect(Pal.Ground.copy(alpha = .62f), Offset(0f, y0), Size(nx, h), rr)   // the part already gone
+            drawRoundRect(Pal.Ground.copy(alpha = .55f), Offset(0f, y0), Size(nx, h), rr)   // the part already gone
             val cy = size.height / 2
             if (prayedAt != null) {
                 val px = f(prayedAt) * w
@@ -522,9 +527,12 @@ private fun VakitSerit(s: Slot, prayedAt: Long?, kerahat: Long?, now: Long, modi
                 drawCircle(Cream, 8.dp.toPx(), Offset(nx, cy))
             }
         }
+        val band = faziletBand(s, dl)
         val labels = listOfNotNull(
-            Triple(0f, hm(s.start), Pal.Muted), Triple(f(third), hm(third), Pal.Gold),
-            ker?.let { Triple(f(it), "kerahat " + hm(it), Pal.Warn) }, Triple(1f, hm(s.end), Pal.Muted),
+            Triple(0f, hm(s.start), Pal.Muted),
+            band?.let { Triple(f(it.first), hm(it.first), Pal.Gold) }?.takeIf { it.first > .08f },
+            band?.let { Triple(f(it.second), hm(it.second), Pal.Gold) }?.takeIf { it.first < .92f },
+            Triple(1f, hm(s.end), Pal.Muted),
         )
         Layout({ labels.forEach { Text(it.second, color = it.third, fontSize = Type.micro, fontWeight = if (it.third == Pal.Muted) FontWeight.Normal else FontWeight.SemiBold) } },
             Modifier.fillMaxWidth().padding(top = 2.dp)) { ms, cons ->
@@ -533,5 +541,9 @@ private fun VakitSerit(s: Slot, prayedAt: Long?, kerahat: Long?, now: Long, modi
                 ps.forEachIndexed { i, p -> p.place((labels[i].first * cons.maxWidth - p.width / 2f).toInt().coerceIn(0, cons.maxWidth - p.width), 0) }
             }
         }
+        if (prayedAt == null && now < s.end) Text(
+            "Şu an: ${DILIM_ADI[nowIn]} (${nowIn + 1}/7)", Modifier.fillMaxWidth().padding(top = Space.xs),
+            color = if (dl[nowIn] == Dilim.KERAHAT) Pal.Warn else Pal.Text, fontSize = Type.body2, textAlign = TextAlign.Center,
+        )
     }
 }

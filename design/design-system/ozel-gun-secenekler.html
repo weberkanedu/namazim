@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Özel Gün</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3;--track:#1C2943;--card:#121D33;--rose:#D9A3B5}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1250px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 30px Cormorant,serif;margin:40px 0 6px;border-top:1px solid #222;padding-top:24px}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:920px;margin-top:10px}.lede b{color:#F3EEE3}
+.four{display:flex;gap:22px;flex-wrap:wrap;margin-top:20px}
+.col{display:flex;flex-direction:column;gap:10px;width:280px}
+.col b.l{font:600 20px Cormorant,serif;color:var(--gold)}
+.col span.w{font-size:12.5px;color:var(--muted);line-height:1.55;min-height:76px}
+.ph{width:280px;height:560px;background:#0B1322;border:1px solid #1E2940;border-radius:22px;padding:16px;box-sizing:border-box;position:relative;overflow:hidden}
+.ph .date{text-align:center;font:500 12px Inter;margin-top:4px}.ph .date i{font-style:normal;color:var(--gold)}
+.chip{display:inline-flex;gap:6px;align-items:center;border:1px solid #2A3550;border-radius:999px;padding:5px 11px;font:500 11.5px Inter;color:var(--muted)}
+.band{margin-top:12px;border-radius:14px;padding:12px;background:rgb(217 163 181 / .08);border:1px solid rgb(217 163 181 / .35)}
+.band .t{font:600 13px Inter;color:var(--rose)}.band .s{font:400 11.5px/1.5 Inter;color:var(--muted);margin-top:3px}
+.btn{display:block;text-align:center;border-radius:999px;padding:11px;font:600 13px Inter;margin-top:10px;cursor:pointer}
+.btn.f{background:var(--gold);color:#0B1322}.btn.o{border:1px solid #2A3550;color:#F3EEE3}
+.rose{display:flex;justify-content:center;margin-top:8px}
+.list{margin-top:8px}.list div{display:flex;justify-content:space-between;font:400 12.5px Inter;padding:7px 2px;border-bottom:1px solid #18223A;color:var(--muted)}
+.list div b{font-weight:500;color:#F3EEE3}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#18223A;border-radius:22px 22px 0 0;padding:14px 16px 18px}
+.sheet h4{font:600 22px Cormorant,serif;margin:0 0 6px}
+.seg{display:flex;border:1px solid #2A3550;border-radius:12px;overflow:hidden;margin-top:8px}
+.seg span{flex:1;text-align:center;padding:8px 0;font:500 12px Inter;color:var(--muted)}.seg span.on{background:#26314C;color:var(--gold)}
+.out{margin-top:10px;font:400 12px/1.55 Inter;color:var(--muted)}.out b{color:#F3EEE3}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.cal div{aspect-ratio:1;border-radius:7px;background:var(--track);font:500 10px Inter;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.cal div.k{background:rgb(244 176 143 / .35);color:#F3EEE3}.cal div.o{background:rgb(217 163 181 / .35);color:#F3EEE3;outline:1px solid var(--rose)}
+.cal div.g{background:rgb(232 190 116 / .7);color:#0B1322}
+.rules{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:1150px}
+.rule{background:#0F1626;border:1px solid #1E2940;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.6;color:var(--muted)}
+.rule b{color:#F3EEE3;display:block;margin-bottom:2px}.rule i{font-style:normal;color:var(--gold)}
+.warnbox{margin-top:16px;max-width:1150px;border:1px solid rgb(244 176 143 / .4);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--warn);line-height:1.6}
+.tabs{display:flex;gap:8px;margin-top:14px}.tabs button{font:500 13px Inter;border:1px solid #2A3550;background:#0F1626;color:#F3EEE3;border-radius:999px;padding:7px 14px;cursor:pointer}.tabs button.on{border-color:var(--gold);color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Kişi · kadınlara özel · özel günler</div>
+  <h1>Özel günler</h1>
+  <p class="lede">Ayarlar'da <b>Kadın</b> seçilince ana sayfada sade bir <b>"Özel gün"</b> düğmesi çıkar. Başlatılınca namaz takibi durur: <b>kaza yazılmaz, "kıldın mı?" hatırlatması gelmez, seriler bozulmaz, istatistiklerde o günler sayılmaz.</b> Başlangıç ve bitiş vaktine göre o vaktin namazının borç olup olmadığını uygulama mezhebe göre hesaplar. Bilgi yalnızca telefonda kalır.</p>
+
+  <h2>Akış</h2>
+  <div class="four">
+    <div class="col"><b class="l">1 · Ana sayfa, normal gün</b><span class="w">Tarih satırının altında küçük, sade bir düğme. Erkeklerde ve "göstermeyi kapat" diyen kadınlarda görünmez.</span>
+      <div class="ph"><div class="date">8 Kasım Pazar · <i>28 Cemâziyelevvel 1448</i></div>
+        <div style="text-align:center;margin-top:8px"><span class="chip">🌙 Özel gün başlat</span></div>
+        <div class="rose" id="r1"></div>
+        <div style="text-align:center;font:600 10px Inter;letter-spacing:.16em;color:var(--gold);margin-top:6px">ÖĞLE VAKTİNE</div>
+        <div style="text-align:center;font:600 34px Cormorant,serif">3:27:29</div></div></div>
+    <div class="col"><b class="l">2 · Başlatırken</b><span class="w">Ne zaman başladığı sorulur (şimdi ya da daha önce). Uygulama o vaktin namazının durumunu mezhebe göre söyler.</span>
+      <div class="ph"><div class="rose" id="r2" style="opacity:.35"></div>
+        <div class="sheet"><h4>Özel gün başlat</h4>
+          <div class="seg"><span class="on">Hayız</span><span>Lohusalık</span></div>
+          <div class="seg"><span class="on">Şimdi (14:10)</span><span>Daha önce…</span></div>
+          <div class="out" id="startOut"></div>
+          <span class="btn f">Başlat</span></div></div></div>
+    <div class="col"><b class="l">3 · Özel gün sürerken</b><span class="w">Gül sakin, solgun ve gül kurusu bir halka içinde. Hatırlatmalar susar. Zikir ve dua serbest; Zikirhane açık, tesbihat kartı gelmez.</span>
+      <div class="ph"><div class="date">10 Kasım Salı · <i>1 Cemâziyelâhir 1448</i></div>
+        <div class="band"><div class="t">Özel gün · 3. gün</div><div class="s">Namaz takibi duraklatıldı, kaza yazılmıyor. Zikir ve dua serbest. Kur'an planı da bekliyor.</div>
+          <span class="btn o" style="margin-top:8px">Özel gün bitti</span></div>
+        <div class="rose" id="r3"></div>
+        <div class="list"><div><b>Öğle</b><span>12:37 · takip yok</span></div><div><b>İkindi</b><span>15:21 · takip yok</span></div></div></div></div>
+    <div class="col"><b class="l">4 · Bittiğinde</b><span class="w">Bitiş vaktine göre o vaktin (ve Şâfiî'de bir öncekinin) namazının borç olup olmadığı söylenir. Gusül hatırlatması gelir, takip kaldığı yerden sürer.</span>
+      <div class="ph"><div class="rose" id="r4" style="opacity:.35"></div>
+        <div class="sheet"><h4>Özel gün bitti</h4>
+          <div class="seg"><span class="on">Şimdi (16:05)</span><span>Daha önce…</span></div>
+          <div class="out" id="endOut"></div>
+          <span class="btn f">Tamam, takibe başla</span></div></div></div>
+  </div>
+  <div class="tabs">Mezhebe göre örnek: <button id="mh" class="on">Hanefî</button><button id="ms">Şâfiî</button></div>
+
+  <h2>Unutulan günler</h2>
+  <p class="lede">Başlatmayı unuttuysa, o günler kazaya yazılmış olur. Defter › Kaza takviminde günlere dokunup <b>"özel gündü"</b> diye işaretleyince o günlerin kazaları silinir. Geri alınabilir.</p>
+  <div class="four"><div class="col" style="width:330px"><div class="ph" style="width:330px;height:auto;padding-bottom:18px">
+    <div style="font:600 10px Inter;letter-spacing:.14em;color:var(--muted)">KASIM · KAZA TAKVİMİ</div>
+    <div class="cal" id="cal"></div>
+    <div class="out">Dokun: <b>kaza</b> → <b>özel gün</b> → <b>kaza</b>. Özel gün işaretlenen günlerin kazaları silinir.</div></div></div></div>
+
+  <h2>Dikkat edilecek hususlar ve uygulamadaki karşılığı</h2>
+  <div class="rules">
+    <div class="rule"><b>Namaz düşer, kazası yoktur</b>Hayız ve lohusalıkta kılınamayan namazlar kaza edilmez. <i>Uygulama:</i> o günler takip edilmez, kaza yazılmaz, hatırlatma gelmez.</div>
+    <div class="rule"><b>Başladığı vakit</b>Hanefî: vakit içinde başladıysa ve henüz kılmadıysa o vaktin namazı düşer. Şâfiî: vakit girdikten sonra kılacak kadar zaman geçmişse o namaz borç olur. <i>Uygulama:</i> başlatırken bunu hesaplayıp söyler, gerekiyorsa kazaya yazar.</div>
+    <div class="rule"><b>Bittiği vakit</b>Hanefî: vakit çıkmadan gusül ve iftitah tekbiri kadar zaman kaldıysa o vaktin namazı borç olur (en uzun süre dolarak bittiyse tekbir kadar zaman yeter). Şâfiî: tekbir kadar zaman kaldıysa borç olur; ikindi vaktinde bittiyse öğle, yatsı vaktinde bittiyse akşam da borç olur. <i>Uygulama:</i> bitirirken söyler, borç olanları kazaya yazar.</div>
+    <div class="rule"><b>Süre sınırları</b>Hayız: Hanefî en az 3, en çok 10 gün; Şâfiî en az 1, en çok 15 gün. Lohusalık: Hanefî en çok 40, Şâfiî en çok 60 gün. Sınırı aşan kan özür kanıdır (istihâza), namaz kılınır. <i>Uygulama:</i> en çok süre dolunca "özel gün bitti mi?" diye sorar; Hanefî'de 3 günden kısa sürdüyse o günlerin namazlarının kaza edilmesi gerektiğini söyler ve onay ister.</div>
+    <div class="rule"><b>Kur'an okuma</b>Özel günde Kur'an okunmaz ve mushafa dokunulmaz; dua ve zikir niyetiyle okunan ayetler, zikir ve dua serbesttir. <i>Uygulama:</i> Okuma'daki Kur'an planı o günlerde durur, "geride kaldın" demez; diğer kitaplar sürer.</div>
+    <div class="rule"><b>Zikir, tesbihat, kaza hedefi</b>Zikir ve dua serbest; namaz olmadığı için tesbihat kartı gelmez. Kaza namazı da kılınamaz. <i>Uygulama:</i> günlük kaza hedefi ve kaza serisi o günlerde bozulmaz.</div>
+    <div class="rule"><b>Oruç</b>Ramazan'da özel günde tutulamayan oruçlar sonra kaza edilir (namazdan farklı olarak). <i>Uygulama:</i> şu an oruç takibi yok; ileride Ramazan özelliği gelirse buna göre yapılır.</div>
+    <div class="rule"><b>Gizlilik</b>Bu bilgi kişiseldir. <i>Uygulama:</i> yalnızca telefonda tutulur, geri bildirim mesajlarına eklenmez. Ana sayfada gösterilmesi kapatılabilir; o zaman yalnızca Ayarlar'dan başlatılır. Yedek dosyasında yer alır.</div>
+  </div>
+  <div class="warnbox">Fıkhî ayrıntılar (özellikle başlangıç ve bitiş vaktindeki borç hesabı ile süre sınırları) uygulamaya konmadan önce bir hocaya ya da Diyanet ilmihaline danışılmalı. Uygulama bir fetva vermez; hesapladığı sonucu gösterir ve kişinin onayıyla kaydeder.</div>
+</div>
+<script>
+const P=(r,a)=>{const q=(a-90)*Math.PI/180;return[100+r*Math.cos(q),100+r*Math.sin(q)]},f=p=>p[0].toFixed(1)+','+p[1].toFixed(1);
+const petal=(r0,r1,a0,a1)=>{const w=a1-a0;return`M${f(P(r0,a0))} C${f(P(r1*1.02,a0-w*.08))} ${f(P(r1*1.16,a0+w*.34))} ${f(P(r1,a0+w*.5))} C${f(P(r1*1.16,a1-w*.34))} ${f(P(r1*1.02,a1+w*.08))} ${f(P(r0,a1))} Z`};
+function rose(st,muted){let s=`<defs><radialGradient id="v" cx=".5" cy="1" r="1"><stop offset="0" stop-color="#060A18"/><stop offset=".55" stop-color="#1A2A52"/><stop offset="1" stop-color="#4A65A6"/></radialGradient><radialGradient id="w" cx=".5" cy="1" r="1"><stop offset="0" stop-color="#5A3A10"/><stop offset=".55" stop-color="#C8913C"/><stop offset="1" stop-color="#FFE7B0"/></radialGradient></defs>`;
+ if(muted)s+=`<circle cx="100" cy="100" r="88" fill="none" stroke="#D9A3B5" stroke-width="2" stroke-opacity=".5" stroke-dasharray="2 5"/>`;
+ for(const i of [0,1,3,4,2]){const a=i*72;s+=`<path d="${petal(24,70,a-40,a+40)}" fill="url(#${st[i]?'w':'v'})" stroke="#0A1124" opacity="${muted?.35:1}"/>`;}
+ for(let i=0;i<5;i++){const a=i*72;s+=`<path d="${petal(12,46,a-26,a+26)}" fill="url(#v)" opacity="${muted?.35:1}"/>`;}
+ s+=`<circle cx="100" cy="100" r="10" fill="#D49E48" opacity="${muted?.4:1}"/>`;
+ return `<svg viewBox="0 0 200 200" width="200" height="200">${s}</svg>`;}
+r1.innerHTML=rose([1,0,0,0,0]);r2.innerHTML=rose([1,0,0,0,0]);r3.innerHTML=rose([0,0,0,0,0],true);r4.innerHTML=rose([0,0,0,0,0],true);
+const T={hanefi:{s:'Öğle vakti içinde başladı ve öğleyi henüz kılmamıştın: <b>öğle namazı düşer</b>, kazası yoktur. İkindiden itibaren takip durur.',
+ e:'İkindi vakti içinde bitti; vaktin çıkmasına (17:48) <b>gusül ve tekbir kadar zaman var</b>: <b>ikindi namazı borcun</b>. Gusül alıp kıl; kılmazsan kazaya yazılır. Akşamdan itibaren takip sürer.'},
+ safii:{s:'Öğle vakti 12:37\'de girmiş, başlaması 14:10: <b>kılacak kadar zaman geçmiş</b>, öğleyi kılmadıysan <b>öğle namazı kazaya yazılır</b>. İkindiden itibaren takip durur.',
+ e:'İkindi vakti içinde bitti: <b>ikindi namazı borcun</b>, ayrıca <b>öğle namazı da borç olur</b> (ikindi vaktinde biten özel günde). İkisi de kazaya yazılır ya da şimdi kılınır.'}};
+let mz='hanefi';function out(){startOut.innerHTML=T[mz].s;endOut.innerHTML=T[mz].e;mh.className=mz==='hanefi'?'on':'';ms.className=mz==='safii'?'on':'';}
+mh.onclick=()=>{mz='hanefi';out()};ms.onclick=()=>{mz='safii';out()};out();
+const C=Array.from({length:30},(_,i)=>i+1).map(d=>({d,k:d>=3&&d<=8?'k':d<12?'g':'g'}));
+function cal(){document.getElementById('cal').innerHTML=C.map((c,i)=>`<div class="${c.k}" data-i="${i}">${c.d}</div>`).join('');
+ document.querySelectorAll('#cal div').forEach(e=>e.onclick=()=>{const c=C[+e.dataset.i];c.k=c.k==='k'?'o':c.k==='o'?'k':c.k;cal();});}
+cal();
+</script>
+</body>
+</html>

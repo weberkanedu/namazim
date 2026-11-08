@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vaktin Yedi Dilimi</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3;--track:#1C2943;--card:#121D33}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1180px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 30px Cormorant,serif;margin:44px 0 6px;border-top:1px solid #222;padding-top:26px}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:900px;margin-top:10px}.lede b{color:#F3EEE3}
+.names{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:16px;max-width:900px}
+.names div{background:var(--card);border-radius:10px;padding:8px 6px;text-align:center;font:500 11.5px/1.35 Inter;color:var(--muted)}
+.names div b{display:block;font:600 18px Cormorant,serif;color:var(--gold)}
+.tabs{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.tabs button{font:500 13px Inter;border:1px solid #2A3550;background:#0F1626;color:#F3EEE3;border-radius:999px;padding:8px 16px;cursor:pointer}
+.tabs button.on{border-color:var(--gold);color:var(--gold);background:#1C2236}
+.why{color:var(--muted);font-size:13px;line-height:1.6;margin-top:10px;max-width:900px;min-height:42px}.why b{color:#F3EEE3}
+.rows{margin-top:10px;max-width:900px}
+.vrow{display:flex;align-items:center;gap:12px;margin-top:12px}
+.vrow .n{width:64px;font:500 14px Inter}.vrow .t{width:120px;font:400 12px Inter;color:var(--muted);text-align:right}
+.seg7{flex:1;display:flex;gap:3px}
+.seg7 i{flex:1;height:22px;border-radius:6px;background:var(--track);position:relative;transition:background .3s}
+.seg7 i.g{background:var(--gold)}.seg7 i.g2{background:rgb(232 190 116 / .45)}
+.seg7 i.w{background:repeating-linear-gradient(135deg,rgb(244 176 143 / .6) 0 4px,rgb(244 176 143 / .2) 4px 8px)}
+.seg7 i span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 10px Inter;color:#0B1322}
+.season{display:inline-flex;gap:6px;margin-left:8px}
+.key{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--muted)}
+.key span{display:flex;align-items:center;gap:6px}.key i{width:18px;height:10px;border-radius:3px;display:inline-block}
+.warnbox{margin-top:14px;max-width:900px;border:1px solid rgb(244 176 143 / .4);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--warn);line-height:1.6}
+/* phone pieces */
+.two{display:flex;gap:30px;flex-wrap:wrap;margin-top:18px}
+.phone{width:360px;background:#0B1322;border:1px solid #1E2940;border-radius:22px;padding:20px}
+.cd{text-align:center}.cd .k{font:600 10px Inter;letter-spacing:.18em;color:var(--gold)}.cd .t{font:600 40px Cormorant,serif}.cd .s{font:400 12px Inter;color:var(--muted)}
+.strip{position:relative;display:flex;gap:3px;margin-top:16px;height:14px}
+.strip i{flex:1;border-radius:5px;background:var(--track)}.strip i.g{background:var(--gold)}.strip i.p{opacity:.4}
+.strip .now{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#FFF4DC;box-shadow:0 0 0 4px rgb(232 190 116 / .35),0 0 14px var(--gold)}
+.slab{display:flex;justify-content:space-between;font:500 10.5px Inter;color:var(--muted);margin-top:8px}
+.part{margin-top:12px;text-align:center;font:500 13px Inter}.part b{color:var(--gold)}
+.ttl{font:600 10px Inter;letter-spacing:.14em;color:var(--muted);margin-bottom:8px}
+.hrow{display:flex;align-items:center;gap:8px;margin-top:10px}
+.hrow .n{width:52px;font:500 13px Inter}
+.hist{flex:1;display:flex;gap:3px;align-items:flex-end;height:46px}
+.hist div{flex:1;border-radius:4px 4px 2px 2px;background:var(--gold);position:relative;min-height:3px}
+.hist div.top::after{content:attr(data-p);position:absolute;top:-15px;left:50%;transform:translateX(-50%);font:600 9.5px Inter;color:var(--gold)}
+.hrow .m{width:96px;font:400 11px Inter;color:var(--muted);text-align:right;line-height:1.3}
+.hax{display:flex;gap:3px;margin:4px 104px 0 60px;font:500 9px Inter;color:var(--muted)}.hax span{flex:1;text-align:center}
+.sent{margin-top:14px;font:500 13px/1.5 Inter}.sent b{color:var(--gold)}
+.old .bar{height:8px;border-radius:4px;background:var(--track);position:relative;flex:1}.old .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--gold)}
+.old .bar u{position:absolute;left:0;top:0;bottom:0;width:33.3%;background:rgb(232 190 116 / .18);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Vakit · yedi dilim · üç kural · İstikrar grafiği</div>
+  <h1>Vaktin yedi dilimi</h1>
+  <p class="lede">Her vakit, girişinden çıkışına kadar <b>yedi eşit dilime</b> bölünür. Böylece "vaktin başı / ortası / sonu" yerine daha ince bir okuma yapılır. Aşağıda önce dilimlerin adları, sonra <b>hangi dilimin "faziletli" sayılacağına dair üç kural</b>, sonra ana sayfadaki şerit ve en altta İstikrar › Tümü'deki grafik var.</p>
+  <div class="names" id="names"></div>
+
+  <h2>1 · Hangi dilim faziletli sayılsın?</h2>
+  <div class="tabs" id="rules"></div>
+  <div class="why" id="why"></div>
+  <div class="rows" id="rows"></div>
+  <div class="key"><span><i style="background:var(--gold)"></i>faziletli (gülün iç yaprağı açılır)</span><span><i style="background:rgb(232 190 116 / .45)"></i>güzel, ama en faziletlisi değil</span><span><i style="background:var(--track)"></i>vakit içinde</span><span><i style="background:repeating-linear-gradient(135deg,rgb(244 176 143 / .6) 0 3px,rgb(244 176 143 / .2) 3px 6px)"></i>kerahat / mekruh</span></div>
+  <div class="warnbox" id="warn">Hanefî dilimleri bir taslaktır. Hangi dilimin tam olarak nereden başlayıp nerede bittiği (özellikle sabahtaki isfar ve öğledeki yaz/kış farkı) uygulamaya konmadan önce bir hocaya ya da Diyanet ilmihaline danışılmalı.</div>
+
+  <h2>2 · Ana sayfada şerit</h2>
+  <p class="lede">Şimdiki vaktin şeridi yedi dilim olur, faziletli dilimler altın. Altında "şu an hangi dilimdesin" yazar. Örnek: İkindi 15:24–17:51, saat 16:36, Hanefî kuralı.</p>
+  <div class="two">
+    <div class="phone">
+      <div class="cd"><div class="k">VAKİT ÇIKMADAN</div><div class="t">1:15:00</div><div class="s">faziletli dilim 17:09'a kadar sürer</div></div>
+      <div class="strip" id="strip"></div>
+      <div class="slab"><span>15:24</span><span>16:03</span><span>16:45</span><span>17:30</span><span>17:51</span></div>
+      <div class="part">Şu an: <b>vaktin ortası</b> (4/7)</div>
+    </div>
+  </div>
+
+  <h2>3 · İstikrar › Tümü: "Namazlarını ne zaman kılıyorsun"</h2>
+  <p class="lede">Bugünkü grafik her vakit için tek bir ortalama çizgi gösteriyor; ortalama, "bazen başta bazen sonda" kılan biri için ortada bir yer gösterip yanıltıyor. Yedi dilimle her vakit için <b>küçük bir sütun grafik</b> olur: hangi dilimde kaç kez kıldığın. En çok kıldığın dilim yazıyla da söylenir.</p>
+  <div class="two">
+    <div class="phone old"><div class="ttl">BUGÜNKÜ</div>
+      <div id="oldrows"></div>
+      <div style="font:400 10.5px Inter;color:var(--muted);margin-top:10px">vaktin başı → sonraki vakit · açık bölge: ilk üçte bir</div></div>
+    <div class="phone"><div class="ttl">YEDİ DİLİM</div>
+      <div id="hist"></div>
+      <div class="hax"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+      <div class="sent" id="sent"></div></div>
+  </div>
+</div>
+<script>
+const NAMES=['Vaktin hemen başı','Vaktin başında','Ortasından önce','Vaktin ortası','Ortasından hemen sonra','Sonlara doğru','Vaktin sonu'];
+document.getElementById('names').innerHTML=NAMES.map((n,i)=>`<div><b>${i+1}</b>${n}</div>`).join('');
+const V=[['Sabah','05:53','07:18'],['Öğle','12:37','15:21'],['İkindi','15:21','17:48'],['Akşam','17:48','19:08'],['Yatsı','19:08','05:54']];
+// g = faziletli, h = güzel, w = kerahat/mekruh, '' = vakit
+const RULES={
+ bas:{n:'1 · Vaktin başı',d:'Bugünkü kurala en yakın: her vakitte <b>ilk iki dilim</b> faziletli sayılır (bugün "ilk üçte bir"). Basit, ama Hanefî görüşüyle her vakitte örtüşmez.',
+   rows:()=>V.map((v,i)=>i===2?['g','g','','','','','w']:['g','g','','','','',''])},
+ hanefi:{n:'2 · Hanefî müstehap',d:'Her vaktin kendi faziletli dilimi: <b>sabah</b> ortalık aydınlanınca (isfar), <b>öğle</b> kışın erken, yazın sıcak kırılınca, <b>ikindi</b> biraz geciktirip güneş sararmadan, <b>akşam</b> hemen, <b>yatsı</b> gecenin ilk üçte birine kadar; gece yarısından sonrası mekruh.',
+   rows:s=>[['','','h','g','g','g','h'], s==='yaz'?['h','h','g','g','','','']:['g','g','h','','','',''], ['h','g','g','g','g','','w'], ['g','g','','','','',''], ['g','g','h','w','w','w','w']]},
+ secim:{n:'3 · Ayarlardan mezhep',d:'Ayarlar › Hedefler\'de <b>Hanefî / Şâfiî</b> seçimi. Hanefî seçen 2\'yi, Şâfiî seçen "vaktin başı" kuralını görür. Hanefî için ikindinin başlangıcı Diyanet takvimindeki gibi kalır.',rows:null},
+};
+let rule='hanefi',season='kis',mez='hanefi';
+function seg(cls){return `<div class="seg7">${cls.map((c,i)=>`<i class="${c}"><span>${c==='g'||c==='h'?i+1:''}</span></i>`).join('')}</div>`;}
+function draw(){
+ document.getElementById('rules').innerHTML=Object.entries(RULES).map(([k,v])=>`<button class="${k===rule?'on':''}" data-k="${k}">${v.n}</button>`).join('')+
+  (rule==='hanefi'||(rule==='secim'&&mez==='hanefi')?`<span class="season"><button class="${season==='kis'?'on':''}" data-s="kis">Kış</button><button class="${season==='yaz'?'on':''}" data-s="yaz">Yaz</button></span>`:'')+
+  (rule==='secim'?`<span class="season"><button class="${mez==='hanefi'?'on':''}" data-m="hanefi">Hanefî</button><button class="${mez==='safii'?'on':''}" data-m="safii">Şâfiî</button></span>`:'');
+ document.getElementById('why').innerHTML=RULES[rule].d;
+ const rows=rule==='secim'?(mez==='hanefi'?RULES.hanefi.rows(season):RULES.bas.rows()):RULES[rule].rows(season);
+ document.getElementById('rows').innerHTML=V.map((v,i)=>`<div class="vrow"><span class="n">${v[0]}</span>${seg(rows[i])}<span class="t">${v[1]} – ${v[2]}</span></div>`).join('');
+ document.getElementById('warn').style.display=rule==='bas'||(rule==='secim'&&mez==='safii')?'none':'block';
+ document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{rule=b.dataset.k;draw();});
+ document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{season=b.dataset.s;draw();});
+ document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mez=b.dataset.m;draw();});}
+draw();
+// home strip: ikindi, hanefi, now in part 4
+const sc=['h','g','g','g','g','','w'];
+document.getElementById('strip').innerHTML=sc.map((c,i)=>`<i class="${c==='g'?'g':c==='w'?'w':''} ${i<3?'p':''}" style="${c==='h'?'background:rgb(232 190 116 / .45)':c==='w'?'background:repeating-linear-gradient(135deg,rgb(244 176 143 / .6) 0 4px,rgb(244 176 143 / .2) 4px 8px)':''}"></i>`).join('')+`<span class="now" style="left:${(3.5/7*100).toFixed(1)}%"></span>`;
+// istikrar
+const H={Sabah:[2,6,9,5,3,2,1],Öğle:[8,11,6,3,1,1,0],İkindi:[3,5,7,9,4,2,1],Akşam:[16,9,2,1,0,0,0],Yatsı:[4,10,8,3,2,1,1]};
+const OLD={Sabah:.34,Öğle:.24,İkindi:.44,Akşam:.09,Yatsı:.14};
+document.getElementById('oldrows').innerHTML=Object.keys(H).map(n=>`<div class="hrow"><span class="n">${n}</span><div class="bar"><u></u><i style="width:${OLD[n]*100}%"></i></div><span class="m" style="width:46px">${Math.round(OLD[n]*100)}%</span></div>`).join('');
+document.getElementById('hist').innerHTML=Object.entries(H).map(([n,a])=>{const mx=Math.max(...a),tot=a.reduce((x,y)=>x+y,0),top=a.indexOf(mx);
+ return `<div class="hrow"><span class="n">${n}</span><div class="hist">${a.map((c,i)=>`<div class="${i===top?'top':''}" data-p="%${Math.round(c/tot*100)}" style="height:${Math.max(3,c/mx*46)}px;opacity:${i===top?1:.45}"></div>`).join('')}</div><span class="m">çoğunlukla<br><b style="color:#F3EEE3;font-weight:500">${NAMES[top].toLocaleLowerCase('tr')}</b></span></div>`;}).join('');
+document.getElementById('sent').innerHTML='Akşamı <b>vaktin hemen başında</b>, sabahı <b>ortasından önce</b> kılıyorsun. İkindide dağınıksın: en çok <b>vaktin ortasında</b>.';
+</script>
+</body>
+</html>

@@ -306,6 +306,18 @@ class Store(context: Context) {
         p.edit().apply { if (kind == null) remove("tesbihat_$key") else putString("tesbihat_$key", kind) }.apply()
         if (kind == null) setTesbihProgress(key, listOf(0, 0, 0))
     }
+    /** Mezhep for the faziletli slices of a vakit (`Fazilet.kt`): Hanefî (default) or Şâfiî. */
+    var hanefi: Boolean
+        get() = p.getString("mezhep", "hanefi") != "safii"
+        set(v) { StoreRev.n++; p.edit().putString("mezhep", if (v) "hanefi" else "safii").apply() }
+    /** The seven slices of [s] for the chosen mezhep; the sarı kerahat is 45 min before akşam, as in `extras()`. */
+    fun dilimler(s: Slot): List<Dilim> {
+        val d = dayTimes(lat, lng, s.date)
+        return dilimler(s, hanefi, isSummer(s.date), d.aksam, if (s.vakit == Vakit.IKINDI) d.aksam - 45 * 60_000L else null)
+    }
+    /** Prayed in a faziletli slice ("vaktinde"). */
+    fun onTime(s: Slot): Boolean = isPrayed(s.key) && inFazilet(s, dilimler(s), prayedAt(s.key))
+
     /** Ask for the tesbihat after Kıldım (card on home, icon on the row). */
     var askTesbihat: Boolean
         get() = p.getBoolean("askTesbihat", true)
@@ -356,7 +368,7 @@ class Store(context: Context) {
     fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
         val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
             "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired",
-            "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2")
+            "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2", "mezhep")
         val e = p.edit()
         p.all.keys.filter { it !in keep }.forEach { e.remove(it) }
         val ok = e.putLong("since", startAt).putLong("settledUntil", startAt).commit()

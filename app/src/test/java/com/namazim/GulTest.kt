@@ -24,12 +24,6 @@ class GulTest {
         assertEquals(9_000L, nextImsakAt(now = 2_000, imsakToday = 2_000, imsakTomorrow = 9_000))
     }
 
-    @Test fun firstThirdBoundaries() {   // window 0..90 min → first third is [0, 30)
-        val s = Slot(Vakit.OGLE, day, 0, 90 * min, 90 * min)
-        assertTrue(inFirstThird(s, 0)); assertTrue(inFirstThird(s, 30 * min - 1))
-        assertFalse(inFirstThird(s, 30 * min)); assertFalse(inFirstThird(s, null)); assertFalse(inFirstThird(s, -1))
-    }
-
     @Test fun zeroGoalCountsAsDone() {
         assertEquals(1f, ratio(0, 0)); assertEquals(1f, ratio(5, 3)); assertEquals(.5f, ratio(1, 2))
     }
@@ -37,7 +31,7 @@ class GulTest {
     @Test fun petalsOrderAndLabels() {
         // 3 prayed: slots 0 and 1 in their first hour (first third), slot 2 in its last hour
         val at = mapOf(k[0] to 10 * min, k[1] to 3 * h + 10 * min, k[2] to 8 * h + 30 * min)
-        val p = gulPetals(slots, prayed = setOf(k[0], k[1], k[2]), prayedAt = at::get,
+        val p = gulPetals(slots, prayed = setOf(k[0], k[1], k[2]), onTime = { s -> at[s.key]?.let { it < s.start + (s.end - s.start) / 3 } == true },
             pagesToday = 1, readGoal = 3, kazaToday = 1, kazaRate = 2, kazaOwed = 40,
             zikirs = DEFAULT_ZIKIRS, zikirCounts = mapOf("Sübhânallah" to 33))
         assertEquals(listOf("Namaz", "Vaktinde", "Sayfa", "Kaza", "Zikir"), p.map { it.name })
@@ -67,11 +61,11 @@ class GulTest {
     }
 
     @Test fun noKazaDebtIsFullPetal() {
-        assertEquals(1f, gulPetals(slots, emptySet(), { null }, 0, 3, 0, 2, kazaOwed = 0)[3].progress)
+        assertEquals(1f, gulPetals(slots, emptySet(), { false }, 0, 3, 0, 2, kazaOwed = 0)[3].progress)
     }
 
     @Test fun unmarkedPrayerDoesNotCount() {
-        val p = gulPetals(slots, prayed = emptySet(), prayedAt = { 10 * min }, 0, 3, 0, 2, 40)
+        val p = gulPetals(slots, prayed = emptySet(), onTime = { true }, 0, 3, 0, 2, 40)
         assertEquals(0f, p[0].progress); assertEquals(0f, p[1].progress)
     }
 }

@@ -1149,7 +1149,7 @@ private fun MuhasebeOzet() {
     val day = store.prayerDay()   // the rose's day runs imsak to imsak
     val readToday = readingToday(store)   // the Sayfa petal: today's pages against today's target on the shelf
     val petals = gulPetals(
-        slots(store.lat, store.lng, day), prayed, store::prayedAt,
+        slots(store.lat, store.lng, day), prayed, store::onTime,
         pagesToday = readToday.first, readGoal = readToday.second,
         kazaToday = store.kazaLog()[day.toString()] ?: 0, kazaRate = store.kazaRate, kazaOwed = totalKaza,
         zikirs = dailyZikirs(store.zikirs, store.tesbihatCounts), zikirCounts = store.zikirCounts(day),
@@ -1503,31 +1503,44 @@ private fun MuhasebeGidisat() {
             InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.l).fillMaxWidth()) {
                 Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = Type.micro, letterSpacing = .8.sp)
                 Spacer(Modifier.height(Space.s))
+                // seven slices per vakit (Fazilet.kt): how many times each slice was used; gold underline = faziletli for the mezhep
+                val today = slots(store.lat, store.lng, store.prayerDay())
+                val tops = mutableListOf<Pair<Vakit, Int>>()
                 Vakit.entries.forEach { vk ->
-                    val fs = data.fracs[vk.name].orEmpty()
-                    val avg = if (fs.isEmpty()) null else fs.average().toFloat()
-                    Row(Modifier.padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
+                    val bins = IntArray(7)
+                    data.fracs[vk.name].orEmpty().forEach { bins[(it * 7).toInt().coerceIn(0, 6)]++ }
+                    val most = bins.maxOrNull() ?: 0
+                    val top = if (most == 0) -1 else bins.indexOfFirst { it == most }
+                    if (top >= 0) tops += vk to top
+                    val fz = store.dilimler(today[vk.ordinal])
+                    Row(Modifier.padding(top = Space.m), verticalAlignment = Alignment.Bottom) {
                         Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = Type.body2)
-                        Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Pal.Track)) {
-                            // the first third of the window is "vaktinde"
-                            Box(Modifier.fillMaxWidth(1f / 3).fillMaxHeight().background(Pal.Gold.copy(alpha = .18f)))
-                            if (avg != null) Box(Modifier.fillMaxWidth(avg).fillMaxHeight().clip(CircleShape).background(Pal.Gold))
+                        Row(Modifier.weight(1f).height(44.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
+                            for (j in 0 until 7) Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
+                                val hFrac = if (most == 0) 0f else bins[j].toFloat() / most
+                                Box(Modifier.fillMaxWidth().fillMaxHeight((hFrac * .82f).coerceAtLeast(.05f))
+                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .background(if (j == top) Pal.Gold else Pal.Gold.copy(alpha = if (bins[j] > 0) .4f else .1f)))
+                                Box(Modifier.padding(top = 2.dp).fillMaxWidth().height(2.dp)
+                                    .background(if (fz[j] == Dilim.FAZILET) Pal.Gold else Color.Transparent))
+                            }
                         }
-                        Spacer(Modifier.width(Space.s))
-                        val ms = data.mins[vk.name].orEmpty()
-                        val avgMin = if (ms.isEmpty()) null else ms.average().toInt()
-                        Text(
-                            when { avgMin == null -> "—"; avgMin >= 60 -> "${avgMin / 60}sa ${avgMin % 60}dk"; else -> "${avgMin}dk" },
-                            Modifier.width(64.dp), color = if (avgMin == null) Pal.Muted else Pal.Text, fontSize = Type.label, textAlign = TextAlign.End,
-                        )
+                        Text(if (top < 0) "—" else "çoğunlukla\n${DILIM_ADI[top]}", Modifier.width(92.dp).padding(start = Space.s),
+                            color = if (top < 0) Pal.Muted else Pal.Text, fontSize = Type.micro, lineHeight = 14.sp, textAlign = TextAlign.End)
                     }
                 }
-                Spacer(Modifier.height(Space.xs))
-                Text("vaktin başı → sonraki vakit · açık bölge: ilk üçte bir · sağda: girişten kaç dakika sonra", color = Pal.Muted, fontSize = Type.micro, lineHeight = 15.sp)
+                Row(Modifier.padding(start = 58.dp, end = 92.dp, top = 4.dp)) {
+                    for (j in 1..7) Text("$j", Modifier.weight(1f), color = Pal.Muted, fontSize = 9.sp, textAlign = TextAlign.Center)
+                }
+                if (tops.isNotEmpty()) {
+                    Spacer(Modifier.height(Space.s))
+                    Text(tops.joinToString(", ") { (v, j) -> "${v.ad} ${DILIM_YER[j]}" }.replaceFirstChar { it.uppercase() } + " kılıyorsun.",
+                        color = Pal.Text, fontSize = Type.body2, lineHeight = 19.sp)
+                }
                 Spacer(Modifier.height(Space.s))
                 Text(
-                    "Not: Bu sayı bir fazilet ölçüsü değil; kendi düzenini görmen için. " +
-                        "Hanefi'de her vakitte erken kılmak daha faziletli sayılsa da, niyet ve istikrar öndedir.",
+                    "Her vakit girişten çıkışa yedi eşit dilim. Altın çizgili dilimler seçtiğin mezhebe göre (Ayarlar › Hedefler) faziletli vakit. " +
+                        "Bu grafik bir ölçü değil, kendi düzenini görmen için; niyet ve istikrar öndedir.",
                     color = Pal.Muted, fontSize = Type.micro, lineHeight = 16.sp,
                 )
             }

@@ -12,9 +12,6 @@ fun prayerDayOf(today: LocalDate, now: Long, imsakToday: Long): LocalDate =
 /** When the open screen must refresh by itself: the next imsak, where the prayer day turns. */
 fun nextImsakAt(now: Long, imsakToday: Long, imsakTomorrow: Long): Long = if (now < imsakToday) imsakToday else imsakTomorrow
 
-/** "Vaktinde": marked within the first third of the prayer's window. */
-fun inFirstThird(slot: Slot, at: Long?): Boolean =
-    at != null && at >= slot.start && at < slot.start + (slot.end - slot.start) / 3
 
 /** No goal set counts as done, so nobody is punished for not having one. */
 fun ratio(done: Int, goal: Int): Float = if (goal <= 0) 1f else (done.toFloat() / goal).coerceIn(0f, 1f)
@@ -60,12 +57,12 @@ fun zikirCell(count: Int, target: Int?): ZikirCell = when {
 }
 
 fun gulPetals(
-    slots: List<Slot>, prayed: Set<String>, prayedAt: (String) -> Long?,
+    slots: List<Slot>, prayed: Set<String>, onTime: (Slot) -> Boolean,
     pagesToday: Int, readGoal: Int, kazaToday: Int, kazaRate: Int, kazaOwed: Int,
     zikirs: List<Zikir> = emptyList(), zikirCounts: Map<String, Int> = emptyMap(),
 ): List<Petal> {
     val kept = slots.filter { it.key in prayed }
-    val onTime = kept.count { inFirstThird(it, prayedAt(it.key)) }
+    val onTime = kept.count(onTime)   // "Vaktinde": prayed in a faziletli slice of the chosen mezhep (Fazilet.kt)
     return listOf(
         Petal("Namaz", kept.size / 5f, "${kept.size}/5", true),
         Petal("Vaktinde", onTime / 5f, "$onTime/5", true),
