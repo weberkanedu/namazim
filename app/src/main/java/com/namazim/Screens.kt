@@ -1842,10 +1842,10 @@ private fun Milestone(icon: ImageVector, title: String, sub: String, value: Stri
 private fun RoseInfoSheet(petals: List<Petal>, kazaRate: Int, onClose: () -> Unit) {
     val how = mapOf(
         "Namaz" to "Beş vaktin her biri için \"Kıldım\" dedikçe açılır. Beşi de kılınınca tam açık.",
-        "Vaktinde" to "\"Kıldım\"a vaktin ilk üçte birinde basılan namazları sayar. Erken kılınan her vakit yaprağı biraz daha açar.",
+        "Vaktinde" to "Faziletli vakitte kılınan namazları sayar; hangi dilimlerin faziletli olduğu Ayarlar'daki mezhebe göre değişir. Her biri yaprağı beşte bir açar. Yatsıyı işaretlediğinde 3 ve üstü vaktinde kıldıysan yaprak tamamen açılır.",
         "Sayfa" to "Okuma'daki bugünkü hedefe göre açılır: planlı okumaların bugünkü payı ya da Kur'an'ın günlük hedefi.",
         "Kaza" to "Kaza planına göre açılır (günde $kazaRate kaza). Kaza borcun yoksa yaprak hep açıktır.",
-        "Zikir" to "Zikir listendeki her zikrin bugünkü tamamlanma oranının ortalamasıyla açılır. Serbest zikir ve hedef sonrası ekstralar sayılmaz.",
+        "Zikir" to "Zikir listendeki her zikrin bugünkü tamamlanma oranının ortalamasıyla açılır. Hedefi aşan ekstralar sayılmaz. Ayarlar'da \"Tesbihat günlük zikrime sayılsın\" açıksa namaz sonrası tesbihat da buraya sayılır.",
     )
     ModalBottomSheet(onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
         Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().padding(bottom = Space.l).verticalScroll(rememberScrollState())) {
