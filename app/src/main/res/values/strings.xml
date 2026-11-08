@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_desc">Canlı ikon: sıradaki vakit, kılınan vakitler</string>
-    <string name="widget_wide_desc">Geniş ikon: kaç vakit kılındı ve sıradakine kalan süre</string>
     <string name="widget_harem">Namazım · Harem</string>
     <string name="widget_harem_desc">Mekke ve Medine fotoğrafı üstünde sıradaki vakit, canlı geri sayım, beş vakit ve Kıldım</string>
     <string name="widget_gul">Namazım · Gül</string>

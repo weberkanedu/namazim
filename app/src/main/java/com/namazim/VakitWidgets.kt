@@ -44,7 +44,6 @@ object VakitWidgets {
     /** Every widget of the app, after a mark, an undo, an alarm or an özel gün change. */
     fun refreshAll(ctx: Context) {
         runCatching { NamazimWidget.refresh(ctx) }
-        runCatching { NamazimWideWidget.refresh(ctx) }
         val mgr = AppWidgetManager.getInstance(ctx)
         listOf(HaremWidget::class.java to Tur.HAREM, GulWidget::class.java to Tur.GUL, SeritWidget::class.java to Tur.SERIT).forEach { (cls, tur) ->
             mgr.getAppWidgetIds(ComponentName(ctx, cls)).forEach { runCatching { update(ctx, mgr, it, tur) } }
