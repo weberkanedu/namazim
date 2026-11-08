@@ -49,7 +49,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -341,11 +340,10 @@ private fun TakipCell(cell: ZikirCell) {
 private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var target by remember { mutableStateOf("33") }
-    // Arabic: picked from the built-in list (design C), or typed by hand when it is not there
+    // Arabic: picked from the built-in list (design C) into the two fields, or typed there by hand
     var ar by remember { mutableStateOf("") }
     var mean by remember { mutableStateOf("") }
     var picked by remember { mutableStateOf<String?>(null) }
-    var manual by remember { mutableStateOf(false) }
     val n = name.trim()
     val t = target.trim().toIntOrNull()
     val error = when {
@@ -379,7 +377,7 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
                     singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = fieldColors)
             }
             if (error != null) Text(error, Modifier.padding(top = Space.xs), color = Pal.Warn, fontSize = Type.label)
-            if (!manual && picked != n) suggestZikir(n).forEach { (sn, sa, sm) ->
+            if (picked != n) suggestZikir(n).forEach { (sn, sa, sm) ->
                 Row(
                     Modifier.padding(top = Space.s).fillMaxWidth().clip(RoundedCornerShape(Radius.s))
                         .border(1.dp, Pal.Gold.copy(alpha = .45f), RoundedCornerShape(Radius.s))
@@ -393,9 +391,8 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
                     Text(sa, color = Color(0xFFF2D79B), fontSize = 20.sp, maxLines = 1)
                 }
             }
-            if (picked == n && !manual) Text("$ar  ·  $mean", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.body2)
-            if (!manual) TextButton({ manual = true }) { Text("Listede yok mu? Arapçasını kendin yaz", color = Pal.Gold, fontSize = Type.body2) }
-            else {
+            // always open: a pick from the list fills them, otherwise they are typed (or left empty)
+            run {
                 OutlinedTextField(ar, { ar = it }, Modifier.fillMaxWidth().padding(top = Space.s), label = { Text("Arapça yazı (isteğe bağlı)") },
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 20.sp, textDirection = androidx.compose.ui.text.style.TextDirection.Rtl),
                     singleLine = true, colors = fieldColors)
@@ -406,9 +403,8 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
             val ok = n.isNotEmpty() && t != null && error == null
             GoldButton("Zikir ekle", Modifier.fillMaxWidth().alpha(if (ok) 1f else .4f), Icons.Default.Add) {
                 if (ok) {
-                    val keep = manual || picked == n   // a pick for an edited name no longer fits it
-                    store.zikirs = zikirs + Zikir(n, t!!, ar.trim().ifEmpty { null }?.takeIf { keep }, mean.trim().ifEmpty { null }?.takeIf { keep })
-                    name = ""; target = "33"; ar = ""; mean = ""; picked = null; manual = false
+                    store.zikirs = zikirs + Zikir(n, t!!, ar.trim().ifEmpty { null }, mean.trim().ifEmpty { null })
+                    name = ""; target = "33"; ar = ""; mean = ""; picked = null
                 }
             }
         }
