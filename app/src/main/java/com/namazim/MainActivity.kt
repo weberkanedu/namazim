@@ -140,6 +140,31 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** One line under the date that shows the next mübarek günler in turn, a few seconds each, sliding up. */
+@Composable
+fun HolyTicker(days: List<Pair<HolyDay, String>>) {
+    if (days.isEmpty()) return
+    var k by remember(days) { mutableIntStateOf(0) }
+    LaunchedEffect(days) { while (days.size > 1) { delay(3500); k = (k + 1) % days.size } }
+    AnimatedContent(
+        k, Modifier.fillMaxWidth(),
+        transitionSpec = {
+            (fadeIn(tween(450)) + androidx.compose.animation.slideInVertically(tween(450)) { it / 2 }) togetherWith
+                (fadeOut(tween(300)) + androidx.compose.animation.slideOutVertically(tween(300)) { -it / 2 })
+        },
+        label = "holy",
+    ) { i ->
+        val (d, left) = days[i % days.size]
+        Text(
+            androidx.compose.ui.text.buildAnnotatedString {
+                append("✦ ${d.name} · ")
+                pushStyle(androidx.compose.ui.text.SpanStyle(color = Pal.Text)); append(left); pop()
+            },
+            Modifier.fillMaxWidth(), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+        )
+    }
+}
+
 /** Bottom space a page leaves so its last row can scroll clear of the floating dock. */
 val LocalDockPad = compositionLocalOf { 0.dp }
 
@@ -452,7 +477,7 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
             d.aksam to "Akşam", d.yatsi to "Yatsı", tomorrow.imsak to "İmsak")
         val next = events.first { it.first > now }
         val ex = extras(d, tomorrow.imsak)
-        val holy = remember(today) { nextHolyDay(today) }
+        val holy = remember(today) { nextHolyDays(today) }
 
         Column(Modifier.fillMaxSize()) {
         // the Harem clips are the showcase: a 240dp header, all of it moving picture
@@ -483,10 +508,8 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
             },
             Modifier.fillMaxWidth().padding(top = Space.xs), fontSize = Type.body, textAlign = TextAlign.Center,
         )
-        Text(
-            "✦ ${holy.first.name} · ${holy.second}", Modifier.fillMaxWidth(),
-            color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
-        )
+        // design C3 (design/design-system/tarih-kompakt.html): the next mübarek günler take turns on one line, in days
+        HolyTicker(holy)
 
             val todaySlots = slots(store.lat, store.lng, today)
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {

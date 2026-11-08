@@ -118,22 +118,18 @@ fun holyDays(hYear: Int): List<HolyDay> {
     )
 }
 
-/** Next mübarek gün (today included) and a "6 hafta kaldı" style countdown. */
-fun nextHolyDay(today: LocalDate): Pair<HolyDay, String> {
+/** The next [n] mübarek günler (today included), each with "32 gün" style days left. */
+fun nextHolyDays(today: LocalDate, n: Int = 3): List<Pair<HolyDay, String>> {
     val cal = android.icu.util.IslamicCalendar()
     cal.calculationType = android.icu.util.IslamicCalendar.CalculationType.ISLAMIC_UMALQURA
     cal.timeInMillis = today.atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
     val hYear = cal.get(android.icu.util.Calendar.YEAR)
-    val next = (holyDays(hYear) + holyDays(hYear + 1)).filter { !it.date.isBefore(today) }.minBy { it.date }
-    val days = java.time.temporal.ChronoUnit.DAYS.between(today, next.date)
-    val left = when {
-        days == 0L -> "bugün"
-        days == 1L -> "yarın"
-        days < 14 -> "$days gün kaldı"
-        else -> "${days / 7} hafta kaldı"
-    }
-    return next to left
+    return (holyDays(hYear) + holyDays(hYear + 1)).filter { !it.date.isBefore(today) }.sortedBy { it.date }.take(n)
+        .map { it to holyLeft(java.time.temporal.ChronoUnit.DAYS.between(today, it.date)) }
 }
+
+/** Days to a mübarek gün in plain days (owner, 2026-11-08: "4 hafta" was too vague). */
+fun holyLeft(days: Long): String = when (days) { 0L -> "bugün"; 1L -> "yarın"; else -> "$days gün" }
 
 // First page of each sûre in the standard 604-page mushaf.
 private val SURE_PAGES = listOf(

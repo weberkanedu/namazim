@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarih ve Mübarek Günler</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--track:#1C2943;--card:#121D33}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1200px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:900px;margin-top:10px}.lede b{color:#F3EEE3}
+.ctl{display:flex;gap:8px;margin-top:14px;font-size:13px;color:var(--muted);align-items:center}
+.ctl button{font:500 12px Inter;border:1px solid #2A3550;background:#0F1626;color:#F3EEE3;border-radius:999px;padding:6px 12px;cursor:pointer}.ctl button.on{border-color:var(--gold);color:var(--gold)}
+.three{display:flex;gap:24px;flex-wrap:wrap;margin-top:20px}
+.col{display:flex;flex-direction:column;gap:8px;width:360px}
+.col b.l{font:600 22px Cormorant,serif;color:var(--gold)}
+.col span.w{font-size:13px;color:var(--muted);line-height:1.55;min-height:64px}
+.ph{width:360px;background:#0B1322;border:1px solid #1E2940;border-radius:22px;overflow:hidden}
+.hd{position:relative;height:150px}.hd video{width:100%;height:100%;object-fit:cover;display:block}
+.hd::after{content:"";position:absolute;inset:auto 0 0 0;height:50px;background:linear-gradient(transparent,#0B1322)}
+.area{display:flex;gap:14px;padding:6px 16px 16px;align-items:stretch}
+.rest{height:120px;margin:0 16px 16px;border-radius:12px;background:#0F1729;display:flex;align-items:center;justify-content:center;font:400 11px Inter;color:var(--muted)}
+/* D1 */
+.dcard{width:96px;flex:none;border-radius:16px;background:var(--card);border:1px solid rgb(232 190 116 / .35);display:flex;flex-direction:column;align-items:center;padding:8px 4px}
+.dcard .n{font:600 46px/1 Cormorant,serif}.dcard .m{font:600 12px Inter;color:var(--gold);margin-top:2px}.dcard .w{font:400 11px Inter;color:var(--muted)}
+.hij{font:500 11px Inter;color:var(--gold);text-align:center;margin-top:6px;line-height:1.35}
+.list{flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.li{display:flex;align-items:center;gap:8px}.li .nm{flex:1;font:500 12.5px Inter;line-height:1.25}.li .nm small{display:block;font:400 10.5px Inter;color:var(--muted)}
+.li .d{font:600 22px Cormorant,serif;color:#F3EEE3;text-align:right;line-height:1}.li .d small{display:block;font:500 9.5px Inter;color:var(--muted)}
+.li.first .d{color:var(--gold)}
+.sep{height:1px;background:#1E2940}
+/* D2 */
+.leaf{width:96px;flex:none;border-radius:12px;overflow:hidden;background:#F3EEE3;color:#0B1322;text-align:center;box-shadow:0 6px 16px rgb(0 0 0 / .45)}
+.leaf .top{background:linear-gradient(180deg,#E8BE74,#C99A4A);color:#0B1322;font:700 11px Inter;letter-spacing:.12em;padding:5px 0}
+.leaf .n{font:600 46px/1.05 Cormorant,serif}.leaf .w{font:500 11px Inter;color:#4A5570;padding-bottom:6px}
+.pill{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:8px 10px}
+.pill .d{min-width:44px;text-align:center;border-radius:10px;background:rgb(232 190 116 / .14);color:var(--gold);font:600 20px/1 Cormorant,serif;padding:5px 4px}
+.pill .d small{display:block;font:500 9px Inter;color:var(--muted);margin-top:1px}
+.pill .nm{font:500 12px Inter;line-height:1.25}.pill .nm small{display:block;font:400 10.5px Inter;color:var(--muted)}
+/* D3 */
+.tl{flex:1;position:relative;padding-top:8px}
+.tl .line{position:absolute;left:4px;right:4px;top:40px;height:2px;background:linear-gradient(90deg,var(--gold),#2A3550)}
+.tl .pt{position:absolute;top:33px;transform:translateX(-50%);text-align:center;width:90px}
+.tl .pt i{display:block;width:14px;height:14px;border-radius:50%;margin:0 auto;background:radial-gradient(circle at 35% 30%,#FFF1CF,#E8BE74 45%,#8A6420)}
+.tl .pt b{display:block;font:600 18px Cormorant,serif;margin-top:4px}.tl .pt span{display:block;font:500 9.5px/1.25 Inter;color:var(--muted)}
+.tl .now{position:absolute;left:0;top:18px;font:600 9.5px Inter;color:var(--gold)}
+.legend{max-width:1050px;margin-top:28px;font-size:13px;color:var(--muted);line-height:1.7;border-top:1px solid #222;padding-top:16px}.legend b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Ana sayfa · tarih · mübarek günler · üç yön</div>
+  <h1>Tarih ve mübarek günler</h1>
+  <p class="lede">Solda tarih bir kutuda: gün büyük, ay ve haftanın günü, altında hicri. Sağda en yakın mübarek günler <b>gün sayısıyla</b> ("4 hafta" yerine "32 gün"). Kaç tane görünsün, düğmelerle değiştirebilirsin. Tarihler örnek: 8 Kasım 2026.</p>
+  <div class="ctl">Sağda: <button id="c2">2 tane</button><button id="c3" class="on">3 tane</button></div>
+  <div class="three">
+    <div class="col"><b class="l">D1 · Tarih kartı ve liste</b><span class="w">Altın çerçeveli koyu kutuda tarih; sağda alt alta mübarek günler, sağ tarafta büyük gün sayısı. En yakını altın.</span><div class="ph" id="d1"></div></div>
+    <div class="col"><b class="l">D2 · Takvim yaprağı</b><span class="w">Tarih, duvar takvimi yaprağı gibi açık renk ve altın başlıklı; ekranda en çok göze çarpan. Sağda gün sayıları küçük altın kutucuklarda.</span><div class="ph" id="d2"></div></div>
+    <div class="col"><b class="l">D3 · Zaman şeridi</b><span class="w">Tarih kartı solda; sağda bugünden başlayan bir çizgi, mübarek günler üstünde mesafeleriyle orantılı noktalar. Ne kadar uzak olduğu bir bakışta.</span><div class="ph" id="d3"></div></div>
+  </div>
+  <div class="legend"><b>Hepsinde:</b> 1 günden azsa "bugün", 1 günse "yarın" yazar. Kandiller Diyanet'in listelediği gün (gecesi bir önceki akşam). Bir mübarek güne dokununca tarihini ve kısa açıklamasını gösteren küçük bir sayfa açılabilir.<br>
+  <b>Not:</b> Üç Aylar ile Regaib bu yıl aynı güne denk geliyor; ikisi ayrı satır olarak görünür.</div>
+</div>
+<script>
+const H=[['Üç Ayların Başlangıcı','10 Aralık Perşembe',32],['Regaib Kandili','10 Aralık Perşembe',32],['Miraç Kandili','4 Ocak Pazartesi',57],['Berat Kandili','22 Ocak Cuma',75]];
+let n=3;
+const vid=`<div class="hd"><video src="../../app/src/main/assets/sky/medine-aksam.mp4" autoplay loop muted playsinline></video></div>`;
+const rest=`<div class="rest">(gül, sayaç ve vakitler, bugünkü gibi)</div>`;
+function draw(){const L=H.slice(0,n);
+ d1.innerHTML=vid+`<div class="area"><div><div class="dcard"><span class="n">8</span><span class="m">Kasım</span><span class="w">Pazar</span></div><div class="hij">28 Cemâziyelevvel<br>1448</div></div>
+  <div class="list">${L.map((h,i)=>`${i?'<div class="sep"></div>':''}<div class="li ${i===0?'first':''}"><span class="nm">${h[0]}<small>${h[1]}</small></span><span class="d">${h[2]}<small>gün</small></span></div>`).join('')}</div></div>`+rest;
+ d2.innerHTML=vid+`<div class="area"><div><div class="leaf"><div class="top">KASIM</div><div class="n">8</div><div class="w">Pazar</div></div><div class="hij">28 Cemâziyelevvel<br>1448</div></div>
+  <div class="list">${L.map(h=>`<div class="pill"><span class="d">${h[2]}<small>gün</small></span><span class="nm">${h[0]}<small>${h[1]}</small></span></div>`).join('')}</div></div>`+rest;
+ const far=L[L.length-1][2];
+ d3.innerHTML=vid+`<div class="area"><div><div class="dcard"><span class="n">8</span><span class="m">Kasım</span><span class="w">Pazar</span></div><div class="hij">28 Cemâziyelevvel<br>1448</div></div>
+  <div class="tl"><span class="now">bugün</span><div class="line"></div>${L.map((h,i)=>{const x=8+(h[2]/far)*80;return `<div class="pt" style="left:${x}%;${i%2?'top:'+(33)+'px':''}"><i></i><b>${h[2]} gün</b><span>${h[0]}</span></div>`}).join('')}</div></div>`+rest;}
+c2.onclick=()=>{n=2;c2.className='on';c3.className='';draw();};c3.onclick=()=>{n=3;c3.className='on';c2.className='';draw();};
+draw();
+</script>
+</body>
+</html>
