@@ -88,6 +88,7 @@ fun vakitState(s: Slot, now: Long, prayed: Boolean, onTime: Boolean, tracked: Bo
     else -> VState.GECTI   // before tracking started: neither kaza nor owed
 }
 
+private val NAFILE = setOf("İşrak", "Kuşluk (duha)", "Evvâbin", "Teheccüd")
 private val ROW_NAME = listOf("İmsak", "Öğle", "İkindi", "Akşam", "Yatsı")
 private val ACCUSATIVE = listOf("Sabahı", "Öğleyi", "İkindiyi", "Akşamı", "Yatsıyı")
 private val EXTRA_GROUP = listOf("GÜNEŞ", "ÖĞLE", "İKİNDİ", "AKŞAM", "YATSI")
@@ -219,7 +220,7 @@ fun VakitlerBody(
             if (chips.isNotEmpty()) FlowRow(
                 Modifier.padding(start = Space.xl + 32.dp, end = Space.xl, bottom = Space.s),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) { chips.forEach { ExtraChip(it, now) } }
+            ) { chips.forEach { ExtraChip(it, now, store, slots[0].date) } }
         }
         Spacer(Modifier.height(Space.xl))
     }
@@ -245,7 +246,7 @@ fun VakitlerBody(
                 Text(msg, color = col, fontSize = Type.body, fontWeight = FontWeight.Medium)
                 val chips = rowExtras(i, ex, gunes)
                 if (chips.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    chips.forEach { ExtraChip(it, now) }
+                    chips.forEach { ExtraChip(it, now, store, s.date) }
                 }
                 if (store.askTesbihat && store.isPrayed(s.key)) {
                     val tk = store.tesbihat(s.key)
@@ -323,19 +324,26 @@ private fun rowExtras(i: Int, ex: List<Extra>, gunes: Long): List<Extra> =
     (if (i == 0) listOf(Extra("Güneş", gunes, null, false, "GÜNEŞ")) else emptyList()) + ex.filter { it.group == EXTRA_GROUP[i] }
 
 @Composable
-private fun ExtraChip(e: Extra, now: Long) {
+private fun ExtraChip(e: Extra, now: Long, store: Store, day: java.time.LocalDate) {
     val live = e.end != null && now in e.start until e.end
+    // with "nafile takibi" on, the four nafile chips mark themselves prayed (only once their time has come)
+    val nafile = store.nafileTakip && e.name in NAFILE
+    val key = "$day|${e.name}"
+    val done = nafile && store.nafileKilindi(key)
     val col = when {
         e.kerahat -> Pal.Warn
-        live -> Pal.Gold
+        live || done -> Pal.Gold
         else -> Pal.Muted
     }
     Row(
-        Modifier.border(1.dp, if (live || e.kerahat) col.copy(alpha = if (live) .9f else .45f) else Pal.Border, RoundedCornerShape(50))
+        Modifier.clip(RoundedCornerShape(50))
+            .background(if (done) Pal.Gold.copy(alpha = .14f) else Color.Transparent)
+            .border(1.dp, if (live || e.kerahat || done) col.copy(alpha = if (live || done) .9f else .45f) else Pal.Border, RoundedCornerShape(50))
+            .clickable(enabled = nafile && now >= e.start) { store.toggleNafile(key) }
             .padding(horizontal = 9.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(e.name, color = col, fontSize = 11.sp)
+        Text((if (done) "✓ " else "") + e.name, color = col, fontSize = 11.sp)
         Spacer(Modifier.width(4.dp))
         Text(hm(e.start), style = NumStyle, fontSize = 13.sp, color = Pal.Text)
     }

@@ -235,6 +235,8 @@ fun AyarlarScreen(onBack: () -> Unit) {
                             else "Şâfiî: her vakitte vaktin başı faziletli.",
                             color = Pal.Muted, fontSize = Type.body2,
                         )
+                        SwitchRow("Nafileleri takip et (işrak, kuşluk, evvâbin, teheccüd)", store.nafileTakip) { store.nafileTakip = it; changed() }
+                        Text("Açıkken ana sayfadaki bu çiplere dokunarak kıldığını işaretlersin. Kazaya girmez, hatırlatma gelmez.", color = Pal.Muted, fontSize = Type.label)
                         Text("Namaz sonrası tesbihat", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
                         SwitchRow("Kıldım'dan sonra tesbihatı sor", store.askTesbihat) { store.askTesbihat = it; changed() }
                         SwitchRow("Tesbihat günlük zikrime sayılsın", store.tesbihatCounts) { store.tesbihatCounts = it; changed() }

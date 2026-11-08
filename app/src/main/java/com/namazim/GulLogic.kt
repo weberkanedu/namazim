@@ -56,6 +56,9 @@ fun zikirCell(count: Int, target: Int?): ZikirCell = when {
     else -> ZikirCell(false, if (count > 0) "$count" else "")
 }
 
+/** On-time prayers that open the "Vaktinde" petal fully, judged after yatsı. */
+const val VAKTINDE_TAM = 3
+
 fun gulPetals(
     slots: List<Slot>, prayed: Set<String>, onTime: (Slot) -> Boolean,
     pagesToday: Int, readGoal: Int, kazaToday: Int, kazaRate: Int, kazaOwed: Int,
@@ -65,7 +68,8 @@ fun gulPetals(
     val onTime = kept.count(onTime)   // "Vaktinde": prayed in a faziletli slice of the chosen mezhep (Fazilet.kt)
     return listOf(
         Petal("Namaz", kept.size / 5f, "${kept.size}/5", true),
-        Petal("Vaktinde", onTime / 5f, "$onTime/5", true),
+        // owner's rule (2026-11-08): once yatsı is marked, 3 or more on time opens the petal fully; before that it fills by fifths
+        Petal("Vaktinde", if (slots.any { it.vakit == Vakit.YATSI && it.key in prayed } && onTime >= VAKTINDE_TAM) 1f else onTime / 5f, "$onTime/5", true),
         Petal("Sayfa", ratio(pagesToday, readGoal), "$pagesToday/$readGoal", true),
         Petal("Kaza", if (kazaOwed == 0) 1f else ratio(kazaToday, kazaRate), "$kazaToday/$kazaRate", true),
         zikirPetal(zikirs, zikirCounts),

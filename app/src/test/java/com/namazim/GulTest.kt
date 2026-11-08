@@ -68,4 +68,14 @@ class GulTest {
         val p = gulPetals(slots, prayed = emptySet(), onTime = { true }, 0, 3, 0, 2, 40)
         assertEquals(0f, p[0].progress); assertEquals(0f, p[1].progress)
     }
+
+    @Test fun vaktindeOpensFullyAfterYatsiWithThree() {
+        val all = slots.map { it.key }.toSet()
+        val onTime: (Slot) -> Boolean = { it.vakit != Vakit.OGLE && it.vakit != Vakit.IKINDI }   // 3 of 5 on time
+        assertEquals(1f, gulPetals(slots, all, onTime, 0, 3, 0, 2, 0)[1].progress)
+        // the same three before yatsı is marked: still by fifths
+        assertEquals(.6f, gulPetals(slots, all - slots.last().key, { it.vakit != Vakit.YATSI && it.vakit != Vakit.AKSAM }, 0, 3, 0, 2, 0)[1].progress, 1e-6f)
+        // two on time after yatsı: by fifths
+        assertEquals(.4f, gulPetals(slots, all, { it.vakit == Vakit.SABAH || it.vakit == Vakit.YATSI }, 0, 3, 0, 2, 0)[1].progress, 1e-6f)
+    }
 }

@@ -369,6 +369,19 @@ class Store(context: Context) {
     /** Prayed in a faziletli slice ("vaktinde"). */
     fun onTime(s: Slot): Boolean = isPrayed(s.key) && inFazilet(s, dilimler(s), prayedAt(s.key))
 
+    // --- Nafile namazlar (işrak, kuşluk, evvâbin, teheccüd): marked from their chips on home, never kaza, never nagged
+    var nafileTakip: Boolean
+        get() = p.getBoolean("nafileTakip", false)
+        set(v) { StoreRev.n++; p.edit().putBoolean("nafileTakip", v).apply() }
+    /** [key] = "prayer day|name", e.g. "2026-11-08|Teheccüd". */
+    fun nafileKilindi(key: String) = key in (p.getStringSet("nafile", emptySet()) ?: emptySet())
+    fun toggleNafile(key: String) {
+        val s = (p.getStringSet("nafile", emptySet()) ?: emptySet()).toMutableSet()
+        if (!s.remove(key)) s.add(key)
+        StoreRev.n++
+        p.edit().putStringSet("nafile", s).apply()
+    }
+
     /** Ask for the tesbihat after Kıldım (card on home, icon on the row). */
     var askTesbihat: Boolean
         get() = p.getBoolean("askTesbihat", true)
@@ -419,7 +432,7 @@ class Store(context: Context) {
     fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
         val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
             "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired",
-            "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2", "mezhep", "cinsiyet", "ozelGunGizli")
+            "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2", "mezhep", "cinsiyet", "ozelGunGizli", "nafileTakip")
         val e = p.edit()
         p.all.keys.filter { it !in keep }.forEach { e.remove(it) }
         val ok = e.putLong("since", startAt).putLong("settledUntil", startAt).commit()

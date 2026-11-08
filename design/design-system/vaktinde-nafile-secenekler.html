@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vaktinde ve Nafile</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3;--track:#1C2943;--card:#121D33}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1200px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 30px Cormorant,serif;margin:40px 0 6px;border-top:1px solid #222;padding-top:24px}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:920px;margin-top:10px}.lede b{color:#F3EEE3}
+.three{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px}
+.col{display:flex;flex-direction:column;gap:8px;width:360px}
+.col b.l{font:600 21px Cormorant,serif;color:var(--gold)}
+.col span.w{font-size:12.5px;color:var(--muted);line-height:1.55;min-height:70px}
+.ph{background:#0B1322;border:1px solid #1E2940;border-radius:20px;padding:16px;box-sizing:border-box}
+.ctl{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;align-items:center;font-size:12.5px;color:var(--muted)}
+.ctl button{font:500 12px Inter;border:1px solid #2A3550;background:#0F1626;color:#F3EEE3;border-radius:999px;padding:6px 12px;cursor:pointer}
+.ctl button.on{border-color:var(--gold);color:var(--gold)}
+.pet{display:flex;align-items:center;gap:14px;margin-top:6px}
+.pet .bar{flex:1;height:10px;border-radius:5px;background:var(--track);overflow:hidden}.pet .bar i{display:block;height:100%;background:var(--gold);transition:width .4s}
+.pet .v{font:600 22px Cormorant,serif;min-width:58px;text-align:right}
+.note{font:400 12px/1.5 Inter;color:var(--muted);margin-top:8px;min-height:36px}.note b{color:var(--gold)}
+.dots{display:flex;gap:6px;margin-top:10px}.dots span{flex:1;text-align:center;font:500 10.5px Inter;color:var(--muted)}
+.dots span i{display:block;width:22px;height:22px;margin:0 auto 4px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3A4A68,#1C2943);cursor:pointer}
+.dots span i.on{background:radial-gradient(circle at 35% 30%,#FFF1CF,#E8BE74 45%,#8A6420)}
+/* nafile */
+.row{display:flex;align-items:center;gap:10px;min-height:44px;border-bottom:1px solid #18223A}
+.row .n{flex:1;font:500 14px Inter}.row .t{font:600 17px Cormorant,serif;color:var(--muted)}
+.bead{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF1CF,#E8BE74 45%,#8A6420)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 10px 28px}
+.chip{font:500 11px Inter;border:1px solid #2A3550;border-radius:999px;padding:4px 10px;color:var(--muted);cursor:pointer;user-select:none}
+.chip b{font:600 12px Cormorant,serif;color:#F3EEE3;margin-left:4px}
+.chip.on{border-color:var(--gold);background:rgb(232 190 116 / .14);color:var(--gold)}
+.sn{display:flex;gap:6px;padding:4px 0 10px 28px;flex-wrap:wrap}
+.sn span{font:500 11px Inter;border-radius:8px;padding:5px 9px;border:1px dashed #2A3550;color:var(--muted);cursor:pointer;user-select:none}
+.sn span.on{border:1px solid var(--gold);color:#0B1322;background:var(--gold)}
+.sn span.f{border:1px solid #2A3550;background:#1C2943;color:#F3EEE3;cursor:default}
+.card{border:1px solid rgb(232 190 116 / .45);border-radius:16px;padding:12px;margin-top:10px;background:#121D33}
+.card h4{margin:0;font:600 15px Inter}.card p{margin:3px 0 0;font:400 11.5px Inter;color:var(--muted)}
+.cnt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.cnt div{background:#121D33;border-radius:12px;padding:10px}.cnt div b{display:block;font:600 26px Cormorant,serif}.cnt div span{font:400 11px Inter;color:var(--muted)}
+.week{display:flex;gap:4px;align-items:flex-end;height:60px;margin-top:10px}.week i{flex:1;background:var(--gold);border-radius:3px 3px 0 0;opacity:.75}
+.legend{max-width:1050px;margin-top:28px;font-size:13px;color:var(--muted);line-height:1.7;border-top:1px solid #222;padding-top:16px}.legend b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Gül · Vaktinde yaprağı · nafile namazlar</div>
+  <h1>Vaktinde yaprağı ve nafileler</h1>
+
+  <h2>1 · Vaktinde yaprağı ne zaman tam açılsın?</h2>
+  <p class="lede">Bugün yaprak 5 vaktin 5'i faziletli dilimde kılınınca tam açılıyor. Önerin: <b>günde 3 vakit vaktinde kılındıysa tam say</b>. Aşağıda vakitleri işaretleyip (boncuklara dokun) üç yolun yaprağı nasıl açtığını görebilirsin. Saat şu an: <span id="clock"></span>.</p>
+  <div class="ctl">Gün içinde: <button data-t="ogle">öğleden sonra</button><button data-t="aksam">akşam</button><button data-t="yatsi" class="on">yatsı kılındı</button></div>
+  <div class="three" id="vk"></div>
+
+  <h2>2 · Nafile ve sünnetleri saymak</h2>
+  <p class="lede">Ayarlar'da <b>"Nafile ve sünnetleri de takip et"</b> açılırsa görünür; kapalıyken uygulama bugünkü gibi sade kalır. Nafileler <b>kazaya hiç girmez, hatırlatma göndermez</b>; yalnızca kendini görmek için sayılır. Üç yol: dokunarak dene.</p>
+  <div class="three">
+    <div class="col"><b class="l">N1 · Ek vakit çipleri</b><span class="w">Ana sayfada vakitlerin altındaki ek vakit çipleri (İşrak, Kuşluk, Evvâbin, Teheccüd) dokunulabilir olur: dokununca kılındı, altın. En sade yol; yalnızca vakti olan nafileler.</span>
+      <div class="ph" id="n1"></div></div>
+    <div class="col"><b class="l">N2 · Sünnetler de</b><span class="w">N1'e ek olarak her vaktin altında sünnetler küçük kutucuklar: ilk sünnet · farz · son sünnet, yatsıda vitir. Kıldım'a basınca kart "sünneti de kıldın mı?" diye sorar.</span>
+      <div class="ph" id="n2"></div></div>
+    <div class="col"><b class="l">N3 · Nafile sayacı</b><span class="w">N2'ye ek olarak Defter'de bir "Nafile" bölümü: bu hafta kaç rekât/kaç kez, en çok hangisi, haftalık grafik. Bir de vakit dışı nafileler için "+ nafile" (tahiyyetü'l-mescid, hâcet, tövbe...).</span>
+      <div class="ph" id="n3"></div></div>
+  </div>
+  <div class="legend"><b>Gülde:</b> nafileler gülün beş yaprağını değiştirmez (farzlarla karışmasın). İstersen gülün etrafında nafile başına küçük altın bir nokta belirebilir; o ayrı bir seçenek.<br>
+  <b>Vitir:</b> Hanefî'de vaciptir; bugün kaçırılan yatsıyla birlikte kazaya yazılıyor. N2'de yatsının altında ayrıca işaretlenebilir.<br>
+  <b>Defter:</b> N1 ve N2'de İstikrar › Tümü'ye "nafileler" diye tek bir satır eklenir; N3'te ayrı bölüm olur.</div>
+</div>
+<script>
+// ---- 1: vaktinde petal
+const V=['Sabah','Öğle','İkindi','Akşam','Yatsı'];let on=[true,false,true,true,false],t='yatsi';
+const reach={ogle:2,aksam:4,yatsi:5};
+function vk(){document.getElementById('clock').textContent={ogle:'15:00',aksam:'18:30',yatsi:'yatsı kılındıktan sonra'}[t];
+ const passed=reach[t],n=on.slice(0,passed).filter(x=>x).length,yatsiDone=t==='yatsi';
+ const opts=[
+  ['V1 · Hedef 3','Yaprak 3 vaktinde kılınınca tam açılır, gün içinde ne zaman olursa. "3/3" yazar; 4. ve 5. vakit fazlası sayılır.',Math.min(n/3,1),`${Math.min(n,3)}/3${n>3?' · +'+(n-3):''}`,n>=3?'<b>Tam açık</b>: bugün 3 vakti vaktinde kıldın.':`${3-n} vakit daha vaktinde kılınca tam açılır.`],
+  ['V2 · Yatsıda değerlendir','Gün boyu bugünkü gibi 5 üzerinden dolar. Yatsı işaretlenince 3 ve üstüyse yaprak tam açılır.',yatsiDone&&n>=3?1:n/5,`${n}/5`,yatsiDone?(n>=3?'<b>Tam açıldı</b>: yatsı kılındı, 3 ve üstü vaktinde.':'Yatsı kılındı; 3 olmadığı için kısmi kalır.'):'Yatsı işaretlenince değerlendirilir.'],
+  ['V3 · Hedefi sen seç','Ayarlar › Hedefler\'de "Günde kaç vakit vaktinde" (1–5, varsayılan 3). Yaprak o sayıya ulaşınca tam açılır; V1 gibi işler.',Math.min(n/3,1),`${Math.min(n,3)}/3`,'Hedef 3 (Ayarlar\'dan 1–5 seçilebilir).'],
+ ];
+ document.getElementById('vk').innerHTML=opts.map(([h,w,p,lab,note])=>`<div class="col"><b class="l">${h}</b><span class="w">${w}</span><div class="ph">
+  <div style="font:600 10px Inter;letter-spacing:.14em;color:var(--muted)">VAKTİNDE YAPRAĞI</div>
+  <div class="pet"><div class="bar"><i style="width:${p*100}%"></i></div><span class="v">${lab}</span></div>
+  <div class="note">${note}</div>
+  <div class="dots">${V.map((v,i)=>`<span><i class="${on[i]&&i<passed?'on':''}" data-i="${i}" style="${i>=passed?'opacity:.3':''}"></i>${v}</span>`).join('')}</div></div></div>`).join('');
+ document.querySelectorAll('#vk i[data-i]').forEach(e=>e.onclick=()=>{const i=+e.dataset.i;if(i<passed){on[i]=!on[i];vk();}});
+ document.querySelectorAll('[data-t]').forEach(b=>{b.className=b.dataset.t===t?'on':'';b.onclick=()=>{t=b.dataset.t;vk();}});}
+vk();
+// ---- 2: nafile
+const EK={Sabah:[['İşrak','08:03'],['Kuşluk','08:03']],Öğle:[],İkindi:[],Akşam:[['Evvâbin','17:48']],Yatsı:[['Teheccüd','02:10']]};
+const SN={Sabah:['Sünnet','Farz'],Öğle:['İlk sünnet','Farz','Son sünnet'],İkindi:['Sünnet','Farz'],Akşam:['Farz','Sünnet'],Yatsı:['İlk sünnet','Farz','Son sünnet','Vitir']};
+const TM={Sabah:'05:53',Öğle:'12:37',İkindi:'15:21',Akşam:'17:48',Yatsı:'19:08'};
+let ek={'Kuşluk':true},sn={'Sabah|Sünnet':true,'Öğle|İlk sünnet':true};
+function rows(withSn){return Object.keys(EK).map(v=>`<div class="row"><span class="bead"></span><span class="n">${v}</span><span class="t">${TM[v]}</span></div>
+ ${withSn?`<div class="sn">${SN[v].map(s=>s==='Farz'?`<span class="f">Farz ✓</span>`:`<span class="${sn[v+'|'+s]?'on':''}" data-s="${v}|${s}">${s}${sn[v+'|'+s]?' ✓':''}</span>`).join('')}</div>`:''}
+ ${EK[v].length?`<div class="chips">${EK[v].map(([n,t])=>`<span class="chip ${ek[n]?'on':''}" data-e="${n}">${ek[n]?'✓ ':''}${n}<b>${t}</b></span>`).join('')}</div>`:''}`).join('');}
+function nf(){const ekN=Object.values(ek).filter(Boolean).length,snN=Object.values(sn).filter(Boolean).length;
+ n1.innerHTML=`<div style="font:600 10px Inter;letter-spacing:.14em;color:var(--muted)">BUGÜN</div>${rows(false)}<div class="note">Bugün <b>${ekN}</b> nafile.</div>`;
+ n2.innerHTML=`<div style="font:600 10px Inter;letter-spacing:.14em;color:var(--muted)">BUGÜN</div>${rows(true)}
+  <div class="card"><h4>Öğle kılındı</h4><p>Sünnetlerini de kıldın mı?</p><div class="sn" style="padding-left:0;margin-top:6px"><span class="${sn['Öğle|İlk sünnet']?'on':''}" data-s="Öğle|İlk sünnet">İlk sünnet</span><span class="${sn['Öğle|Son sünnet']?'on':''}" data-s="Öğle|Son sünnet">Son sünnet</span></div></div>
+  <div class="note">Bugün <b>${snN}</b> sünnet, <b>${ekN}</b> nafile.</div>`;
+ n3.innerHTML=`<div style="font:600 10px Inter;letter-spacing:.14em;color:var(--muted)">DEFTER › NAFİLE</div>
+  <div class="cnt"><div><b>${snN+ekN+23}</b><span>bu hafta toplam</span></div><div><b>${(snN+ekN+23)*2+6}</b><span>rekât (yaklaşık)</span></div><div><b>Kuşluk</b><span>en çok kılınan</span></div><div><b>5 gün</b><span>teheccüd serisi</span></div></div>
+  <div class="week">${[4,6,3,7,5,8,snN+ekN].map(h=>`<i style="height:${h*7}px"></i>`).join('')}</div>
+  <div style="display:flex;justify-content:space-between;font:500 10px Inter;color:var(--muted);margin-top:4px"><span>Pzt</span><span>Bugün</span></div>
+  <span class="chip" style="display:inline-block;margin-top:12px" id="plus">+ nafile (tahiyyetü'l-mescid, hâcet, tövbe…)</span>`;
+ document.querySelectorAll('[data-e]').forEach(e=>e.onclick=()=>{ek[e.dataset.e]=!ek[e.dataset.e];nf();});
+ document.querySelectorAll('[data-s]').forEach(e=>e.onclick=()=>{sn[e.dataset.s]=!sn[e.dataset.s];nf();});
+ const pl=document.getElementById('plus');if(pl)pl.onclick=()=>{ek['Diğer'+Math.random()]=true;nf();};}
+nf();
+</script>
+</body>
+</html>
