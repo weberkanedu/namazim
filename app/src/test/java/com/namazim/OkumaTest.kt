@@ -25,6 +25,25 @@ class OkumaTest {
         assertEquals(2, planLead(0, 100, from, until, today, 52))
         assertEquals(-1, planLead(0, 100, from, until, today, 15))
         assertEquals(0, planLead(0, 100, from, until, today, 35))
+        // morning, on yesterday's line, today's pages not read yet: on plan, not a day behind
+        assertEquals(0, planLead(0, 100, from, until, today, 20))
+        assertEquals(0, planLead(0, 100, from, until, today, 25))
+    }
+
+    @Test fun paceCountsFromTheFirstDayRead() {
+        // started 3 days ago, 10 pages a day: 10/day, not 30/14
+        assertEquals(10f, readingPace(listOf(10, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)), 1e-6f)
+        // nothing today yet still counts today: 20 over 3 days
+        assertEquals(20f / 3, readingPace(listOf(0, 10, 10, 0)), 1e-6f)
+        assertEquals(0f, readingPace(List(14) { 0 }), 0f)
+    }
+
+    @Test fun finishDateIncludesToday() {
+        // 30 pages left at 10 a day: today, tomorrow, the day after
+        assertEquals(today.plusDays(2), finishDate(today, 30, 10f))
+        assertEquals(today, finishDate(today, 5, 10f))
+        assertEquals(null, finishDate(today, 0, 10f))
+        assertEquals(null, finishDate(today, 30, 0f))
     }
 
     @Test fun undatedKuranUsesTheDailyGoalAndUndatedBookHasNone() {

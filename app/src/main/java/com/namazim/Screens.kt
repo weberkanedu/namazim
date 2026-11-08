@@ -677,14 +677,31 @@ fun todayShare(total: Int, pageNow: Int, readToday: Int, today: LocalDate, until
     return ((left + days - 1) / days).toInt()
 }
 
-/** Days ahead (+) or behind (−) of an even plan from page [startPage] on [from] to [total] on [until], counted at the end of today. */
+/** Days ahead (+) or behind (−) of an even plan from page [startPage] on [from] to [total] on [until]. Behind only when
+ *  short of yesterday's line (today's pages may still come), ahead only past today's line: in between it is "planda". */
 fun planLead(startPage: Int, total: Int, from: LocalDate, until: LocalDate, today: LocalDate, pageNow: Int): Int {
     val span = (until.toEpochDay() - from.toEpochDay() + 1).coerceAtLeast(1)
     val perDay = (total - startPage).toFloat() / span
     if (perDay <= 0f) return 0
-    val expected = startPage + perDay * (today.toEpochDay() - from.toEpochDay() + 1).coerceIn(0, span)
-    return ((pageNow - expected) / perDay).toInt()   // toward zero: half a day is not a day yet
+    val daysIn = today.toEpochDay() - from.toEpochDay()
+    val byYesterday = startPage + perDay * daysIn.coerceIn(0, span)
+    val byToday = startPage + perDay * (daysIn + 1).coerceIn(0, span)
+    return when {
+        pageNow < byYesterday -> -kotlin.math.ceil((byYesterday - pageNow) / perDay).toInt()
+        else -> ((pageNow - byToday) / perDay).toInt().coerceAtLeast(0)
+    }
 }
+
+/** Pages a day over the last days ([newestFirst], today first), counted from the first day with pages in that window,
+ *  so a reading begun three days ago is not divided by fourteen. */
+fun readingPace(newestFirst: List<Int>): Float {
+    val oldest = newestFirst.indexOfLast { it > 0 }
+    return if (oldest < 0) 0f else newestFirst.sum().toFloat() / (oldest + 1)
+}
+
+/** When [left] pages end at [pace] a day; null when there is no pace yet or nothing is left. */
+fun finishDate(today: LocalDate, left: Int, pace: Float): LocalDate? =
+    if (pace < .05f || left <= 0) null else today.plusDays(kotlin.math.ceil(left / pace).toLong() - 1)
 
 /** Today's share of one reading: the plan's share when dated, the fixed daily goal for an undated Kur'an, nothing for an undated book. */
 fun readingShare(r: Reading, readToday: Int, today: LocalDate, readGoal: Int): Int = when {
@@ -816,8 +833,8 @@ fun OkumaScreen() {
                 color = Pal.Muted, fontSize = Type.body2,
             )
             // pace of the last 14 days for this reading → when it would end
-            val pace = (0 until 14).sumOf { store.readLogBy(todayDate.minusDays(it.toLong()))[r.id] ?: 0 } / 14f
-            val finish = if (pace < .05f || r.page >= r.total) null else todayDate.plusDays(kotlin.math.ceil((r.total - r.page) / pace).toLong())
+            val pace = readingPace((0 until 14).map { store.readLogBy(todayDate.minusDays(it.toLong()))[r.id] ?: 0 })
+            val finish = finishDate(todayDate, r.total - r.page, pace)
             Row(Modifier.padding(top = Space.m).fillMaxWidth().height(IntrinsicSize.Min)) {
                 BigStat(if (share > 0) "$read/$share" else "$read", "bugün")
                 Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
@@ -914,15 +931,16 @@ private fun Spine(r: Reading, read: Int, share: Int, hatim: Int, selected: Boole
             Text(if (r.quran) "Kur'an-ı Kerîm" else r.title, style = NumStyle, fontSize = 17.sp, lineHeight = 19.sp, color = Pal.Text, maxLines = 3)
             if (r.quran && r.title != "Kur'an-ı Kerîm") Text(r.title, color = Pal.Muted, fontSize = Type.micro, maxLines = 1)
             Spacer(Modifier.weight(1f))
-            if (share > 0) Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("$read", style = NumStyle, fontSize = 18.sp, color = Pal.Text)
-                Text("/$share", Modifier.weight(1f), color = Pal.Muted, fontSize = Type.micro)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("%${(if (r.total == 0) 0 else r.page * 100 / r.total)}", Modifier.weight(1f), style = NumStyle, fontSize = 20.sp, color = Pal.Text)
+                if (share > 0) {
                 val ok = read >= share
                 Box(
                     Modifier.size(32.dp).clip(CircleShape).then(if (ok) Modifier.background(Pal.Gold) else Modifier.border(1.5.dp, Pal.Gold, CircleShape))
                         .clickable(enabled = !ok, onClick = onTick).semantics { contentDescription = "${r.title}: bugünkünü tamamla" },
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Default.Check, null, tint = if (ok) Pal.Ground else Pal.Gold, modifier = Modifier.size(16.dp)) }
+                }
             }
         }
     }
@@ -1201,8 +1219,9 @@ private fun MuhasebeOzet() {
     }
 
     // okuma hızı → mushaf ne zaman biter
-    val perDay = (0 until 7).sumOf { log[today.minusDays(it.toLong()).toString()] ?: 0 } / 7f
-    val eta = if (perDay <= 0.05f || page == 0) null else today.plusDays(((604 - page) / perDay).toLong().coerceAtLeast(1))
+    // only the Kur'an's own pages: books on the shelf do not move the mushaf
+    val perDay = readingPace((0 until 14).map { store.readLogBy(today.minusDays(it.toLong()))["quran"] ?: 0 })
+    val eta = if (page == 0) null else finishDate(today, QURAN_PAGES - page, perDay)
     val monthsLeft = if (store.kazaRate <= 0 || totalKaza == 0) null else totalKaza / (store.kazaRate * 30f)
 
     var shown by remember { mutableStateOf(false) }
