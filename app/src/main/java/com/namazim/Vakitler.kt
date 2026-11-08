@@ -522,13 +522,7 @@ private fun AraSerit(gunes: Long, ogle: Long, ex: List<Extra>, now: Long, modifi
             Modifier.fillMaxWidth().padding(top = Space.xs), color = if (inKer != null) Pal.Warn else Pal.Gold,
             fontSize = Type.label, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center,
         )
-        // when the nafile of the morning may be prayed, from the app's own ek vakitler (Prayers.extras)
-        val israk = ex.firstOrNull { it.name == "İşrak" }
-        val kusluk = ex.firstOrNull { it.name.startsWith("Kuşluk") }
-        if (israk != null && kusluk?.end != null) Text(
-            "İşrak ${hm(israk.start)} sonrası · Kuşluk ${hm(kusluk.start)}–${hm(kusluk.end)}",
-            Modifier.fillMaxWidth(), color = Pal.Muted, fontSize = Type.micro, textAlign = TextAlign.Center,
-        )
+
     }
 }
 
