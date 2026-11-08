@@ -32,7 +32,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 // Zikirhane design Z1 "Nur" (design/design-system/zikirhane-secenekler.html): the zikir in Arabic with its meaning,
-// a gold arc that fills once to the target (no turns), a ripple and rising light motes where the screen is touched,
+// a gold arc that fills once to the target (no turns), light motes rising where the screen is touched,
 // and a glow that grows with the progress.
 
 /** How far the ring is filled, 0..1: once to the target; the free counter (no target) turns every 33 like a tesbih. */
@@ -114,7 +114,7 @@ fun NurRing(count: Int, target: Int?, glow: Float, modifier: Modifier) {
     }
 }
 
-/** A touch on the counter: a ring spreading from [at] and six motes of light rising. Times in ms of [frameClock]. */
+/** A touch on the counter: six motes of light rising from [at]. Times in ms of [frameClock]. */
 class Burst(val at: Offset, val t0: Long, val drift: List<Float>)
 
 fun frameClock() = System.nanoTime() / 1_000_000
@@ -132,8 +132,6 @@ fun NurBursts(bursts: SnapshotStateList<Burst>, modifier: Modifier) {
     Canvas(modifier) {
         bursts.forEach { b ->
             val age = (now - b.t0).coerceAtLeast(0).toFloat()
-            val ring = (age / 800f).coerceAtMost(1f)
-            if (ring < 1f) drawCircle(Pal.Gold.copy(alpha = .7f * (1 - ring)), 110.dp.toPx() * ring, b.at, style = Stroke(2.dp.toPx()))
             val m = (age / 1400f).coerceAtMost(1f)
             val rise = 1 - (1 - m) * (1 - m)
             b.drift.forEachIndexed { i, dx ->

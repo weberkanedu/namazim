@@ -30,10 +30,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -107,14 +105,14 @@ fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
             IconButton(onClick = { editing = true }) { Icon(Icons.Default.Edit, "Zikirleri düzenle", tint = Pal.Muted) }
         }
         PageTabs(listOf("Zikirhane", "Takip"), section) { section = it }
-        if (section == 0) { Zikirhane(store, zikirs, pick) { pick = null }; Spacer(Modifier.height(LocalDockPad.current)) }
+        if (section == 0) { Zikirhane(store, zikirs, pick); Spacer(Modifier.height(LocalDockPad.current)) }
         else ZikirTakip(store, zikirs) { pick = it; section = 0 }
     }
     if (editing) ZikirSheet(store, all) { editing = false }   // the editor always shows the whole list
 }
 
 @Composable
-private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: String?, onPicked: () -> Unit) {
+private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: String?) {
     val ctx = LocalContext.current
     val vibrator = remember { ctx.getSystemService(VibratorManager::class.java)?.defaultVibrator }
     val scope = rememberCoroutineScope()
@@ -136,12 +134,8 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: Strin
         scope.launch { glow.snapTo(1f); glow.animateTo(0f, tween(900)) }
     }
 
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = Space.xl, vertical = Space.m),
-        horizontalArrangement = Arrangement.spacedBy(Space.s),
-    ) {
-        itemsIndexed(items) { idx, it -> ZikirChip(it, counts[it.key] ?: 0, idx == i) { sel = idx; onPicked() } }
-    }
+    // no chips: a zikir is picked in Takip, and reaching a target moves on to the next one
+    Spacer(Modifier.height(Space.m))
     // the whole body is the tap target, so counting works without looking
     Box(
         Modifier.weight(1f).fillMaxWidth()
@@ -338,23 +332,6 @@ private fun TakipCell(cell: ZikirCell) {
             cell.text.isNotEmpty() -> Text(cell.text, style = NumStyle, color = Pal.Text, fontSize = Type.body)
             else -> Text("×", color = Pal.Muted.copy(alpha = .3f), fontSize = Type.body)
         }
-    }
-}
-
-@Composable
-private fun ZikirChip(z: Counter, count: Int, on: Boolean, onClick: () -> Unit) {
-    val t = z.target
-    val done = t != null && count >= t
-    Row(
-        Modifier.height(36.dp).clip(RoundedCornerShape(Radius.s))
-            .background(if (on) Pal.Track else Color.Transparent)
-            .border(1.dp, if (on) Color.Transparent else Pal.Border, RoundedCornerShape(Radius.s))
-            .clickable(onClick = onClick).padding(horizontal = Space.m),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (done) { Icon(Icons.Default.Check, null, tint = Pal.Gold, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(Space.xs)) }
-        Text(if (t == null) "${z.label} · $count" else "${z.label} · ${count.coerceAtMost(t)}/$t", color = if (on) Pal.Gold else Pal.Muted,
-            fontSize = Type.body2, fontWeight = FontWeight.Medium)
     }
 }
 

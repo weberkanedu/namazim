@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zikir Arapçası</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+body{font-family:var(--font-body);background:var(--surface-container-lowest);color:var(--on-surface);padding:56px 24px 96px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1200px;width:100%}
+.kicker{font:600 11px var(--font-body);letter-spacing:.16em;text-transform:uppercase;color:var(--primary-ink)}
+h1{font:600 46px/1.05 var(--font-display);margin-top:6px}
+.lede{color:var(--on-surface-variant);font-size:15px;line-height:1.65;max-width:860px;margin-top:12px}.lede b{color:var(--on-surface)}
+.three{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;align-items:flex-start;margin-top:28px}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px;width:340px}
+.col .label{font:600 22px var(--font-display);color:var(--primary-ink)}
+.col .why{font-size:13px;color:var(--on-surface-variant);line-height:1.55;text-align:center;min-height:86px}
+.device{width:340px;height:700px;background:#0B1322;border:1px solid var(--outline);position:relative;overflow:hidden}
+.prev{height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 60%,rgb(232 190 116 / .08),transparent 65%)}
+.prev .k{font:600 10px var(--font-body);letter-spacing:.16em;color:var(--subtle);margin-bottom:10px}
+.ar{font-size:32px;line-height:1.35;color:#F2D79B;text-shadow:0 0 18px rgb(232 190 116 / .5);direction:rtl;text-align:center;min-height:0}
+.tr{font:600 22px var(--font-display)}
+.mean{font:400 12px var(--font-body);color:var(--on-surface-variant);text-align:center;max-width:280px}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:220px;background:var(--surface-container-high);border-radius:26px 26px 0 0;padding:14px 18px}
+.sheet .grab{width:32px;height:4px;border-radius:2px;background:var(--outline);margin:0 auto 12px}
+.sheet h3{font:600 22px var(--font-display);margin-bottom:10px}
+.f{display:block;width:100%;margin-top:10px;border:1px solid var(--outline);border-radius:10px;background:transparent;color:var(--on-surface);font:400 14px var(--font-body);padding:12px}
+.f:focus{outline:none;border-color:#E8BE74}
+.f.arf{direction:rtl;font-size:20px}
+.lab{font:500 11px var(--font-body);color:var(--on-surface-variant);margin-top:12px}
+.sug{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.sug div{display:flex;align-items:center;gap:10px;border:1px solid rgb(232 190 116 / .45);border-radius:12px;padding:8px 10px;cursor:pointer;background:rgb(232 190 116 / .06)}
+.sug div:hover{background:rgb(232 190 116 / .14)}
+.sug b{font:500 13px var(--font-body);flex:1}.sug i{font-style:normal;font-size:20px;color:#F2D79B;direction:rtl}
+.sug small{display:block;font:400 11px var(--font-body);color:var(--on-surface-variant)}
+.none{font:400 12px var(--font-body);color:var(--subtle);margin-top:8px}
+.more{font:500 12px var(--font-body);color:var(--primary-ink);margin-top:10px;cursor:pointer}
+.btn{margin-top:14px;width:100%}
+.legend{max-width:1000px;margin-top:32px;font-size:13px;color:var(--on-surface-variant);line-height:1.7;border-top:1px solid var(--outline-variant);padding-top:18px}.legend b{color:var(--on-surface)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Zikir · yeni zikir · Arapça yazı · üç yön</div>
+  <h1>Kendi zikrinin Arapçası</h1>
+  <p class="lede">Kalemle yeni zikir eklerken Arapça yazı ve anlam nereden gelecek? Her karede üstte <b>Zikirhane'de nasıl görüneceği</b>, altta <b>ekleme sayfası</b> var. Ad alanına yaz ve dene: <b>ya rahim</b>, <b>ya vedud</b>, <b>hasbunallah</b>, <b>salavat</b>, ya da listede olmayan bir şey.</p>
+  <div class="three">
+    <div class="col"><div class="label">A · Elle yaz</div>
+      <div class="why">Ad ve hedefin altında iki isteğe bağlı alan: "Arapça yazı" ve "Anlamı". Kişi Arapçayı bir yerden kopyalayıp yapıştırır ya da klavyeyle yazar. Boş bırakırsa yalnızca adı görünür.</div>
+      <div class="device" id="a"></div></div>
+    <div class="col"><div class="label">B · Hazır listeden</div>
+      <div class="why">Ad yazılırken uygulamanın içindeki listeden eşleşenler çıkar (Esmâ-ül Hüsnâ'nın 99 ismi ve bilinen zikirler). Birine dokununca Arapçası ve anlamı gelir. Listede yoksa yalnızca adı görünür.</div>
+      <div class="device" id="b"></div></div>
+    <div class="col"><div class="label">C · Önce liste, yoksa elle</div>
+      <div class="why">B gibi öneri çıkar. Aradığı listede yoksa "Arapçasını kendin yaz" bağlantısıyla A'daki iki alan açılır. Hem kolay hem eksiksiz.</div>
+      <div class="device" id="c"></div></div>
+  </div>
+  <div class="legend"><b>Öneri:</b> C. Çoğu kişi Esmâ'dan ya da bilinen zikirlerden seçer; doğru Arapçası tek dokunuşla gelir, yazım hatası olmaz. Listede olmayan özel bir zikirde kişi kendi yazar.<br>
+  <b>Liste:</b> 99 isim ve 20 kadar bilinen zikir uygulamanın içinde durur (birkaç KB), internet gerekmez. Arapça metinleri eklerken tek tek kontrol edeceğim.<br>
+  <b>Mevcut zikirler:</b> Bugünkü gibi, bilinen bir adsa Arapçası zaten kendiliğinden çıkar. Kalem sayfasında bir zikre dokunup Arapçasını sonradan ekleme ya da düzeltme de olur.</div>
+</div>
+<script>
+// a few entries of the built-in list, enough to try the idea
+const L=[['Yâ Rahmân','يَا رَحْمٰنُ','Ey rahmeti her şeyi kuşatan'],['Yâ Rahîm','يَا رَحِيمُ','Ey merhametli olan'],['Yâ Vedûd','يَا وَدُودُ','Ey kullarını seven ve sevilen'],
+['Yâ Latîf','يَا لَطِيفُ','Ey lütfu sonsuz olan'],['Yâ Fettâh','يَا فَتَّاحُ','Ey kapıları açan'],['Yâ Rezzâk','يَا رَزَّاقُ','Ey rızık veren'],['Yâ Hayyu yâ Kayyûm','يَا حَيُّ يَا قَيُّومُ','Ey diri olan, her şeyi ayakta tutan'],
+['Hasbünallah','حَسْبُنَا اللّٰهُ وَنِعْمَ الْوَكِيلُ','Allah bize yeter, O ne güzel vekildir'],['Salavat','اَللّٰهُمَّ صَلِّ عَلٰى مُحَمَّدٍ','Allah\'ım, Muhammed\'e salât eyle'],['Estağfirullah','أَسْتَغْفِرُ اللّٰهَ','Allah\'tan bağışlanma dilerim'],
+['Lâ ilâhe illallah','لَا إِلٰهَ إِلَّا اللّٰهُ','Allah\'tan başka ilah yoktur'],['Sübhânallahi ve bihamdihî','سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ','Allah\'ı hamdiyle tesbih ederim']];
+const norm=s=>s.toLocaleLowerCase('tr').replace(/â/g,'a').replace(/î/g,'i').replace(/û/g,'u').replace(/[^a-zçğıöşü]/g,'');
+const st={a:{n:'',ar:'',m:'',open:true},b:{n:'',ar:'',m:''},c:{n:'',ar:'',m:'',open:false}};
+function prev(s){return `<div class="prev"><div class="k">ZİKİRHANE'DE</div>${s.ar?`<div class="ar">${s.ar}</div>`:''}<div class="tr">${s.n||'Zikrin adı'}</div>${s.m?`<div class="mean">${s.m}</div>`:''}</div>`;}
+function sugs(id,s){const q=norm(s.n);if(q.length<2)return '';const hits=L.filter(([n])=>norm(n).includes(q)).slice(0,3);
+ if(!hits.length)return `<div class="none">Listede bulunamadı${id==='b'?'; yalnızca adı görünecek.':'.'}</div>`;
+ return `<div class="sug">${hits.map(([n,ar,m],i)=>`<div data-k="${L.indexOf(hits[i])}"><b>${n}<small>${m}</small></b><i>${ar}</i></div>`).join('')}</div>`;}
+function manual(s){return `<div class="lab">Arapça yazı (isteğe bağlı)</div><input class="f arf" data-f="ar" value="${s.ar}" placeholder="يَا ...">
+ <div class="lab">Anlamı (isteğe bağlı)</div><input class="f" data-f="m" value="${s.m}" placeholder="Kısa anlamı">`;}
+function draw(id){const s=st[id],el=document.getElementById(id);const picked=L.some(([n,ar])=>ar===s.ar&&n===s.n);
+ el.innerHTML=prev(s)+`<div class="sheet"><div class="grab"></div><h3>Zikir ekle</h3>
+ <input class="f" data-f="n" value="${s.n}" placeholder="Zikrin adı (ör. Yâ Rahîm)"><input class="f" value="100" style="width:110px">
+ ${id==='a'?manual(s):id==='b'?(picked?'':sugs(id,s)):(picked?'':sugs(id,s))+(s.open?manual(s):`<div class="more" data-more>Listede yok mu? Arapçasını kendin yaz</div>`)}
+ <span class="btn btn-filled">Ekle</span></div>`;
+ el.querySelectorAll('input[data-f]').forEach(inp=>inp.oninput=()=>{const f=inp.dataset.f;s[f]=inp.value;if(f==='n'&&id!=='a'&&!s.open){s.ar='';s.m='';}
+   const pos=inp.selectionStart;draw(id);const again=document.querySelector(`#${id} input[data-f="${f}"]`);again.focus();again.setSelectionRange(pos,pos);});
+ el.querySelectorAll('.sug div').forEach(d=>d.onclick=()=>{const [n,ar,m]=L[+d.dataset.k];Object.assign(s,{n,ar,m});draw(id);});
+ const mo=el.querySelector('[data-more]');if(mo)mo.onclick=()=>{s.open=true;draw(id);};}
+['a','b','c'].forEach(draw);
+</script>
+</body>
+</html>
