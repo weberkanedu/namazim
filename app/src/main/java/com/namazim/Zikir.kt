@@ -111,6 +111,9 @@ fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
 
 @Composable
 private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: String?) {
+    // read here, not only in ZikirScreen: with the default list (same instance every time) this call is skipped,
+    // so a tap saved the count but the screen stayed put until the tab was left (seen on a fresh install, 2026-11-08)
+    StoreRev.n.let { }
     val ctx = LocalContext.current
     val vibrator = remember { ctx.getSystemService(VibratorManager::class.java)?.defaultVibrator }
     val scope = rememberCoroutineScope()
@@ -291,6 +294,7 @@ private val CELL = 42.dp
 /** Takip: rows are the zikirs, columns the last five prayer days, today first. */
 @Composable
 private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Unit) {
+    StoreRev.n.let { } // same reason as in Zikirhane
     var library by remember { mutableStateOf(false) }
     var create by remember { mutableStateOf(false) }
     if (library) KutuphaneSheet(store, onClose = { library = false }) { library = false; create = true }
