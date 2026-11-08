@@ -18,7 +18,7 @@ fun ratio(done: Int, goal: Int): Float = if (goal <= 0) 1f else (done.toFloat() 
 
 /** A zikir on the user's own list; [name] is unique and keys the day's count. */
 /** [ar] / [mean]: Arabic and meaning picked or typed when the zikir was added; null = built-in or none. */
-data class Zikir(val name: String, val target: Int, val ar: String? = null, val mean: String? = null)
+data class Zikir(val name: String, val target: Int, val ar: String? = null, val mean: String? = null, val okunus: String? = null)
 
 /** The tesbihat the list starts with; the user may edit or empty it. */
 val DEFAULT_ZIKIRS = listOf(Zikir("Sübhânallah", 33), Zikir("Elhamdülillah", 33), Zikir("Allâhu ekber", 33))

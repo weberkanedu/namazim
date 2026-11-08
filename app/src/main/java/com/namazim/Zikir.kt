@@ -82,8 +82,6 @@ import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** The free counter (no target) buzzes every 33, one turn of a hand tesbih. Targets fill once, no turns. */
-private const val TURN = 33
 
 /** A chip in Zikirhane: the free counter (target null) or one of the user's zikirs. */
 private data class Counter(val key: String, val label: String, val target: Int?)
@@ -101,18 +99,14 @@ fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
     val all = store.zikirs
     val zikirs = dailyZikirs(all, store.tesbihatCounts)
     var section by rememberSaveable { mutableIntStateOf(SkyDebug.zSection) }
-    var editing by remember { mutableStateOf(false) }
     // a zikir picked in Takip: Zikirhane opens on it
     var pick by rememberSaveable { mutableStateOf<String?>(null) }
     Column(Modifier.fillMaxSize()) {
-        ScreenTitle("Zikir", rule = false) {
-            IconButton(onClick = { editing = true }) { Icon(Icons.Default.Edit, "Zikirleri düzenle", tint = Pal.Muted) }
-        }
+        ScreenTitle("Zikir", rule = false)
         PageTabs(listOf("Zikirhane", "Takip"), section) { section = it }
         if (section == 0) { Zikirhane(store, zikirs, pick); Spacer(Modifier.height(LocalDockPad.current)) }
         else ZikirTakip(store, zikirs) { pick = it; section = 0 }
     }
-    if (editing) ZikirSheet(store, all) { editing = false }   // the editor always shows the whole list
 }
 
 @Composable
@@ -122,11 +116,19 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: Strin
     val scope = rememberCoroutineScope()
     val glow = remember { Animatable(0f) }
     val counts = store.zikirCounts()
-    val items = listOf(Counter(FREE_ZIKIR, "Serbest", null)) + zikirs.map { Counter(it.name, it.name, it.target) }
-    // opens on the first unfinished zikir (else the first one); the free counter sits first among the chips
+    if (zikirs.isEmpty()) {
+        Column(Modifier.weight(1f).fillMaxWidth().padding(Space.xl), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text("Zikir listen boş", style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+            Text("Takip › Kütüphaneden ekle ile bir zikir seç ya da kendin oluştur.", color = Pal.Muted, fontSize = Type.body2,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        }
+        return
+    }
+    val items = zikirs.map { Counter(it.name, it.name, it.target) }
+    // opens on the zikir picked in Takip, else the first unfinished one (else the first)
     var sel by rememberSaveable(pick) {
         mutableIntStateOf(pick?.let { k -> items.indexOfFirst { it.key == k }.takeIf { it >= 0 } }
-            ?: if (zikirs.isEmpty()) 0 else zikirs.indexOfFirst { (counts[it.name] ?: 0) < it.target }.coerceAtLeast(0) + 1)
+            ?: zikirs.indexOfFirst { (counts[it.name] ?: 0) < it.target }.coerceAtLeast(0))
     }
     val bursts = remember { mutableStateListOf<Burst>() }
     var tapAt by remember { mutableStateOf(Offset.Zero) }
@@ -152,11 +154,10 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: Strin
                 store.addZikir(z.key, 1)
                 val n = c + 1
                 when {
-                    z.target == null && n % TURN == 0 -> buzz(160)   // one full turn of the tesbih
                     n == z.target -> {
                         buzz(320)
                         // move on once the glow has been seen; past the target the same chip keeps counting extras
-                        scope.launch { delay(450); sel = nextOpenZikir(zikirs, counts + (z.key to n), i - 1) + 1 }
+                        scope.launch { delay(450); sel = nextOpenZikir(zikirs, counts + (z.key to n), i) }
                     }
                     else -> vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
                 }
@@ -164,7 +165,8 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: Strin
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            NurHead(z.label, zikirs.firstOrNull { it.name == z.key }?.let { zikirArabic(it) })
+            val own = zikirs.firstOrNull { it.name == z.key }
+            NurHead(z.label, own?.let { zikirArabic(it) }, own?.okunus)
             Spacer(Modifier.height(Space.m))
             Box(contentAlignment = Alignment.Center) {
                 NurRing(c, z.target, glow.value, Modifier.size(260.dp))
@@ -286,15 +288,17 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
 
 private val CELL = 42.dp
 
-/** Takip: rows are the zikirs (+ Serbest), columns the last five prayer days, today first. */
+/** Takip: rows are the zikirs, columns the last five prayer days, today first. */
 @Composable
 private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Unit) {
     var library by remember { mutableStateOf(false) }
-    if (library) KutuphaneSheet(store) { library = false }
+    var create by remember { mutableStateOf(false) }
+    if (library) KutuphaneSheet(store, onClose = { library = false }) { library = false; create = true }
+    if (create) ZikirSheet(store, store.zikirs) { create = false }
     val tr = Locale("tr")
     val days = (0L until 5L).map { store.prayerDay().minusDays(it) }
     val logs = days.map { store.zikirCounts(it) }
-    val rows = zikirs.map { Counter(it.name, it.name, it.target) } + Counter(FREE_ZIKIR, "Serbest", null)
+    val rows = zikirs.map { Counter(it.name, it.name, it.target) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current).padding(horizontal = Space.l, vertical = Space.m)) {
         Row(Modifier.fillMaxWidth().padding(start = Space.l, end = Space.l, bottom = Space.s), verticalAlignment = Alignment.CenterVertically) {
             Spacer(Modifier.weight(1f))
@@ -329,7 +333,7 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Un
             contentAlignment = Alignment.Center,
         ) { Text("＋  Kütüphaneden ekle", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
         Spacer(Modifier.height(Space.m))
-        Text("Zikir adına dokununca Zikirhane o zikirle açılır. Zikirhane'de saydıkça bugünün sütunu kendiliğinden dolar. Serbest zikir ve hedef sonrası ekstralar hedefe sayılmaz.",
+        Text("Zikir adına dokununca Zikirhane o zikirle açılır. Zikirhane'de saydıkça bugünün sütunu kendiliğinden dolar. Hedef sonrası ekstralar hedefe sayılmaz.",
             Modifier.padding(horizontal = Space.s), color = Pal.Muted.copy(alpha = .7f), fontSize = Type.label, lineHeight = 17.sp)
     }
 }
@@ -351,14 +355,22 @@ private fun TakipCell(cell: ZikirCell) {
 /** The built-in library: sections, search, and "Ekle" (the hadith's count becomes the target, else 33). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun KutuphaneSheet(store: Store, onClose: () -> Unit) {
+private fun KutuphaneSheet(store: Store, onClose: () -> Unit, onCreate: () -> Unit) {
     var tur by remember { mutableStateOf("Tümü") }
     var q by remember { mutableStateOf("") }
     val mine = store.zikirs
     val list = remember(tur, q) { kutuphane(tur, q) }
     ModalBottomSheet(onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
         Column(Modifier.padding(horizontal = Space.xl).fillMaxHeight(.92f)) {
-            Text("Kütüphane", style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Kütüphane", Modifier.weight(1f), style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+                // your own zikir (with Arabic, reading and meaning), and your list to edit
+                Row(Modifier.clip(CircleShape).border(1.dp, Pal.Gold.copy(alpha = .6f), CircleShape).clickable(onClick = onCreate)
+                    .padding(horizontal = Space.m, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Edit, null, tint = Pal.Gold, modifier = Modifier.size(16.dp))
+                    Text(" Oluştur", color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
+                }
+            }
             Row(Modifier.padding(top = Space.s).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 ZIKIR_TURLERI.forEach { t ->
                     val on = t == tur
@@ -402,12 +414,13 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
     // Arabic: picked from the built-in list (design C) into the two fields, or typed there by hand
     var ar by remember { mutableStateOf("") }
     var mean by remember { mutableStateOf("") }
+    var okunus by remember { mutableStateOf("") }
     var picked by remember { mutableStateOf<String?>(null) }
     val n = name.trim()
     val t = target.trim().toIntOrNull()
     val error = when {
         n.isNotEmpty() && zikirs.any { it.name.equals(n, ignoreCase = true) } -> "Bu zikir listede var"
-        n.equals("Serbest", ignoreCase = true) || n.startsWith("#") -> "Bu ad serbest sayaç için ayrıldı"
+        n.startsWith("#") -> "Ad # ile başlayamaz"
         target.isNotBlank() && (t == null || t !in 1..10_000) -> "Hedef 1 ile 10.000 arası olmalı"
         else -> null
     }
@@ -457,6 +470,8 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
                 OutlinedTextField(ar, { ar = it }, Modifier.fillMaxWidth().padding(top = Space.s), label = { Text("Arapça yazı (isteğe bağlı)") },
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 20.sp, textDirection = androidx.compose.ui.text.style.TextDirection.Rtl),
                     singleLine = true, colors = fieldColors)
+                OutlinedTextField(okunus, { okunus = it }, Modifier.fillMaxWidth().padding(top = Space.s), label = { Text("Okunuşu (isteğe bağlı)") },
+                    singleLine = true, colors = fieldColors)
                 OutlinedTextField(mean, { mean = it }, Modifier.fillMaxWidth().padding(top = Space.s), label = { Text("Anlamı (isteğe bağlı)") },
                     singleLine = true, colors = fieldColors)
             }
@@ -464,8 +479,8 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
             val ok = n.isNotEmpty() && t != null && error == null
             GoldButton("Zikir ekle", Modifier.fillMaxWidth().alpha(if (ok) 1f else .4f), Icons.Default.Add) {
                 if (ok) {
-                    store.zikirs = zikirs + Zikir(n, t!!, ar.trim().ifEmpty { null }, mean.trim().ifEmpty { null })
-                    name = ""; target = "33"; ar = ""; mean = ""; picked = null
+                    store.zikirs = zikirs + Zikir(n, t!!, ar.trim().ifEmpty { null }, mean.trim().ifEmpty { null }, okunus.trim().ifEmpty { null })
+                    name = ""; target = "33"; ar = ""; mean = ""; okunus = ""; picked = null
                 }
             }
         }

@@ -299,12 +299,12 @@ class Store(context: Context) {
             val raw = p.getString("zikirs", null) ?: return DEFAULT_ZIKIRS
             val a = JSONArray(raw)
             return (0 until a.length()).map { a.getJSONObject(it).run {
-                Zikir(getString("name"), getInt("target"), optString("ar").ifEmpty { null }, optString("mean").ifEmpty { null })
+                Zikir(getString("name"), getInt("target"), optString("ar").ifEmpty { null }, optString("mean").ifEmpty { null }, optString("okunus").ifEmpty { null })
             } }
         }
         set(v) {
             StoreRev.n++
-            val a = JSONArray(); v.forEach { a.put(JSONObject().put("name", it.name).put("target", it.target).putOpt("ar", it.ar).putOpt("mean", it.mean)) }
+            val a = JSONArray(); v.forEach { a.put(JSONObject().put("name", it.name).put("target", it.target).putOpt("ar", it.ar).putOpt("mean", it.mean).putOpt("okunus", it.okunus)) }
             p.edit().putString("zikirs", a.toString()).apply()
         }
 

@@ -235,11 +235,13 @@ fun ayetOfDay(day: LocalDate = LocalDate.now()) = ZIKIR_AYET[day.dayOfYear % ZIK
 
 /** Arabic (when known), the name, the meaning. */
 @Composable
-fun NurHead(name: String, own: Pair<String, String>? = null) {
+fun NurHead(name: String, own: Pair<String, String>? = null, okunus: String? = null) {
     val ar = own ?: zikirArabic(name)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         if (ar != null) Text(ar.first, style = TextStyle(fontSize = 32.sp, lineHeight = 44.sp, color = Color(0xFFF2D79B),
             textAlign = TextAlign.Center, shadow = Shadow(Pal.Gold.copy(alpha = .55f), blurRadius = 22f)))
+        if (!okunus.isNullOrBlank() && okunus != name)
+            Text(okunus, color = Pal.Text.copy(alpha = .8f), fontSize = Type.body2, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, textAlign = TextAlign.Center)
         Text(name, style = NumStyle, fontSize = Type.h2, color = Pal.Text, textAlign = TextAlign.Center)
         if (ar != null && ar.second.isNotBlank()) Text(ar.second, color = Pal.Muted, fontSize = Type.label, textAlign = TextAlign.Center)
     }
