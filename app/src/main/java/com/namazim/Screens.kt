@@ -1500,6 +1500,9 @@ private fun MuhasebeGidisat() {
             }
         }
 
+        // ---- Nafileler (design A, `design/design-system/nafile-takip-secenekler.html`): only while nafile takibi is on
+        if (store.nafileTakip) NafileCard(period, data.start, data.from, data.elapsed, store.nafileKeys())
+
         // ---- Namazları ne zaman kılıyoruz: yalnızca "Tümü"de (kısa dönemde ortalama yanıltır)
         if (period == 3) {
             InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.l).fillMaxWidth()) {
@@ -1548,6 +1551,82 @@ private fun MuhasebeGidisat() {
             }
         }
         Spacer(Modifier.height(Space.xl))
+    }
+}
+
+private val NAFILE_AD = listOf("İşrak" to "İşrak", "Kuşluk (duha)" to "Kuşluk", "Evvâbin" to "Evvâbin", "Teheccüd" to "Teheccüd")
+
+/** Nafileler for İstikrar's period: Hafta / Ay = a cell per day, Yıl = a bar per month, Tümü = totals and a bar per nafile.
+ *  [keys] are "prayer day|name" marks; days before [from] predate the app. */
+@Composable
+private fun NafileCard(period: Int, start: LocalDate, from: Int, elapsed: Int, keys: Set<String>) {
+    val tr = java.util.Locale("tr")
+    val days = (from until elapsed).map { start.plusDays(it.toLong()) }
+    fun did(d: LocalDate, k: String) = "$d|$k" in keys
+    val totals = NAFILE_AD.map { (k, _) -> days.count { did(it, k) } }
+    val sum = totals.sum()
+    val best = totals.indices.maxByOrNull { totals[it] }?.takeIf { totals[it] > 0 }
+    InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).fillMaxWidth()) {
+        Text(when (period) { 0 -> "NAFİLELER · BU HAFTA"; 1 -> "NAFİLELER · SON 30 GÜN"; 2 -> "NAFİLELER · ${start.year}"; else -> "NAFİLELER · TÜMÜ" },
+            color = Pal.Muted, fontSize = Type.micro, letterSpacing = .8.sp)
+        if (period == 3) {
+            // longest run of days in a row for any nafile
+            var runBest = 0; var runName = ""
+            NAFILE_AD.forEach { (k, ad) ->
+                var run = 0
+                days.forEach { d -> run = if (did(d, k)) run + 1 else 0; if (run > runBest) { runBest = run; runName = ad } }
+            }
+            Row(Modifier.padding(top = Space.s)) {
+                BigStat("$sum", "toplam")
+                BigStat(best?.let { NAFILE_AD[it].second } ?: "—", "en çok kılınan")
+                BigStat(if (runBest > 0) "$runBest gün" else "—", if (runBest > 0) "$runName serisi" else "seri")
+            }
+        }
+        NAFILE_AD.forEachIndexed { i, (k, ad) ->
+            Row(Modifier.padding(top = Space.s).height(if (period == 2) 30.dp else 22.dp), verticalAlignment = if (period == 2) Alignment.Bottom else Alignment.CenterVertically) {
+                Text(ad, Modifier.width(66.dp), color = Pal.Text, fontSize = Type.body2)
+                Row(Modifier.weight(1f).fillMaxHeight(), horizontalArrangement = Arrangement.spacedBy(if (period == 1) 1.dp else 3.dp),
+                    verticalAlignment = if (period == 2) Alignment.Bottom else Alignment.CenterVertically) {
+                    when (period) {
+                        0, 1 -> for (j in 0 until elapsed) {
+                            val d = start.plusDays(j.toLong())
+                            val on = j >= from && did(d, k)
+                            Box(Modifier.weight(1f).fillMaxHeight(if (period == 0) 1f else .8f).clip(RoundedCornerShape(if (period == 0) 5.dp else 2.dp))
+                                .background(if (on) Pal.Gold else Pal.Track.copy(alpha = if (j < from) .3f else 1f)))
+                        }
+                        2 -> {
+                            val perMonth = (1..12).map { m -> days.count { it.monthValue == m && did(it, k) } }
+                            val mx = perMonth.maxOrNull()?.coerceAtLeast(1) ?: 1
+                            perMonth.forEach { c ->
+                                Box(Modifier.weight(1f).fillMaxHeight((.12f + .88f * c / mx).coerceAtMost(1f)).clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))
+                                    .background(if (c > 0) Pal.Gold else Pal.Track))
+                            }
+                        }
+                        else -> Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Pal.Track)) {
+                            val f = if (days.isEmpty()) 0f else totals[i].toFloat() / days.size
+                            Box(Modifier.fillMaxWidth(f).fillMaxHeight().clip(CircleShape).background(Pal.Gold))
+                        }
+                    }
+                }
+                Text("${totals[i]}", Modifier.width(32.dp), color = Pal.Text, style = NumStyle, fontSize = 16.sp, textAlign = TextAlign.End)
+            }
+        }
+        // axis under the cells
+        if (period == 0) Row(Modifier.padding(start = 66.dp, end = 32.dp, top = 4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            for (j in 0 until elapsed) Text(start.plusDays(j.toLong()).dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, tr),
+                Modifier.weight(1f), color = Pal.Muted, fontSize = 9.sp, textAlign = TextAlign.Center, maxLines = 1)
+        }
+        if (period == 2) Row(Modifier.padding(start = 66.dp, end = 32.dp, top = 4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            listOf("O", "Ş", "M", "N", "M", "H", "T", "A", "E", "E", "K", "A").forEach {
+                Text(it, Modifier.weight(1f), color = Pal.Muted, fontSize = 9.sp, textAlign = TextAlign.Center)
+            }
+        }
+        Spacer(Modifier.height(Space.s))
+        Text(
+            if (sum == 0) "Bu dönemde işaretlenmiş nafile yok. Ana sayfadaki İşrak, Kuşluk, Evvâbin ve Teheccüd çiplerine dokunarak işaretlersin."
+            else "Bu dönemde $sum nafile" + (best?.let { " · en çok ${NAFILE_AD[it].second} (${totals[it]} gün)" } ?: "") + ".",
+            color = Pal.Muted, fontSize = Type.label, lineHeight = 17.sp,
+        )
     }
 }
 

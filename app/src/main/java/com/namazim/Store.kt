@@ -374,7 +374,8 @@ class Store(context: Context) {
         get() = p.getBoolean("nafileTakip", false)
         set(v) { StoreRev.n++; p.edit().putBoolean("nafileTakip", v).apply() }
     /** [key] = "prayer day|name", e.g. "2026-11-08|Teheccüd". */
-    fun nafileKilindi(key: String) = key in (p.getStringSet("nafile", emptySet()) ?: emptySet())
+    fun nafileKeys(): Set<String> = p.getStringSet("nafile", emptySet()) ?: emptySet()
+    fun nafileKilindi(key: String) = key in nafileKeys()
     fun toggleNafile(key: String) {
         val s = (p.getStringSet("nafile", emptySet()) ?: emptySet()).toMutableSet()
         if (!s.remove(key)) s.add(key)
