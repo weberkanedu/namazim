@@ -187,7 +187,7 @@ fun KurulumScreen(store: Store, startAt: Int, deneme: Boolean, onDone: (tanit: B
                                         color = if (on) Pal.Gold else Pal.Muted, fontSize = Type.body2, fontWeight = FontWeight.Medium)
                                 }
                             }
-                            Text("Vaktin son yarım saatinde sıklaşır. Hepsi Ayarlar › Hatırlatmalar'dan değişir.",
+                            Text("Vaktin son yarım saatinde sıklaşır. Hepsi Ayarlar › Bildirimler'den değişir.",
                                 Modifier.padding(top = Space.m), color = Pal.Muted, fontSize = Type.label, textAlign = TextAlign.Center)
                         }
                         7 -> {
@@ -317,7 +317,7 @@ val TUR = listOf(
     TurAdim(2, "plan", "Plan ve bitiş tarihi", "Bitirmek istediğin tarihi koy; günlük payın hesaplanır. Öndeysen ya da geride kaldıysan burada söyler."),
     TurAdim(3, "deftersekme", "Defter", "Özet: günün gülü. İstikrar: hafta, ay, yıl ve tüm zamanlar. Kaza: borcun ve gün gün eda."),
     TurAdim(3, "gul3", "Günün gülü", "Beş yaprak: Namaz, Vaktinde, Sayfa, Kaza, Zikir. Gün boyunca yaptıkça yapraklar açılır."),
-    TurAdim(0, null, "Hepsi bu kadar", "Ayarlar'da \"Tanıtımı tekrar göster\" ile istediğin zaman yeniden bakabilirsin. Allah kabul etsin."),
+    TurAdim(0, null, "Hepsi bu kadar", "Ayarlar › Yardım'daki \"Tanıtımı tekrar göster\" ile istediğin zaman yeniden bakabilirsin. Allah kabul etsin."),
 )
 
 /** The tour's state: the step on screen (-1 = off) and where each tagged element is on the screen. */

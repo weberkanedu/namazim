@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -149,16 +150,18 @@ fun AyarlarScreen(onBack: () -> Unit) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = Pal.Text) }
         })
         key(v) {
+            // design C (design/design-system/ayarlar-duzen-secenekler.html): what is about you on a card, the topics as tiles
+            ProfilKart(store, locating) { open = "sen" }
             val prep = if (store.prepOffsets.isEmpty()) "Vakit öncesi kapalı" else store.prepOffsets.sortedDescending().joinToString("·") + " dk önce"
             val tiles = listOf(
-                Triple("hatirlatma", Icons.Default.Notifications, "Hatırlatmalar" to "$prep · her ${store.nagEvery} dk \"Kıldın mı?\""),
-                Triple("ses", Icons.Default.PlayArrow, "Ses" to Reminders.soundLabel(store.notifSound)),
-                Triple("hedef", Icons.Default.Star, "Hedefler" to "Günde ${store.readGoal} sayfa · ${store.kazaRate} kaza"),
-                Triple("konum", Icons.Default.Place, "Konum" to (if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Belirlenmedi" })),
+                Triple("hatirlatma", Icons.Default.Notifications, "Bildirimler" to "$prep · her ${store.nagEvery} dk · ${Reminders.soundLabel(store.notifSound)}"),
+                Triple("hedef", Icons.Default.Star, "Hedefler" to "Günde ${store.readGoal} sayfa · ${store.kazaRate} vakit kaza"),
+                Triple("ibadet", Icons.Default.Favorite, "İbadet takibi" to
+                    "Tesbihat ${if (store.askTesbihat) "açık" else "kapalı"} · nafile ${if (store.nafileTakip) "açık" else "kapalı"}"),
                 Triple("izin", if (missing > 0) Icons.Default.Warning else Icons.Default.Lock,
                     "İzinler" to (if (missing > 0) "$missing eksik · düzelt" else "Hepsi açık")),
                 Triple("veri", Icons.Default.Share, "Veri" to lastText),
-                Triple("geri", Icons.Default.Email, "Geri bildirim" to "Hata, istek ya da fikir gönder"),
+                Triple("yardim", Icons.Default.Info, "Yardım" to "Tanıtım · geri bildirim"),
             )
             Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 tiles.chunked(2).forEach { pair ->
@@ -169,9 +172,6 @@ fun AyarlarScreen(onBack: () -> Unit) {
                     }
                 }
             }
-        }
-        TextButton(onClick = { Tur.adim = 0; onBack() }, Modifier.fillMaxWidth().padding(top = Space.m)) {
-            Text("Tanıtımı tekrar göster", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
         }
         Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.fillMaxWidth().padding(horizontal = Space.xl, vertical = Space.m), color = Pal.Muted,
             fontSize = Type.label, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
@@ -190,7 +190,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
     }
     open?.let { id ->
         SettingSheet(
-            when (id) { "hatirlatma" -> "Hatırlatmalar"; "ses" -> "Bildirim sesi"; "hedef" -> "Hedefler"; "konum" -> "Konum"; "izin" -> "Telefon izinleri"; "geri" -> "Geri bildirim"; else -> "Veri" },
+            when (id) { "sen" -> "Sen"; "hatirlatma" -> "Bildirimler"; "hedef" -> "Hedefler"; "ibadet" -> "İbadet takibi"; "izin" -> "Telefon izinleri"; "yardim" -> "Yardım"; else -> "Veri" },
             onClose = { open = null },
         ) {
             key(v) {
@@ -204,8 +204,8 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         SwitchRow("Vaktin son yarım saatinde 5 dakikada bir", store.nagBurst) { store.nagBurst = it; changed() }
                         ValueRow("Ertele süresi", "${store.snoozeMin} dk") { openDialog("snooze", "${store.snoozeMin}") }
                         GhostButton("Deneme bildirimi gönder", Modifier.fillMaxWidth(), color = Pal.Gold) { Reminders.test(ctx) }
-                    }
-                    "ses" -> Reminders.SOUNDS.forEach { (sid, spec) ->
+                        Text("Bildirim sesi", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
+                        Reminders.SOUNDS.forEach { (sid, spec) ->
                         val on = store.notifSound == sid
                         Row(Modifier.fillMaxWidth().heightIn(min = TouchMin).clip(RoundedCornerShape(Radius.s)).clickable {
                             store.notifSound = sid; Reminders.createChannels(ctx); v++; playTone(ctx, sid)
@@ -214,10 +214,13 @@ fun AyarlarScreen(onBack: () -> Unit) {
                                 fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
                             if (on) Icon(Icons.Default.Check, "seçili", tint = Pal.Gold, modifier = Modifier.size(18.dp))
                         }
+                        }
                     }
                     "hedef" -> {
                         ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
-                        ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
+                        ValueRow("Günde kılınacak kaza", "${store.kazaRate} vakit") { openDialog("kaza", "${store.kazaRate}") }
+                    }
+                    "sen" -> {
                         ValueRow("Cinsiyet", if (store.kadin) "Kadın" else "Erkek") { store.kadin = !store.kadin; changed() }
                         if (store.kadin) {
                             SwitchRow("Özel gün düğmesi ana sayfada görünsün", !store.ozelGunGizli) { store.ozelGunGizli = !it; changed() }
@@ -238,6 +241,17 @@ fun AyarlarScreen(onBack: () -> Unit) {
                             else "Şâfiî: her vakitte vaktin başı faziletli.",
                             color = Pal.Muted, fontSize = Type.body2,
                         )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Konum", color = Pal.Text, fontSize = Type.body)
+                                Text(if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Konum belirlenmedi" }, color = Pal.Gold, fontSize = Type.body, fontWeight = FontWeight.SemiBold)
+                            }
+                            TextButton(onClick = { askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }) {
+                                Text("Güncelle", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                    "ibadet" -> {
                         SwitchRow("Nafileleri takip et (işrak, kuşluk, evvâbin, teheccüd)", store.nafileTakip) { store.nafileTakip = it; changed() }
                         Text("Açıkken ana sayfadaki bu çiplere dokunarak kıldığını işaretlersin. Kazaya girmez, hatırlatma gelmez.", color = Pal.Muted, fontSize = Type.label)
                         Text("Namaz sonrası tesbihat", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
@@ -245,15 +259,9 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         SwitchRow("Tesbihat günlük zikrime sayılsın", store.tesbihatCounts) { store.tesbihatCounts = it; changed() }
                         Text(
                             if (store.tesbihatCounts) "Açık: namazdan sonra çektiğin 33·33·33, günlük Sübhânallah / Elhamdülillah / Allâhu ekber hedefini doldurur."
-                            else "Kapalı: tesbihat ayrı tutulur; 33·33·33 zikirleri Zikirhane ve Takip listesinden çıkar. Ekstra zikir istersen Zikir sayfasındaki kalemle ekle.",
+                            else "Kapalı: tesbihat ayrı tutulur; 33·33·33 zikirleri Zikirhane ve Takip listesinden çıkar. Ekstra zikir istersen Takip › Kütüphaneden ekle.",
                             color = Pal.Muted, fontSize = Type.body2,
                         )
-                    }
-                    "konum" -> Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (locating) "Konum alınıyor…" else store.city.ifEmpty { "Konum belirlenmedi" }, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
-                        TextButton(onClick = { askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }) {
-                            Text("Güncelle", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
-                        }
                     }
                     "izin" -> {
                         StatusRow("Bildirimler", notifOk, "İzin ver") { askNotif.launch(Manifest.permission.POST_NOTIFICATIONS) }
@@ -267,7 +275,11 @@ fun AyarlarScreen(onBack: () -> Unit) {
                             TextButton(onClick = { openAutostart(ctx) }) { Text("Aç", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
                         }
                     }
-                    "geri" -> FeedbackForm()
+                    "yardim" -> {
+                        GhostButton("Tanıtımı tekrar göster", Modifier.fillMaxWidth(), color = Pal.Gold) { open = null; Tur.adim = 0; onBack() }
+                        Text("Geri bildirim", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
+                        FeedbackForm()
+                    }
                     else -> {
                         Text(if (lastBackup == 0L) "Henüz yedek alınmadı. Kayıtların yalnızca bu telefonda." else "$lastText.",
                             color = Pal.Muted, fontSize = Type.body2)
@@ -412,6 +424,33 @@ fun AyarlarScreen(onBack: () -> Unit) {
             },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Vazgeç", color = Pal.Muted) } },
         )
+    }
+}
+/** The "Sen" card on top of Ayarlar: gender, mezhep and place at a glance; a tap opens their rows. */
+@Composable
+private fun ProfilKart(store: Store, locating: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(Radius.l)
+    Row(
+        Modifier.padding(start = Space.l, end = Space.l, top = Space.l).fillMaxWidth().clip(shape)
+            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0xFF1A2745), Pal.Card)))
+            .border(1.dp, Pal.Gold.copy(alpha = .25f), shape).clickable(onClick = onClick).padding(Space.l),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(48.dp).clip(CircleShape).background(Pal.Gold.copy(alpha = .15f)), contentAlignment = Alignment.Center) {
+            Icon(Icons.Default.Person, null, tint = Pal.Gold, modifier = Modifier.size(24.dp))
+        }
+        Column(Modifier.weight(1f).padding(start = Space.m)) {
+            Text("Sen", style = NumStyle, fontSize = Type.h2, lineHeight = 26.sp, color = Pal.Text)
+            Text("Sana göre hesaplananlar", color = Pal.Muted, fontSize = Type.label)
+            Row(Modifier.padding(top = Space.xs), horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                listOf(if (store.kadin) "Kadın" else "Erkek", if (store.hanefi) "Hanefî" else "Şâfiî",
+                    if (locating) "Konum…" else store.city.ifEmpty { "Konum yok" }).forEach {
+                    Text(it, Modifier.border(1.dp, Pal.Gold.copy(alpha = .35f), CircleShape).padding(horizontal = Space.s, vertical = 2.dp),
+                        color = Pal.Gold, fontSize = Type.micro, maxLines = 1)
+                }
+            }
+        }
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = Pal.Muted)
     }
 }
 /** Ayarlarda hazır seçenek yerine kendi değerini yazman için tek satır. */

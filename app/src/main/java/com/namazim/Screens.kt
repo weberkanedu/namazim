@@ -1556,7 +1556,7 @@ private fun MuhasebeGidisat() {
                 }
                 Spacer(Modifier.height(Space.s))
                 Text(
-                    "Her vakit girişten çıkışa yedi eşit dilim. Altın çizgili dilimler seçtiğin mezhebe göre (Ayarlar › Hedefler) faziletli vakit. " +
+                    "Her vakit girişten çıkışa yedi eşit dilim. Altın çizgili dilimler seçtiğin mezhebe göre (Ayarlar › Sen) faziletli vakit. " +
                         "Bu grafik bir ölçü değil, kendi düzenini görmen için; niyet ve istikrar öndedir.",
                     color = Pal.Muted, fontSize = Type.micro, lineHeight = 16.sp,
                 )
@@ -1838,7 +1838,7 @@ private fun RoseInfoSheet(petals: List<Petal>, kazaRate: Int, onClose: () -> Uni
         "Vaktinde" to "Faziletli vakitte kılınan namazları sayar; hangi dilimlerin faziletli olduğu Ayarlar'daki mezhebe göre değişir. Vaktinde kıldığın her namaz yaprağı biraz daha açar.",
         "Sayfa" to "Okuma'daki bugünkü hedefe göre açılır: planlı okumaların bugünkü payı ya da Kur'an'ın günlük hedefi.",
         "Kaza" to "Kaza planına göre açılır (günde $kazaRate kaza). Kaza borcun yoksa yaprak hep açıktır.",
-        "Zikir" to "Zikir listendeki her zikrin bugünkü tamamlanma oranının ortalamasıyla açılır. Hedefi aşan ekstralar sayılmaz. Ayarlar'da \"Tesbihat günlük zikrime sayılsın\" açıksa namaz sonrası tesbihat da buraya sayılır.",
+        "Zikir" to "Zikir listendeki her zikrin bugünkü tamamlanma oranının ortalamasıyla açılır. Hedefi aşan ekstralar sayılmaz. Ayarlar › İbadet takibi'nde \"Tesbihat günlük zikrime sayılsın\" açıksa namaz sonrası tesbihat da buraya sayılır.",
     )
     ModalBottomSheet(onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
         Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().padding(bottom = Space.l).verticalScroll(rememberScrollState())) {

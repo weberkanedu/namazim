@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ayarlar Düzeni</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322;--warn:#F4B08F}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:40px 24px 80px}
+.wrap{max-width:1240px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:980px;margin-top:10px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:28px;flex-wrap:wrap;margin-top:26px}
+.opt{width:380px}
+.opt h2{font:600 26px Cormorant,serif;margin:0;color:var(--gold)}
+.opt .d{font-size:13px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:60px}
+.phone{width:360px;height:740px;border-radius:40px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:32px;overflow:hidden;background:var(--ground);display:flex;flex-direction:column}
+.body{flex:1;overflow-y:auto;padding:46px 0 20px;scrollbar-width:none}
+.ttl{display:flex;align-items:flex-end;padding:0 20px}.ttl b{font:600 38px/1 Cormorant,serif;flex:1}.ttl i{font-style:normal;font-size:20px;color:#F3EEE3}
+.sub{padding:4px 20px 0;font-size:12px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px 14px 0}
+.tile{background:var(--card);border-radius:20px;padding:14px;min-height:112px;cursor:pointer;border:1px solid #ffffff10;transition:transform .15s}
+.tile:hover{transform:scale(.98)}
+.tile.w{grid-column:span 2;min-height:0}
+.tile .ic{width:32px;height:32px;border-radius:10px;background:rgb(232 190 116 / .15);display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:8px}
+.tile b{display:block;font:600 14px Inter}.tile span{font-size:11.5px;color:var(--muted);line-height:1.4}
+.tile.warn{border-color:rgb(244 176 143 / .5)}.tile.warn span{color:var(--warn)}.tile.warn .ic{background:rgb(244 176 143 / .15)}
+.prof{margin:16px 14px 0;background:linear-gradient(135deg,#1A2745,#121D33);border-radius:22px;padding:16px;display:flex;gap:12px;align-items:center;cursor:pointer;border:1px solid rgb(232 190 116 / .25)}
+.prof .av{width:48px;height:48px;border-radius:50%;background:rgb(232 190 116 / .15);display:flex;align-items:center;justify-content:center;font-size:22px}
+.prof b{font:600 20px Cormorant,serif;display:block}.prof span{font-size:12px;color:var(--muted)}
+.prof .chips{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}.prof .chips em{font-style:normal;font-size:10.5px;color:var(--gold);border:1px solid rgb(232 190 116 / .35);border-radius:999px;padding:2px 8px}
+.sec{padding:18px 20px 4px;font:600 10px Inter;letter-spacing:.16em;color:var(--gold)}
+.grp{margin:0 14px;background:var(--card);border-radius:18px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.li:last-child{border-bottom:0}
+.li .ic{width:28px;height:28px;border-radius:8px;background:rgb(232 190 116 / .13);display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+.li div{flex:1}.li b{display:block;font:500 13.5px Inter}.li span{font-size:11px;color:var(--muted)}
+.li em{font-style:normal;font-size:12px;color:var(--gold)}.li.warn em{color:var(--warn)}
+.foot{text-align:center;font-size:12px;color:var(--gold);padding:18px 0 4px;font-weight:600}
+.foot2{text-align:center;font-size:11px;color:var(--muted)}
+/* sheet */
+.dim{position:absolute;inset:0;background:#0009;opacity:0;pointer-events:none;transition:.25s}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:26px 26px 0 0;padding:10px 20px 26px;transform:translateY(100%);transition:.3s cubic-bezier(.3,1,.4,1);max-height:82%;overflow-y:auto}
+.open .dim{opacity:1;pointer-events:auto}.open .sheet{transform:none}
+.sheet .h{width:36px;height:4px;border-radius:2px;background:#3A4560;margin:0 auto 12px}
+.sheet h3{font:600 26px Cormorant,serif;margin:0 0 6px}
+.r{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.r:last-child{border-bottom:0}
+.r div{flex:1}.r b{display:block;font:400 13.5px Inter}.r span{font-size:12px;color:var(--gold);font-weight:600}
+.r small{display:block;font-size:11px;color:var(--muted);line-height:1.4;margin-top:2px}
+.sw{width:38px;height:22px;border-radius:11px;background:var(--gold);position:relative;flex:none}.sw::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:var(--ground)}
+.sw.off{background:var(--track)}.sw.off::after{right:auto;left:3px;background:#8A93A8}
+.r .lk{font-size:12px;color:var(--gold);font-weight:600}
+.cap{font:600 10px Inter;letter-spacing:.14em;color:var(--gold);margin:14px 0 2px}
+.map{margin-top:34px;border-top:1px solid #222;padding-top:18px;color:var(--muted);font-size:13px;line-height:1.7}
+.map table{border-collapse:collapse;width:100%;margin-top:8px;font-size:12.5px}
+.map td,.map th{border-bottom:1px solid #1C2230;padding:7px 10px;text-align:left;vertical-align:top}
+.map th{color:#F3EEE3;font-weight:600}.map td:first-child{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Ayarlar · yeni düzen · üç seçenek</div>
+  <h1>Her şey yerli yerinde</h1>
+  <p class="lede">Bugün <b>Hedefler</b> kutusunda okuma hedefi, kaza sayısı, <b>cinsiyet, özel gün, mezhep, nafile ve tesbihat</b> bir arada; konuyla ilgisi yok. Üç seçenekte de bunlar ayrılıyor: <b>sana dair olanlar</b> (cinsiyet, mezhep, özel gün, konum), <b>ibadet takibi</b> (nafile, tesbihat), <b>hedefler</b> (okuma, kaza) ve <b>bildirimler</b> (ses dahil). Kutucuklara ya da satırlara dokun: içinde ne olduğu açılır.</p>
+
+  <div class="row" id="row"></div>
+
+  <div class="map"><b style="color:#F3EEE3">Bugün nerede → yeni yeri</b>
+    <table><tr><th>Ayar</th><th>Bugün</th><th>A · Yeni kutular</th><th>B · Gruplu liste</th><th>C · Profil kartı</th></tr>
+    <tr><td>Cinsiyet, özel gün</td><td>Hedefler</td><td>Sen</td><td>Hakkımda</td><td>Profil kartı</td></tr>
+    <tr><td>Mezhep</td><td>Hedefler</td><td>Sen</td><td>Hakkımda</td><td>Profil kartı</td></tr>
+    <tr><td>Konum</td><td>Konum kutusu</td><td>Sen</td><td>Hakkımda</td><td>Profil kartı</td></tr>
+    <tr><td>Nafile, tesbihat</td><td>Hedefler</td><td>İbadet takibi</td><td>Namaz</td><td>İbadet takibi</td></tr>
+    <tr><td>Okuma hedefi, kaza sayısı</td><td>Hedefler</td><td>Hedefler</td><td>Hedefler</td><td>Hedefler</td></tr>
+    <tr><td>Bildirim sesi</td><td>Ses kutusu</td><td>Bildirimler</td><td>Bildirimler</td><td>Bildirimler</td></tr>
+    <tr><td>Tanıtımı tekrar göster</td><td>en altta</td><td>Yardım</td><td>Yardım</td><td>Yardım</td></tr>
+    </table>
+    Hiçbir ayar kaybolmuyor, sadece yeri değişiyor. İstikrar'daki "Ayarlar › Hedefler" gibi yönlendirme yazıları da yeni yerlere göre düzeltilecek.
+  </div>
+</div>
+<script>
+// the rows of each topic, shared by the three options
+const T={
+ sen:['Sen',[['Cinsiyet','Erkek'],['Mezhep','Hanefî','Faziletli vakit dilimleri buna göre: sabah ortalık aydınlanınca, akşam hemen…'],['Konum','Altındağ','Güncelle'],['Özel gün (kadın seçilince)','','Ana sayfada düğme · başlat / bitir · geçmiş dönemler']]],
+ ibadet:['İbadet takibi',[['Nafileleri takip et',null,'İşrak, kuşluk, evvâbin, teheccüd çipleri işaretlenir',0],['Kıldım\'dan sonra tesbihatı sor',null,'',1],['Tesbihat günlük zikrime sayılsın',null,'Açıkken 33·33·33 zikir hedefini doldurur',1]]],
+ hedef:['Hedefler',[['Günlük okuma hedefi','20 sayfa'],['Günde kılınacak kaza','1 vakit']]],
+ bildirim:['Bildirimler',[['Vakitten önce hazırlan','30, 15 dk'],['"Kıldın mı?" sıklığı','15 dk'],['Son yarım saatte 5 dk\'da bir',null,'',1],['Ertele süresi','10 dk'],['Bildirim sesi','Ney'],['Deneme bildirimi gönder','','',2]]],
+ izin:['Telefon izinleri',[['Bildirimler','✓ Açık'],['Pil kısıtlaması yok','Kaldır'],['Otomatik başlatma (Xiaomi)','Aç']]],
+ veri:['Veri',[['Yedek al','Kaydet','Tek dosya: kaza, namazlar, okuma, zikir, ayarlar'],['Yedekten yükle','Seç'],['Kayıtları sıfırla','Sıfırla']]],
+ yardim:['Yardım',[['Tanıtımı tekrar göster','Başlat'],['Geri bildirim gönder','Yaz','Hata, istek ya da fikir']]],
+};
+function sheet(k){const [t,rows]=T[k];return `<div class="h"></div><h3>${t}</h3>`+rows.map(([a,v,s,sw])=>`<div class="r"><div><b>${a}</b>${s?`<small>${s}</small>`:''}</div>${sw===0?'<i class="sw off"></i>':sw===1?'<i class="sw"></i>':v?`<span>${v}</span>`:''}</div>`).join('');}
+const tile=(k,ic,t,s,cls='')=>`<div class="tile ${cls}" data-k="${k}"><div class="ic">${ic}</div><b>${t}</b><span>${s}</span></div>`;
+const li=(k,ic,t,s,v='',cls='')=>`<div class="li ${cls}" data-k="${k}"><div class="ic">${ic}</div><div><b>${t}</b><span>${s}</span></div><em>${v}</em></div>`;
+const head=`<div class="ttl"><b>Ayarlar</b><i>←</i></div><div class="sub">Altındağ · Diyanet vakitleri</div>`;
+const OPTS=[
+ {n:'A · Yeni kutular',d:'Bugünkü kutucuk görünümü kalır; kutular konuya göre yeniden bölünür. Ses Bildirimler\'e girer, Konum "Sen"e taşınır. Yedi kutu, ikişer ikişer; Yardım tam genişlik.',
+  h:head+`<div class="tiles">${tile('sen','👤','Sen','Erkek · Hanefî · Altındağ')}${tile('bildirim','🔔','Bildirimler','30·15 dk önce · her 15 dk · Ney')}${tile('hedef','★','Hedefler','Günde 20 sayfa · 1 vakit kaza')}${tile('ibadet','📿','İbadet takibi','Tesbihat açık · nafile kapalı')}${tile('izin','⚠','İzinler','1 eksik · düzelt','warn')}${tile('veri','⇪','Veri','Son yedek 2 Kasım')}${tile('yardim','?','Yardım','Tanıtım · geri bildirim','w')}</div><div class="foot2" style="padding-top:16px">Namazım · vakitler Diyanet yöntemiyle hesaplanır</div>`},
+ {n:'B · Gruplu liste',d:'Kutucuklar yerine başlıklı gruplar; her satır nerede durduğunu sağında söyler. Ne nerede bir bakışta okunur, ama daha uzun ve kutular kadar "oyuncaklı" değil.',
+  h:head+`<div class="sec">HAKKIMDA</div><div class="grp">${li('sen','👤','Cinsiyet','Özel gün takibi için','Erkek')}${li('sen','🕌','Mezhep','Faziletli vakit dilimleri','Hanefî')}${li('sen','📍','Konum','Vakitler buna göre','Altındağ')}</div>
+   <div class="sec">NAMAZ</div><div class="grp">${li('ibadet','📿','Tesbihat','Kıldım\'dan sonra sor · zikre say','açık')}${li('ibadet','✦','Nafileler','İşrak, kuşluk, evvâbin, teheccüd','kapalı')}</div>
+   <div class="sec">HEDEFLER</div><div class="grp">${li('hedef','📖','Günlük okuma','','20 sayfa')}${li('hedef','↺','Günlük kaza','','1 vakit')}</div>
+   <div class="sec">BİLDİRİMLER</div><div class="grp">${li('bildirim','🔔','Hatırlatmalar','30·15 dk önce · her 15 dk','')}${li('bildirim','♪','Ses','','Ney')}</div>
+   <div class="sec">TELEFON VE VERİ</div><div class="grp">${li('izin','⚠','İzinler','Pil kısıtlaması açık','1 eksik','warn')}${li('veri','⇪','Yedek','Son yedek 2 Kasım','')}</div>
+   <div class="sec">YARDIM</div><div class="grp">${li('yardim','?','Tanıtımı tekrar göster','','')}${li('yardim','✉','Geri bildirim','','')}</div>`},
+ {n:'C · Profil kartı + kutular',d:'En üstte "sen" kartı: cinsiyet, mezhep, konum tek bakışta, dokununca düzenlenir. Altında kalan konular kutucuk. Kişisel bilgiler ayarlardan ayrışır; en derli toplu görünen.',
+  h:head+`<div class="prof" data-k="sen"><div class="av">👤</div><div><b>Sen</b><span>Sana göre hesaplananlar</span><div class="chips"><em>Erkek</em><em>Hanefî</em><em>📍 Altındağ</em></div></div><i style="font-style:normal;color:var(--muted)">›</i></div>
+   <div class="tiles">${tile('bildirim','🔔','Bildirimler','30·15 dk önce · her 15 dk · Ney')}${tile('hedef','★','Hedefler','Günde 20 sayfa · 1 vakit kaza')}${tile('ibadet','📿','İbadet takibi','Tesbihat açık · nafile kapalı')}${tile('izin','⚠','İzinler','1 eksik · düzelt','warn')}${tile('veri','⇪','Veri','Son yedek 2 Kasım')}${tile('yardim','?','Yardım','Tanıtım · geri bildirim')}</div><div class="foot2" style="padding-top:16px">Namazım · vakitler Diyanet yöntemiyle hesaplanır</div>`},
+];
+document.getElementById('row').innerHTML=OPTS.map((o,i)=>`<div class="opt"><h2>${o.n}</h2><div class="d">${o.d}</div><div class="phone"><div class="scr" id="p${i}"><div class="body">${o.h}</div><div class="dim"></div><div class="sheet"></div></div></div></div>`).join('');
+document.querySelectorAll('.scr').forEach(s=>{
+ s.querySelectorAll('[data-k]').forEach(e=>e.onclick=()=>{s.querySelector('.sheet').innerHTML=sheet(e.dataset.k);s.classList.add('open');});
+ s.querySelector('.dim').onclick=()=>s.classList.remove('open');
+});
+</script>
+</body>
+</html>
