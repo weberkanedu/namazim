@@ -518,9 +518,16 @@ private fun AraSerit(gunes: Long, ogle: Long, ex: List<Extra>, now: Long, modifi
             drawCircle(Cream, 5.dp.toPx(), Offset(nx, size.height / 2))
         }
         Text(
-            if (inKer != null) "${inKer.name} · ${hm(inKer.end!!)} kadar namaz kılınmaz" else "kuşluk vakti",
-            Modifier.fillMaxWidth().padding(top = Space.xs), color = if (inKer != null) Pal.Warn else Pal.Muted,
-            fontSize = Type.label, textAlign = TextAlign.Center,
+            if (inKer != null) "${inKer.name} · ${hm(inKer.end!!)} kadar namaz kılınmaz" else "kuşluk vakti · nafile kılınabilir",
+            Modifier.fillMaxWidth().padding(top = Space.xs), color = if (inKer != null) Pal.Warn else Pal.Gold,
+            fontSize = Type.label, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center,
+        )
+        // when the nafile of the morning may be prayed, from the app's own ek vakitler (Prayers.extras)
+        val israk = ex.firstOrNull { it.name == "İşrak" }
+        val kusluk = ex.firstOrNull { it.name.startsWith("Kuşluk") }
+        if (israk != null && kusluk?.end != null) Text(
+            "İşrak ${hm(israk.start)} sonrası · Kuşluk ${hm(kusluk.start)}–${hm(kusluk.end)}",
+            Modifier.fillMaxWidth(), color = Pal.Muted, fontSize = Type.micro, textAlign = TextAlign.Center,
         )
     }
 }
