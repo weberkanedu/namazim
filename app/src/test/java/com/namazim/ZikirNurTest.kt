@@ -23,4 +23,23 @@ class ZikirNurTest {
         assertNotNull(zikirArabic("Sübhânallah"))
         assertNull(zikirArabic("Benim zikrim"))
     }
+
+    @Test fun ninetyNineNames() {
+        assertEquals(98, ZIKIR_LIST.count { it.first.startsWith("Yâ ") && it.first != "Yâ Hayyu yâ Kayyûm" })
+        assertNotNull(ZIKIR_LIST.firstOrNull { it.first == "Allah" })
+        assertEquals(ZIKIR_LIST.size, ZIKIR_LIST.map { it.first }.toSet().size)   // no name twice
+    }
+
+    @Test fun suggestions() {
+        assertEquals("Yâ Rahmân", suggestZikir("ya rahm").first().first)
+        assertEquals("Yâ Kâbıd", suggestZikir("kabid").first().first)
+        assert(suggestZikir("x").isEmpty())
+        assert(suggestZikir("zzqq").isEmpty())
+    }
+
+    @Test fun ownArabicWins() {
+        assertEquals("abc" to "anlam", zikirArabic(Zikir("Yâ Latîf", 33, "abc", "anlam")))
+        assertNotNull(zikirArabic(Zikir("Yâ Latîf", 33)))
+        assertNull(zikirArabic(Zikir("Kendi zikrim", 33)))
+    }
 }

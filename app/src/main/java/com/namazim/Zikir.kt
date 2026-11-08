@@ -49,6 +49,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -160,7 +161,7 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: Strin
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            NurHead(z.label)
+            NurHead(z.label, zikirs.firstOrNull { it.name == z.key }?.let { zikirArabic(it) })
             Spacer(Modifier.height(Space.m))
             Box(contentAlignment = Alignment.Center) {
                 NurRing(c, z.target, glow.value, Modifier.size(260.dp))
@@ -340,6 +341,11 @@ private fun TakipCell(cell: ZikirCell) {
 private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var target by remember { mutableStateOf("33") }
+    // Arabic: picked from the built-in list (design C), or typed by hand when it is not there
+    var ar by remember { mutableStateOf("") }
+    var mean by remember { mutableStateOf("") }
+    var picked by remember { mutableStateOf<String?>(null) }
+    var manual by remember { mutableStateOf(false) }
     val n = name.trim()
     val t = target.trim().toIntOrNull()
     val error = when {
@@ -361,6 +367,7 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
                 if (idx > 0) HorizontalDivider(color = Pal.Line)
                 Row(Modifier.fillMaxWidth().heightIn(min = 52.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(z.name, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body)
+                    zikirArabic(z)?.let { Text(it.first, Modifier.padding(end = Space.m), color = Color(0xFFF2D79B), fontSize = 18.sp, maxLines = 1) }
                     Text("${z.target}", color = Pal.Muted, fontSize = Type.body2)
                     IconButton(onClick = { store.zikirs = zikirs - z }) { Icon(Icons.Default.Delete, "${z.name} sil", tint = Pal.Muted, modifier = Modifier.size(20.dp)) }
                 }
@@ -372,10 +379,37 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
                     singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = fieldColors)
             }
             if (error != null) Text(error, Modifier.padding(top = Space.xs), color = Pal.Warn, fontSize = Type.label)
+            if (!manual && picked != n) suggestZikir(n).forEach { (sn, sa, sm) ->
+                Row(
+                    Modifier.padding(top = Space.s).fillMaxWidth().clip(RoundedCornerShape(Radius.s))
+                        .border(1.dp, Pal.Gold.copy(alpha = .45f), RoundedCornerShape(Radius.s))
+                        .clickable { name = sn; ar = sa; mean = sm; picked = sn }.padding(horizontal = Space.m, vertical = Space.s),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(sn, color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium)
+                        Text(sm, color = Pal.Muted, fontSize = Type.micro, maxLines = 1)
+                    }
+                    Text(sa, color = Color(0xFFF2D79B), fontSize = 20.sp, maxLines = 1)
+                }
+            }
+            if (picked == n && !manual) Text("$ar  ·  $mean", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.body2)
+            if (!manual) TextButton({ manual = true }) { Text("Listede yok mu? Arapçasını kendin yaz", color = Pal.Gold, fontSize = Type.body2) }
+            else {
+                OutlinedTextField(ar, { ar = it }, Modifier.fillMaxWidth().padding(top = Space.s), label = { Text("Arapça yazı (isteğe bağlı)") },
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 20.sp, textDirection = androidx.compose.ui.text.style.TextDirection.Rtl),
+                    singleLine = true, colors = fieldColors)
+                OutlinedTextField(mean, { mean = it }, Modifier.fillMaxWidth().padding(top = Space.s), label = { Text("Anlamı (isteğe bağlı)") },
+                    singleLine = true, colors = fieldColors)
+            }
             Spacer(Modifier.height(Space.l))
             val ok = n.isNotEmpty() && t != null && error == null
             GoldButton("Zikir ekle", Modifier.fillMaxWidth().alpha(if (ok) 1f else .4f), Icons.Default.Add) {
-                if (ok) { store.zikirs = zikirs + Zikir(n, t!!); name = ""; target = "33" }
+                if (ok) {
+                    val keep = manual || picked == n   // a pick for an edited name no longer fits it
+                    store.zikirs = zikirs + Zikir(n, t!!, ar.trim().ifEmpty { null }?.takeIf { keep }, mean.trim().ifEmpty { null }?.takeIf { keep })
+                    name = ""; target = "33"; ar = ""; mean = ""; picked = null; manual = false
+                }
             }
         }
     }

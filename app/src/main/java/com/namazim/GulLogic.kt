@@ -20,7 +20,8 @@ fun inFirstThird(slot: Slot, at: Long?): Boolean =
 fun ratio(done: Int, goal: Int): Float = if (goal <= 0) 1f else (done.toFloat() / goal).coerceIn(0f, 1f)
 
 /** A zikir on the user's own list; [name] is unique and keys the day's count. */
-data class Zikir(val name: String, val target: Int)
+/** [ar] / [mean]: Arabic and meaning picked or typed when the zikir was added; null = built-in or none. */
+data class Zikir(val name: String, val target: Int, val ar: String? = null, val mean: String? = null)
 
 /** The tesbihat the list starts with; the user may edit or empty it. */
 val DEFAULT_ZIKIRS = listOf(Zikir("Sübhânallah", 33), Zikir("Elhamdülillah", 33), Zikir("Allâhu ekber", 33))
@@ -29,7 +30,7 @@ val DEFAULT_ZIKIRS = listOf(Zikir("Sübhânallah", 33), Zikir("Elhamdülillah", 
  *  after each prayer and kept apart, so they leave the list (Zikirhane chips, Takip, rose). A zikir the user set to
  *  another target (e.g. Sübhânallah 100) is their own and stays. */
 fun dailyZikirs(all: List<Zikir>, tesbihatCounts: Boolean): List<Zikir> =
-    if (tesbihatCounts) all else all.filterNot { it in DEFAULT_ZIKIRS }
+    if (tesbihatCounts) all else all.filterNot { z -> DEFAULT_ZIKIRS.any { it.name == z.name && it.target == z.target } }
 
 /** Fifth petal: the average of each zikir's completion; an empty list counts as done. */
 fun zikirPetal(zikirs: List<Zikir>, counts: Map<String, Int>): Petal {
