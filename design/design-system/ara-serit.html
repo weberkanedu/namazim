@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ara Şerit</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3;--track:#1C2943;--card:#121D33}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1000px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:860px;margin-top:10px}.lede b{color:#F3EEE3}
+.scrub{display:flex;gap:12px;align-items:center;margin-top:16px;max-width:560px}
+.scrub input{flex:1;accent-color:#E8BE74}.scrub span{font:600 22px Cormorant,serif;min-width:60px}
+.grid{display:flex;gap:28px;flex-wrap:wrap;margin-top:20px}
+.col{display:flex;flex-direction:column;gap:8px;width:360px}
+.col b.l{font:600 22px Cormorant,serif;color:var(--gold)}
+.col span.w{font-size:13px;color:var(--muted);line-height:1.55;min-height:70px}
+.ph{width:360px;background:#0B1322;border:1px solid #1E2940;border-radius:22px;padding:18px 16px;box-sizing:border-box}
+.rose{height:110px;border-radius:12px;background:#0F1729;display:flex;align-items:center;justify-content:center;font:400 11px Inter;color:var(--muted)}
+.cd{text-align:center;margin-top:12px}.cd .k{font:600 10px Inter;letter-spacing:.18em}.cd .t{font:600 40px/1.05 Cormorant,serif}.cd .s{font:400 12px Inter;color:var(--muted)}
+.strip{position:relative;display:flex;gap:3px;margin-top:14px;height:12px}
+.strip i{border-radius:6px;background:var(--track)}
+.strip i.k{background:repeating-linear-gradient(135deg,rgb(244 176 143 / .6) 0 4px,rgb(244 176 143 / .2) 4px 8px)}
+.strip i.n{background:rgb(232 190 116 / .35)}
+.strip .now{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#FFF4DC;box-shadow:0 0 0 4px rgb(232 190 116 / .3),0 0 12px #E8BE74;transition:left .2s}
+.lab{position:relative;height:16px;margin-top:6px;font:500 10.5px Inter;color:var(--muted)}.lab span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.lab span:first-child{transform:none}.lab span:last-child{transform:translateX(-100%)}.lab .w{color:var(--warn)}
+.now-t{text-align:center;margin-top:10px;font:500 13px Inter}
+.thin{position:relative;height:4px;border-radius:2px;background:var(--track);margin-top:12px}
+.thin i{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--warn)}
+.thin .now{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#FFF4DC;box-shadow:0 0 8px #E8BE74}
+.btn{display:block;text-align:center;border-radius:999px;padding:11px;font:600 13px Inter;margin-top:12px;border:1px solid #2A3550;color:var(--muted)}
+.legend{max-width:900px;margin-top:28px;font-size:13px;color:var(--muted);line-height:1.7;border-top:1px solid #222;padding-top:16px}.legend b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Ana sayfa · güneş – öğle arası · iki yön</div>
+  <h1>Ara şerit</h1>
+  <p class="lede">Güneş doğduktan öğleye kadar kılınacak farz yok; bugün bu aralıkta şerit görünmüyor. İki örnekte bu aralık da bir şeritle gösteriliyor: <b>işrak kerahati</b> (07:18–08:03) ve <b>istiva kerahati</b> (12:27–12:37) taralı şeftali, aradaki <b>kuşluk</b> vakti (nafile kılınabilir) yumuşak altın. <b>Kaydırıcıyla saati değiştir.</b></p>
+  <div class="scrub"><input type="range" id="tm" min="438" max="757" value="455"><span id="tl"></span></div>
+  <div class="grid">
+    <div class="col"><b class="l">A1 · Tam ara şerit</b><span class="w">Namaz vakitlerindeki şeridin aynısı: üç parça, kerahatlerin saatleri altında, ışıklı nokta saatle yürür. Kerahatteyken sayaç şeftaliye döner ve "kerahat vakti" der.</span><div class="ph" id="a1"></div></div>
+    <div class="col"><b class="l">A2 · İnce çizgi</b><span class="w">Daha sakin: sayacın altında ince bir çizgi; yalnızca kerahat parçaları renkli. Kerahatteyken altında tek satır uyarı.</span><div class="ph" id="a2"></div></div>
+  </div>
+  <div class="legend"><b>İkisinde de:</b> öğle girince bu şerit kaybolur, yerine öğlenin yedi dilimli şeridi gelir. Kerahat anında "kıldım" düğmesi yoktur zaten (farz vakti değil); sayaç öğleye kalan süreyi göstermeye devam eder.<br>
+  <b>Nafile takibi açıksa</b> kuşluk dilimine dokunarak kuşluğu işaretlemek de mümkün olabilir (ana sayfadaki çiple aynı iş).</div>
+</div>
+<script>
+const G=438,I=483,K=747,O=757;   // güneş 07:18, işrak 08:03, istiva 12:27, öğle 12:37 (minutes of the day)
+const hm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const left=m=>{m=Math.max(0,m);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+':00'};
+const pc=m=>(m-G)/(O-G)*100;
+function draw(){const t=+tm.value;tl.textContent=hm(t);
+ const ker=t<I||t>=K, which=t<I?'İşrak kerahati':'İstiva kerahati', till=t<I?I:O;
+ const head=ker?`<div class="k" style="color:var(--warn)">KERAHAT VAKTİ</div><div class="t" style="color:var(--warn)">${left(till-t).slice(0,-3)}</div><div class="s">${which} · ${hm(till)}'e kadar namaz kılınmaz</div>`
+  :`<div class="k" style="color:var(--gold)">ÖĞLE VAKTİNE</div><div class="t">${left(O-t).slice(0,-3)}</div><div class="s">kuşluk vakti · nafile kılınabilir</div>`;
+ a1.innerHTML=`<div class="rose">(gül)</div><div class="cd">${head}</div>
+  <div class="strip"><i class="k" style="flex:${I-G}"></i><i class="n" style="flex:${K-I}"></i><i class="k" style="flex:${O-K}"></i><span class="now" style="left:${pc(t)}%"></span></div>
+  <div class="lab"><span style="left:0">${hm(G)}</span><span class="w" style="left:${pc(I)}%">${hm(I)}</span><span class="w" style="left:${pc(K)-6}%">${hm(K)}</span><span style="left:100%">${hm(O)}</span></div>
+  <div class="now-t">Şu an: <b style="color:${ker?'var(--warn)':'var(--gold)'}">${ker?which:'kuşluk vakti'}</b></div>`;
+ a2.innerHTML=`<div class="rose">(gül)</div><div class="cd"><div class="k" style="color:var(--gold)">ÖĞLE VAKTİNE</div><div class="t">${left(O-t).slice(0,-3)}</div><div class="s">kaldı</div></div>
+  <div class="thin"><i style="left:0;width:${pc(I)}%"></i><i style="left:${pc(K)}%;right:0"></i><span class="now" style="left:${pc(t)}%"></span></div>
+  ${ker?`<div class="now-t" style="color:var(--warn);font-size:12px">${which} · ${hm(till)}'e kadar namaz kılınmaz</div>`:'<div class="now-t" style="color:var(--muted);font-size:12px">kuşluk vakti</div>'}`;}
+tm.oninput=draw;draw();
+</script>
+</body>
+</html>

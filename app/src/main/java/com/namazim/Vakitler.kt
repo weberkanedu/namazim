@@ -167,6 +167,9 @@ fun VakitlerBody(
             Text(time, style = NumStyle, fontSize = Type.display, lineHeight = 48.sp, color = if (inKerahat) Pal.Warn else Pal.Text)
             Text(sub, color = Pal.Muted, fontSize = Type.body2, textAlign = TextAlign.Center)
         }
+        // güneş to öğle has no farz: a thin line shows the two kerahat times (design A2, design/design-system/ara-serit.html)
+        if (c == null && now >= gunes && now < slots[1].start) AraSerit(gunes, slots[1].start, ex, now,
+            Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m))
         if (c != null && cs != null) {
             VakitSerit(c, store.prayedAt(c.key).takeIf { store.isPrayed(c.key) }, dl!!, now,
                 Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m))
@@ -493,6 +496,32 @@ private fun VakitGul(st: List<VState>, cur: Int, arc: Float?, kerahat: Boolean, 
             if (j == 0) bud.moveTo(px, py) else bud.lineTo(px, py)
         }
         drawPath(bud, Color(0xFF5A3A10), style = Stroke(1.3f * k))
+    }
+}
+
+/** Güneş to öğle: a thin line with the işrak and istiva kerahat in peach and a light at the clock; one line under it. */
+@Composable
+private fun AraSerit(gunes: Long, ogle: Long, ex: List<Extra>, now: Long, modifier: Modifier) {
+    val kers = ex.filter { it.kerahat && it.end != null && it.start >= gunes && it.end <= ogle }
+    val len = (ogle - gunes).toFloat()
+    fun f(t: Long) = ((t - gunes) / len).coerceIn(0f, 1f)
+    val inKer = kers.firstOrNull { now >= it.start && now < it.end!! }
+    Column(modifier) {
+        Canvas(Modifier.fillMaxWidth().height(14.dp)) {
+            val h = 4.dp.toPx()
+            val y0 = (size.height - h) / 2
+            val rr = CornerRadius(h / 2)
+            drawRoundRect(Pal.Track, Offset(0f, y0), Size(size.width, h), rr)
+            kers.forEach { k -> drawRoundRect(Pal.Warn, Offset(f(k.start) * size.width, y0), Size((f(k.end!!) - f(k.start)) * size.width, h), rr) }
+            val nx = f(now) * size.width
+            drawCircle(Pal.Gold.copy(alpha = .35f), 8.dp.toPx(), Offset(nx, size.height / 2))
+            drawCircle(Cream, 5.dp.toPx(), Offset(nx, size.height / 2))
+        }
+        Text(
+            if (inKer != null) "${inKer.name} · ${hm(inKer.end!!)} kadar namaz kılınmaz" else "kuşluk vakti",
+            Modifier.fillMaxWidth().padding(top = Space.xs), color = if (inKer != null) Pal.Warn else Pal.Muted,
+            fontSize = Type.label, textAlign = TextAlign.Center,
+        )
     }
 }
 
