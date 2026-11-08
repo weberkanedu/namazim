@@ -18,6 +18,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import android.graphics.BlurMaskFilter
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -88,7 +93,11 @@ private val ROW_NAME = listOf("İmsak", "Öğle", "İkindi", "Akşam", "Yatsı")
 private val ACCUSATIVE = listOf("Sabahı", "Öğleyi", "İkindiyi", "Akşamı", "Yatsıyı")
 private val EXTRA_GROUP = listOf("GÜNEŞ", "ÖĞLE", "İKİNDİ", "AKŞAM", "YATSI")
 private val Cream = Color(0xFFFFF4DC)
-private val InnerGold = Color(0xFFF6D899)
+// K6 petal colours, base -> middle -> tip: night-blue velvet (empty) and warm gold (prayed)
+private val Velvet = listOf(Color(0xFF060A18), Color(0xFF1A2A52), Color(0xFF4A65A6))
+private val Warm = listOf(Color(0xFF5A3A10), Color(0xFFC8913C), Color(0xFFFFE7B0))
+private val Velvet2 = listOf(Color(0xFF050914), Color(0xFF1C2C58), Color(0xFF5370B2))
+private val Warm2 = listOf(Color(0xFF6B4312), Color(0xFFE2B060), Color(0xFFFFF3D6))
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -348,6 +357,8 @@ private fun VakitGul(st: List<VState>, cur: Int, slots: List<Slot>, now: Long, k
     val arc = if (c != null && st[cur] == VState.ACIK && now < thirdEnd(c)) (thirdEnd(c) - now).toFloat() / (thirdEnd(c) - c.start) else null
     val tap by rememberUpdatedState(onPetal)
     val curNow by rememberUpdatedState(cur)
+    val shade = remember { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG) }
+    val blurs = remember { HashMap<Float, BlurMaskFilter>() }
     Canvas(modifier.pointerInput(Unit) {
         detectTapGestures { o ->
             val dx = o.x - size.width / 2f
@@ -373,26 +384,47 @@ private fun VakitGul(st: List<VState>, cur: Int, slots: List<Slot>, now: Long, k
             if (close) close()
         }
         val dash = PathEffect.dashPathEffect(floatArrayOf(3f * k, 3f * k))
-        // the current petal goes last so nothing covers its edge
-        for (i in (0 until 5).filter { it != cur } + listOfNotNull(cur.takeIf { it >= 0 })) {
+        // the tip of a petal curls toward the light: a thin bright line just inside the rim
+        fun tip(r1: Float, a0: Float, a1: Float, kk: Float) = Path().apply {
+            val w = a1 - a0
+            val s0 = pt(r1 * kk, a0 + w * .18f); moveTo(s0.x, s0.y)
+            val c1 = pt(r1 * 1.1f, a0 + w * .36f); val c2 = pt(r1 * 1.1f, a1 - w * .36f); val e0 = pt(r1 * kk, a1 - w * .18f)
+            cubicTo(c1.x, c1.y, c2.x, c2.y, e0.x, e0.y)
+        }
+        // soft shadow under a petal, so each one lies on the one below
+        fun shadow(p: Path, dy: Float, blur: Float, alpha: Float) = drawIntoCanvas { cv ->
+            shade.color = android.graphics.Color.argb((alpha * 255).toInt(), 0, 0, 0)
+            shade.maskFilter = blurs.getOrPut(blur * k) { BlurMaskFilter(blur * k, BlurMaskFilter.Blur.NORMAL) }
+            cv.save(); cv.translate(0f, dy * k); cv.nativeCanvas.drawPath(p.asAndroidPath(), shade); cv.restore()
+        }
+        // design K6 "gerçek yaprak" (design/design-system/gul-kabartma-2.html): cupped petals, dark at the base and light
+        // toward the tip; night-blue velvet when empty, warm gold when prayed. The current petal goes last so nothing covers it.
+        val order = (0 until 5).filter { it != cur } + listOfNotNull(cur.takeIf { it >= 0 })
+        for (i in order) {
             val a = i * 72f
             val x = st[i]
             val open = i == cur && x == VState.ACIK
+            val f = fill[i].coerceIn(0f, 1f)
             val outer = petal(24f, 70f, a - 40f, a + 40f, true)
-            drawPath(outer, Pal.Card)
-            if (fill[i] > .01f) scale(.8f + .2f * fill[i], pivot = pt(24f, a)) { drawPath(outer, Pal.Gold.copy(alpha = .42f * fill[i].coerceIn(0f, 1f))) }
-            if (x == VState.KAZA) drawPath(outer, Pal.Warn.copy(alpha = .38f))
+            shadow(outer, 3f, 2.6f, .6f)
+            scale(1f + .08f * (fill[i] - f), pivot = pt(24f, a)) {   // the spring's overshoot is a small pop
+                drawPath(outer, Brush.radialGradient(
+                    0f to lerp(Velvet[0], Warm[0], f), .55f to lerp(Velvet[1], Warm[1], f), 1f to lerp(Velvet[2], Warm[2], f),
+                    center = pt(16f, a), radius = 66f * k,
+                ))
+            }
+            if (x == VState.KAZA) drawPath(outer, Pal.Warn.copy(alpha = .30f))
+            val t = tip(70f, a - 40f, a + 40f, .9f)
+            drawPath(t, lerp(Color(0xFF9DB2E6), Color(0xFFFFF6DC), f).copy(alpha = .22f + .2f * f), style = Stroke(4f * k, cap = StrokeCap.Round))
+            drawPath(tip(70f, a - 40f, a + 40f, .92f), lerp(Color(0xFFC6D3F2), Color(0xFFFFFBEF), f).copy(alpha = .6f + .35f * f),
+                style = Stroke(1f * k, cap = StrokeCap.Round))
             val edge = when {
                 x == VState.KAZA || (open && kerahat) -> Pal.Warn
                 open -> Pal.Text
-                else -> Pal.Gold
+                else -> lerp(Color(0xFF0A1124), Color(0xFF7A5418), f)
             }
-            drawPath(petal(24f, 70f, a - 40f, a + 40f, false), edge.copy(alpha = if (open && kerahat) breathe else 1f),
-                style = Stroke((if (open) 2.6f else 1.8f) * k, join = StrokeJoin.Round))
-            if (inner[i] > .01f) scale(inner[i], pivot = pt(12f, a)) { drawPath(petal(12f, 46f, a - 26f, a + 26f, true), InnerGold) }
-            if (x != VState.VAKTINDE) drawPath(petal(12f, 46f, a - 26f, a + 26f, false),
-                Pal.Gold.copy(alpha = if (open && arc != null) breathe else .45f),
-                style = Stroke(1.2f * k, pathEffect = if (open && arc != null) dash else null))
+            drawPath(petal(24f, 70f, a - 40f, a + 40f, false), edge.copy(alpha = if (open && kerahat) breathe else .95f),
+                style = Stroke((if (open) 2.4f else if (x == VState.KAZA) 1.6f else 1f) * k, join = StrokeJoin.Round))
             if (i == cur && arc != null) {
                 val r = 79f * k
                 drawArc(Pal.Gold, a - 38f - 90f, 76f * arc, false, Offset(center.x - r, center.y - r), Size(2 * r, 2 * r),
@@ -408,6 +440,31 @@ private fun VakitGul(st: List<VState>, cur: Int, slots: List<Slot>, now: Long, k
             val p = pt(91f, a)
             drawText(l, topLeft = Offset(p.x - l.size.width / 2f, p.y - l.size.height / 2f))
         }
+        // inner petals sit one layer higher; the on-time one turns gold with a small pop
+        for (i in order) {
+            val a = i * 72f
+            val g = inner[i].coerceIn(0f, 1f)
+            val inn = petal(12f, 46f, a - 26f, a + 26f, true)
+            shadow(inn, 2.4f, 1.3f, .6f)
+            scale(.94f + .06f * inner[i], pivot = pt(12f, a)) {
+                drawPath(inn, Brush.radialGradient(
+                    0f to lerp(Velvet2[0], Warm2[0], g), .6f to lerp(Velvet2[1], Warm2[1], g), 1f to lerp(Velvet2[2], Warm2[2], g),
+                    center = pt(8f, a), radius = 44f * k,
+                ))
+                drawPath(tip(46f, a - 26f, a + 26f, .88f), lerp(Color(0xFFB9C8EE), Color(0xFFFFFBEF), g).copy(alpha = .75f),
+                    style = Stroke(1f * k, cap = StrokeCap.Round))
+            }
+            if (i == cur && st[i] == VState.ACIK && arc != null)   // the on-time slice is still open: the inner petal waits, breathing
+                drawPath(petal(12f, 46f, a - 26f, a + 26f, false), Pal.Gold.copy(alpha = breathe), style = Stroke(1.2f * k, pathEffect = dash))
+        }
+        val bc = Offset(center.x, center.y + 1.5f * k)
+        drawIntoCanvas { cv ->
+            shade.color = android.graphics.Color.argb(150, 0, 0, 0)
+            shade.maskFilter = blurs.getOrPut(1.3f * k) { BlurMaskFilter(1.3f * k, BlurMaskFilter.Blur.NORMAL) }
+            cv.nativeCanvas.drawCircle(bc.x, bc.y, 11f * k, shade)
+        }
+        drawCircle(Brush.radialGradient(0f to Color(0xFF6B4312), .5f to Color(0xFFD49E48), 1f to Color(0xFFFFF0C8),
+            center = Offset(center.x, center.y + 10.5f * k), radius = 22f * k), 10.5f * k)
         val bud = Path()
         for (j in 0..60) {
             val th = j / 60.0 * Math.PI * 3.2
@@ -415,7 +472,7 @@ private fun VakitGul(st: List<VState>, cur: Int, slots: List<Slot>, now: Long, k
             val px = center.x + r * cos(th).toFloat(); val py = center.y + r * sin(th).toFloat()
             if (j == 0) bud.moveTo(px, py) else bud.lineTo(px, py)
         }
-        drawPath(bud, Pal.Gold, style = Stroke(1.4f * k))
+        drawPath(bud, Color(0xFF5A3A10), style = Stroke(1.3f * k))
     }
 }
 

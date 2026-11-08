@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kabartma Gül 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1250px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:#E8BE74}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:#A9B2C3;font-size:15px;line-height:1.65;max-width:900px;margin-top:12px}.lede b{color:#F3EEE3}
+.ctl{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;font-size:13px;color:#A9B2C3;align-items:center}
+.ctl button{font:500 13px Inter;border:1px solid #2A3550;background:#0F1626;color:#F3EEE3;border-radius:999px;padding:7px 14px;cursor:pointer}
+.three{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px;width:350px}
+.col b{font:600 24px Cormorant,serif;color:#E8BE74}
+.col span{font-size:13px;color:#A9B2C3;line-height:1.55;text-align:center;min-height:84px}
+.card{width:350px;height:380px;background:#0B1322;border:1px solid #1E2940;border-radius:18px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.card .bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,rgb(232 190 116 / .10),transparent 60%);pointer-events:none}
+@keyframes sheen{0%{transform:translateX(-140px) rotate(25deg)}100%{transform:translateX(160px) rotate(25deg)}}
+.legend{max-width:1050px;margin-top:30px;font-size:13px;color:#A9B2C3;line-height:1.7;border-top:1px solid #222;padding-top:18px}.legend b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Ana sayfa · gül · kabartma · ikinci tur</div>
+  <h1>Kabartmalı gül, yeni üç yön</h1>
+  <p class="lede"><b>K4</b>, K2'nin malzemesi (lacivert mine ve altın varak) ile K3'ün derinliğini (katman katman gölge, iç yapraklar önde) birleştiriyor. <b>K5</b> ve <b>K6</b> yeni yönler. Örnek yine: İmsak vaktinde, Öğle kılındı, İkindi şimdiki vakit. <b>Bir yaprağa dokun</b>: boş → kılındı → vaktinde.</p>
+  <div class="ctl">Hepsini: <button id="all0">boş</button><button id="all1">kılındı</button><button id="all2">vaktinde</button><button id="reset">örnek</button></div>
+  <div class="three">
+    <div class="col"><b>K4 · Mine katmanları</b><span>K2 + K3. Yapraklar mine ve altın; her yaprak altındakine gölge düşürür, iç yapraklar bir kat daha önde. Kılınınca altının üstünden ince bir ışık geçer.</span><div class="card" id="k4"><div class="bg"></div></div></div>
+    <div class="col"><b>K5 · Telkari</b><span>Gümüş-altın telkari işi gibi: yapraklar kabarık altın tel ile çevrili, kenarlarında küçük boncuklar. Aralar koyu lacivert mine. Kılınan yaprağın içi altınla dolar.</span><div class="card" id="k5"><div class="bg"></div></div></div>
+    <div class="col"><b>K6 · Gerçek yaprak</b><span>Gül yaprağı gibi içe kıvrık: dipte koyu, uca doğru açılan renk; yaprak ucunda kıvrılan ışık. Boş yaprak gece mavisi kadife, kılınan sıcak altın.</span><div class="card" id="k6"><div class="bg"></div></div></div>
+  </div>
+  <div class="legend"><b>Hepsinde:</b> şimdiki vaktin yaprağı, vaktinde yayı ve dokununca kıldım davranışı aynı kalır.<br>
+  <b>Performans:</b> renk geçişleri ve yumuşak gölgeler; K4'teki geçen ışık yalnızca bir yaprak kılındığı an bir kez oynar. Telefonu yormaz.</div>
+</div>
+<script>
+const NAMES=['İmsak','Öğle','İkindi','Akşam','Yatsı'];const CUR=2;
+let st=[2,1,0,0,0],flash=-1;
+const P=(r,a)=>{const q=(a-90)*Math.PI/180;return[100+r*Math.cos(q),100+r*Math.sin(q)]},f=p=>p[0].toFixed(1)+','+p[1].toFixed(1);
+const petal=(r0,r1,a0,a1)=>{const w=a1-a0;return`M${f(P(r0,a0))} C${f(P(r1*1.02,a0-w*.08))} ${f(P(r1*1.16,a0+w*.34))} ${f(P(r1,a0+w*.5))} C${f(P(r1*1.16,a1-w*.34))} ${f(P(r1*1.02,a1+w*.08))} ${f(P(r0,a1))} Z`};
+const tip=(r1,a0,a1,k)=>{const w=a1-a0;return`M${f(P(r1*k,a0+w*.18))} C${f(P(r1*1.1,a0+w*.36))} ${f(P(r1*1.1,a1-w*.36))} ${f(P(r1*k,a1-w*.18))}`};
+let sp='';for(let k=0;k<=60;k++){const th=k/60*Math.PI*3.2,r=9*(1-k/68);sp+=(k?' L':'M')+(100+r*Math.cos(th)).toFixed(1)+','+(100+r*Math.sin(th)).toFixed(1);}
+const order=[0,1,3,4,2];
+const DEFS=id=>`<defs>
+<linearGradient id="${id}gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF0C8"/><stop offset=".45" stop-color="#E8BE74"/><stop offset="1" stop-color="#9A6A22"/></linearGradient>
+<linearGradient id="${id}goldf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6DC"/><stop offset=".3" stop-color="#F2D08A"/><stop offset=".6" stop-color="#D9A94F"/><stop offset="1" stop-color="#8A5C1A"/></linearGradient>
+<radialGradient id="${id}enamel" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#3A5490"/><stop offset=".5" stop-color="#1A2A55"/><stop offset="1" stop-color="#0A1330"/></radialGradient>
+<radialGradient id="${id}enamel2" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#4864A8"/><stop offset=".5" stop-color="#22346A"/><stop offset="1" stop-color="#0E1A3E"/></radialGradient>
+<linearGradient id="${id}gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<radialGradient id="${id}velvet" cx=".5" cy="1" r="1.05" fx=".5" fy="1"><stop offset="0" stop-color="#070C1C"/><stop offset=".55" stop-color="#1B2A52"/><stop offset="1" stop-color="#3B5590"/></radialGradient>
+<radialGradient id="${id}warm" cx=".5" cy="1" r="1.05" fx=".5" fy="1"><stop offset="0" stop-color="#6B4312"/><stop offset=".5" stop-color="#D49E48"/><stop offset="1" stop-color="#FFF0C8"/></radialGradient>
+<filter id="${id}soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.6"/></filter>
+<filter id="${id}soft2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3"/></filter>
+<radialGradient id="${id}halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#E8BE74" stop-opacity=".26"/><stop offset="1" stop-color="#E8BE74" stop-opacity="0"/></radialGradient>
+<linearGradient id="${id}band" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>`;
+function label(i){const m=P(92,i*72);return `<text x="${m[0]}" y="${m[1]+4}" text-anchor="middle" font-size="10" font-weight="600" fill="${i===CUR?'#E8BE74':'#A9B2C3'}" font-family="Inter">${NAMES[i]}</text>`;}
+function arc(i){const a0=i*72-38,a1=a0+76*.55,R=79,A=P(R,a0),B=P(R,a1);return `<path d="M${f(A)} A${R} ${R} 0 0 1 ${f(B)}" fill="none" stroke="#E8BE74" stroke-width="3.5" stroke-linecap="round"/><circle cx="${B[0]}" cy="${B[1]}" r="3.5" fill="#FFF4DC"/>`;}
+const W=s=>`<svg viewBox="-8 -8 216 216" width="320" height="320" style="overflow:visible;position:relative">${s}</svg>`;
+const curEdge=(i,on)=>i===CUR&&!on;
+
+const R={
+ // K4: enamel + gold leaf, every petal shadows the one below, inner petals one layer higher, a sheen passes when marked
+ k4(){const id='d';let s=DEFS(id)+`<circle cx="100" cy="100" r="98" fill="url(#${id}halo)"/>`;
+  for(const i of order){const a=i*72,o=petal(24,70,a-40,a+40),on=st[i]>0;
+   s+=`<g data-i="${i}"><path d="${o}" fill="#000" opacity=".6" transform="translate(0 3.4)" filter="url(#${id}soft)"/>
+   <path d="${o}" fill="url(#${id}${on?'goldf':'enamel'})"/><path d="${o}" fill="url(#${id}gloss)" opacity="${on?.5:.32}"/>
+   <path d="${o}" fill="none" stroke="url(#${id}gold)" stroke-width="${curEdge(i,on)?2.8:1.9}"/>${curEdge(i,on)?`<path d="${o}" fill="none" stroke="#FFF4DC" stroke-width=".9"/>`:''}
+   ${flash===i&&on?`<clipPath id="${id}c${i}"><path d="${o}"/></clipPath><rect x="${P(70,a)[0]-60}" y="${P(70,a)[1]-80}" width="22" height="200" fill="url(#${id}band)" clip-path="url(#${id}c${i})"><animate attributeName="x" from="${P(70,a)[0]-90}" to="${P(70,a)[0]+70}" dur=".9s" fill="freeze"/></rect>`:''}
+   ${label(i)}</g>`;}
+  for(const i of order){const a=i*72,inn=petal(12,46,a-26,a+26),v=st[i]===2,on=st[i]>0;
+   s+=`<g data-i="${i}"><path d="${inn}" fill="#000" opacity=".6" transform="translate(0 2.6)" filter="url(#${id}soft2)"/>
+   <path d="${inn}" fill="url(#${id}${v?'goldf':'enamel2'})"/><path d="${inn}" fill="url(#${id}gloss)" opacity="${v?.6:.3}"/>
+   <path d="${inn}" fill="none" stroke="url(#${id}gold)" stroke-width="${v?1:1.1}" stroke-opacity="${v||on?1:.75}"/></g>`;}
+  return W(s+arc(CUR)+`<circle cx="100" cy="102" r="12" fill="#000" opacity=".55" filter="url(#${id}soft2)"/><circle cx="100" cy="100" r="11.5" fill="url(#${id}goldf)" stroke="#8A5C1A" stroke-width=".7"/><path d="${sp}" fill="none" stroke="#6B4512" stroke-width="1.3"/>`);},
+ // K5: telkari, raised gold wire with beads along the rims, dark enamel between
+ k5(){const id='e';let s=DEFS(id);
+  const beads=(r0,r1,a0,a1,n,rb)=>{let b='';for(let k=1;k<n;k++){const t=k/n,a=a0+(a1-a0)*t,r=r0+(r1*1.04-r0)*Math.sin(Math.PI*t)*.98+ (r1-r0)*.0;const p=P(r,a);b+=`<circle cx="${p[0]}" cy="${p[1]}" r="${rb}" fill="url(#${id}gold)"/>`;}return b;};
+  for(const i of order){const a=i*72,o=petal(24,70,a-40,a+40),on=st[i]>0;
+   s+=`<g data-i="${i}"><path d="${o}" fill="#000" opacity=".55" transform="translate(1 2.6)" filter="url(#${id}soft)"/>
+   <path d="${o}" fill="${on?`url(#${id}goldf)`:'#0C1530'}"/>${on?`<path d="${o}" fill="url(#${id}gloss)" opacity=".45"/>`:`<path d="${o}" fill="url(#${id}enamel)" opacity=".55"/>`}
+   <path d="${o}" fill="none" stroke="#2A1A05" stroke-width="3.6" stroke-opacity=".55" transform="translate(.6 .9)"/>
+   <path d="${o}" fill="none" stroke="url(#${id}gold)" stroke-width="${curEdge(i,on)?3.4:2.8}"/>
+   <path d="${o}" fill="none" stroke="#FFF6DC" stroke-width=".7" stroke-opacity=".8" transform="translate(-.5 -.6)"/>
+   ${curEdge(i,on)?`<path d="${o}" fill="none" stroke="#FFF4DC" stroke-width="1.2"/>`:''}
+   <path d="${petal(34,62,a-28,a+28)}" fill="none" stroke="url(#${id}gold)" stroke-width="1" stroke-opacity="${on?.0:.55}"/>
+   ${label(i)}</g>`;}
+  for(const i of order){const a=i*72,inn=petal(12,46,a-26,a+26),v=st[i]===2;
+   s+=`<g data-i="${i}"><path d="${inn}" fill="${v?`url(#${id}goldf)`:'#0A1228'}" fill-opacity="${v?1:.85}"/>
+   <path d="${inn}" fill="none" stroke="#2A1A05" stroke-width="2.6" stroke-opacity=".5" transform="translate(.5 .7)"/><path d="${inn}" fill="none" stroke="url(#${id}gold)" stroke-width="2"/></g>`;}
+  for(let i=0;i<5;i++){const a=i*72;const p=P(76,a);s+=`<circle cx="${p[0]}" cy="${p[1]}" r="2.6" fill="url(#${id}gold)" stroke="#2A1A05" stroke-width=".4"/>`;}
+  return W(s+arc(CUR)+`<circle cx="100" cy="100" r="12" fill="#0A1228" stroke="url(#${id}gold)" stroke-width="2.4"/>${[0,1,2,3,4,5,6,7].map(k=>{const p=P(12,k*45);return `<circle cx="${p[0]}" cy="${p[1]}" r="1.5" fill="url(#${id}gold)"/>`}).join('')}<path d="${sp}" fill="none" stroke="url(#${id}gold)" stroke-width="1.6"/>`);},
+ // K6: cupped real petals: dark at the base, light toward the curled tip; velvet night blue or warm gold
+ k6(){const id='f';let s=DEFS(id);
+  for(const i of order){const a=i*72,o=petal(24,70,a-40,a+40),on=st[i]>0;const g=`<radialGradient id="${id}g${i}" gradientUnits="userSpaceOnUse" cx="${P(16,a)[0]}" cy="${P(16,a)[1]}" r="66"><stop offset="0" stop-color="${on?'#5A3A10':'#060A18'}"/><stop offset=".55" stop-color="${on?'#C8913C':'#1A2A52'}"/><stop offset="1" stop-color="${on?'#FFE7B0':'#4A65A6'}"/></radialGradient>`;
+   s+=`<g data-i="${i}">${g}<path d="${o}" fill="#000" opacity=".6" transform="translate(0 3)" filter="url(#${id}soft)"/>
+   <path d="${o}" fill="url(#${id}g${i})"/>
+   <path d="${tip(70,a-40,a+40,.9)}" fill="none" stroke="${on?'#FFF6DC':'#9DB2E6'}" stroke-width="2.6" stroke-linecap="round" stroke-opacity="${on?.9:.55}" filter="url(#${id}soft2)"/>
+   <path d="${tip(70,a-40,a+40,.92)}" fill="none" stroke="${on?'#FFFBEF':'#C6D3F2'}" stroke-width="1" stroke-linecap="round" stroke-opacity="${on?.95:.6}"/>
+   <path d="${o}" fill="none" stroke="${curEdge(i,on)?'#F3EEE3':on?'#7A5418':'#0A1124'}" stroke-width="${curEdge(i,on)?2.2:1}" stroke-opacity=".9"/>${label(i)}</g>`;}
+  for(const i of order){const a=i*72,inn=petal(12,46,a-26,a+26),v=st[i]===2;const g=`<radialGradient id="${id}h${i}" gradientUnits="userSpaceOnUse" cx="${P(8,a)[0]}" cy="${P(8,a)[1]}" r="44"><stop offset="0" stop-color="${v?'#6B4312':'#050914'}"/><stop offset=".6" stop-color="${v?'#E2B060':'#1C2C58'}"/><stop offset="1" stop-color="${v?'#FFF3D6':'#5370B2'}"/></radialGradient>`;
+   s+=`<g data-i="${i}">${g}<path d="${inn}" fill="#000" opacity=".6" transform="translate(0 2.4)" filter="url(#${id}soft2)"/><path d="${inn}" fill="url(#${id}h${i})"/>
+   <path d="${tip(46,a-26,a+26,.88)}" fill="none" stroke="${v?'#FFFBEF':'#B9C8EE'}" stroke-width="1" stroke-linecap="round" stroke-opacity=".75"/></g>`;}
+  return W(s+arc(CUR)+`<circle cx="100" cy="101.5" r="11" fill="#000" opacity=".6" filter="url(#${id}soft2)"/><circle cx="100" cy="100" r="10.5" fill="url(#${id}warm)"/><path d="${sp}" fill="none" stroke="#5A3A10" stroke-width="1.3"/>`);},
+};
+function draw(){for(const k of ['k4','k5','k6']){const el=document.getElementById(k);el.innerHTML='<div class="bg"></div>'+R[k]();
+  el.querySelectorAll('g[data-i]').forEach(g=>g.onclick=e=>{e.stopPropagation();const i=+g.dataset.i;st[i]=(st[i]+1)%3;flash=st[i]?i:-1;draw();setTimeout(()=>{flash=-1},950);});}}
+all0.onclick=()=>{st=[0,0,0,0,0];draw()};all1.onclick=()=>{st=[1,1,1,1,1];draw()};all2.onclick=()=>{st=[2,2,2,2,2];draw()};reset.onclick=()=>{st=[2,1,0,0,0];draw()};
+draw();
+</script>
+</body>
+</html>
