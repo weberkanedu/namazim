@@ -313,13 +313,26 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Un
         AppCard(Modifier.fillMaxWidth()) {
             rows.forEachIndexed { r, z ->
                 if (r > 0) HorizontalDivider(Modifier.padding(vertical = Space.xs), color = Pal.Line)
-                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f).clip(RoundedCornerShape(Radius.s)).clickable { onOpen(z.key) }.padding(vertical = Space.xs)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(z.label, Modifier.weight(1f, fill = false), color = if (z.target == null) Pal.Muted else Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium, maxLines = 2)
-                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Zikirhane'de aç", tint = Pal.Gold, modifier = Modifier.size(16.dp))
-                        }
-                        Text(z.target?.let { "hedef $it" } ?: "hedef dışı", color = Pal.Muted.copy(alpha = .6f), fontSize = Type.micro)
+                val name = @Composable { mod: Modifier ->
+                    Row(mod.clip(RoundedCornerShape(Radius.s)).clickable { onOpen(z.key) }.padding(vertical = Space.xs), verticalAlignment = Alignment.CenterVertically) {
+                        Text(z.label, Modifier.weight(1f, fill = false), color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium, maxLines = 2)
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Zikirhane'de aç", tint = Pal.Gold, modifier = Modifier.size(16.dp))
+                    }
+                }
+                val hedef = z.target?.let { "hedef $it" } ?: ""
+                // a long name gets its own full-width line, so it never breaks inside a word next to the five cells
+                if (z.label.length > 16) Column(Modifier.fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) { name(Modifier) }
+                        Text(hedef, Modifier.padding(start = Space.s), color = Pal.Muted.copy(alpha = .6f), fontSize = Type.micro)
+                    }
+                    Row(Modifier.fillMaxWidth().heightIn(min = 40.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                        logs.forEach { log -> TakipCell(zikirCell(log[z.key] ?: 0, z.target)) }
+                    }
+                } else Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        name(Modifier)
+                        Text(hedef, color = Pal.Muted.copy(alpha = .6f), fontSize = Type.micro)
                     }
                     logs.forEach { log -> TakipCell(zikirCell(log[z.key] ?: 0, z.target)) }
                 }
