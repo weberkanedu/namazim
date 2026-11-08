@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parlak Logo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1200px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:#E8BE74}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:#A9B2C3;font-size:15px;line-height:1.65;max-width:860px;margin-top:12px}.lede b{color:#F3EEE3}
+.opts{display:flex;gap:14px;flex-wrap:wrap;margin-top:24px}
+.opt{display:flex;flex-direction:column;align-items:center;gap:8px;width:260px;padding:18px 12px;border:1px solid #2A3550;border-radius:18px;cursor:pointer;background:#0B1120;transition:border-color .2s}
+.opt.on{border-color:#E8BE74;background:#141C2E}
+.opt b{font:600 20px Cormorant,serif;color:#E8BE74}.opt span{font-size:12.5px;color:#A9B2C3;text-align:center;line-height:1.5}
+.stage{display:flex;gap:40px;flex-wrap:wrap;margin-top:28px;align-items:flex-start}
+.phone{width:380px;border-radius:40px;background:#000;padding:24px 14px 30px;border:1px solid #222}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);row-gap:20px}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px;font:400 11px Inter;color:#E8E8E8}
+.app .i{width:56px;height:56px;border-radius:15px;display:flex;align-items:center;justify-content:center;font:700 22px Inter;color:#fff;overflow:hidden}
+.app.me .i{box-shadow:0 0 0 2px rgb(232 190 116 / .0)}
+.big{display:flex;flex-direction:column;gap:18px;align-items:center}
+.big .i{width:180px;height:180px;border-radius:46px;overflow:hidden}
+.legend{max-width:1000px;margin-top:30px;font-size:13px;color:#A9B2C3;line-height:1.7;border-top:1px solid #222;padding-top:18px}.legend b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Logo · ana ekranda görünürlük · dört yön</div>
+  <h1>Daha parlak "Beş vakit gülü"</h1>
+  <p class="lede">Bugünkü ikon lacivert zemin üstünde ince altın çizgiler; parlak ikonların arasında kayboluyor. Aşağıdaki dört yönün hepsi <b>aynı gülü</b> koruyor, ama <b>dolu ve kalın</b> çiziyor, rengi ve zemini güçlendiriyor. Bir seçeneğe dokun: soldaki ana ekranda yerine geçer, sağda büyüğü görünür.</p>
+  <div class="opts" id="opts"></div>
+  <div class="stage">
+    <div class="phone"><div class="grid" id="grid"></div></div>
+    <div class="big"><div class="i" id="bigicon"></div><div id="bigname" style="font:600 22px Cormorant,serif;color:#E8BE74"></div></div>
+  </div>
+  <div class="legend"><b>Hepsinde:</b> Gül beş yapraklı, vakit başına bir yaprak; ortada tomurcuk. Bildirim ikonu ve widget aynı gülü kullanmaya devam eder. Telefonun "temalı ikon" (tek renk) modu için ayrıca çizgi sürümü üretilir, bugünkü gibi.<br>
+  <b>Not:</b> Komşu ikonlar marka logoları değil, yalnızca renk ve parlaklık karşılaştırması için düz renkli kutular.</div>
+</div>
+<script>
+const CX=54,CY=54,R=27;
+const P=(r,a)=>{const t=(a-90)*Math.PI/180;return[CX+r*Math.cos(t),CY+r*Math.sin(t)]},f=p=>p[0].toFixed(2)+','+p[1].toFixed(2);
+const petal=(r0,r1,a0,a1)=>{const w=a1-a0;return`M${f(P(r0,a0))} C${f(P(r1*1.02,a0-w*.08))} ${f(P(r1*1.16,a0+w*.34))} ${f(P(r1,a0+w*.5))} C${f(P(r1*1.16,a1-w*.34))} ${f(P(r1*1.02,a1+w*.08))} ${f(P(r0,a1))} Z`};
+const outer=s=>[0,1,2,3,4].map(i=>petal(R*.34*s,R*s,i*72-40,i*72+40));
+const inner=s=>[0,1,2,3,4].map(i=>petal(R*.16*s,R*.6*s,i*72-2,i*72+74));
+const bud=s=>{let d='';for(let k=0;k<=60;k++){const th=k/60*Math.PI*3.2,r=R*s*.24*(1-k/68);d+=(k?' L':'M')+(CX+r*Math.cos(th)).toFixed(2)+','+(CY+r*Math.sin(th)).toFixed(2);}return d;};
+const G=`<defs>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE9B8"/><stop offset=".5" stop-color="#E8BE74"/><stop offset="1" stop-color="#B8842E"/></linearGradient>
+<linearGradient id="goldbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE3A3"/><stop offset=".55" stop-color="#E5B565"/><stop offset="1" stop-color="#B07A28"/></linearGradient>
+<radialGradient id="royal" cx=".5" cy=".38" r=".75"><stop offset="0" stop-color="#2B4C9B"/><stop offset=".6" stop-color="#16295A"/><stop offset="1" stop-color="#0B1530"/></radialGradient>
+<radialGradient id="navy" cx=".5" cy=".4" r=".8"><stop offset="0" stop-color="#1C2C52"/><stop offset="1" stop-color="#0B1322"/></radialGradient>
+<radialGradient id="halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE7B0" stop-opacity=".55"/><stop offset="1" stop-color="#FFE7B0" stop-opacity="0"/></radialGradient>
+</defs>`;
+const svg=body=>`<svg viewBox="0 0 108 108" width="100%" height="100%">${G}${body}</svg>`;
+const L={
+ now:{n:'Bugünkü',d:'İnce altın çizgi, koyu lacivert zemin.',s:()=>svg(`<rect width="108" height="108" fill="#0E1A30"/>`+outer(1).map(p=>`<path d="${p}" fill="#0E1A30" stroke="#E8BE74" stroke-width="1.5"/>`).join('')+inner(1).map(p=>`<path d="${p}" fill="none" stroke="#E8BE74" stroke-width="1.3"/>`).join('')+`<path d="${bud(1)}" fill="none" stroke="#E8BE74" stroke-width="1.3"/>`)},
+ L1:{n:'L1 · Altın zemin',d:'Zemin parlak altın, gül koyu lacivert. Ekranda en çok parlayan, uzaktan bile seçilen.',s:()=>svg(`<rect width="108" height="108" fill="url(#goldbg)"/>`+outer(1.45).map(p=>`<path d="${p}" fill="#14213D" stroke="#F6D899" stroke-width="2.2" stroke-linejoin="round"/>`).join('')+inner(1.45).map(p=>`<path d="${p}" fill="none" stroke="#E8BE74" stroke-width="2"/>`).join('')+`<path d="${bud(1.45)}" fill="none" stroke="#E8BE74" stroke-width="2.2"/>`)},
+ L2:{n:'L2 · Dolu altın gül',d:'Lacivert zemin kalır, ama gül baştan sona altınla dolu ve büyük. Uygulamanın içindeki renkle bire bir.',s:()=>svg(`<rect width="108" height="108" fill="url(#navy)"/><circle cx="54" cy="54" r="46" fill="url(#halo)"/>`+outer(1.5).map(p=>`<path d="${p}" fill="url(#gold)" stroke="#0E1A30" stroke-width="2.4" stroke-linejoin="round"/>`).join('')+inner(1.5).map(p=>`<path d="${p}" fill="none" stroke="#0E1A30" stroke-width="2"/>`).join('')+`<path d="${bud(1.5)}" fill="none" stroke="#0E1A30" stroke-width="2.2"/>`)},
+ L3:{n:'L3 · Gece mavisi',d:'Daha canlı bir kraliyet mavisi zemin, ortadan ışık; altın dolu gül. Mavi ikonların arasında da kendini belli eder.',s:()=>svg(`<rect width="108" height="108" fill="url(#royal)"/><circle cx="54" cy="54" r="44" fill="url(#halo)"/>`+outer(1.45).map(p=>`<path d="${p}" fill="url(#gold)" stroke="#16295A" stroke-width="2.4" stroke-linejoin="round"/>`).join('')+inner(1.45).map(p=>`<path d="${p}" fill="#F6D899" fill-opacity=".55" stroke="#16295A" stroke-width="1.8"/>`).join('')+`<path d="${bud(1.45)}" fill="none" stroke="#16295A" stroke-width="2.2"/>`)},
+ L4:{n:'L4 · Mühür',d:'Lacivert zeminde kalın altın halka ve içinde dolu gül: Osmanlı mührü gibi. Çerçeve ikonu ekranda öne çıkarır.',s:()=>svg(`<rect width="108" height="108" fill="url(#navy)"/><circle cx="54" cy="54" r="40" fill="none" stroke="url(#gold)" stroke-width="5"/><circle cx="54" cy="54" r="34" fill="none" stroke="#E8BE74" stroke-width="1" stroke-opacity=".6"/>`+outer(1.08).map(p=>`<path d="${p}" fill="url(#gold)" stroke="#0E1A30" stroke-width="2" stroke-linejoin="round"/>`).join('')+inner(1.08).map(p=>`<path d="${p}" fill="none" stroke="#0E1A30" stroke-width="1.6"/>`).join('')+`<path d="${bud(1.08)}" fill="none" stroke="#0E1A30" stroke-width="1.8"/>`)},
+};
+// neighbours: plain colour squares, only for brightness
+const N=[['#D7262E','B'],['#1E7A34','D'],['#1B5FD9','P'],['#6C3CE0','T'],['#FFFFFF','C',1],['#E8794F','✳'],['#FFFFFF','E',1],['#2E7D32','F'],['#F6F6F6','G',1],['#FFFFFF','✦',1],
+ ['#FFFFFF','G',1],['#2FCB6B','S'],['#FFFFFF','◉',1],['#F2F2F2','±',1],['#111','◎'],['#F14B9A','I'],['#FFFFFF','J',1],['#E9E9EE','◉',1],['#222','|||'],['#1C2A6B','✓'],
+ ['#1E7A34','👤'],['#1FC7A0','K'],['#2A9FB0','📖'],['#1E7A34','≡'],['#4A5AF0','M'],[null,'Namazım'],['#F2F2F2','N',1],['#1E88FF','▤'],['#FFFFFF','✉',1],['#FFFFFF','▶',1]];
+let cur='L2';
+function draw(){document.getElementById('opts').innerHTML=Object.entries(L).map(([k,v])=>`<div class="opt${k===cur?' on':''}" data-k="${k}"><div style="width:72px;height:72px;border-radius:19px;overflow:hidden">${v.s()}</div><b>${v.n}</b><span>${v.d}</span></div>`).join('');
+ document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{cur=o.dataset.k;draw();});
+ document.getElementById('grid').innerHTML=N.map(([c,t,l])=>c===null?`<div class="app me"><div class="i">${L[cur].s()}</div>Namazım</div>`:`<div class="app"><div class="i" style="background:${c};color:${l?'#333':'#fff'}">${t}</div>&nbsp;</div>`).join('');
+ document.getElementById('bigicon').innerHTML=L[cur].s();document.getElementById('bigname').textContent=L[cur].n;}
+draw();
+</script>
+</body>
+</html>
