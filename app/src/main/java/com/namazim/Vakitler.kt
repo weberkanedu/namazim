@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import android.graphics.BlurMaskFilter
@@ -108,7 +109,11 @@ fun VakitlerBody(
     val store = remember { Store(ctx) }
     StoreRev.n.let { } // marking bumps the rev: redraw at once, without resetting the animations
     val haptic = LocalHapticFeedback.current
-    val st = slots.map { vakitState(it, now, store.isPrayed(it.key), store.onTime(it), store.tracked(it)) }
+    // a prayer in a woman's özel gün is not owed: no button, no kaza ("takip yok")
+    val exempt = slots.map { !store.isPrayed(it.key) && store.exempt(it) }
+    val st = slots.mapIndexed { i, s -> if (exempt[i]) VState.GECTI else vakitState(s, now, store.isPrayed(s.key), store.onTime(s), store.tracked(s)) }
+    var ozel by remember { mutableStateOf<String?>(null) }
+    val ozelNow = store.ozelGunNow
     val cur = slots.indexOfFirst { now in it.start until it.end }   // -1 between güneş and öğle
     val c = slots.getOrNull(cur)
     val cs = st.getOrNull(cur)
@@ -151,8 +156,9 @@ fun VakitlerBody(
     val tesbihEl = { key: String -> store.setTesbihat(key, "el"); haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
 
     Column(Modifier.fillMaxWidth()) {
+        if (store.kadin) OzelGunHome(store, now) { ozel = it }
         val arc = if (inBand) (band!!.second - now).toFloat() / (band.second - band.first) else null
-        VakitGul(st, cur, arc, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp)) { i ->
+        VakitGul(st, cur, arc, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp).alpha(if (ozelNow != null) .35f else 1f)) { i ->
             if (i == cur && st[i] == VState.ACIK) toggle(i) else sheet = i
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = Space.xl), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -200,7 +206,7 @@ fun VakitlerBody(
                         VState.KILINDI -> Text("kılındı$at", color = Pal.Muted, fontSize = Type.micro)
                         VState.KAZA -> Text("kaza", color = Pal.Warn, fontSize = Type.micro)
                         VState.ACIK -> Text("şimdi · ${hm(s.start)}–${hm(s.end)}", color = accent, fontSize = Type.micro)
-                        else -> {}
+                        else -> if (exempt[i]) Text("özel gün · takip yok", color = OzelRenk, fontSize = Type.micro)
                     }
                 }
                 if (store.askTesbihat && (st[i] == VState.VAKTINDE || st[i] == VState.KILINDI)) {
@@ -218,6 +224,7 @@ fun VakitlerBody(
         Spacer(Modifier.height(Space.xl))
     }
 
+    ozel?.let { OzelGunSheet(it, store) { ozel = null } }
     sheet?.let { i ->
         val s = slots[i]
         val x = st[i]

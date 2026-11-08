@@ -134,6 +134,8 @@ fun AyarlarScreen(onBack: () -> Unit) {
 
     // design A3 "Kutucuklar": six tiles that each say where things stand; a tap opens that topic's rows in a sheet
     var open by remember { mutableStateOf<String?>(null) }
+    var ozelSheet by remember { mutableStateOf<String?>(null) }
+    var ozelSil by remember { mutableStateOf<OzelGun?>(null) }
     val notifOk = ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
     val batteryOk = ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName)
     val missing = listOf(notifOk, batteryOk).count { !it }
@@ -172,6 +174,17 @@ fun AyarlarScreen(onBack: () -> Unit) {
             fontSize = Type.label, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 
+    ozelSheet?.let { OzelGunSheet(it, store) { ozelSheet = null; v++ } }
+    ozelSil?.let { p ->
+        AlertDialog(
+            onDismissRequest = { ozelSil = null },
+            title = { Text("Dönemi sil") },
+            text = { Text("${ozelTarih(p.start)} – ${ozelTarih(p.end ?: p.start)} silinsin mi? O günlerde kılınmamış namazlar kazaya yazılır.") },
+            confirmButton = { TextButton(onClick = { store.setOzelGunler(store.ozelGunler - p); ozelSil = null; v++ }) { Text("Sil", color = Pal.Warn) } },
+            dismissButton = { TextButton(onClick = { ozelSil = null }) { Text("Vazgeç", color = Pal.Muted) } },
+            containerColor = Pal.Card, titleContentColor = Pal.Text, textContentColor = Pal.Muted,
+        )
+    }
     open?.let { id ->
         SettingSheet(
             when (id) { "hatirlatma" -> "Hatırlatmalar"; "ses" -> "Bildirim sesi"; "hedef" -> "Hedefler"; "konum" -> "Konum"; "izin" -> "Telefon izinleri"; "geri" -> "Geri bildirim"; else -> "Veri" },
@@ -202,6 +215,20 @@ fun AyarlarScreen(onBack: () -> Unit) {
                     "hedef" -> {
                         ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
                         ValueRow("Günde kılınacak kaza", "${store.kazaRate} kaza") { openDialog("kaza", "${store.kazaRate}") }
+                        ValueRow("Cinsiyet", if (store.kadin) "Kadın" else "Erkek") { store.kadin = !store.kadin; changed() }
+                        if (store.kadin) {
+                            SwitchRow("Özel gün düğmesi ana sayfada görünsün", !store.ozelGunGizli) { store.ozelGunGizli = !it; changed() }
+                            val og = store.ozelGunNow
+                            GhostButton(if (og != null) "Özel günü bitir" else "Özel gün başlat", Modifier.fillMaxWidth(), OzelRenk) { ozelSheet = if (og != null) "bitir" else "baslat" }
+                            store.ozelGunler.filter { it.end != null }.takeLast(5).reversed().forEach { p ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("${ozelTarih(p.start)} – ${ozelTarih(p.end!!)}${if (p.nifas) " · lohusalık" else ""}", Modifier.weight(1f), color = Pal.Text, fontSize = Type.body2)
+                                    TextButton(onClick = { ozelSil = p }) { Text("sil", color = Pal.Muted) }
+                                }
+                            }
+                            TextButton(onClick = { ozelSheet = "gecmis" }) { Text("Geçmiş bir dönem ekle", color = Pal.Gold, fontWeight = FontWeight.SemiBold) }
+                            Text("Bu bilgi yalnızca telefonunda tutulur; geri bildirimle gönderilmez.", color = Pal.Muted, fontSize = Type.label)
+                        }
                         ValueRow("Mezhep (faziletli vakit dilimleri)", if (store.hanefi) "Hanefî" else "Şâfiî") { store.hanefi = !store.hanefi; changed() }
                         Text(
                             if (store.hanefi) "Hanefî: sabah ortalık aydınlanınca, öğle kışın erken / yazın sıcak kırılınca, ikindi güneş sararmadan, akşam hemen, yatsı gecenin ilk üçte birinde faziletli; gece yarısından sonrası mekruh."

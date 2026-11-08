@@ -54,7 +54,57 @@ class Store(context: Context) {
         return p.getLong("since", 0)
     }
     val firstDay: LocalDate get() = java.time.Instant.ofEpochMilli(since).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-    fun tracked(s: Slot) = s.end > since
+    /** Tracked = after first use and not in a woman's özel gün (no nag, no kaza). */
+    fun tracked(s: Slot) = s.end > since && !exempt(s)
+
+    // --- Kadınlar: özel günler (OzelGun.kt)
+    var kadin: Boolean
+        get() = p.getString("cinsiyet", "erkek") == "kadin"
+        set(v) { StoreRev.n++; p.edit().putString("cinsiyet", if (v) "kadin" else "erkek").apply() }
+    /** Hide the "Özel gün" button on home (it is then started from Ayarlar only). */
+    var ozelGunGizli: Boolean
+        get() = p.getBoolean("ozelGunGizli", false)
+        set(v) { StoreRev.n++; p.edit().putBoolean("ozelGunGizli", v).apply() }
+    // shortcut: switching gender or mezhep later does not recount the kaza of past periods; recount if that matters
+    val ozelGunler: List<OzelGun> get() = if (!kadin) emptyList() else ozelFromJson(p.getString("ozelGunler", null))
+    val ozelGunNow: OzelGun? get() = ozelGunler.lastOrNull { it.end == null }
+    fun exempt(s: Slot): Boolean {
+        val ps = ozelGunler
+        if (ps.isEmpty()) return false
+        val day = slots(lat, lng, s.date)
+        return exemptAny(s, day.getOrNull(day.indexOfFirst { it.key == s.key } + 1), ps, hanefi)
+    }
+    /** Every prayer of [d] falls in an özel gün (kaza streaks skip such days). */
+    fun ozelGunDay(d: LocalDate) = ozelGunler.isNotEmpty() && slots(lat, lng, d).all { exempt(it) }
+    /** Saves the periods and fixes the kaza already counted for ended prayers whose status the change flips
+     *  (a period entered late, ended, edited or deleted). */
+    fun setOzelGunler(new: List<OzelGun>, now: Long = System.currentTimeMillis()) {
+        val old = ozelFromJson(p.getString("ozelGunler", null))
+        val all = old + new
+        if (all.isNotEmpty() && hasLocation) {
+            val zone = java.time.ZoneId.systemDefault()
+            val from = maxOf(all.minOf { it.start }, now - 400 * DAY_MS)
+            var d = java.time.Instant.ofEpochMilli(from).atZone(zone).toLocalDate().minusDays(1)
+            val last = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+            while (!d.isAfter(last)) {
+                val day = slots(lat, lng, d)
+                day.forEachIndexed { i, s ->
+                    if (s.end <= settledUntil && s.end > since && !isPrayed(s.key)) {
+                        val was = exemptAny(s, day.getOrNull(i + 1), old, hanefi)
+                        val isNow = exemptAny(s, day.getOrNull(i + 1), new, hanefi)
+                        if (was != isNow) {
+                            val n = if (isNow) -1 else 1
+                            addKaza(s.vakit, n)
+                            if (s.vakit == Vakit.YATSI) addKaza("VITIR", n)
+                        }
+                    }
+                }
+                d = d.plusDays(1)
+            }
+        }
+        StoreRev.n++
+        p.edit().putString("ozelGunler", ozelToJson(new.sortedBy { it.start })).apply()
+    }
 
     // --- Prayed log, keyed by Slot.key
     fun isPrayed(key: String) = key in prayed()
@@ -168,8 +218,9 @@ class Store(context: Context) {
         // settledUntil'den bu yana kaçan vakitler: 30 güne kadar geriye bak (telefon kapalı kalmış olabilir)
         var day = LocalDate.now().minusDays(30)
         while (!day.isAfter(LocalDate.now())) {
-            for (s in slots(lat, lng, day)) {
-                if (s.end in (settledUntil + 1)..now && !isPrayed(s.key)) {
+            val ds = slots(lat, lng, day)
+            for ((i, s) in ds.withIndex()) {
+                if (s.end in (settledUntil + 1)..now && !isPrayed(s.key) && !exemptAny(s, ds.getOrNull(i + 1), ozelGunler, hanefi)) {
                     addKaza(s.vakit, 1)
                     if (s.vakit == Vakit.YATSI) addKaza("VITIR", 1) // vitir is owed along with a missed yatsı
                 }
@@ -368,7 +419,7 @@ class Store(context: Context) {
     fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
         val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
             "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired",
-            "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2", "mezhep")
+            "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2", "mezhep", "cinsiyet", "ozelGunGizli")
         val e = p.edit()
         p.all.keys.filter { it !in keep }.forEach { e.remove(it) }
         val ok = e.putLong("since", startAt).putLong("settledUntil", startAt).commit()

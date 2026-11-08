@@ -38,7 +38,8 @@ fun reminders(slot: Slot, cfg: ReminderCfg = ReminderCfg()): List<Reminder> {
 
 /** [reminders] with the user's settings, minus the ones a snooze skipped, plus one when the snooze ends. */
 fun remindersFor(s: Store, slot: Slot): List<Reminder> {
-    if (!s.tracked(slot)) return emptyList()   // a prayer from before tracking started is neither nagged nor kaza
+    if (!s.tracked(slot)) return emptyList()   // a prayer from before tracking started (or in an özel gün) is neither nagged nor kaza
+    if (s.ozelGunNow != null) return emptyList()   // nothing can be prayed while an özel gün lasts, even a prayer that became owed
     val all = reminders(slot, s.reminderCfg())
     val until = s.snoozedUntil(slot.key)
     if (until == 0L) return all

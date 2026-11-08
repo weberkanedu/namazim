@@ -486,7 +486,7 @@ fun KazaScreen(embedded: Boolean = false) {
             Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
             BigStat("${daily.take(7).sum()}", "son 7 gün")
             Box(Modifier.width(1.dp).fillMaxHeight().background(Pal.Line))
-            BigStat("${kazaStreak(daily)}", "gün seri")
+            BigStat("${kazaStreak(daily.filterIndexed { i, _ -> i == 0 || !store.ozelGunDay(today.minusDays(i.toLong())) })}", "gün seri")   // özel gün days do not break it
         }
         // "gün gün eda": what is left in days of six, and the day in progress
         val done = KAZA_KEYS.map { v.let { _ -> store.kazaDone(it.first) } }
@@ -698,7 +698,9 @@ fun readingToday(store: Store): Pair<Int, Int> {
     val day = store.prayerDay()
     val by = store.readLogBy(day)
     var done = 0; var target = 0
+    val ozel = store.ozelGunNow != null   // no Kur'an in an özel gün: its share waits
     store.readings().forEach { r ->
+        if (ozel && r.quran) return@forEach
         val read = by[r.id] ?: 0
         val share = readingShare(r, read, day, store.readGoal)
         target += share; done += minOf(read, share)
@@ -719,7 +721,7 @@ fun OkumaScreen() {
     val readings = v.let { store.readings() }
     val byToday = v.let { store.readLogBy(todayDate) }
     val goal = v.let { store.readGoal }
-    val shares = readings.map { readingShare(it, byToday[it.id] ?: 0, todayDate, goal) }
+    val shares = readings.map { if (it.quran && store.ozelGunNow != null) 0 else readingShare(it, byToday[it.id] ?: 0, todayDate, goal) }
     val target = shares.sum()
     val done = readings.indices.sumOf { minOf(byToday[readings[it].id] ?: 0, shares[it]) }
     var sel by remember { mutableIntStateOf(0) }
@@ -1352,7 +1354,7 @@ private fun MuhasebeGidisat() {
                 pages[i] = log[d.toString()] ?: 0
                 for (sl in slots(store.lat, store.lng, d)) {
                     val k = sl.vakit.ordinal
-                    val m = when { sl.key in prayed -> 1; sl.end <= now -> 2; else -> 0 }
+                    val m = when { sl.key in prayed -> 1; store.exempt(sl) -> 0; sl.end <= now -> 2; else -> 0 }   // özel gün: not due
                     marks[i][k] = m
                     if (m != 0) { due++; vDue[k]++ }
                     if (m == 1) { kept++; vKept[k]++; counts[i]++ }
