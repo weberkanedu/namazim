@@ -159,7 +159,7 @@ fun VakitlerBody(
     Column(Modifier.fillMaxWidth()) {
         if (store.kadin) OzelGunHome(store, now) { ozel = it }
         val arc = if (inBand) (band!!.second - now).toFloat() / (band.second - band.first) else null
-        VakitGul(st, cur, arc, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp).alpha(if (ozelNow != null) .35f else 1f)) { i ->
+        VakitGul(st, cur, arc, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp).turHedef("gul").alpha(if (ozelNow != null) .35f else 1f)) { i ->
             if (i == cur && st[i] == VState.ACIK) toggle(i) else sheet = i
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = Space.xl), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -169,16 +169,16 @@ fun VakitlerBody(
         }
         // güneş to öğle has no farz: a thin line shows the two kerahat times (design A2, design/design-system/ara-serit.html)
         if (c == null && now >= gunes && now < slots[1].start) AraSerit(gunes, slots[1].start, ex, now,
-            Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m))
+            Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).turHedef("serit"))
         if (c != null && cs != null) {
             VakitSerit(c, store.prayedAt(c.key).takeIf { store.isPrayed(c.key) }, dl!!, now,
-                Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m))
+                Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).turHedef("serit"))
             val mode = when {
                 cs == VState.ACIK -> 0
                 (cs == VState.VAKTINDE || cs == VState.KILINDI) && store.askTesbihat && store.tesbihat(c.key) == null && c.key !in later -> 1
                 else -> 2
             }
-            AnimatedContent(mode, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m),
+            AnimatedContent(mode, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).turHedef("kildim"),
                 transitionSpec = { (fadeIn(tween(350)) + slideInVertically(tween(350)) { it / 3 }) togetherWith fadeOut(tween(200)) }, label = "kildim") { m ->
                 when (m) {
                     0 -> GoldButton(ACCUSATIVE[cur] + " kıldım" + if (inBand) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }

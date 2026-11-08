@@ -119,6 +119,11 @@ class MainActivity : ComponentActivity() {
             val bad = live.keys.filter { k -> live[k] != parsed[k] }
             android.util.Log.i("Backup", "round trip: ${live.size} keys, ${parsed.size} parsed, mismatched=$bad")
         }
+        // `--ei kurulum N` (debug builds): the setup screens from step N without writing tracking start or kaza; `--ei tur N`: the tour from step N
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            SkyDebug.kurulum = intent.getIntExtra("kurulum", -1)
+            intent.getIntExtra("tur", -1).takeIf { it >= 0 }?.let { Tur.adim = it }
+        }
         SkyDebug.gPeriod = intent.getIntExtra("gperiod", 2) // `--ei gperiod 0..3` opens Gidişat on Hafta/Ay/Yıl/Tümü
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
@@ -167,6 +172,20 @@ val LocalDockPad = compositionLocalOf { 0.dp }
 
 @Composable
 fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
+    val ctx = LocalContext.current
+    val store = remember { Store(ctx) }
+    // first run: the setup screens instead of the app (Kurulum.kt), then the tour once
+    var kurulum by remember { mutableStateOf(SkyDebug.kurulum >= 0 || store.needsKurulum()) }
+    if (kurulum) {
+        KurulumScreen(store, if (SkyDebug.kurulum >= 0) SkyDebug.kurulum else store.kurulumStep, deneme = SkyDebug.kurulum >= 0) { tanit ->
+            if (SkyDebug.kurulum < 0) store.kurulumBitti()
+            SkyDebug.kurulum = -1
+            if (tanit) Tur.adim = 0 else store.turDone = true
+            kurulum = false
+        }
+        return
+    }
+    LaunchedEffect(Unit) { if (!store.turDone && Tur.adim < 0 && reminderKey == null) Tur.adim = 0 }
     var tab by remember { mutableIntStateOf(startTab) }
     // `am start --ei tab N` on a running instance moves to that tab (useful for screenshots)
     LaunchedEffect(startTab) { tab = startTab }
@@ -198,7 +217,8 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
                 }
             }
         }
-        if (!subPage) Box(Modifier.align(Alignment.BottomCenter)) { SeherNav(tab) { tab = it } }
+        if (!subPage) Box(Modifier.align(Alignment.BottomCenter).turHedef("dock")) { SeherNav(tab) { tab = it } }
+        if (Tur.adim >= 0) TurOverlay(onTab = { tab = it }) { Tur.adim = -1; store.turDone = true; tab = 0 }
         if (reminderKey != null) ReminderScreen(reminderKey, onReminderClosed)
     }
 }
@@ -499,16 +519,18 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
             ) {
                 LocationChip(store.city, locating) { if (!locating) locate() }
                 Spacer(Modifier.weight(1f))
-                HeaderButton(onOpenKible) { Icon(painterResource(R.drawable.ic_nav_kible), "Kıble", tint = Pal.Text, modifier = Modifier.size(18.dp)) }
-                Spacer(Modifier.width(Space.s))
-                GearButton(onOpenSettings)
+                Row(Modifier.turHedef("ust")) {
+                    HeaderButton(onOpenKible) { Icon(painterResource(R.drawable.ic_nav_kible), "Kıble", tint = Pal.Text, modifier = Modifier.size(18.dp)) }
+                    Spacer(Modifier.width(Space.s))
+                    GearButton(onOpenSettings)
+                }
             }
         }
         // the two dates under the picture: miladi in the text colour, hicri in gold, one line
         // design K1 (design/design-system/tarih-karma.html): a mini date box, the weekday and the hijri date on the left,
         // the next mübarek günler taking turns on the right, in days
         val tr = Locale("tr")
-        Row(Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.xl, top = Space.xs).height(46.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.xl, top = Space.xs).height(46.dp).turHedef("tarih"), verticalAlignment = Alignment.CenterVertically) {
             Column(
                 Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Pal.Card)
                     .border(1.dp, Pal.Gold.copy(alpha = .45f), RoundedCornerShape(10.dp)),

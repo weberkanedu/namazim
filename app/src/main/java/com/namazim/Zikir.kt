@@ -103,7 +103,7 @@ fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
     var pick by rememberSaveable { mutableStateOf<String?>(null) }
     Column(Modifier.fillMaxSize()) {
         ScreenTitle("Zikir", rule = false)
-        PageTabs(listOf("Zikirhane", "Takip"), section) { section = it }
+        Box(Modifier.turHedef("zikirsekme")) { PageTabs(listOf("Zikirhane", "Takip"), section) { section = it } }
         if (section == 0) { Zikirhane(store, zikirs, pick); Spacer(Modifier.height(LocalDockPad.current)) }
         else ZikirTakip(store, zikirs) { pick = it; section = 0 }
     }
@@ -172,7 +172,7 @@ private fun ColumnScope.Zikirhane(store: Store, zikirs: List<Zikir>, pick: Strin
             NurHead(z.label, own?.let { zikirArabic(it) }, own?.okunus)
             Spacer(Modifier.height(Space.m))
             Box(contentAlignment = Alignment.Center) {
-                NurRing(c, z.target, glow.value, Modifier.size(260.dp))
+                NurRing(c, z.target, glow.value, Modifier.size(260.dp).turHedef("halka"))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val t = z.target
                     Text("${if (t == null) c else c.coerceAtMost(t)}", style = NumStyle, fontSize = 80.sp, lineHeight = 80.sp, color = Pal.Text)
@@ -275,7 +275,7 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
                 if (step < 0) Text("Tesbihat tamam", style = NumStyle, fontSize = Type.h2, color = Pal.Gold) else NurHead(DEFAULT_ZIKIRS[shown].name)
                 Spacer(Modifier.height(Space.l))
                 Box(contentAlignment = Alignment.Center) {
-                    NurRing(counts[shown], DEFAULT_ZIKIRS[shown].target, glow.value, Modifier.size(260.dp))
+                    NurRing(counts[shown], DEFAULT_ZIKIRS[shown].target, glow.value, Modifier.size(260.dp).turHedef("halka"))
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(if (step < 0) "99" else "${counts[shown]}", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
                         Text(if (step < 0) "Allah kabul etsin" else "/ ${DEFAULT_ZIKIRS[shown].target}", color = Pal.Muted, fontSize = Type.body)

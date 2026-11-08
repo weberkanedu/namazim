@@ -170,7 +170,10 @@ fun AyarlarScreen(onBack: () -> Unit) {
                 }
             }
         }
-        Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.fillMaxWidth().padding(Space.xl), color = Pal.Muted,
+        TextButton(onClick = { Tur.adim = 0; onBack() }, Modifier.fillMaxWidth().padding(top = Space.m)) {
+            Text("Tanıtımı tekrar göster", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
+        }
+        Text("Namazım · vakitler Diyanet yöntemiyle hesaplanır", Modifier.fillMaxWidth().padding(horizontal = Space.xl, vertical = Space.m), color = Pal.Muted,
             fontSize = Type.label, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 

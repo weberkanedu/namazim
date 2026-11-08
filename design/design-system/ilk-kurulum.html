@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İlk Kurulum ve Tanıtım</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:40px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1150px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:900px;margin-top:10px}.lede b{color:#F3EEE3}
+.stage{display:flex;gap:34px;margin-top:22px;flex-wrap:wrap;align-items:flex-start}
+.steps{width:300px;display:flex;flex-direction:column;gap:4px}
+.steps h3{font:600 20px Cormorant,serif;color:var(--gold);margin:10px 0 4px}
+.steps div{font:500 13px Inter;color:var(--muted);padding:7px 10px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+.steps div.on{color:#F3EEE3;border-color:rgb(232 190 116 / .5);background:#121A2C}
+.steps div small{display:block;font:400 11.5px/1.45 Inter;color:#6F7B96;margin-top:2px}
+.phone{width:360px;height:760px;border-radius:40px;background:#000;padding:10px;position:relative;flex:none}
+.scr{position:absolute;inset:10px;border-radius:32px;overflow:hidden;background:var(--ground)}
+/* onboarding */
+.ob{position:absolute;inset:0;display:flex;flex-direction:column;padding:56px 26px 26px}
+.ob .back{position:absolute;top:44px;left:16px;font:500 13px Inter;color:var(--muted);cursor:pointer;padding:6px}
+.ob .dots{display:flex;gap:5px;justify-content:center;margin-bottom:18px}.ob .dots i{width:6px;height:6px;border-radius:3px;background:#2A3550}.ob .dots i.on{width:18px;background:var(--gold)}
+.ob .ill{height:150px;display:flex;align-items:center;justify-content:center;font-size:58px}
+.ob h2{font:600 30px/1.1 Cormorant,serif;margin:6px 0 0;text-align:center}
+.ob p{font:400 13.5px/1.6 Inter;color:var(--muted);text-align:center;margin:10px 0 0}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.opt{border:1px solid #2A3550;border-radius:14px;padding:12px 14px;cursor:pointer;transition:all .2s}
+.opt b{display:block;font:600 14px Inter}.opt span{font:400 12px/1.45 Inter;color:var(--muted)}
+.opt.on{border-color:var(--gold);background:rgb(232 190 116 / .08)}.opt.on b{color:var(--gold)}
+.row2{display:flex;gap:8px}.row2 .opt{flex:1;text-align:center}
+.bottom{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+.btn{border-radius:999px;padding:14px;text-align:center;font:600 14px Inter;cursor:pointer;user-select:none}
+.btn.f{background:var(--gold);color:#0B1322}.btn.g{color:var(--muted)}
+.sys{position:absolute;left:16px;right:16px;top:230px;background:#2B3140;border-radius:24px;padding:20px;box-shadow:0 20px 60px #000c;z-index:9}
+.sys b{font:500 15px Inter}.sys p{font:400 13px/1.5 Inter;color:#C9CFDA;margin:8px 0 14px}.sys div{display:flex;flex-direction:column;gap:6px}.sys span{background:#3A4152;border-radius:12px;padding:11px;text-align:center;font:500 13px Inter;cursor:pointer}
+.chipset{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}.chipset span{border:1px solid #2A3550;border-radius:999px;padding:6px 12px;font:500 12px Inter;color:var(--muted);cursor:pointer}.chipset span.on{border-color:var(--gold);color:var(--gold)}
+.note{font:400 11.5px/1.5 Inter;color:#6F7B96;text-align:center;margin-top:8px}
+/* home for the tour */
+.home{position:absolute;inset:0}
+.hd{height:170px;background:url(../widget/mekke-gun.jpg) center/cover;position:relative}
+.hd::after{content:"";position:absolute;inset:auto 0 0 0;height:50px;background:linear-gradient(transparent,var(--ground))}
+.hb{position:absolute;top:40px;right:12px;display:flex;gap:8px;z-index:1}.hb i{width:36px;height:36px;border-radius:50%;background:rgb(255 255 255 / .2);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:16px}
+.loc{position:absolute;top:46px;left:14px;font:500 12px Inter;z-index:1}
+.date{display:flex;align-items:center;gap:8px;padding:2px 14px;height:44px}
+.date .mb{width:36px;height:36px;border-radius:9px;border:1px solid rgb(232 190 116 / .45);display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1 Cormorant,serif}.date .mb i{font:600 7px Inter;color:var(--gold);font-style:normal}
+.date .t{font:500 11px/1.3 Inter}.date .t span{display:block;color:var(--gold);font-size:10px}
+.date .r{margin-left:auto;text-align:right;font:500 10px Inter;color:var(--muted)}.date .r b{display:block;font:600 15px Cormorant,serif;color:var(--gold)}
+.rose{display:flex;justify-content:center;margin-top:2px}
+.cd{text-align:center}.cd .k{font:600 9px Inter;letter-spacing:.16em;color:var(--gold)}.cd .t{font:600 34px/1 Cormorant,serif}
+.strip{display:flex;gap:2px;margin:10px 18px 0}.strip i{flex:1;height:8px;border-radius:4px;background:var(--track)}.strip i.g{background:var(--gold)}
+.kb{margin:10px 18px 0;background:var(--gold);color:#0B1322;border-radius:999px;padding:11px;text-align:center;font:600 13px Inter}
+.list{margin:12px 18px 0;font:500 12px Inter}.list div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #18223A}.list b{font:600 14px Cormorant,serif}
+.dock{position:absolute;left:12px;right:12px;bottom:12px;height:54px;border-radius:27px;background:#16203Aee;display:flex;align-items:center;justify-content:space-around;font-size:18px}
+.dock i{font-style:normal;width:56px;text-align:center;font-size:11px;color:var(--muted)}
+/* spotlight */
+.spot{position:absolute;border-radius:16px;box-shadow:0 0 0 2000px rgb(3 6 14 / .78);transition:all .45s cubic-bezier(.3,1,.4,1);pointer-events:none;z-index:5}
+.spot::after{content:"";position:absolute;inset:-4px;border-radius:20px;border:1.5px solid rgb(232 190 116 / .8);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+.bub{position:absolute;left:16px;right:16px;background:#F3EEE3;color:#0B1322;border-radius:18px;padding:14px 16px;z-index:6;transition:top .45s;box-shadow:0 12px 30px #0009}
+.bub b{display:block;font:700 14px Inter}.bub p{margin:4px 0 10px;font:400 12.5px/1.5 Inter;color:#2A3346}
+.bub .f{display:flex;align-items:center;gap:8px}.bub .f small{font:500 11px Inter;color:#6F7B96;flex:1}
+.bub .f span{font:600 12px Inter;border-radius:999px;padding:7px 14px;cursor:pointer}.bub .f .n{background:#0B1322;color:#F3EEE3}.bub .f .s{color:#6F7B96}
+.bub::before{content:"";position:absolute;width:14px;height:14px;background:#F3EEE3;transform:rotate(45deg);left:var(--ax,50%)}
+.bub.up::before{top:-6px}.bub.down::before{bottom:-6px}
+.dock i.on{color:var(--gold)}
+.sw{display:flex;align-items:center;gap:10px;margin-top:14px;border:1px solid #2A3550;border-radius:14px;padding:12px 14px;cursor:pointer}
+.sw div{flex:1}.sw b{display:block;font:600 13px Inter}.sw span{font:400 11.5px/1.45 Inter;color:var(--muted)}
+.sw i{width:40px;height:22px;border-radius:11px;background:#2A3550;position:relative;flex:none;transition:.2s}.sw i::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#8A93A8;transition:.2s}
+.sw i.on{background:var(--gold)}.sw i.on::after{left:21px;background:#0B1322}
+.pg{padding-top:44px}.ttl{font:600 30px Cormorant,serif;padding:0 18px}
+.tabs{display:flex;gap:6px;margin:8px 18px 0}.tabs span{flex:1;text-align:center;border-radius:999px;padding:8px;font:500 12px Inter;color:var(--muted);background:#121D33}.tabs span.on{background:rgb(232 190 116 / .15);color:var(--gold)}
+.ar{text-align:center;font:400 30px serif;margin-top:22px;color:var(--gold)}
+.zn{text-align:center;font:600 22px Cormorant,serif;margin-top:4px}.zn small{display:block;font:400 11px Inter;color:var(--muted)}
+.ring{position:relative;width:220px;height:220px;margin:16px auto 0}.ring div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.ring b{font:600 56px/1 Cormorant,serif}.ring small{color:var(--muted);font-size:12px}
+.ayet{margin:18px 26px 0;text-align:center;font:italic 400 12px/1.6 Inter;color:var(--muted)}
+.tot{margin:10px 18px 0;font:500 12px Inter;color:var(--muted)}.tot b{font:600 40px Cormorant,serif;color:#F3EEE3;margin-right:6px}
+.shelf{display:flex;align-items:flex-end;gap:8px;margin:12px 18px 0;padding:0 8px 6px;border-bottom:3px solid #3A2E1E;height:150px}
+.shelf div{width:44px;border-radius:6px 6px 2px 2px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font:600 10px Inter;padding-bottom:6px;color:#0B1322}
+.pc{margin:14px 18px 0;background:var(--card);border-radius:16px;padding:14px}.pc b{font:600 18px Cormorant,serif;display:block}.pc span{display:block;font:400 12px/1.6 Inter;color:var(--muted)}.pc .bar{height:6px;border-radius:3px;background:var(--track);margin-top:8px}.pc .bar i{display:block;height:100%;width:38%;border-radius:3px;background:var(--gold)}
+.days{display:flex;align-items:flex-end;gap:4px;margin:14px 18px 0;height:60px}.days i{flex:1;background:rgb(232 190 116 / .6);border-radius:2px}
+.lg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 18px 0;font:500 11.5px Inter;color:var(--muted)}.lg2 span{background:var(--card);border-radius:10px;padding:8px 10px}.lg2 b{color:var(--gold);float:right}
+.legend{max-width:1050px;margin-top:28px;font-size:13px;color:var(--muted);line-height:1.7;border-top:1px solid #222;padding-top:16px}.legend b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">İlk açılış · kurulum · tanıtım turu · simülasyon</div>
+  <h1>İlk kurulum ve tanıtım</h1>
+  <p class="lede">Telefonda dokunur gibi ilerle: düğmelere bas, seçenek seç. Önce <b>kurulum</b> (izinler ve tercihler, her biri tek ekran), sonra ana sayfada <b>tanıtım turu</b>: ilgili yer aydınlanır, gerisi kararır, altında ya da üstünde bir bilgi baloncuğu çıkar. Soldan istediğin adıma atlayabilirsin.</p>
+  <div class="stage"><div class="steps" id="steps"></div><div class="phone"><div class="scr" id="scr"></div></div></div>
+  <div class="legend"><b>Kurulumda sorulanlar:</b> hoş geldin (ve "eski telefondan yedek yükle"), konum (alınamazsa şehir seç), bildirim izni, pil ve otomatik başlatma (Xiaomi/Samsung'a göre yönlendirme), mezhep, cinsiyet, hatırlatma sıklığı, takibin ne zaman başlayacağı, kaza borcu (isteğe bağlı), hazır. <b>Her şey sonradan Ayarlar'dan değiştirilebilir</b>; kurulum yarıda bırakılırsa kaldığı yerden sürer; her adımda sol üstteki ‹ Geri ile bir önceki adıma dönülür.<br>
+  <b>Tanıtım turu</b> ilk açılışta bir kez gösterilir, "Atla" ile geçilebilir; Ayarlar'da "Tanıtımı tekrar göster" olur. Tur ana sayfadan sonra Zikir, Okuma ve Defter sekmelerini de sırayla açıp tanıtır.<br>
+  <b>Kadın seçilirse:</b> ana sayfadaki "Özel gün başlat" düğmesi varsayılan olarak <b>kapalı</b> gelir (kurulumda sorulmaz); Ayarlar › Hedefler'den açılır. Kapalıyken özel gün Ayarlar › Hedefler'den girilir.<br>
+  <b>Ayrıca kendiliğinden:</b> izin sonradan kapatılırsa Ayarlar'daki İzinler kutucuğu turuncu olur ve ana sayfada tek satırlık uyarı çıkar (bugünkü gibi).</div>
+</div>
+<script>
+const st={mezhep:'Hanefî',cins:null,hat:'15',bas:'imsak',kaza:'yok',city:'Altındağ',ozel:false};
+let sysOpen=null;
+const OB=[
+ {id:'hos',t:'Hoş geldin',d:'Uygulamanın amacı ve eski telefondan yedek yükleme',
+  r:()=>`<div class="ill">🌹</div><h2>Namazım'a hoş geldin</h2><p>Vaktinde hatırlatır, kıldığını işaretlersin; kaçanlar kazaya yazılır. Zikir, okuma ve defterin bir arada.</p>
+   <div class="bottom"><span class="btn f" data-next>Başlayalım</span><span class="btn g" data-next>Eski telefondan yedeğim var · yükle</span></div>`},
+ {id:'konum',t:'Konum',d:'Vakitler için; alınamazsa şehir seçimi',
+  r:()=>`<div class="ill">📍</div><h2>Vakitler için konumun</h2><p>Namaz vakitleri bulunduğun yere göre Diyanet yöntemiyle hesaplanır. Konum yalnızca telefonunda kalır.</p>
+   <div class="note">Şu an: <b style="color:#F3EEE3">${st.city}</b></div>
+   <div class="bottom"><span class="btn f" data-sys="konum">Konumumu bul</span><span class="btn g" data-next>Şehri elle seçeyim</span></div>`},
+ {id:'bildirim',t:'Bildirim izni',d:'Vakit öncesi ve "Kıldın mı?" hatırlatmaları',
+  r:()=>`<div class="ill">🔔</div><h2>Hatırlatabilmem için</h2><p>Vakit girmeden önce haber veririm; kılana kadar "Kıldın mı?" diye sorarım. Bunun için bildirim izni gerekiyor.</p>
+   <div class="bottom"><span class="btn f" data-sys="bildirim">İzin ver</span><span class="btn g" data-next>Sonra</span></div>`},
+ {id:'pil',t:'Pil ve otomatik başlatma',d:'Hatırlatmalar gecikmesin (marka için yol tarifi)',
+  r:()=>`<div class="ill">🔋</div><h2>Hatırlatmalar gecikmesin</h2><p>Bazı telefonlar (Xiaomi, Samsung) pili korumak için uygulamaları uyutur; hatırlatma geç gelir. Namazım'ı bu kısıtlamadan çıkaralım.</p>
+   <div class="opts"><div class="opt on"><b>1 · Pil kısıtlamasını kaldır</b><span>Tek dokunuş, sistem sorar.</span></div><div class="opt"><b>2 · Otomatik başlatmayı aç (Xiaomi)</b><span>Ayarlar sayfasını açarım, Namazım'ı aç.</span></div></div>
+   <div class="bottom"><span class="btn f" data-sys="pil">Kısıtlamayı kaldır</span><span class="btn g" data-next>Sonra</span></div>`},
+ {id:'mezhep',t:'Mezhep',d:'Faziletli vakit dilimleri ve özel gün kuralları',
+  r:()=>`<div class="ill">🕌</div><h2>Mezhebin</h2><p>Faziletli vakitler (vaktinde yaprağı) ve bazı hesaplar mezhebe göre değişir.</p>
+   <div class="opts">${['Hanefî','Şâfiî'].map(m=>`<div class="opt ${st.mezhep===m?'on':''}" data-set="mezhep" data-v="${m}"><b>${m}</b><span>${m==='Hanefî'?'Türkiye\'de yaygın; sabah ortalık aydınlanınca, akşam hemen…':'Her vakitte vaktin başı faziletli.'}</span></div>`).join('')}</div>
+   <div class="bottom"><span class="btn f" data-next>Devam</span></div>`},
+ {id:'cins',t:'Cinsiyet',d:'Kadınlara özel gün takibi için',
+  r:()=>`<div class="ill">👤</div><h2>Seni tanıyalım</h2><p>Kadınlarda özel günlerde namaz takibi durur, kaza yazılmaz. Bu bilgi yalnızca telefonunda kalır.</p>
+   <div class="row2 opts">${['Erkek','Kadın'].map(m=>`<div class="opt ${st.cins===m?'on':''}" data-set="cins" data-v="${m}"><b>${m}</b></div>`).join('')}</div>"></i></div>`:''}
+   <div class="bottom"><span class="btn f" data-next style="${st.cins?'':'opacity:.4;pointer-events:none'}">Devam</span></div>`},
+ {id:'hatirlatma',t:'Hatırlatmalar',d:'Vakitten önce ve "Kıldın mı?" sıklığı',
+  r:()=>`<div class="ill">⏰</div><h2>Nasıl hatırlatayım?</h2><p>Vakit girmeden: 30, 15 ve 5 dakika önce. Vakit girince kılana kadar şu sıklıkla sorarım:</p>
+   <div class="chipset">${['10','15','20','30'].map(m=>`<span class="${st.hat===m?'on':''}" data-set="hat" data-v="${m}">her ${m} dk</span>`).join('')}</div>
+   <div class="note">Vaktin son yarım saatinde sıklaşır. Ayarlar'dan değişir.</div>
+   <div class="bottom"><span class="btn f" data-next>Devam</span></div>`},
+ {id:'baslangic',t:'Takip ne zaman başlasın',d:'Bugünkü kılınmış vakitler kaza olmasın',
+  r:()=>`<div class="ill">🌅</div><h2>Takibe nereden başlayalım?</h2><p>Bugün kıldığın ama işaretlemediğin vakitler kazaya yazılmasın.</p>
+   <div class="opts"><div class="opt ${st.bas==='imsak'?'on':''}" data-set="bas" data-v="imsak"><b>Yarın imsaktan</b><span>Bugün sadece tanış; takip yarın sabah başlar.</span></div>
+   <div class="opt ${st.bas==='simdi'?'on':''}" data-set="bas" data-v="simdi"><b>Şu anki vakitten</b><span>Önceki vakitler sayılmaz.</span></div></div>
+   <div class="bottom"><span class="btn f" data-next>Devam</span></div>`},
+ {id:'kaza',t:'Kaza borcu (isteğe bağlı)',d:'Geçmişten kalan borcu hesapla',
+  r:()=>`<div class="ill">📿</div><h2>Geçmişten kaza borcun var mı?</h2><p>İstersen kabaca hesaplayıp ekleyelim; günde kaç kaza kılacağını da seçersin. Sonra da yapabilirsin.</p>
+   <div class="opts"><div class="opt ${st.kaza==='hesapla'?'on':''}" data-set="kaza" data-v="hesapla"><b>Evet, hesaplayalım</b><span>Buluğ yaşı ve düzenli kılmaya başladığın yaşla.</span></div>
+   <div class="opt ${st.kaza==='yok'?'on':''}" data-set="kaza" data-v="yok"><b>Şimdilik geç</b><span>Defter › Kaza'dan sonra eklersin.</span></div></div>
+   <div class="bottom"><span class="btn f" data-next>Devam</span></div>`},
+ {id:'hazir',t:'Hazır',d:'Kısa tanıtım turuna geçiş',
+  r:()=>`<div class="ill">✨</div><h2>Hazırsın</h2><p>${st.mezhep} · ${st.cins||'—'} · her ${st.hat} dk · takip ${st.bas==='imsak'?'yarın imsaktan':'şimdiden'}.</p><p>Ana sayfayı bir dakikada tanıtayım mı?</p>
+   <div class="bottom"><span class="btn f" data-next>Tanıt</span><span class="btn g" data-jump="tur-son">Atla, kendim keşfederim</span></div>`},
+];
+// tour: each step names the screen and the element (CSS selector) to light up
+const TUR=[
+ {id:'t-gul',t:'Gül',s:'home',q:'.rose svg',b:'Gül, bugünün beş vakti',p:'Her yaprak bir vakit. Kıldıkça altına döner; vaktinde kılarsan içindeki yaprak da açılır. Bir yaprağa dokununca o vaktin ayrıntısı açılır.'},
+ {id:'t-serit',t:'Vakit şeridi',s:'home',q:'.strip',b:'Vaktin yedi dilimi',p:'Altın dilimler faziletli vakit, taralı turuncu kerahat. Işıklı nokta şu anı gösterir.'},
+ {id:'t-kildim',t:'Kıldım',s:'home',q:'.kb',b:'Kıldım',p:'Vakit girince burada büyük bir "Kıldım" düğmesi olur. Bildirimden de işaretleyebilirsin. Kıldıktan sonra tesbihat kartı çıkar.'},
+ {id:'t-tarih',t:'Tarih ve mübarek günler',s:'home',q:'.date',b:'Tarih ve mübarek günler',p:'Miladi ve hicri tarih; sağda en yakın mübarek günler gün sayısıyla, sırayla değişir.'},
+ {id:'t-ust',t:'Kıble ve Ayarlar',s:'home',q:'.hb',b:'Kıble ve ayarlar',p:'Pusula kıbleyi gösterir; çark ayarları açar (mezhep, hatırlatmalar, izinler, yedek).'},
+ {id:'t-dock',t:'Alt menü',s:'home',q:'.dock',b:'Alt menü',p:'Namaz, Zikir, Okuma ve Defter. Şimdi diğer sekmelere birlikte bakalım.'},
+ {id:'t-zikir',t:'Zikir · sayaç',s:'zikir',q:'.ring',b:'Zikirhane',p:'Ekranın her yerine dokun, sayar; her dokunuşta hafif titrer. Hedefe varınca uzun titrer ve sıradaki zikre geçer.'},
+ {id:'t-takip',t:'Zikir · Takip',s:'zikir',q:'.tabs span:nth-child(2)',b:'Takip ve kütüphane',p:'Son beş günde hangi zikri tamamladığını gösterir. "Kütüphaneden ekle" ile sahih hadislerdeki zikirleri ve Esmâ-ül Hüsnâ\'yı ekler, kendi zikrini oluşturursun.'},
+ {id:'t-raf',t:'Okuma · raf',s:'okuma',q:'.shelf',b:'Okuma rafın',p:'Her sırt bir kitap; Kur\'an da burada. Üstündeki yüzde bitirdiğin kısım. Dokunup bugün okuduğun sayfayı eklersin.'},
+ {id:'t-plan',t:'Okuma · plan',s:'okuma',q:'.pc',b:'Plan ve bitiş tarihi',p:'Bitirmek istediğin tarihi koy; günlük payın hesaplanır. Öndeysen ya da geride kaldıysan burada söyler.'},
+ {id:'t-defter',t:'Defter · bölümler',s:'defter',q:'.tabs',b:'Defter',p:'Özet: gülün. İstikrar: hafta, ay, yıl ve tüm zamanlar. Kaza: borcun ve gün gün eda.'},
+ {id:'t-gul3',t:'Defter · gül',s:'defter',q:'.g3',b:'Günün gülü',p:'Beş yaprak: Namaz, Vaktinde, Sayfa, Kaza, Zikir. Gün boyunca yaptıkça yapraklar açılır.'},
+ {id:'tur-son',t:'Bitti',s:'home',q:null,b:'Hepsi bu kadar',p:'Ayarlar\'da "Tanıtımı tekrar göster" ile istediğin zaman yeniden bakabilirsin. Allah kabul etsin.'},
+];
+let i=0;
+const ALL=[...OB.map(x=>({...x,kind:'ob'})),...TUR.map(x=>({...x,kind:'tur'}))];
+function home(){return `<div class="home"><div class="hd"></div><div class="loc">📍 ${st.city}</div><div class="hb"><i>🧭</i><i>⚙</i></div>
+ <div class="date"><div class="mb">8<i>KAS</i></div><div class="t">Pazar<span>28 Cemâziyelevvel 1448</span></div><div class="r">✦ Regaib Kandili<b>32 gün</b></div></div>
+ <div class="rose"><svg viewBox="0 0 200 200" width="150" height="150">${[0,1,2,3,4].map(k=>`<ellipse cx="100" cy="58" rx="28" ry="40" transform="rotate(${k*72} 100 100)" fill="${k<2?'#C8913C':'#1A2A52'}" stroke="#0A1124"/>`).join('')}<circle cx="100" cy="100" r="10" fill="#D49E48"/></svg></div>
+ <div class="cd"><div class="k">VAKTİNDE KILMAK İÇİN</div><div class="t">0:23:10</div></div>
+ <div class="strip"><i class="g"></i><i class="g"></i><i></i><i></i><i></i><i></i><i></i></div>
+ <div class="kb">✓ Öğleyi kıldım · vaktinde</div>
+ <div class="list"><div><span>İmsak ✓</span><b>05:53</b></div><div><span>Öğle</span><b>12:37</b></div><div><span>İkindi</span><b>15:21</b></div></div>
+ ${dock(0)}</div>`;}
+function dock(on){return `<div class="dock">${[['🕌','Namaz'],['📿','Zikir'],['📖','Okuma'],['📊','Defter']].map(([a,b],k)=>`<i class="${k===on?'on':''}">${a}<br>${b}</i>`).join('')}</div>`;}
+function zikir(){return `<div class="home pg"><div class="ttl">Zikir</div><div class="tabs"><span class="on">Zikirhane</span><span>Takip</span></div>
+ <div class="ar">سُبْحَانَ اللّٰهِ</div><div class="zn">Sübhânallah<small>Allah her türlü eksiklikten uzaktır</small></div>
+ <div class="ring"><svg viewBox="0 0 220 220" width="220" height="220"><circle cx="110" cy="110" r="96" fill="none" stroke="#1C2943" stroke-width="10"/><circle cx="110" cy="110" r="96" fill="none" stroke="#E8BE74" stroke-width="10" stroke-linecap="round" stroke-dasharray="${603*12/33} 603" transform="rotate(-90 110 110)"/></svg><div><b>12</b><small>/ 33</small></div></div>
+ <div class="ayet">"Bilesiniz ki kalpler ancak Allah'ı anmakla huzur bulur." — Ra'd 28</div>${dock(1)}</div>`;}
+function okuma(){const sp=[['Kur\'an',130,'#E8BE74','38%'],['Riyâzü\'s-Sâlihîn',110,'#C9A27A','12%'],['Siyer',96,'#8FA6C8','64%'],['İlmihal',120,'#A7B98E','5%']];
+ return `<div class="home pg"><div class="ttl">Okuma</div><div class="tot"><b>12</b>sayfa bugün · hedef 20</div>
+ <div class="shelf">${sp.map(([n,h,c,p])=>`<div style="height:${h}px;background:${c}" title="${n}">${p}</div>`).join('')}</div>
+ <div class="pc"><b>Kur'an-ı Kerim</b><span>Günde 20 sayfa · 2 gün öndesin</span><span>Bitiş: 14 Ocak 2027</span><div class="bar"><i></i></div></div>
+ <div class="days">${[8,20,14,0,22,20,6,18,20,25,12,20,16,12].map(v=>`<i style="height:${Math.max(3,v*2.2)}px"></i>`).join('')}</div>${dock(2)}</div>`;}
+function defter(){return `<div class="home pg"><div class="ttl">Defter</div><div class="tabs"><span class="on">Özet</span><span>İstikrar</span><span>Kaza</span></div>
+ <div class="rose g3" style="width:220px;margin:18px auto 0"><svg viewBox="0 0 200 200" width="220" height="220">${[0,1,2,3,4].map(k=>`<ellipse cx="100" cy="52" rx="32" ry="46" transform="rotate(${k*72} 100 100)" fill="${['#C8913C','#B8843A','#1A2A52','#A97A36','#1A2A52'][k]}" stroke="#0A1124"/>`).join('')}<circle cx="100" cy="100" r="12" fill="#D49E48"/></svg></div>
+ <div class="lg2"><span>Namaz<b>4/5</b></span><span>Vaktinde<b>3</b></span><span>Sayfa<b>12</b></span><span>Kaza<b>2</b></span><span>Zikir<b>%60</b></span></div>${dock(3)}</div>`;}
+const SCR={home,zikir,okuma,defter};
+function sysDlg(k){const T={konum:['Namazım konumunuza erişsin mi?','Uygulamayı kullanırken','Yalnızca bu sefer','İzin verme'],bildirim:['Namazım\'ın bildirim göndermesine izin verilsin mi?','İzin ver','İzin verme'],pil:['Uygulama arka planda çalışmaya devam etsin mi?','İzin ver','Reddet']}[k];
+ return `<div class="sys"><b>${T[0]}</b><p>Bu bir Android sistem penceresi; uygulama değil, telefon sorar.</p><div>${T.slice(1).map(x=>`<span data-close>${x}</span>`).join('')}</div></div>`;}
+function draw(){const s=ALL[i];
+ document.getElementById('steps').innerHTML='<h3>Kurulum</h3>'+OB.map((x,k)=>`<div class="${k===i?'on':''}" data-go="${k}">${k+1}. ${x.t}<small>${x.d}</small></div>`).join('')+'<h3>Tanıtım turu</h3>'+TUR.map((x,k)=>`<div class="${k+OB.length===i?'on':''}" data-go="${k+OB.length}">${x.t}</div>`).join('');
+ let h='';
+ if(s.kind==='ob'){h=`<div class="ob">${i>0?'<span class="back" data-back>‹ Geri</span>':''}<div class="dots">${OB.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div>${s.r()}</div>`+(sysOpen?sysDlg(sysOpen):'');}
+ else{const k=i-OB.length,last=k===TUR.length-1;
+  h=SCR[s.s]()+`<div class="spot"></div>
+   <div class="bub"><b>${s.b}</b><p>${s.p}</p>
+   <div class="f"><small>${k+1} / ${TUR.length}</small>${last?'':'<span class="s" data-jump="tur-son">Atla</span>'}<span class="n" data-next>${last?'Başla':'İleri'}</span></div></div>`;}
+ const scr=document.getElementById('scr');scr.innerHTML=h;
+ if(s.kind==='tur'){const sp=scr.querySelector('.spot'),bu=scr.querySelector('.bub'),o=scr.getBoundingClientRect();
+  let x=170,y=330,w=0,hh=0;const el=s.q&&scr.querySelector(s.q);
+  if(el){const r=el.getBoundingClientRect();x=r.left-o.left-6;y=r.top-o.top-6;w=r.width+12;hh=r.height+12;}
+  Object.assign(sp.style,{left:x+'px',top:y+'px',width:w+'px',height:hh+'px'});
+  const bh=bu.offsetHeight,below=y+hh/2<o.height/2;
+  bu.classList.add(below?'up':'down');bu.style.top=(below?y+hh+14:Math.max(30,y-bh-14))+'px';
+  bu.style.setProperty('--ax',Math.min(290,Math.max(14,x+w/2-23))+'px');if(!el)bu.classList.remove('up','down');}
+ document.querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>{i=+e.dataset.go;sysOpen=null;draw();});
+ document.querySelectorAll('#scr [data-next]').forEach(e=>e.onclick=()=>{if(i<ALL.length-1)i++;else i=0;sysOpen=null;draw();});
+ document.querySelectorAll('#scr [data-sys]').forEach(e=>e.onclick=()=>{sysOpen=e.dataset.sys;draw();});
+ document.querySelectorAll('#scr [data-close]').forEach(e=>e.onclick=()=>{sysOpen=null;i++;draw();});
+ document.querySelectorAll('#scr [data-set]').forEach(e=>e.onclick=()=>{st[e.dataset.set]=e.dataset.v;draw();});
+ document.querySelectorAll('#scr [data-back]').forEach(e=>e.onclick=()=>{i--;sysOpen=null;draw();});
+ document.querySelectorAll('#scr [data-tog]').forEach(e=>e.onclick=()=>{st[e.dataset.tog]=!st[e.dataset.tog];draw();});
+ document.querySelectorAll('#scr [data-jump]').forEach(e=>e.onclick=()=>{i=ALL.findIndex(x=>x.id===e.dataset.jump);draw();});}
+draw();
+</script>
+</body>
+</html>

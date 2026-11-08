@@ -285,7 +285,7 @@ fun KibleScreen(onBack: () -> Unit) {
 
 // ---------------------------------------------------------------- Kaza
 
-private val KAZA_KEYS = listOf("SABAH" to "Sabah", "OGLE" to "Öğle", "IKINDI" to "İkindi", "AKSAM" to "Akşam", "YATSI" to "Yatsı", "VITIR" to "Vitir")
+internal val KAZA_KEYS = listOf("SABAH" to "Sabah", "OGLE" to "Öğle", "IKINDI" to "İkindi", "AKSAM" to "Akşam", "YATSI" to "Yatsı", "VITIR" to "Vitir")
 
 /**
  * Estimated kaza owed, in days (each day = one of every vakit, vitir included): the years between the age the debt
@@ -378,7 +378,7 @@ private fun KazaCalendar(today: LocalDate, first: LocalDate, newestFirst: List<I
 /** Kaza › "Geçmişten kalan borcunu hesapla": four numbers in, a live estimate out; [onAdd] gets the days to add per vakit. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun KazaDebtSheet(rate: Int, onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
+internal fun KazaDebtSheet(rate: Int, onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
     var from by remember { mutableStateOf("") }
     var to by remember { mutableStateOf("") }
     var excused by remember { mutableStateOf("0") }
@@ -793,7 +793,7 @@ fun OkumaScreen() {
         }
 
         // ---- the shelf: fill = how far the reading is; the foot carries today's share and its tick
-        Row(Modifier.horizontalScroll(rememberScrollState()).padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.s),
+        Row(Modifier.turHedef("raf").horizontalScroll(rememberScrollState()).padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.s),
             horizontalArrangement = Arrangement.spacedBy(Space.m)) {
             readings.forEachIndexed { k, r ->
                 val read = byToday[r.id] ?: 0
@@ -819,7 +819,7 @@ fun OkumaScreen() {
         val r = readings[i]
         val read = byToday[r.id] ?: 0
         val share = shares[i]
-        Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l)) {
+        Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.l).turHedef("plan")) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Text("${r.page}", style = NumStyle, fontSize = Type.title, lineHeight = Type.title, color = Pal.Text)
                 Text("/ ${r.total} sayfa", Modifier.padding(start = Space.xs, bottom = 5.dp), color = Pal.Muted, fontSize = Type.body2)
@@ -1125,7 +1125,7 @@ fun MuhasebeScreen() {
     var section by remember { mutableIntStateOf(SkyDebug.mSection) }
     Column(Modifier.fillMaxSize()) {
         ScreenTitle("Defter", rule = false)
-        PageTabs(listOf("Özet", "İstikrar", "Kaza"), section) { section = it }
+        Box(Modifier.turHedef("deftersekme")) { PageTabs(listOf("Özet", "İstikrar", "Kaza"), section) { section = it } }
         Box(Modifier.weight(1f).clipToBounds()) {
             when (section) {
                 0 -> MuhasebeOzet()
@@ -1230,7 +1230,7 @@ private fun MuhasebeOzet() {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
         // design A "Sahne": the rose stands on the page itself, full width; long-term numbers sit in one row under it
-        GulCard(petals, Modifier.fillMaxWidth().height(360.dp))
+        GulCard(petals, Modifier.fillMaxWidth().height(360.dp).turHedef("gul3"))
         val open = petals.count { it.progress >= 1f }
         var roseInfo by remember { mutableStateOf(false) }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
