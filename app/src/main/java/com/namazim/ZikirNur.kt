@@ -199,6 +199,28 @@ val ZIKIR_LIST = listOf(
 )
 private val BY_NAME = ZIKIR_LIST.associate { norm(it.name) to (it.ar to it.mean) }
 
+/** The library's sections (Takip › Kütüphaneden ekle). */
+val ZIKIR_TURLERI = listOf("Tümü", "Tesbihat", "Tevhid", "İstiğfar", "Salavat", "Dua", "Esmâ")
+
+fun turOf(h: HazirZikir): String {
+    val n = h.name
+    return when {
+        n == "Yâ mukallibe'l-kulûb" -> "Dua"
+        n == "Allah" || n.startsWith("Yâ ") -> "Esmâ"
+        n.contains("istiğf", ignoreCase = true) || n.startsWith("Estağfirullah") || n.startsWith("Rabbiğfir") -> "İstiğfar"
+        n == "Salavat" || n == "Salli-bârik" -> "Salavat"
+        n.startsWith("Sübhân") || n == "Elhamdülillah" || n == "Allâhu ekber" || n.startsWith("Yatarken") -> "Tesbihat"
+        n.startsWith("Lâ ") -> "Tevhid"
+        else -> "Dua"
+    }
+}
+
+/** Library entries of [tur] ("Tümü" = all) whose name or meaning holds [query] (loose spelling). */
+fun kutuphane(tur: String, query: String): List<HazirZikir> {
+    val q = norm(query)
+    return ZIKIR_LIST.filter { (tur == "Tümü" || turOf(it) == tur) && (q.isEmpty() || norm(it.name).contains(q) || norm(it.mean).contains(q)) }
+}
+
 /** One line under the counter, a different one each day. */
 private val ZIKIR_AYET = listOf(
     "Kalpler ancak Allah'ı anmakla huzur bulur." to "Ra'd 13:28",

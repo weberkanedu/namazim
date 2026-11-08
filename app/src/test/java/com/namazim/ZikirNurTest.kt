@@ -50,4 +50,15 @@ class ZikirNurTest {
         // loose names must not collide
         assertEquals(ZIKIR_LIST.size, ZIKIR_LIST.map { it.name.lowercase().filter(Char::isLetter) }.toSet().size)
     }
+
+    @Test fun librarySections() {
+        assertEquals("Esmâ", turOf(ZIKIR_LIST.first { it.name == "Yâ Latîf" }))
+        assertEquals("İstiğfar", turOf(ZIKIR_LIST.first { it.name == "Seyyidü'l-istiğfâr" }))
+        assertEquals("Salavat", turOf(ZIKIR_LIST.first { it.name == "Salli-bârik" }))
+        assertEquals("Dua", turOf(ZIKIR_LIST.first { it.name == "Yâ mukallibe'l-kulûb" }))
+        assertEquals("Tesbihat", turOf(ZIKIR_LIST.first { it.name == "Yatarken tesbihat (33·33·34)" }))
+        assertEquals(ZIKIR_LIST.size, kutuphane("Tümü", "").size)
+        assert(kutuphane("Esmâ", "rahim").any { it.name == "Yâ Rahîm" })
+        assert(kutuphane("Tesbihat", "rahim").isEmpty())
+    }
 }

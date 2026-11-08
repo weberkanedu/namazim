@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kütüphane Seçenekleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1200px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:900px;margin-top:10px}.lede b{color:#F3EEE3}
+.three{display:flex;gap:22px;flex-wrap:wrap;margin-top:20px}
+.col{display:flex;flex-direction:column;gap:8px;width:350px}
+.col b.l{font:600 22px Cormorant,serif;color:var(--gold)}
+.col span.w{font-size:13px;color:var(--muted);line-height:1.55;min-height:80px}
+.ph{width:350px;height:680px;background:#0B1322;border:1px solid var(--line);border-radius:22px;position:relative;overflow:hidden}
+.title{font:600 32px Cormorant,serif;padding:18px 18px 0}
+.tabs{display:flex;border-bottom:1px solid #222a3c;margin-top:8px}.tabs span{flex:1;text-align:center;padding:10px 0;font:500 13px Inter;color:var(--muted)}.tabs span.on{color:var(--gold);box-shadow:inset 0 -2px var(--gold)}
+.grid{margin:12px 14px 0;background:var(--card);border-radius:16px;padding:8px 12px}
+.gr{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #18223A;font:500 13px Inter}.gr:last-child{border:0}.gr span{flex:1}.gr i{font-style:normal;color:var(--gold);width:26px;text-align:center}
+.addbtn{margin:12px 14px 0;border:1px dashed rgb(232 190 116 / .55);border-radius:14px;padding:12px;text-align:center;font:600 13px Inter;color:var(--gold);cursor:pointer}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:120px;background:#16203A;border-radius:22px 22px 0 0;padding:12px 14px;transition:transform .35s;overflow:auto;scrollbar-width:none}
+.sheet.closed{transform:translateY(105%)}
+.sheet h4{font:600 22px Cormorant,serif;margin:2px 0 8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips span{font:500 11px Inter;border:1px solid #2A3550;border-radius:999px;padding:4px 10px;color:var(--muted)}.chips span.on{border-color:var(--gold);color:var(--gold)}
+.search{border:1px solid #2A3550;border-radius:10px;padding:8px 10px;font:400 12px Inter;color:var(--muted);margin:8px 0}
+.card{background:#0F1729;border-radius:12px;padding:10px;margin-top:8px}
+.card .t{display:flex;align-items:center;gap:8px}.card .t b{flex:1;font:500 13px Inter}.card .t em{font-style:normal;font:600 11px Inter;color:#0B1322;background:var(--gold);border-radius:999px;padding:4px 10px}
+.card .t em.added{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.card .ar{font-family:Amiri,serif;font-size:19px;color:#F2D79B;direction:rtl;text-align:right;margin-top:4px;line-height:1.6}
+.card .f{font:400 11px/1.45 Inter;color:var(--muted);margin-top:2px}.card .f i{font-style:normal;color:var(--gold)}
+.today{margin:12px 14px 0;border:1px solid rgb(232 190 116 / .45);border-radius:16px;padding:12px;background:var(--card)}
+.today .k{font:600 10px Inter;letter-spacing:.14em;color:var(--gold)}
+.today .ar{font-family:Amiri,serif;font-size:22px;color:#F2D79B;direction:rtl;text-align:right;line-height:1.6;margin-top:4px}
+.today b{display:block;font:500 14px Inter}.today p{margin:4px 0 0;font:400 11.5px/1.5 Inter;color:var(--muted)}
+.today .row{display:flex;gap:8px;margin-top:10px}.today .row span{flex:1;text-align:center;border-radius:999px;padding:8px;font:600 12px Inter}
+.ring{width:150px;height:150px;border-radius:50%;border:5px solid var(--track);margin:16px auto 0;display:flex;align-items:center;justify-content:center;font:600 46px Cormorant,serif}
+.legend{max-width:1050px;margin-top:28px;font-size:13px;color:var(--muted);line-height:1.7;border-top:1px solid #222;padding-top:16px}.legend b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Zikir · kütüphane · nasıl öne çıkar</div>
+  <h1>Kütüphaneyi göstermek</h1>
+  <p class="lede">Bugün kütüphane yalnızca kalemle ad yazarken öneri olarak çıkıyor; kimse orada olduğunu bilmiyor. Üç yol: dokunarak dene (kütüphaneyi aç, "Ekle"ye bas).</p>
+  <div class="three">
+    <div class="col"><b class="l">K1 · Takip'in altında "Kütüphaneden ekle"</b><span class="w">Senin fikrin. Takip listesinin altında kesik çizgili bir düğme; açılan sayfada türlere göre (Tesbihat, Tevhid, İstiğfar, Salavat, Dua, Esmâ) gezilir, arama da var. "Ekle" ile hadisteki sayısıyla listeye girer.</span><div class="ph" id="k1"></div></div>
+    <div class="col"><b class="l">K2 · Zikir'de üçüncü bölüm</b><span class="w">Zikirhane / Takip / <b>Kütüphane</b>. Kütüphane tam sayfa: aynı türler ve arama, her kartta Arapçası, fazileti, kaynağı ve "Ekle". En görünür yol.</span><div class="ph" id="k2"></div></div>
+    <div class="col"><b class="l">K3 · Günün zikri + K1</b><span class="w">Zikirhane'nin altında her gün değişen tek bir "Günün zikri" kartı: Arapçası, fazileti, "Listeme ekle" ya da "Bir kere çek". Yanında "Kütüphane" bağlantısı K1'deki sayfayı açar. Keşfettirir, kalabalık etmez.</span><div class="ph" id="k3"></div></div>
+  </div>
+  <div class="legend"><b>Hepsinde:</b> eklenen zikir Takip'e ve Zikirhane'ye girer, hedefi hadisteki sayı olur (değiştirilebilir). Kalemle ad yazarken öneri çıkması da sürer.<br>
+  <b>Önerim:</b> K3. Kütüphaneyi her gün bir zikirle tanıtır (fazileti okuyan kişi merak eder), istersen tamamına K1'deki sayfadan ulaşılır; Zikir sekmesine yeni bölüm eklemez.</div>
+</div>
+<script>
+const LIB=[['Tesbihat','Sübhânallâhi ve bihamdihî','سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ','Günahlar deniz köpüğü kadar olsa da bağışlanır','100','Buhârî, Müslim'],
+ ['Tesbihat','İki hafif kelime','سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ سُبْحَانَ اللّٰهِ الْعَظِيمِ','Dile hafif, mizanda ağır','100','Buhârî, Müslim'],
+ ['İstiğfar','Seyyidü\'l-istiğfâr','اَللّٰهُمَّ أَنْتَ رَبِّي لَا إِلٰهَ إِلَّا أَنْتَ','İstiğfarın efendisi','1','Buhârî'],
+ ['Tevhid','Lâ havle ve lâ kuvvete illâ billâh','لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ','Cennet hazinelerinden bir hazine','—','Buhârî, Müslim'],
+ ['Salavat','Salli-bârik','اَللّٰهُمَّ صَلِّ عَلٰى مُحَمَّدٍ','Bir salavata on rahmet','10','Buhârî, Müslim'],
+ ['Esmâ','Yâ Vedûd','يَا وَدُودُ','Kullarını seven ve sevilen','—','Esmâ-ül Hüsnâ']];
+const CATS=['Tümü','Tesbihat','Tevhid','İstiğfar','Salavat','Dua','Esmâ'];
+const added=new Set(['Sübhânallâhi ve bihamdihî']);
+function libHtml(cat){return `<div class="chips">${CATS.map(c=>`<span class="${c===cat?'on':''}" data-c="${c}">${c}</span>`).join('')}</div><div class="search">🔍 Ara: zikir, esmâ, dua…</div>`+
+ LIB.filter(x=>cat==='Tümü'||x[0]===cat).map(x=>`<div class="card"><div class="t"><b>${x[1]}</b><em class="${added.has(x[1])?'added':''}" data-a="${x[1]}">${added.has(x[1])?'✓ Listede':'Ekle'}</em></div><div class="ar">${x[2]}</div><div class="f"><i>${x[4]!=='—'?x[4]+' kere · ':''}</i>${x[3]} · ${x[5]}</div></div>`).join('');}
+const takip=()=>`<div class="title">Zikir</div><div class="tabs"><span>Zikirhane</span><span class="on">Takip</span></div>
+ <div class="grid">${['Yâ Latîf','Sübhânallâhi ve bihamdihî','Serbest'].map(n=>`<div class="gr"><span>${n}</span><i>✓</i><i>✓</i><i>×</i></div>`).join('')}</div>`;
+let s1=false,c1='Tümü',c2='Tümü',s3=false,c3='Tümü';
+function draw(){
+ k1.innerHTML=takip()+`<div class="addbtn" id="o1">＋ Kütüphaneden ekle</div><div class="sheet ${s1?'':'closed'}" id="sh1"><h4>Kütüphane <span style="float:right;font:500 12px Inter;color:var(--muted);cursor:pointer" id="x1">Kapat</span></h4>${libHtml(c1)}</div>`;
+ k2.innerHTML=`<div class="title">Zikir</div><div class="tabs"><span>Zikirhane</span><span>Takip</span><span class="on">Kütüphane</span></div><div style="padding:10px 14px;overflow:auto;height:560px;scrollbar-width:none" id="p2">${libHtml(c2)}</div>`;
+ k3.innerHTML=`<div class="title">Zikir</div><div class="tabs"><span class="on">Zikirhane</span><span>Takip</span></div><div class="ring">0</div>
+  <div class="today"><div class="k">GÜNÜN ZİKRİ</div><div class="ar">سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ سُبْحَانَ اللّٰهِ الْعَظِيمِ</div><b>İki hafif kelime · 100 kere</b><p>Dile hafif, mizanda ağır, Rahmân'a sevimli iki kelime. (Buhârî, Müslim)</p>
+  <div class="row"><span style="background:var(--gold);color:#0B1322" data-a="İki hafif kelime">${added.has('İki hafif kelime')?'✓ Listende':'Listeme ekle'}</span><span style="border:1px solid #2A3550">Bir kere çek</span></div>
+  <div style="text-align:center;margin-top:10px;font:600 12px Inter;color:var(--gold);cursor:pointer" id="o3">Kütüphanenin tamamı ›</div></div>
+  <div class="sheet ${s3?'':'closed'}" style="top:60px"><h4>Kütüphane <span style="float:right;font:500 12px Inter;color:var(--muted);cursor:pointer" id="x3">Kapat</span></h4>${libHtml(c3)}</div>`;
+ o1.onclick=()=>{s1=true;draw()};x1.onclick=()=>{s1=false;draw()};o3.onclick=()=>{s3=true;draw()};x3.onclick=()=>{s3=false;draw()};
+ document.querySelectorAll('#k1 [data-c]').forEach(e=>e.onclick=()=>{c1=e.dataset.c;draw()});
+ document.querySelectorAll('#k2 [data-c]').forEach(e=>e.onclick=()=>{c2=e.dataset.c;draw()});
+ document.querySelectorAll('#k3 [data-c]').forEach(e=>e.onclick=()=>{c3=e.dataset.c;draw()});
+ document.querySelectorAll('[data-a]').forEach(e=>e.onclick=ev=>{ev.stopPropagation();added.add(e.dataset.a);draw()});}
+draw();
+</script>
+</body>
+</html>

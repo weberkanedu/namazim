@@ -9,6 +9,10 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -285,6 +289,8 @@ private val CELL = 42.dp
 /** Takip: rows are the zikirs (+ Serbest), columns the last five prayer days, today first. */
 @Composable
 private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Unit) {
+    var library by remember { mutableStateOf(false) }
+    if (library) KutuphaneSheet(store) { library = false }
     val tr = Locale("tr")
     val days = (0L until 5L).map { store.prayerDay().minusDays(it) }
     val logs = days.map { store.zikirCounts(it) }
@@ -315,6 +321,13 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Un
                 }
             }
         }
+        // design K1 (design/design-system/kutuphane-secenekler.html): the built-in library, by section, with search
+        Box(
+            Modifier.padding(top = Space.m).fillMaxWidth().clip(RoundedCornerShape(Radius.m))
+                .border(1.dp, Pal.Gold.copy(alpha = .55f), RoundedCornerShape(Radius.m)).clickable { library = true }
+                .padding(vertical = Space.m),
+            contentAlignment = Alignment.Center,
+        ) { Text("＋  Kütüphaneden ekle", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
         Spacer(Modifier.height(Space.m))
         Text("Zikir adına dokununca Zikirhane o zikirle açılır. Zikirhane'de saydıkça bugünün sütunu kendiliğinden dolar. Serbest zikir ve hedef sonrası ekstralar hedefe sayılmaz.",
             Modifier.padding(horizontal = Space.s), color = Pal.Muted.copy(alpha = .7f), fontSize = Type.label, lineHeight = 17.sp)
@@ -331,6 +344,52 @@ private fun TakipCell(cell: ZikirCell) {
             }
             cell.text.isNotEmpty() -> Text(cell.text, style = NumStyle, color = Pal.Text, fontSize = Type.body)
             else -> Text("×", color = Pal.Muted.copy(alpha = .3f), fontSize = Type.body)
+        }
+    }
+}
+
+/** The built-in library: sections, search, and "Ekle" (the hadith's count becomes the target, else 33). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun KutuphaneSheet(store: Store, onClose: () -> Unit) {
+    var tur by remember { mutableStateOf("Tümü") }
+    var q by remember { mutableStateOf("") }
+    val mine = store.zikirs
+    val list = remember(tur, q) { kutuphane(tur, q) }
+    ModalBottomSheet(onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
+        Column(Modifier.padding(horizontal = Space.xl).fillMaxHeight(.92f)) {
+            Text("Kütüphane", style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+            Row(Modifier.padding(top = Space.s).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ZIKIR_TURLERI.forEach { t ->
+                    val on = t == tur
+                    Text(t, Modifier.clip(CircleShape).border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape).clickable { tur = t }
+                        .padding(horizontal = Space.m, vertical = 6.dp), color = if (on) Pal.Gold else Pal.Muted, fontSize = Type.label)
+                }
+            }
+            OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth().padding(top = Space.s), singleLine = true,
+                label = { Text("Ara: zikir, esmâ, dua…") },
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Pal.Gold, unfocusedBorderColor = Pal.Border,
+                    focusedLabelColor = Pal.Gold, cursorColor = Pal.Gold, focusedTextColor = Pal.Text, unfocusedTextColor = Pal.Text))
+            LazyColumn(Modifier.padding(top = Space.s).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                items(list, key = { it.name }) { h ->
+                    val added = mine.any { it.name.equals(h.name, ignoreCase = true) }
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.s)).background(Pal.Ground).padding(Space.m)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(h.name, Modifier.weight(1f), color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium)
+                            Text(if (added) "✓ Listede" else "Ekle",
+                                Modifier.clip(CircleShape).then(if (added) Modifier.border(1.dp, Pal.Gold, CircleShape) else Modifier.background(Pal.Gold))
+                                    .clickable(enabled = !added) { store.zikirs = store.zikirs + Zikir(h.name, h.adet ?: 33, h.ar, h.mean) }
+                                    .padding(horizontal = Space.m, vertical = 5.dp),
+                                color = if (added) Pal.Gold else Pal.Ground, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
+                        }
+                        Text(h.ar, Modifier.fillMaxWidth().padding(top = Space.xs), color = Color(0xFFF2D79B), fontSize = 19.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End, maxLines = 2)
+                        Text(listOfNotNull(h.adet?.let { "$it kere" }, h.mean, h.kaynak).joinToString(" · "),
+                            Modifier.padding(top = 2.dp), color = Pal.Muted, fontSize = Type.micro, lineHeight = 15.sp)
+                    }
+                }
+                item { Spacer(Modifier.height(Space.xl)) }
+            }
         }
     }
 }
