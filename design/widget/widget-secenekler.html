@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Widget Seçenekleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1250px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:920px;margin-top:10px}.lede b{color:#F3EEE3}
+.ctl{display:flex;gap:8px;margin-top:14px;font-size:13px;color:var(--muted);align-items:center;flex-wrap:wrap}
+.ctl button{font:500 12px Inter;border:1px solid #2A3550;background:#0F1626;color:#F3EEE3;border-radius:999px;padding:6px 12px;cursor:pointer}.ctl button.on{border-color:var(--gold);color:var(--gold)}
+.three{display:flex;gap:24px;flex-wrap:wrap;margin-top:18px}
+.col{display:flex;flex-direction:column;gap:8px;width:370px}
+.col b.l{font:600 22px Cormorant,serif;color:var(--gold)}
+.col span.w{font-size:13px;color:var(--muted);line-height:1.55;min-height:84px}
+.home{width:370px;height:520px;border-radius:30px;padding:22px 14px;box-sizing:border-box;background:linear-gradient(160deg,#3a6b8f,#7a5c8f 45%,#c98a6a);position:relative;overflow:hidden}
+.apps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;margin-top:16px}
+.apps i{display:block;width:52px;height:52px;border-radius:14px;margin:0 auto;background:rgb(255 255 255 / .75)}
+/* W1 Harem */
+.w1{height:176px;border-radius:24px;overflow:hidden;position:relative;background-size:cover;background-position:center;box-shadow:0 10px 30px rgb(0 0 0 / .35)}
+.w1::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgb(8 13 26 / .88) 0%,rgb(8 13 26 / .55) 55%,rgb(8 13 26 / .2) 100%)}
+.w1 .in{position:absolute;inset:0;z-index:1;display:flex;padding:14px 16px;gap:10px}
+.w1 .left{flex:1;display:flex;flex-direction:column}
+.k{font:600 9.5px Inter;letter-spacing:.16em;color:var(--gold)}
+.big{font:600 40px/1 Cormorant,serif;margin-top:4px}
+.sub{font:500 11px Inter;color:#D9DEE8;margin-top:2px}
+.cd{font:600 22px Cormorant,serif;color:var(--gold);margin-top:auto}
+.cd small{font:500 10px Inter;color:#C9D0DE;margin-left:4px}
+.list{display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:104px}
+.list div{display:flex;justify-content:space-between;font:500 11.5px Inter;color:#C9D0DE;padding:2px 8px;border-radius:8px}
+.list div b{font:600 14px Cormorant,serif;color:#F3EEE3}
+.list div.on{background:rgb(232 190 116 / .9);color:#0B1322}.list div.on b{color:#0B1322}
+.list div.ok b::after{content:" ✓";font:600 10px Inter;color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 12px;font:600 11.5px Inter;background:var(--gold);color:#0B1322;margin-top:8px;align-self:flex-start;cursor:pointer;user-select:none}
+.btn.done{background:rgb(232 190 116 / .18);color:var(--gold);border:1px solid rgb(232 190 116 / .6)}
+/* W2 Gül */
+.w2{height:176px;border-radius:24px;overflow:hidden;position:relative;background:radial-gradient(circle at 26% 50%,#24345e 0%,#101a33 55%,#0b1322 100%);box-shadow:0 10px 30px rgb(0 0 0 / .35);display:flex;align-items:center;padding:0 14px 0 6px;gap:6px}
+.w2 .rose{width:160px;height:160px;flex:none}
+.w2 .mid{flex:1;display:flex;flex-direction:column}
+.w2 .times{display:flex;gap:4px;margin-top:8px}
+.w2 .times div{flex:1;text-align:center;font:500 9px Inter;color:var(--muted)}.w2 .times div b{display:block;font:600 13px Cormorant,serif;color:#F3EEE3}
+.w2 .times div.on{color:var(--gold)}.w2 .times div.on b{color:var(--gold)}
+/* W3 Şerit */
+.w3{height:84px;border-radius:22px;overflow:hidden;position:relative;background:linear-gradient(90deg,#0b1322,#16223f);box-shadow:0 10px 30px rgb(0 0 0 / .35);display:flex;align-items:center;gap:12px;padding:0 14px}
+.w3 .r{width:62px;height:62px;flex:none}
+.w3 .mid{flex:1}
+.w3 .bar{display:flex;gap:3px;margin-top:6px}.w3 .bar i{flex:1;height:6px;border-radius:3px;background:#22304f}.w3 .bar i.g{background:var(--gold)}.w3 .bar i.p{background:rgb(232 190 116 / .35)}
+.w3 .bar i.k{background:repeating-linear-gradient(135deg,rgb(244 176 143 / .7) 0 3px,rgb(244 176 143 / .2) 3px 6px)}
+.w3 .chk{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font:700 18px Inter;cursor:pointer;flex:none}
+.w3 .chk.done{background:var(--gold);color:#0B1322}
+.legend{max-width:1050px;margin-top:28px;font-size:13px;color:var(--muted);line-height:1.7;border-top:1px solid #222;padding-top:16px}.legend b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Ana ekran · widget · üç yön</div>
+  <h1>Gösterişli widget</h1>
+  <p class="lede">Üçü de bizim dilimizle: <b>Harem görüntüleri, lacivert ve altın, gül</b>. Geri sayım widget'ta canlı akar; <b>"Kıldım"</b> uygulamayı açmadan işaretler. Vakti değiştirerek dene (arka plan ve vurgular vakte göre değişir), "Kıldım"a bas.</p>
+  <div class="ctl">Vakit: <span id="vk"></span></div>
+  <div class="three">
+    <div class="col"><b class="l">W1 · Harem penceresi (4×2)</b><span class="w">Arka planda vakte göre Mekke ya da Medine fotoğrafı (ana sayfadaki kliplerden bir kare), soldan koyulaşan bir gölge. Solda sıradaki vakit, saati ve canlı geri sayım, altında "Kıldım". Sağda beş vakit; şimdiki altın şeritte, kılınanlarda ✓.</span><div class="home"><div class="w1" id="w1"></div><div class="apps">${'<i></i>'.repeat(8)}</div></div></div>
+    <div class="col"><b class="l">W2 · Gül (4×2)</b><span class="w">Lacivert zeminde, ortadan ışıyan K6 gülü: her vakit bir yaprak, kılınan altın. Yanında sıradaki vakit ve geri sayım, altta beş vaktin saatleri. Uygulamanın kimliği en çok bunda.</span><div class="home"><div class="w2" id="w2"></div><div class="apps">${'<i></i>'.repeat(8)}</div></div></div>
+    <div class="col"><b class="l">W3 · İnce şerit (4×1)</b><span class="w">Az yer kaplayan: küçük gül, sıradaki vakit ve geri sayım, altında vaktin yedi dilimli şeridi (faziletli altın, kerahat taralı), sağda yuvarlak "Kıldım".</span><div class="home"><div class="w3" id="w3"></div><div class="apps">${'<i></i>'.repeat(12)}</div></div></div>
+  </div>
+  <div class="legend"><b>Hepsinde:</b> dokununca uygulama açılır; "Kıldım" o vakti işaretler ve gülde yaprak altına döner. Widget vakit değişince ve işaretleyince kendini günceller; geri sayım sistem saatiyle canlı akar, pil yemez.<br>
+  <b>Sınır:</b> widget'larda uygulamanın içindeki gibi akan video ya da gül animasyonu olmaz (Android izin vermiyor); W1'de fotoğraf vakte göre değişir.<br>
+  <b>Mevcut 1×1 "canlı ikon" widget'ı da kalır;</b> bu yeni widget'lar ana ekrana eklenirken listede ayrı görünür. İstersen birden fazlasını birlikte sunabiliriz.</div>
+</div>
+<script>
+document.querySelectorAll('.apps').forEach((a,i)=>a.innerHTML='<i></i>'.repeat(i===2?8:8));
+const V=[['İmsak','05:53','medine-safak'],['Öğle','12:37','mekke-gun'],['İkindi','15:21','mekke-gun'],['Akşam','17:48','medine-aksam'],['Yatsı','19:08','mekke-gece']];
+let cur=2,done=new Set([0,1]);
+const P=(r,a)=>{const q=(a-90)*Math.PI/180;return[100+r*Math.cos(q),100+r*Math.sin(q)]},f=p=>p[0].toFixed(1)+','+p[1].toFixed(1);
+const petal=(r0,r1,a0,a1)=>{const w=a1-a0;return`M${f(P(r0,a0))} C${f(P(r1*1.02,a0-w*.08))} ${f(P(r1*1.16,a0+w*.34))} ${f(P(r1,a0+w*.5))} C${f(P(r1*1.16,a1-w*.34))} ${f(P(r1*1.02,a1+w*.08))} ${f(P(r0,a1))} Z`};
+function rose(id){let s=`<defs>`;for(let i=0;i<5;i++){const a=i*72,on=done.has(i),c=P(16,a);s+=`<radialGradient id="${id}g${i}" gradientUnits="userSpaceOnUse" cx="${c[0]}" cy="${c[1]}" r="66"><stop offset="0" stop-color="${on?'#5A3A10':'#060A18'}"/><stop offset=".55" stop-color="${on?'#C8913C':'#1A2A52'}"/><stop offset="1" stop-color="${on?'#FFE7B0':'#4A65A6'}"/></radialGradient>`;}
+ s+=`<filter id="${id}b"><feGaussianBlur stdDeviation="2.4"/></filter></defs>`;
+ for(const i of [0,1,3,4,2].filter(x=>x!==cur).concat([cur])){const a=i*72,o=petal(24,70,a-40,a+40);s+=`<path d="${o}" fill="#000" opacity=".55" transform="translate(0 3)" filter="url(#${id}b)"/><path d="${o}" fill="url(#${id}g${i})" stroke="${i===cur&&!done.has(i)?'#F3EEE3':'#0A1124'}" stroke-width="${i===cur&&!done.has(i)?2.4:1}"/>`;}
+ return `<svg viewBox="-10 -10 220 220" width="100%" height="100%">${s}<circle cx="100" cy="100" r="10" fill="#D49E48"/></svg>`;}
+function nextIdx(){return (cur+1)%5}
+function draw(){
+ document.getElementById('vk').innerHTML=V.map((v,i)=>`<button class="${i===cur?'on':''}" data-v="${i}">${v[0]}</button>`).join('');
+ document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{cur=+b.dataset.v;done=new Set([...Array(cur).keys()]);draw();});
+ const isDone=done.has(cur), n=V[nextIdx()];
+ const head=isDone?{k:`${n[0].toUpperCase()} VAKTİNE`,big:n[1],sub:`${V[cur][0]} kılındı`}:{k:`${V[cur][0].toUpperCase()} VAKTİ`,big:V[cur][1],sub:'vaktin çıkmasına'};
+ const btn=`<span class="btn ${isDone?'done':''}" data-k>${isDone?'✓ Kılındı':'✓ Kıldım'}</span>`;
+ w1.style.backgroundImage=`url(${V[cur][2]}.jpg)`;
+ w1.innerHTML=`<div class="in"><div class="left"><div class="k">${head.k}</div><div class="big">${head.big}</div><div class="sub">${head.sub}</div><div class="cd">1:12:40<small>kaldı</small></div>${btn}</div>
+  <div class="list">${V.map((v,i)=>`<div class="${i===cur?'on':''} ${done.has(i)&&i!==cur?'ok':''}"><span>${v[0]}</span><b>${v[1]}</b></div>`).join('')}</div></div>`;
+ w2.innerHTML=`<div class="rose">${rose('a')}</div><div class="mid"><div class="k">${head.k}</div><div class="big" style="font-size:34px">${head.big}</div><div class="cd" style="margin-top:2px">1:12:40<small>kaldı</small></div>${btn}
+  <div class="times">${V.map((v,i)=>`<div class="${i===cur?'on':''}">${v[0].slice(0,3)}<b>${v[1]}</b></div>`).join('')}</div></div>`;
+ const seg=cur===2?['p','g','g','g','g','k','k']:['g','g','','','','',''];
+ w3.innerHTML=`<div class="r">${rose('b')}</div><div class="mid"><div class="k">${head.k}</div><div style="display:flex;align-items:baseline;gap:8px"><span class="big" style="font-size:26px;margin:0">${head.big}</span><span class="cd" style="font-size:17px;margin:0">1:12:40</span></div>
+  <div class="bar">${seg.map(c=>`<i class="${c}"></i>`).join('')}</div></div><div class="chk ${isDone?'done':''}" data-k>✓</div>`;
+ document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{done.add(cur);draw();});}
+draw();
+</script>
+</body>
+</html>

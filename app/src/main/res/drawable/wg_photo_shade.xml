@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- W1: darkens the photo from the left so the text reads. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><gradient android:angle="0" android:startColor="#E6080D1A" android:centerColor="#8C080D1A" android:endColor="#33080D1A" /></shape>

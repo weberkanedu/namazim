@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vakit widgets: rounded card that clips the photo (clipToOutline). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><corners android:radius="24dp" /><solid android:color="#0B1322" /></shape>

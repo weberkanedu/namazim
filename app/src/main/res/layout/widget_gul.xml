@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- W2 "Gül" 4×2: the K6 rose drawn as a bitmap, the next vakit, a live countdown, Kıldım, the five times. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/w_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="horizontal" android:gravity="center_vertical" android:background="@drawable/wg_gul_bg"
+    android:paddingStart="4dp" android:paddingEnd="14dp">
+    <ImageView android:id="@+id/w_rose" android:layout_width="150dp" android:layout_height="150dp" android:scaleType="fitCenter"
+        android:src="@drawable/ic_logo_mono" android:contentDescription="@null" />
+    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+        <TextView android:id="@+id/w_k" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:maxLines="1"
+            android:text="İKİNDİ VAKTİ" android:textColor="#E8BE74" android:textSize="9.5sp" android:textStyle="bold" android:letterSpacing="0.16" />
+        <TextView android:id="@+id/w_big" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:maxLines="1"
+            android:layout_marginTop="3dp" android:text="15:21" android:fontFamily="serif" android:textColor="#F3EEE3" android:textSize="30sp" />
+        <Chronometer android:id="@+id/w_cd" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="0dp" android:countDown="true" android:fontFamily="serif" android:textColor="#E8BE74" android:textSize="19sp" />
+        <TextView android:id="@+id/w_btn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:maxLines="1"
+            android:layout_marginTop="6dp" android:background="@drawable/wg_btn_gold" android:paddingStart="12dp" android:paddingEnd="12dp"
+            android:paddingTop="5dp" android:paddingBottom="5dp" android:text="✓ Kıldım" android:textColor="#0B1322" android:textSize="12sp" android:textStyle="bold" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
+            <TextView android:id="@+id/w_x0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:gravity="center" android:includeFontPadding="false" android:maxLines="2" android:text="İms
+05:53" android:textColor="#A9B2C3" android:textSize="9.5sp" />
+            <TextView android:id="@+id/w_x1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:gravity="center" android:includeFontPadding="false" android:maxLines="2" android:text="Öğl
+12:37" android:textColor="#A9B2C3" android:textSize="9.5sp" />
+            <TextView android:id="@+id/w_x2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:gravity="center" android:includeFontPadding="false" android:maxLines="2" android:text="İki
+15:21" android:textColor="#A9B2C3" android:textSize="9.5sp" />
+            <TextView android:id="@+id/w_x3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:gravity="center" android:includeFontPadding="false" android:maxLines="2" android:text="Akş
+17:48" android:textColor="#A9B2C3" android:textSize="9.5sp" />
+            <TextView android:id="@+id/w_x4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:gravity="center" android:includeFontPadding="false" android:maxLines="2" android:text="Yat
+19:08" android:textColor="#A9B2C3" android:textSize="9.5sp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

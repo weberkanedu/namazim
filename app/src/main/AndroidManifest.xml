@@ -39,6 +39,24 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_namazim_wide_info" />
         </receiver>
+        <receiver android:name=".HaremWidget" android:exported="true" android:label="@string/widget_harem">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_harem_info" />
+        </receiver>
+        <receiver android:name=".GulWidget" android:exported="true" android:label="@string/widget_gul">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_gul_info" />
+        </receiver>
+        <receiver android:name=".SeritWidget" android:exported="true" android:label="@string/widget_serit">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_serit_info" />
+        </receiver>
         <receiver android:name=".RescheduleReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

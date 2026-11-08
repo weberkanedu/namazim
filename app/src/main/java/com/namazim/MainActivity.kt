@@ -344,6 +344,14 @@ fun WidgetPreview() {
         }
         Spacer(Modifier.height(Space.s))
         Text(NamazimWidget.label(ctx), color = Pal.Text, fontSize = Type.micro, fontWeight = FontWeight.Medium)
+        // the three big widgets as the launcher would draw them
+        VakitWidgets.Tur.entries.forEach { tur ->
+            Spacer(Modifier.height(Space.l))
+            androidx.compose.ui.viewinterop.AndroidView(
+                factory = { c -> android.widget.FrameLayout(c).apply { addView(VakitWidgets.views(c, tur).apply(c, this)) } },
+                modifier = Modifier.padding(horizontal = Space.l).fillMaxWidth().height(if (tur == VakitWidgets.Tur.SERIT) 84.dp else 176.dp),
+            )
+        }
     }
 }
 

@@ -2,5 +2,11 @@
 <resources>
     <string name="widget_desc">Canlı ikon: sıradaki vakit, kılınan vakitler</string>
     <string name="widget_wide_desc">Geniş ikon: kaç vakit kılındı ve sıradakine kalan süre</string>
+    <string name="widget_harem">Namazım · Harem</string>
+    <string name="widget_harem_desc">Mekke ve Medine fotoğrafı üstünde sıradaki vakit, canlı geri sayım, beş vakit ve Kıldım</string>
+    <string name="widget_gul">Namazım · Gül</string>
+    <string name="widget_gul_desc">Kıldıkça açılan gül, sıradaki vakit, canlı geri sayım ve Kıldım</string>
+    <string name="widget_serit">Namazım · Şerit</string>
+    <string name="widget_serit_desc">İnce şerit: vakit, geri sayım, yedi dilim ve Kıldım</string>
 </resources>
 
