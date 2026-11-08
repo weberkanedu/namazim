@@ -377,16 +377,18 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
                     singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = fieldColors)
             }
             if (error != null) Text(error, Modifier.padding(top = Space.xs), color = Pal.Warn, fontSize = Type.label)
-            if (picked != n) suggestZikir(n).forEach { (sn, sa, sm) ->
+            if (picked != n) suggestZikir(n).forEach { hz ->
+                val (sn, sa, sm) = hz
                 Row(
                     Modifier.padding(top = Space.s).fillMaxWidth().clip(RoundedCornerShape(Radius.s))
                         .border(1.dp, Pal.Gold.copy(alpha = .45f), RoundedCornerShape(Radius.s))
-                        .clickable { name = sn; ar = sa; mean = sm; picked = sn }.padding(horizontal = Space.m, vertical = Space.s),
+                        .clickable { name = sn; ar = sa; mean = sm; picked = sn; hz.adet?.let { target = "$it" } }.padding(horizontal = Space.m, vertical = Space.s),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(sn, color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium)
-                        Text(sm, color = Pal.Muted, fontSize = Type.micro, maxLines = 1)
+                        Text(listOfNotNull(hz.adet?.let { "$it kere" }, hz.kaynak).joinToString(" · ").ifEmpty { sm },
+                            color = Pal.Muted, fontSize = Type.micro, maxLines = 1)
                     }
                     Text(sa, color = Color(0xFFF2D79B), fontSize = 20.sp, maxLines = 1)
                 }

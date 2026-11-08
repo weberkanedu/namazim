@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zikir Kütüphanesi</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 120px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:980px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 30px Cormorant,serif;margin:36px 0 4px;border-top:1px solid #222;padding-top:22px}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;margin-top:10px}.lede b{color:#F3EEE3}
+.warn{margin-top:12px;border:1px solid rgb(244 176 143 / .4);border-radius:12px;padding:10px 14px;font-size:12.5px;color:#F4B08F;line-height:1.6}
+.item{display:flex;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:12px;cursor:pointer;transition:border-color .2s,background .2s}
+.item.on{border-color:var(--gold);background:#1A2238}
+.box{width:22px;height:22px;flex:none;border-radius:7px;border:1.5px solid #3A4A68;margin-top:3px;display:flex;align-items:center;justify-content:center;color:#0B1322;font:700 14px Inter}
+.item.on .box{background:var(--gold);border-color:var(--gold)}
+.body{flex:1;min-width:0}
+.top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.top b{font:600 16px Inter}.top .n{font:600 12px Inter;color:var(--gold);border:1px solid rgb(232 190 116 / .5);border-radius:999px;padding:2px 9px}
+.ar{font-family:Amiri,serif;font-size:24px;line-height:1.8;color:#F2D79B;direction:rtl;text-align:right;margin-top:6px}
+.ok{font:italic 400 13px/1.5 Inter;color:#D9DEE8;margin-top:4px}
+.mn{font:400 13px/1.55 Inter;color:var(--muted);margin-top:4px}
+.fz{font:400 13px/1.55 Inter;margin-top:6px}.fz i{font-style:normal;color:var(--gold)}
+.src{font:500 11.5px Inter;color:#6F7B96;margin-top:6px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#0B1322ee;border-top:1px solid var(--line);padding:12px 24px;display:flex;justify-content:center;gap:12px;align-items:center;backdrop-filter:blur(6px)}
+.bar span{font:500 14px Inter}.bar b{color:var(--gold)}
+.bar button{font:600 13px Inter;border:1px solid #2A3550;background:#0F1626;color:#F3EEE3;border-radius:999px;padding:8px 14px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Zikir · kütüphane · seç ve ekle</div>
+  <h1>Hadislerde fazileti geçen zikirler</h1>
+  <p class="lede">Sahih kaynaklarda (çoğu Buhârî ve Müslim) fazileti bildirilen zikirler, tesbihatlar, istiğfarlar, salavatlar ve dualar. <b>İstediklerine dokunarak işaretle</b>, sonra bana "seçtim" de; uygulamanın hazır listesine (Esmâ'nın yanına) ekleyeyim. Kalemle zikir eklerken adını yazınca öneri olarak çıkarlar; Arapçası, anlamı ve hadisteki sayısı hazır gelir.</p>
+  <div class="warn">Faziletler hadislerin kısa özetidir, kelimesi kelimesine çeviri değildir. Kaynaklar kitap ve bâb adıyla verildi; uygulamaya koymadan önce bir hocanın ya da Diyanet'in Hadislerle İslâm külliyatının gözden geçirmesini öneririm.</div>
+  <div id="list"></div>
+</div>
+<div class="bar"><span>Seçilen: <b id="cnt">0</b></span><button id="all">Hepsini seç</button><button id="none">Temizle</button></div>
+<script>
+const L=[
+ ['Tesbihat',[
+  ['subhanallahi-ve-bihamdihi','Sübhânallâhi ve bihamdihî','سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ','Sübhânallâhi ve bihamdihî','Allah\'ı hamdiyle tesbih ederim.','100','Günde yüz kere söyleyenin günahları deniz köpüğü kadar olsa da bağışlanır.','Buhârî, Daavât 65; Müslim, Zikir 28'],
+  ['iki-kelime','İki hafif kelime','سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ سُبْحَانَ اللّٰهِ الْعَظِيمِ','Sübhânallâhi ve bihamdihî, sübhânallâhi\'l-azîm','Allah\'ı hamdiyle tesbih ederim; yüce Allah her noksanlıktan uzaktır.','100','Dile hafif, mizanda ağır, Rahmân\'a sevimli iki kelime.','Buhârî, Daavât 65, Tevhîd 58; Müslim, Zikir 31'],
+  ['dort-kelime','Dört kelime','سُبْحَانَ اللّٰهِ وَالْحَمْدُ لِلّٰهِ وَلَا إِلٰهَ إِلَّا اللّٰهُ وَاللّٰهُ أَكْبَرُ','Sübhânallâhi velhamdülillâhi ve lâ ilâhe illallâhu vallâhu ekber','Allah noksanlıktan uzaktır, hamd Allah\'adır, Allah\'tan başka ilah yoktur, Allah en büyüktür.','100','Allah\'a en sevimli dört söz; Peygamberimiz bunları söylemenin, üzerine güneş doğan her şeyden daha sevimli olduğunu bildirdi.','Müslim, Âdâb 12; Zikir 32'],
+  ['cuveyriye','Cüveyriye tesbihi','سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ','Sübhânallâhi ve bihamdihî adede halkıhî ve rızâ nefsihî ve zinete arşihî ve midâde kelimâtih','Allah\'ı mahlukatı sayısınca, kendi rızası kadar, arşının ağırlığınca ve kelimelerinin mürekkebi kadar hamdiyle tesbih ederim.','3','Sabahtan kuşluğa kadar yapılan zikirden daha ağır gelen dört söz (üçer kere).','Müslim, Zikir 79'],
+  ['fatima-tesbihi','Yatarken tesbihat (Fâtıma tesbihi)','سُبْحَانَ اللّٰهِ ٣٣ · اَلْحَمْدُ لِلّٰهِ ٣٣ · اَللّٰهُ أَكْبَرُ ٣٤','33 Sübhânallâh, 33 Elhamdülillâh, 34 Allâhu ekber','Yatağa girince söylenir.','100','Peygamberimiz, hizmetçi isteyen Hz. Fâtıma\'ya bunun bir hizmetçiden daha hayırlı olduğunu söyledi.','Buhârî, Fezâilü\'l-ashâb 9; Müslim, Zikir 80'],
+  ['sublanallahil-azim-ve-bihamdihi','Cennette hurma ağacı','سُبْحَانَ اللّٰهِ الْعَظِيمِ وَبِحَمْدِهِ','Sübhânallâhi\'l-azîmi ve bihamdihî','Yüce Allah\'ı hamdiyle tesbih ederim.','—','Bunu söyleyen için cennette bir hurma ağacı dikilir.','Tirmizî, Daavât 58 (hasen sahih)'],
+ ]],
+ ['Tevhid',[
+  ['la-ilahe-illallah-vahdehu','Tevhid (yüz kere)','لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلٰى كُلِّ شَيْءٍ قَدِيرٌ','Lâ ilâhe illallâhu vahdehû lâ şerîke leh, lehü\'l-mülkü ve lehü\'l-hamdü ve hüve alâ külli şey\'in kadîr','Allah\'tan başka ilah yoktur, tektir, ortağı yoktur; mülk O\'nundur, hamd O\'na aittir, O her şeye kadirdir.','100','Günde yüz kere söyleyen on köle azat etmiş gibi sevap alır, yüz iyilik yazılır, yüz günahı silinir, o gün akşama kadar şeytandan korunur.','Buhârî, Daavât 64; Müslim, Zikir 28'],
+  ['la-ilahe-illallah','Zikrin en faziletlisi','لَا إِلٰهَ إِلَّا اللّٰهُ','Lâ ilâhe illallâh','Allah\'tan başka ilah yoktur.','100','Zikrin en faziletlisi lâ ilâhe illallâh, duanın en faziletlisi elhamdülillâhtır.','Tirmizî, Daavât 9 (hasen)'],
+  ['la-havle','Cennet hazinesi','لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ','Lâ havle ve lâ kuvvete illâ billâh','Güç ve kuvvet ancak Allah\'tandır.','—','Cennet hazinelerinden bir hazinedir.','Buhârî, Daavât 50; Müslim, Zikir 44'],
+ ]],
+ ['İstiğfar',[
+  ['seyyidul-istigfar','Seyyidü\'l-istiğfâr','اَللّٰهُمَّ أَنْتَ رَبِّي لَا إِلٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلٰى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ','Allâhümme ente rabbî lâ ilâhe illâ ente, halaktenî ve ene abdük, ve ene alâ ahdike ve va\'dike mesteta\'tü, eûzü bike min şerri mâ sana\'tü, ebûü leke bi ni\'metike aleyye, ve ebûü bi zenbî fağfir lî, fe innehû lâ yağfiru\'z-zünûbe illâ ente','Allah\'ım, sen benim Rabbimsin... Bana verdiğin nimetleri ikrar eder, günahımı itiraf ederim; beni bağışla, günahları ancak sen bağışlarsın.','1','İstiğfarın efendisidir; inanarak gündüz söyleyip akşam olmadan ölen, gece söyleyip sabah olmadan ölen cennetliktir.','Buhârî, Daavât 2'],
+  ['estagfirullah-ve-etubu','İstiğfar ve tövbe','أَسْتَغْفِرُ اللّٰهَ وَأَتُوبُ إِلَيْهِ','Estağfirullâhe ve etûbu ileyh','Allah\'tan bağışlanma diler, O\'na tövbe ederim.','100','Peygamberimiz günde yetmiş (bir rivayette yüz) kereden fazla istiğfar ve tövbe ederdi.','Buhârî, Daavât 3; Müslim, Zikir 41'],
+  ['rabbigfirli','Meclis istiğfarı','رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ','Rabbiğfir lî ve tüb aleyye inneke ente\'t-tevvâbü\'r-rahîm','Rabbim beni bağışla, tövbemi kabul et; sen tövbeleri çok kabul eden, merhametlisin.','100','Peygamberimizin bir mecliste bunu yüz kere söylediği sayılırdı.','Ebû Dâvûd, Vitr 26; Tirmizî, Daavât 38 (sahih)'],
+ ]],
+ ['Salavat',[
+  ['salli-barik','Salli-bârik (salât-ı İbrâhîmiyye)','اَللّٰهُمَّ صَلِّ عَلٰى مُحَمَّدٍ وَعَلٰى آلِ مُحَمَّدٍ كَمَا صَلَّيْتَ عَلٰى إِبْرَاهِيمَ وَعَلٰى آلِ إِبْرَاهِيمَ إِنَّكَ حَمِيدٌ مَجِيدٌ، اَللّٰهُمَّ بَارِكْ عَلٰى مُحَمَّدٍ وَعَلٰى آلِ مُحَمَّدٍ كَمَا بَارَكْتَ عَلٰى إِبْرَاهِيمَ وَعَلٰى آلِ إِبْرَاهِيمَ إِنَّكَ حَمِيدٌ مَجِيدٌ','Allâhümme salli alâ Muhammedin ve alâ âli Muhammed... Allâhümme bârik alâ Muhammedin ve alâ âli Muhammed...','Allah\'ım, İbrâhim\'e ve ailesine salât ettiğin gibi Muhammed\'e ve ailesine de salât et; bereketlendirdiğin gibi bereketlendir.','10','Peygamberimizin öğrettiği salavat. Bir kere salavat getirene Allah on kere rahmet eder.','Buhârî, Enbiyâ 10; Müslim, Salât 66, 70'],
+ ]],
+ ['Dua ve evrad',[
+  ['ayetel-kursi','Âyetü\'l-kürsî','اَللّٰهُ لَا إِلٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ... (Bakara 255)','Allâhu lâ ilâhe illâ hüve\'l-hayyü\'l-kayyûm...','Bakara sûresi 255. âyet.','1','Yatarken okuyanı sabaha kadar Allah\'ın koruduğu, şeytanın ona yaklaşamadığı bildirildi.','Buhârî, Vekâle 10'],
+  ['muavvizat','İhlâs, Felak, Nâs (sabah-akşam)','قُلْ هُوَ اللّٰهُ أَحَدٌ · قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ · قُلْ أَعُوذُ بِرَبِّ النَّاسِ','Kul hüvallâhu ehad · Kul eûzü bi rabbi\'l-felak · Kul eûzü bi rabbi\'n-nâs','Üç sûre, sabah ve akşam üçer kere.','3','Sabah ve akşam üçer kere okumak her şeye karşı yeter. İhlâs ayrıca Kur\'ân\'ın üçte birine denktir.','Ebû Dâvûd, Edeb 101; Tirmizî, Daavât 117; Buhârî, Fezâilü\'l-Kur\'ân 13'],
+  ['bismillahillezi','Korunma duası','بِسْمِ اللّٰهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ','Bismillâhillezî lâ yedurru maa\'smihî şey\'ün fi\'l-ardı ve lâ fi\'s-semâi ve hüve\'s-semîu\'l-alîm','Adıyla yerde ve gökte hiçbir şeyin zarar veremediği Allah\'ın adıyla; O işitendir, bilendir.','3','Sabah ve akşam üçer kere söyleyene o gün ve o gece hiçbir şey zarar vermez.','Ebû Dâvûd, Edeb 101; Tirmizî, Daavât 13 (hasen sahih)'],
+  ['euzu-bikelimatillah','Akşam sığınma duası','أَعُوذُ بِكَلِمَاتِ اللّٰهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ','Eûzü bi kelimâtillâhi\'t-tâmmâti min şerri mâ halak','Yarattıklarının şerrinden Allah\'ın tam kelimelerine sığınırım.','3','Bir yere konaklayıp bunu söyleyene oradan ayrılıncaya kadar hiçbir şey zarar vermez.','Müslim, Zikir 54'],
+  ['rabbena-atina','En çok yapılan dua','رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ','Rabbenâ âtinâ fi\'d-dünyâ haseneten ve fi\'l-âhireti haseneten ve kınâ azâbe\'n-nâr','Rabbimiz, bize dünyada da iyilik ver, ahirette de iyilik ver, bizi ateş azabından koru.','—','Peygamberimizin en çok yaptığı dua.','Buhârî, Daavât 55; Müslim, Zikir 26'],
+  ['huda-tuka','Hidayet duası','اَللّٰهُمَّ إِنِّي أَسْأَلُكَ الْهُدٰى وَالتُّقٰى وَالْعَفَافَ وَالْغِنٰى','Allâhümme innî es\'elüke\'l-hüdâ ve\'t-tükâ ve\'l-afâfe ve\'l-ginâ','Allah\'ım senden hidayet, takva, iffet ve gönül zenginliği isterim.','—','Peygamberimizin sık yaptığı dualardan.','Müslim, Zikir 72'],
+  ['yunus','Yunus duası','لَا إِلٰهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ','Lâ ilâhe illâ ente sübhâneke innî küntü mine\'z-zâlimîn','Senden başka ilah yoktur, seni tenzih ederim; ben zalimlerden oldum.','—','Bir müslüman bununla dua ederse Allah ona icabet eder.','Tirmizî, Daavât 81 (sahih)'],
+  ['mukallibel-kulub','Kalp sebatı duası','يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلٰى دِينِكَ','Yâ mukallibe\'l-kulûb, sebbit kalbî alâ dînik','Ey kalpleri evirip çeviren, kalbimi dinin üzere sabit kıl.','—','Peygamberimizin en çok yaptığı dualardandı.','Tirmizî, Kader 7, Daavât 89 (hasen)'],
+  ['radıtu','Ezandan sonra','رَضِيتُ بِاللّٰهِ رَبًّا وَبِمُحَمَّدٍ رَسُولًا وَبِالْإِسْلَامِ دِينًا','Radîtü billâhi rabben ve bi Muhammedin rasûlen ve bi\'l-İslâmi dînen','Rab olarak Allah\'tan, peygamber olarak Muhammed\'den, din olarak İslâm\'dan razıyım.','1','Ezanı duyunca şehadetle birlikte bunu söyleyenin günahları bağışlanır.','Müslim, Salât 13'],
+  ['entes-selam','Namaz sonrası','اَللّٰهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ','Allâhümme ente\'s-selâmü ve minke\'s-selâm, tebârekte yâ ze\'l-celâli ve\'l-ikrâm','Allah\'ım, sen selamsın, selamet sendendir; ey celal ve ikram sahibi, sen yücesin.','1','Peygamberimiz selam verdikten sonra bunu söylerdi.','Müslim, Mesâcid 136'],
+ ]],
+];
+let sel=new Set(JSON.parse(localStorage.getItem('zk-sec')||'[]'));
+function draw(){document.getElementById('list').innerHTML=L.map(([cat,items])=>`<h2>${cat}</h2>`+items.map(([id,ad,ar,ok,mn,n,fz,src])=>`<div class="item ${sel.has(id)?'on':''}" data-id="${id}"><div class="box">${sel.has(id)?'✓':''}</div><div class="body">
+ <div class="top"><b>${ad}</b>${n!=='—'?`<span class="n">${n} kere</span>`:''}</div><div class="ar">${ar}</div><div class="ok">${ok}</div><div class="mn">${mn}</div>
+ <div class="fz"><i>Fazileti:</i> ${fz}</div><div class="src">${src}</div></div></div>`).join('')).join('');
+ document.querySelectorAll('.item').forEach(e=>e.onclick=()=>{const id=e.dataset.id;sel.has(id)?sel.delete(id):sel.add(id);save();});
+ document.getElementById('cnt').textContent=sel.size;}
+function save(){localStorage.setItem('zk-sec',JSON.stringify([...sel]));draw();}
+all.onclick=()=>{L.forEach(([,it])=>it.forEach(x=>sel.add(x[0])));save();};none.onclick=()=>{sel.clear();save();};
+draw();
+</script>
+</body>
+</html>

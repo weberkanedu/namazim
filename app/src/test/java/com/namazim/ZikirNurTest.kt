@@ -25,14 +25,14 @@ class ZikirNurTest {
     }
 
     @Test fun ninetyNineNames() {
-        assertEquals(98, ZIKIR_LIST.count { it.first.startsWith("Yâ ") && it.first != "Yâ Hayyu yâ Kayyûm" })
-        assertNotNull(ZIKIR_LIST.firstOrNull { it.first == "Allah" })
-        assertEquals(ZIKIR_LIST.size, ZIKIR_LIST.map { it.first }.toSet().size)   // no name twice
+        assertEquals(98, ZIKIR_LIST.count { it.name.startsWith("Yâ ") && it.name != "Yâ Hayyu yâ Kayyûm" && it.name != "Yâ mukallibe'l-kulûb" })
+        assertNotNull(ZIKIR_LIST.firstOrNull { it.name == "Allah" })
+        assertEquals(ZIKIR_LIST.size, ZIKIR_LIST.map { it.name }.toSet().size)   // no name twice
     }
 
     @Test fun suggestions() {
-        assertEquals("Yâ Rahmân", suggestZikir("ya rahm").first().first)
-        assertEquals("Yâ Kâbıd", suggestZikir("kabid").first().first)
+        assertEquals("Yâ Rahmân", suggestZikir("ya rahm").first().name)
+        assertEquals("Yâ Kâbıd", suggestZikir("kabid").first().name)
         assert(suggestZikir("x").isEmpty())
         assert(suggestZikir("zzqq").isEmpty())
     }
@@ -41,5 +41,13 @@ class ZikirNurTest {
         assertEquals("abc" to "anlam", zikirArabic(Zikir("Yâ Latîf", 33, "abc", "anlam")))
         assertNotNull(zikirArabic(Zikir("Yâ Latîf", 33)))
         assertNull(zikirArabic(Zikir("Kendi zikrim", 33)))
+    }
+
+    @Test fun hadisPicksCarryTheirCount() {
+        val s = ZIKIR_LIST.first { it.name == "Seyyidü'l-istiğfâr" }
+        assertEquals(1, s.adet); assertNotNull(s.kaynak)
+        assertEquals(100, suggestZikir("estagfirullahe ve").first().adet)
+        // loose names must not collide
+        assertEquals(ZIKIR_LIST.size, ZIKIR_LIST.map { it.name.lowercase().filter(Char::isLetter) }.toSet().size)
     }
 }
