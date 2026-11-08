@@ -362,7 +362,7 @@ private fun KazaCalendar(today: LocalDate, first: LocalDate, newestFirst: List<I
         Row(Modifier.padding(top = Space.s), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
             Text("hiç", color = Pal.Muted, fontSize = Type.micro)
             listOf(Pal.Track, Pal.Gold.copy(alpha = .4f), Pal.Gold).forEach { Box(Modifier.size(9.dp).clip(RoundedCornerShape(2.dp)).background(it)) }
-            Text("plan tuttu (günde $rate)", color = Pal.Muted, fontSize = Type.micro)
+            Text("plan tuttu (günde $rate vakit)", color = Pal.Muted, fontSize = Type.micro)
         }
         val kept30 = newestFirst.take(30).count { it >= rate }
         var run = 0; var longest = 0
@@ -1316,7 +1316,7 @@ private fun MuhasebeOzet() {
                 Spacer(Modifier.width(Space.m))
                 Column(Modifier.weight(1f)) {
                     Text("$totalKaza vakit kaldı", style = NumStyle, fontSize = Type.num, color = Pal.Text)
-                    Text("Bu ay ${store.kazaPaidThisMonth()} kaza kıldın · plan günde ${store.kazaRate}", color = Pal.Muted, fontSize = Type.label)
+                    Text("Bu ay ${store.kazaPaidThisMonth()} kaza kıldın · plan günde ${store.kazaRate} vakit", color = Pal.Muted, fontSize = Type.label)
                     Text(
                         if (monthsLeft != null) "Bu hızla ~${monthsLeft.roundToInt()} ay içinde tamamlanır, inşallah"
                         else "Kaza kalmadı, elhamdülillah",
@@ -1515,7 +1515,7 @@ private fun MuhasebeGidisat() {
                 Milestone(Icons.Default.Star, "İlk tam gün", firstFull?.format(dayFmt) ?: "henüz yok", if (firstFull != null) "✓" else "–")
                 Milestone(Icons.Default.DateRange, "En uzun seri", "üst üste beş vakit", "$longest gün")
                 Milestone(Icons.Default.Done, "Okunan", "Kur'an ve kitaplar", "$pagesSum s.")
-                Milestone(Icons.Default.CheckCircle, "Kılınan kaza", "plan: günde ${store.kazaRate}", "$kazaSum")
+                Milestone(Icons.Default.CheckCircle, "Kılınan kaza", "plan: günde ${store.kazaRate} vakit", "$kazaSum")
             }
         }
 
@@ -1529,13 +1529,11 @@ private fun MuhasebeGidisat() {
                 Spacer(Modifier.height(Space.s))
                 // seven slices per vakit (Fazilet.kt): how many times each slice was used; gold underline = faziletli for the mezhep
                 val today = slots(store.lat, store.lng, store.prayerDay())
-                val tops = mutableListOf<Pair<Vakit, Int>>()
                 Vakit.entries.forEach { vk ->
                     val bins = IntArray(7)
                     data.fracs[vk.name].orEmpty().forEach { bins[(it * 7).toInt().coerceIn(0, 6)]++ }
                     val most = bins.maxOrNull() ?: 0
                     val top = if (most == 0) -1 else bins.indexOfFirst { it == most }
-                    if (top >= 0) tops += vk to top
                     val fz = store.dilimler(today[vk.ordinal])
                     Row(Modifier.padding(top = Space.m), verticalAlignment = Alignment.Bottom) {
                         Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = Type.body2)
@@ -1555,11 +1553,6 @@ private fun MuhasebeGidisat() {
                 }
                 Row(Modifier.padding(start = 58.dp, end = 92.dp, top = 4.dp)) {
                     for (j in 1..7) Text("$j", Modifier.weight(1f), color = Pal.Muted, fontSize = 9.sp, textAlign = TextAlign.Center)
-                }
-                if (tops.isNotEmpty()) {
-                    Spacer(Modifier.height(Space.s))
-                    Text(tops.joinToString(", ") { (v, j) -> "${v.ad} ${DILIM_YER[j]}" }.replaceFirstChar { it.uppercase() } + " kılıyorsun.",
-                        color = Pal.Text, fontSize = Type.body2, lineHeight = 19.sp)
                 }
                 Spacer(Modifier.height(Space.s))
                 Text(

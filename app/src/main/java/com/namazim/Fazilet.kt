@@ -13,7 +13,6 @@ enum class Dilim { FAZILET, GUZEL, VAKIT, KERAHAT }
 val DILIM_ADI = listOf("vaktin hemen başı", "vaktin başı", "ortasından önce", "vaktin ortası", "ortasından hemen sonra", "sonlara doğru", "vaktin sonu")
 
 /** The slice as "where": "Akşam vaktin hemen başında kılıyorsun". */
-val DILIM_YER = listOf("vaktin hemen başında", "vaktin başında", "ortasından önce", "vaktin ortasında", "ortasından hemen sonra", "sonlara doğru", "vaktin sonunda")
 
 /** Which seventh of the vakit [at] falls in, 0..6. */
 fun dilimOf(s: Slot, at: Long): Int = (((at - s.start) * 7) / (s.end - s.start).coerceAtLeast(1)).toInt().coerceIn(0, 6)
