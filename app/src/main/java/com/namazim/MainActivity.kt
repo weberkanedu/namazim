@@ -147,7 +147,7 @@ fun HolyTicker(days: List<Pair<HolyDay, String>>) {
     var k by remember(days) { mutableIntStateOf(0) }
     LaunchedEffect(days) { while (days.size > 1) { delay(3500); k = (k + 1) % days.size } }
     AnimatedContent(
-        k, Modifier.fillMaxWidth(),
+        k, contentAlignment = Alignment.CenterEnd,
         transitionSpec = {
             (fadeIn(tween(450)) + androidx.compose.animation.slideInVertically(tween(450)) { it / 2 }) togetherWith
                 (fadeOut(tween(300)) + androidx.compose.animation.slideOutVertically(tween(300)) { -it / 2 })
@@ -155,13 +155,10 @@ fun HolyTicker(days: List<Pair<HolyDay, String>>) {
         label = "holy",
     ) { i ->
         val (d, left) = days[i % days.size]
-        Text(
-            androidx.compose.ui.text.buildAnnotatedString {
-                append("✦ ${d.name} · ")
-                pushStyle(androidx.compose.ui.text.SpanStyle(color = Pal.Text)); append(left); pop()
-            },
-            Modifier.fillMaxWidth(), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
-        )
+        Column(horizontalAlignment = Alignment.End) {
+            Text("✦ ${d.name}", color = Pal.Muted, fontSize = Type.label, maxLines = 1)
+            Text(left, style = NumStyle, fontSize = 18.sp, lineHeight = 20.sp, color = Pal.Gold)
+        }
     }
 }
 
@@ -500,16 +497,24 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
             }
         }
         // the two dates under the picture: miladi in the text colour, hicri in gold, one line
-        Text(
-            androidx.compose.ui.text.buildAnnotatedString {
-                pushStyle(androidx.compose.ui.text.SpanStyle(color = Pal.Text, fontWeight = FontWeight.Medium)); append(calDate.format(TR_DATE)); pop()
-                pushStyle(androidx.compose.ui.text.SpanStyle(color = Pal.Muted)); append("  ·  "); pop()
-                pushStyle(androidx.compose.ui.text.SpanStyle(color = Pal.Gold, fontWeight = FontWeight.Medium)); append(hijri(calDate)); pop()
-            },
-            Modifier.fillMaxWidth().padding(top = Space.xs), fontSize = Type.body, textAlign = TextAlign.Center,
-        )
-        // design C3 (design/design-system/tarih-kompakt.html): the next mübarek günler take turns on one line, in days
-        HolyTicker(holy)
+        // design K1 (design/design-system/tarih-karma.html): a mini date box, the weekday and the hijri date on the left,
+        // the next mübarek günler taking turns on the right, in days
+        val tr = Locale("tr")
+        Row(Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.xl, top = Space.xs).height(46.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(
+                Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Pal.Card)
+                    .border(1.dp, Pal.Gold.copy(alpha = .45f), RoundedCornerShape(10.dp)),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+            ) {
+                Text("${calDate.dayOfMonth}", style = NumStyle, fontSize = 22.sp, lineHeight = 22.sp, color = Pal.Text)
+                Text(calDate.format(DateTimeFormatter.ofPattern("MMM", tr)).uppercase(tr), color = Pal.Gold, fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 10.sp)
+            }
+            Column(Modifier.padding(start = Space.m).weight(1f)) {
+                Text(calDate.format(DateTimeFormatter.ofPattern("EEEE", tr)), color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium)
+                Text(hijri(calDate), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.Medium, maxLines = 1)
+            }
+            HolyTicker(holy)
+        }
 
             val todaySlots = slots(store.lat, store.lng, today)
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {

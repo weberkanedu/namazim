@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarih Karma</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:48px 24px 80px;display:flex;flex-direction:column;align-items:center}
+.wrap{max-width:1000px;width:100%}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 44px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.65;max-width:860px;margin-top:10px}
+.grid{display:flex;gap:28px;flex-wrap:wrap;margin-top:20px}
+.col{display:flex;flex-direction:column;gap:8px;width:360px}
+.col b.l{font:600 22px Cormorant,serif;color:var(--gold)}
+.col span.w{font-size:13px;color:var(--muted);line-height:1.55;min-height:54px}
+.ph{width:360px;background:#0B1322;border:1px solid #1E2940;border-radius:22px;overflow:hidden}
+.hd{position:relative;height:130px}.hd video{width:100%;height:100%;object-fit:cover;display:block}
+.hd::after{content:"";position:absolute;inset:auto 0 0 0;height:46px;background:linear-gradient(transparent,#0B1322)}
+.rest{height:90px;margin:8px 16px 16px;border-radius:12px;background:#0F1729;display:flex;align-items:center;justify-content:center;font:400 11px Inter;color:var(--muted)}
+.bar{display:flex;align-items:center;gap:10px;padding:2px 16px;height:46px}
+.mini{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid rgb(232 190 116 / .45);display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card)}
+.mini b{font:600 22px/1 Cormorant,serif}.mini i{font-style:normal;font:600 8.5px Inter;color:var(--gold);letter-spacing:.06em}
+.dl{display:flex;flex-direction:column;line-height:1.3}.dl b{font:500 13px Inter}.dl span{font:500 11px Inter;color:var(--gold)}
+.rot{margin-left:auto;position:relative;height:36px;width:150px;overflow:hidden}
+.rot div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;transition:opacity .5s,transform .5s;line-height:1.3}
+.rot div span{font:500 11px Inter;color:var(--muted);white-space:nowrap}.rot div b{font:600 18px Cormorant,serif;color:var(--gold)}
+.rot2 div{flex-direction:row;align-items:center;justify-content:flex-end;gap:8px}
+.rot2 .dd{min-width:40px;text-align:center;border-radius:9px;background:rgb(232 190 116 / .14);font:600 18px/1 Cormorant,serif;color:var(--gold);padding:4px}
+.rot2 .dd small{display:block;font:500 8.5px Inter;color:var(--muted)}
+.rot2 span{text-align:right;max-width:96px;white-space:normal!important;line-height:1.25}
+.dots{position:absolute;right:0;bottom:-2px;display:flex;gap:3px}.dots i{width:4px;height:4px;border-radius:50%;background:#2A3550}.dots i.on{background:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Ana sayfa · tarih · C1 + dönen satır</div>
+  <h1>Karma: mini kutu ve dönen mübarek gün</h1>
+  <p class="lede">Solda C1'deki gibi mini tarih kutusu, haftanın günü ve hicri. Sağda mübarek günler tek tek, birkaç saniyede bir yukarı kayarak değişir. Yükseklik bugünkü iki satırla aynı.</p>
+  <div class="grid">
+    <div class="col"><b class="l">K1 · Ad üstte, gün altta</b><span class="w">Sağda iki satır: mübarek günün adı, altında büyük altın gün sayısı.</span><div class="ph" id="k1"></div></div>
+    <div class="col"><b class="l">K2 · Gün kutusu</b><span class="w">Sağda gün sayısı küçük altın bir kutuda, adı yanında. Altında kaçıncı olduğunu gösteren üç küçük nokta.</span><div class="ph" id="k2"></div></div>
+  </div>
+</div>
+<script>
+const vid=`<div class="hd"><video src="../../app/src/main/assets/sky/medine-aksam.mp4" autoplay loop muted playsinline></video></div>`;
+const rest=`<div class="rest">(gül, sayaç, vakitler: hemen başlar)</div>`;
+const left=`<div class="mini"><b>8</b><i>KAS</i></div><div class="dl"><b>Pazar</b><span>28 Cemâziyelevvel 1448</span></div>`;
+const T=[['Üç Ayların Başlangıcı','32 gün'],['Regaib Kandili','32 gün'],['Miraç Kandili','57 gün']];
+k1.innerHTML=vid+`<div class="bar">${left}<div class="rot" id="r1">${T.map((t,i)=>`<div style="opacity:${i?0:1}"><span>✦ ${t[0]}</span><b>${t[1]}</b></div>`).join('')}</div></div>`+rest;
+k2.innerHTML=vid+`<div class="bar">${left}<div class="rot rot2" id="r2" style="width:160px">${T.map((t,i)=>`<div style="opacity:${i?0:1}"><span>${t[0]}</span><span class="dd">${t[1].split(' ')[0]}<small>gün</small></span></div>`).join('')}<div class="dots">${T.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div></div>`+rest;
+let k=0;setInterval(()=>{for(const id of ['r1','r2']){const d=document.querySelectorAll('#'+id+' > div:not(.dots)');d[k].style.opacity=0;d[k].style.transform='translateY(-10px)';}
+ k=(k+1)%T.length;
+ for(const id of ['r1','r2']){const d=document.querySelectorAll('#'+id+' > div:not(.dots)');d[k].style.transform='translateY(10px)';requestAnimationFrame(()=>{d[k].style.opacity=1;d[k].style.transform='none';});}
+ document.querySelectorAll('#r2 .dots i').forEach((e,i)=>e.className=i===k?'on':'');},3000);
+</script>
+</body>
+</html>
