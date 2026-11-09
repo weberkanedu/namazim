@@ -402,7 +402,7 @@ private fun KutuphaneSheet(store: Store, onClose: () -> Unit, onCreate: () -> Un
                         }
                         Text(h.ar, Modifier.fillMaxWidth().padding(top = Space.xs), color = Color(0xFFF2D79B), fontSize = 19.sp,
                             textAlign = androidx.compose.ui.text.style.TextAlign.End, maxLines = 2)
-                        Text(listOfNotNull(h.adet?.let { "$it kere" }, h.mean, h.kaynak).joinToString(" · "),
+                        Text(listOfNotNull(h.adet?.let { "$it kere" }, h.mean.removeSuffix("."), h.kaynak).joinToString(" · "),
                             Modifier.padding(top = 2.dp), color = Pal.Muted, fontSize = Type.micro, lineHeight = 15.sp)
                     }
                 }

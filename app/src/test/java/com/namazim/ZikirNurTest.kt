@@ -1,11 +1,19 @@
 package com.namazim
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ZikirNurTest {
+    @Test fun meaningsEndWithAPeriod() {
+        assertEquals("Allah en büyüktür.", cumle("Allah en büyüktür"))
+        assertEquals("Allah en büyüktür.", cumle("Allah en büyüktür. "))
+        assertEquals("", cumle(""))
+        assertTrue(ZIKIR_LIST.all { it.mean.last() in ".!?" })
+    }
+
     @Test fun ringFillsOnceToTheTarget() {
         assertEquals(.47f, zikirProgress(47, 100), 1e-4f)
         assertEquals(1f, zikirProgress(130, 100), 0f)      // extras keep it full, no second turn
