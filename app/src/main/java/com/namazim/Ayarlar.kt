@@ -154,7 +154,7 @@ fun AyarlarScreen(onBack: () -> Unit) {
             ProfilKart(store, locating) { open = "sen" }
             val prep = if (store.prepOffsets.isEmpty()) "Vakit öncesi kapalı" else store.prepOffsets.sortedDescending().joinToString("·") + " dk önce"
             val tiles = listOf(
-                Triple("hatirlatma", Icons.Default.Notifications, "Bildirimler" to "$prep · her ${store.nagEvery} dk · ${Reminders.soundLabel(store.notifSound)}"),
+                Triple("hatirlatma", Icons.Default.Notifications, "Bildirimler" to "$prep · her ${store.nagEvery} dk · ${Reminders.soundLabel(store.nagSound)}"),
                 Triple("hedef", Icons.Default.Star, "Hedefler" to "Günde ${store.readGoal} sayfa · ${store.kazaRate} vakit kaza"),
                 Triple("ibadet", Icons.Default.Favorite, "İbadet takibi" to
                     "Tesbihat ${if (store.askTesbihat) "açık" else "kapalı"} · nafile ${if (store.nafileTakip) "açık" else "kapalı"}"),
@@ -196,6 +196,11 @@ fun AyarlarScreen(onBack: () -> Unit) {
             key(v) {
                 when (id) {
                     "hatirlatma" -> {
+                        // design A of design/design-system/bildirim-sesleri-secenekler.html: two fixed signature sounds, two picked ones
+                        Text("İMZA SESLER", color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                        SesRow("Vakit girdi", "Namazım'ın sesi, değişmez", "done", store.girdiSes) { store.girdiSes = it; changed() }
+                        SesRow("En faziletli vakit", "Mezhebine göre; vakit girişiyle aynı andaysa tek ses çalar", "tam", store.faziletSes) { store.faziletSes = it; changed() }
+                        Text("HATIRLATMALAR", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                         ValueRow(
                             "Vakitten önce hazırlan bildirimi",
                             if (store.prepOffsets.isEmpty()) "kapalı" else store.prepOffsets.sortedDescending().joinToString(", ") { "$it dk" },
@@ -204,17 +209,9 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         SwitchRow("Vaktin son yarım saatinde 5 dakikada bir", store.nagBurst) { store.nagBurst = it; changed() }
                         ValueRow("Ertele süresi", "${store.snoozeMin} dk") { openDialog("snooze", "${store.snoozeMin}") }
                         GhostButton("Deneme bildirimi gönder", Modifier.fillMaxWidth(), color = Pal.Gold) { Reminders.test(ctx) }
-                        Text("Bildirim sesi", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
-                        Reminders.SOUNDS.forEach { (sid, spec) ->
-                        val on = store.notifSound == sid
-                        Row(Modifier.fillMaxWidth().heightIn(min = TouchMin).clip(RoundedCornerShape(Radius.s)).clickable {
-                            store.notifSound = sid; Reminders.createChannels(ctx); v++; playTone(ctx, sid)
-                        }.padding(horizontal = Space.s), verticalAlignment = Alignment.CenterVertically) {
-                            Text(spec.first, Modifier.weight(1f), color = if (on) Pal.Gold else Pal.Text, fontSize = Type.body,
-                                fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
-                            if (on) Icon(Icons.Default.Check, "seçili", tint = Pal.Gold, modifier = Modifier.size(18.dp))
-                        }
-                        }
+                        Text("SESLER", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                        SesSecici("Hazırlan sesi", store.prepSound) { store.prepSound = it; Reminders.createChannels(ctx); changed() }
+                        SesSecici("\"Kıldın mı?\" sesi", store.nagSound) { store.nagSound = it; Reminders.createChannels(ctx); changed() }
                     }
                     "hedef" -> {
                         ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }
@@ -479,8 +476,56 @@ private fun StepButton(text: String, enabled: Boolean, onClick: () -> Unit) {
     ) { Text(text, color = if (enabled) Pal.Gold else Pal.Muted, fontSize = Type.h2) }
 }
 
-/** Seçili bildirim sesini bir kez çalar. */
+/** A signature sound: name, note, a play button and an on/off switch (the sound itself is fixed). */
+@Composable
+private fun SesRow(title: String, note: String, sound: String, on: Boolean, onChange: (Boolean) -> Unit) {
+    val ctx = LocalContext.current
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, color = Pal.Text, fontSize = Type.body)
+            Text(note, color = Pal.Muted, fontSize = Type.label, lineHeight = 16.sp)
+        }
+        TextButton(onClick = { playTone(ctx, sound) }) {
+            Icon(Icons.Default.PlayArrow, null, tint = Pal.Gold, modifier = Modifier.size(18.dp))
+            Text(Reminders.soundLabel(sound), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
+        }
+        Switch(on, onChange, colors = SwitchDefaults.colors(checkedTrackColor = Pal.Gold, checkedThumbColor = Pal.Ground,
+            uncheckedTrackColor = Pal.Track, uncheckedThumbColor = Pal.Muted, uncheckedBorderColor = Pal.Border))
+    }
+}
+
+/** A picked sound: the row shows the choice; a tap opens the sounds as chips, a chip plays and picks. */
+@Composable
+private fun SesSecici(title: String, current: String, onPick: (String) -> Unit) {
+    val ctx = LocalContext.current
+    var open by remember { mutableStateOf(false) }
+    ValueRow(title, Reminders.soundLabel(current)) { open = !open }
+    if (open) Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+        Reminders.SOUNDS.chunked(2).forEach { pair ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                pair.forEach { (id, spec) ->
+                    val on = id == current
+                    Row(
+                        Modifier.weight(1f).heightIn(min = TouchMin).clip(CircleShape)
+                            .border(1.dp, if (on) Pal.Gold else Pal.Border, CircleShape)
+                            .clickable { onPick(id); playTone(ctx, id) }.padding(horizontal = Space.m),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(if (spec.second == 0) Icons.Default.Notifications else Icons.Default.PlayArrow, null,
+                            tint = if (on) Pal.Gold else Pal.Muted, modifier = Modifier.size(16.dp))
+                        Text(spec.first, Modifier.padding(start = Space.xs), color = if (on) Pal.Gold else Pal.Text, fontSize = Type.body2,
+                            fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1)
+                    }
+                }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/** Seçili bildirim sesini bir kez çalar ("Sessiz" hiçbir şey çalmaz). */
 fun playTone(ctx: Context, sound: String) {
+    if (sound == "sessiz") return
     runCatching {
         val res = Reminders.soundRes(sound)
         if (res != 0) {

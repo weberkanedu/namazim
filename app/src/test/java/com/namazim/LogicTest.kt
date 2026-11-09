@@ -16,6 +16,18 @@ class LogicTest {
         assertEquals((0L..90L step 15).toList() + (95L..115L step 5).toList(), nags)
     }
 
+    @Test fun faziletReminder() {
+        val s = Slot(Vakit.OGLE, LocalDate.of(2026, 11, 1), 0, 120 * min, 120 * min)
+        // faziletli time at the start: one reminder there, the fazilet one (no separate "girdi")
+        val same = reminders(s, fz = 0).filterNot { it.prep }
+        assertEquals(Ses.FAZILET, same.first().kind); assertEquals(1, same.count { it.at == 0L })
+        // later (at 32 min): girdi at 0, fazilet at 32, the nag at 30 (2 min before) is dropped, 45 stays
+        val later = reminders(s, fz = 32 * min).filterNot { it.prep }
+        assertEquals(Ses.GIRDI, later.first().kind)
+        assertEquals(listOf(0L, 15L, 32L, 45L), later.filter { it.at <= 45 * min }.map { it.at / min })
+        assertEquals(Ses.FAZILET, later.first { it.at == 32 * min }.kind)
+    }
+
     @Test fun cuzOfPage() {
         assertEquals(1, cuz(1)); assertEquals(1, cuz(21)); assertEquals(2, cuz(22))
         assertEquals(29, cuz(581)); assertEquals(30, cuz(582)); assertEquals(30, cuz(604))

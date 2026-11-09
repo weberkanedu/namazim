@@ -12,20 +12,29 @@ import java.time.LocalDate
 
 private const val MIN = 60_000L
 
+/** What a reminder is: before the time, the time entering (sound "done"), the faziletli time beginning ("tam vakti"), a nag. */
+enum class Ses { HAZIR, GIRDI, FAZILET, ISRAR }
+
 /** A moment to remind about [slot]; [prep] = before the time enters, otherwise "go pray". */
-data class Reminder(val at: Long, val slot: Slot, val prep: Boolean)
+data class Reminder(val at: Long, val slot: Slot, val prep: Boolean, val kind: Ses = if (prep) Ses.HAZIR else Ses.ISRAR)
 
 /** User-tunable cadence (Ayarlar). Minutes. */
 data class ReminderCfg(val prep: List<Long> = listOf(30, 15, 5), val every: Long = 15, val burst: Boolean = true)
 
-/** "Hazırlan" at each prep offset; then "kıl" every [ReminderCfg.every] min, every 5 min in the last half hour if [ReminderCfg.burst]. */
-fun reminders(slot: Slot, cfg: ReminderCfg = ReminderCfg()): List<Reminder> {
+/**
+ * "Hazırlan" at each prep offset; then "kıl" every [ReminderCfg.every] min, every 5 min in the last half hour if [ReminderCfg.burst].
+ * The first "kıl" is the time entering. [fz] = start of the faziletli time (design A, bildirim-sesleri-secenekler.html):
+ * at the start it replaces the entering one, later it is its own reminder and a nag closer than 5 min to it is dropped.
+ */
+fun reminders(slot: Slot, cfg: ReminderCfg = ReminderCfg(), fz: Long? = null): List<Reminder> {
     val list = cfg.prep.map { Reminder(slot.start - it * MIN, slot, true) }.toMutableList()
     var t = slot.start
     // Yatsı gece yarısını geçince seyrelir: 60 dakikada bir; son yarım saatte yine sık.
     val night = if (slot.vakit == Vakit.YATSI) slot.start + (slot.end - slot.start) / 2 else Long.MAX_VALUE
+    val later = fz != null && fz > slot.start && fz < slot.nagEnd
     while (t < slot.nagEnd) {
-        list += Reminder(t, slot, false)
+        val kind = when { t != slot.start -> Ses.ISRAR; fz == slot.start -> Ses.FAZILET; else -> Ses.GIRDI }
+        if (!(kind == Ses.ISRAR && later && kotlin.math.abs(t - fz!!) < 5 * MIN)) list += Reminder(t, slot, false, kind)
         val step = when {
             slot.nagEnd - t <= 30 * MIN && cfg.burst -> 5 * MIN
             t >= night -> 60 * MIN
@@ -33,14 +42,16 @@ fun reminders(slot: Slot, cfg: ReminderCfg = ReminderCfg()): List<Reminder> {
         }
         t += step
     }
-    return list
+    if (later) list += Reminder(fz!!, slot, false, Ses.FAZILET)
+    return list.sortedBy { it.at }
 }
 
 /** [reminders] with the user's settings, minus the ones a snooze skipped, plus one when the snooze ends. */
 fun remindersFor(s: Store, slot: Slot): List<Reminder> {
     if (!s.tracked(slot)) return emptyList()   // a prayer from before tracking started (or in an özel gün) is neither nagged nor kaza
     if (s.ozelGunNow != null) return emptyList()   // nothing can be prayed while an özel gün lasts, even a prayer that became owed
-    val all = reminders(slot, s.reminderCfg())
+    val fz = if (!s.faziletSes) null else s.dilimler(slot).indexOf(Dilim.FAZILET).takeIf { it >= 0 }?.let { dilimStart(slot, it) }
+    val all = reminders(slot, s.reminderCfg(), fz)
     val until = s.snoozedUntil(slot.key)
     if (until == 0L) return all
     return all.filter { it.at >= until } + Reminder(until, slot, false)
@@ -119,50 +130,56 @@ object Reminders {
 
     fun createChannels(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
-        // Ses, kanal oluşturulurken sabitlenir; bu yüzden her ses için ayrı kanal kimliği kullanılır.
         val s = Store(ctx)
-        // Ses listesi değişmiş olabilir: bilinmeyen anahtar kalırsa sisteme dön
-        if (SOUNDS.none { it.first == s.notifSound }) s.notifSound = "system"
-        val sound = s.notifSound
-        val uri = soundUri(ctx, sound)
-        val prep = NotificationChannel("hazirlik_$sound", "Namaza hazırlık", NotificationManager.IMPORTANCE_DEFAULT)
-        val nag = NotificationChannel("israr_$sound", "Kıldın mı?", NotificationManager.IMPORTANCE_HIGH)
-        if (uri != null) { prep.setSound(uri, null); nag.setSound(uri, null) }
-        nag.enableVibration(true)
-        nm.createNotificationChannel(prep)
-        nm.createNotificationChannel(nag)
-        // eski kimlikleri temizle
-        (SOUNDS.map { it.first } + listOf("")).flatMap { listOf("hazirlik_$it", "israr_$it") }
-            .filter { it != "hazirlik_$sound" && it != "israr_$sound" }
-            .forEach { nm.deleteNotificationChannel(it) }
+        // the sound is fixed when a channel is made, so the chosen sound is part of the id; an unknown key (old list) falls back
+        if (SOUNDS.none { it.first == s.prepSound }) s.prepSound = "coming"
+        if (SOUNDS.none { it.first == s.nagSound }) s.nagSound = "ding"
+        val want = listOf(
+            channel(ctx, "hazir_${s.prepSound}", "Namaza hazırlık", NotificationManager.IMPORTANCE_DEFAULT, s.prepSound),
+            channel(ctx, "kil_${s.nagSound}", "Kıldın mı?", NotificationManager.IMPORTANCE_HIGH, s.nagSound),
+            // the two signature sounds never change, so the ear learns them
+            channel(ctx, "ses_girdi", "Vakit girdi", NotificationManager.IMPORTANCE_HIGH, "done"),
+            channel(ctx, "ses_fazilet", "En faziletli vakit", NotificationManager.IMPORTANCE_HIGH, "tam"),
+        )
+        want.forEach { nm.createNotificationChannel(it) }
+        nm.notificationChannels.filter { c -> want.none { it.id == c.id } }.forEach { nm.deleteNotificationChannel(it.id) }
     }
 
-    /** Seçili ses (sistem = null → kanal varsayılanı). */
-    /** Seçilebilir bildirim sesleri: anahtar → (etiket, ham kaynak). */
+    private fun channel(ctx: Context, id: String, name: String, importance: Int, sound: String) =
+        NotificationChannel(id, name, importance).apply {
+            when (sound) {
+                "system" -> {}
+                "sessiz" -> setSound(null, null)
+                else -> setSound(soundUri(ctx, sound), Notification.AUDIO_ATTRIBUTES_DEFAULT)
+            }
+            enableVibration(true)
+        }
+
+    /** Bildirim sesleri (the wavs in the `bildirim` folder, as OGG): anahtar → (etiket, ham kaynak). done ve tam vakti imza seslerdir. */
     val SOUNDS = listOf(
-        "system" to ("Sistem" to 0),
-        "ezan" to ("Ezan · Hicaz" to R.raw.notif_ezan),
-        "sala" to ("Sala · Rast" to R.raw.notif_sala),
-        "ney" to ("Ney" to R.raw.notif_ney),
-        "kudum" to ("Kudüm" to R.raw.notif_kudum),
-        "def" to ("Def" to R.raw.notif_def),
-        "ud" to ("Ud" to R.raw.notif_ud),
-        "rebap" to ("Rebap" to R.raw.notif_rebap),
-        "zikir" to ("Zikir" to R.raw.notif_zikir),
-        "hilal" to ("Hilal çanağı" to R.raw.notif_hilal),
-        "sabah" to ("Sabah · Saba" to R.raw.notif_sabah),
+        "ding" to ("Ding" to R.raw.notif_ding),
+        "dririn" to ("Dririn" to R.raw.notif_dririn),
+        "key" to ("Key" to R.raw.notif_key),
+        "coming" to ("Coming" to R.raw.notif_coming),
+        "sparkly" to ("Sparkly" to R.raw.notif_sparkly),
+        "magic" to ("Magic" to R.raw.notif_magic),
+        "done" to ("Done" to R.raw.notif_done),
+        "tam" to ("Tam vakti" to R.raw.notif_tam),
+        "system" to ("Sistem sesi" to 0),
+        "sessiz" to ("Sessiz" to 0),
     )
 
     fun soundRes(sound: String): Int = SOUNDS.firstOrNull { it.first == sound }?.second?.second ?: 0
 
-    fun soundLabel(sound: String): String = SOUNDS.firstOrNull { it.first == sound }?.second?.first ?: "Sistem"
+    fun soundLabel(sound: String): String = SOUNDS.firstOrNull { it.first == sound }?.second?.first ?: "Sistem sesi"
 
     fun soundUri(ctx: Context, sound: String): android.net.Uri? {
         val res = soundRes(sound)
-        return if (res == 0) null else android.net.Uri.parse("android.resource://${ctx.packageName}/$res")
+        // by name, not number: a channel keeps its sound for good, and resource numbers move when the raw files change
+        return if (res == 0) null else android.net.Uri.parse("android.resource://${ctx.packageName}/raw/${ctx.resources.getResourceEntryName(res)}")
     }
 
-    fun channelFor(kind: String, ctx: Context) = "${kind}_${Store(ctx).notifSound}"
+    fun channelFor(kind: String, ctx: Context) = Store(ctx).let { if (kind == "hazirlik") "hazir_${it.prepSound}" else "kil_${it.nagSound}" }
 
 
     private fun notify(ctx: Context, r: Reminder, now: Long) {
@@ -170,6 +187,12 @@ object Reminders {
         val left = (r.slot.end - now) / MIN
         val (channel, title, text) = if (r.prep) {
             Triple(channelFor("hazirlik", ctx), "${v.ad} vaktine ${(r.slot.start - now + MIN - 1) / MIN} dk", "Abdestini al, namaza hazırlan.")
+        } else if (r.kind == Ses.FAZILET) {
+            Triple("ses_fazilet", if (r.at == r.slot.start) "${v.ad} vakti girdi · en faziletli vakit" else "${v.ad}: en faziletli vakit",
+                "Şimdi kılmanın tam vakti.")
+        } else if (r.kind == Ses.GIRDI) {
+            val o = nextOgut(Store(ctx))
+            Triple(if (Store(ctx).girdiSes) "ses_girdi" else channelFor("israr", ctx), "${v.ad} vakti girdi — kıldın mı?", "${o.text}\n— ${o.source}")
         } else if (r.slot.nagEnd - now <= 30 * MIN) {
             Triple(channelFor("israr", ctx), "${v.ad} vakti çıkıyor!", "Son $left dakika. Kazaya bırakma, hemen kıl.")
         } else {

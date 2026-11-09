@@ -188,9 +188,19 @@ class Store(context: Context) {
     var prepOffsets: Set<Int>
         get() = p.getStringSet("prepOffsets", null)?.map { it.toInt() }?.toSet() ?: setOf(30, 15, 5)
         set(v) { StoreRev.n++; p.edit().putStringSet("prepOffsets", v.map { it.toString() }.toSet()).apply() }
-    var notifSound: String
-        get() = p.getString("notifSound", "system")!!
-        set(v) { StoreRev.n++; p.edit().putString("notifSound", v).apply() }
+    // sounds (Reminders.SOUNDS): the two the user picks, and the two signature sounds that can only be switched off
+    var prepSound: String
+        get() = p.getString("prepSound", "coming")!!
+        set(v) { StoreRev.n++; p.edit().putString("prepSound", v).apply() }
+    var nagSound: String
+        get() = p.getString("nagSound", "ding")!!
+        set(v) { StoreRev.n++; p.edit().putString("nagSound", v).apply() }
+    var girdiSes: Boolean
+        get() = p.getBoolean("girdiSes", true)
+        set(v) { StoreRev.n++; p.edit().putBoolean("girdiSes", v).apply() }
+    var faziletSes: Boolean
+        get() = p.getBoolean("faziletSes", true)
+        set(v) { StoreRev.n++; p.edit().putBoolean("faziletSes", v).apply() }
     var nagEvery: Int
         get() = p.getInt("nagEvery", 15)
         set(v) { StoreRev.n++; p.edit().putInt("nagEvery", v).apply() }
@@ -449,7 +459,7 @@ class Store(context: Context) {
      * Location, every setting, the zikir list and the reminder chain's state stay. Tracking restarts at [startAt].
      */
     fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
-        val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "notifSound", "prepOffsets", "readGoal",
+        val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "prepSound", "nagSound", "girdiSes", "faziletSes", "prepOffsets", "readGoal",
             "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired",
             "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2", "mezhep", "cinsiyet", "ozelGunGizli", "nafileTakip", "kurulum", "tanitim")
         val e = p.edit()
