@@ -78,18 +78,28 @@ fun extras(d: DayTimes, nextImsak: Long): List<Extra> {
     )
 }
 
+val HICRI_AYLAR get() = HIJRI_MONTHS
+
+/** A hijri date: day, month 1..12, year (Umm al-Qura, as [hijri]). */
+data class HicriTarih(val gun: Int, val ay: Int, val yil: Int)
+
+fun hicriOf(date: LocalDate): HicriTarih {
+    val cal = android.icu.util.IslamicCalendar()
+    cal.calculationType = android.icu.util.IslamicCalendar.CalculationType.ISLAMIC_UMALQURA
+    cal.timeInMillis = date.atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    return HicriTarih(cal.get(android.icu.util.Calendar.DAY_OF_MONTH), cal.get(android.icu.util.Calendar.MONTH) + 1, cal.get(android.icu.util.Calendar.YEAR))
+}
+
+/** The Gregorian day a hijri month ([ay] 1..12) starts on. */
+fun hicriAyBasi(yil: Int, ay: Int): LocalDate = hijriToDate(yil, ay, 1)
+
 private val HIJRI_MONTHS = listOf(
     "Muharrem", "Safer", "Rebiülevvel", "Rebiülahir", "Cemaziyelevvel", "Cemaziyelahir",
     "Recep", "Şaban", "Ramazan", "Şevval", "Zilkade", "Zilhicce",
 )
 
 // shortcut: Umm al-Qura calendar; Diyanet's own hijri date can differ by a day around month starts.
-fun hijri(date: LocalDate): String {
-    val cal = android.icu.util.IslamicCalendar()
-    cal.calculationType = android.icu.util.IslamicCalendar.CalculationType.ISLAMIC_UMALQURA
-    cal.timeInMillis = date.atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-    return "${cal.get(android.icu.util.Calendar.DAY_OF_MONTH)} ${HIJRI_MONTHS[cal.get(android.icu.util.Calendar.MONTH)]} ${cal.get(android.icu.util.Calendar.YEAR)}"
-}
+fun hijri(date: LocalDate): String = hicriOf(date).let { "${it.gun} ${HIJRI_MONTHS[it.ay - 1]} ${it.yil}" }
 
 data class HolyDay(val name: String, val date: LocalDate)
 

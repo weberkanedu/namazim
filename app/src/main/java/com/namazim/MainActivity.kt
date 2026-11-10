@@ -103,6 +103,7 @@ class MainActivity : ComponentActivity() {
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
         DefterYer.yukle(Store(this))
         acKisayol(intent)
+        SkyDebug.acik = intent.getStringExtra("acik")
         SkyDebug.asagi = intent.getBooleanExtra("asagi", false) // `--ez asagi true`: İstikrar opens scrolled to the bottom
         SkyDebug.zSection = intent.getIntExtra("zsection", 0) // `--ei zsection 1` opens Zikir > Takip
         // `--ez resetentries true` (debug builds): Ayarlar › Kayıtları sıfırla without tapping; tracking restarts at the next imsak
@@ -507,6 +508,9 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
     var refresh by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     var locating by remember { mutableStateOf(false) }
+    // `--es acik takvim|mubarek` (debug) opens one of them at start, for screenshots
+    var takvim by remember { mutableStateOf<LocalDate?>(if (SkyDebug.acik == "takvim") LocalDate.now() else null) }   // the calendar, opened on this day
+    var mubarek by remember { mutableStateOf(SkyDebug.acik == "mubarek") }
 
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) {
@@ -579,18 +583,21 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
         Row(Modifier.fillMaxWidth().padding(start = Space.xl, end = Space.xl, top = Space.xs).height(46.dp).turHedef("tarih"), verticalAlignment = Alignment.CenterVertically) {
             Column(
                 Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Pal.Card)
-                    .border(1.dp, Pal.Gold.copy(alpha = .45f), RoundedCornerShape(10.dp)),
+                    .border(1.dp, Pal.Gold.copy(alpha = .45f), RoundedCornerShape(10.dp)).clickable { takvim = calDate },
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
             ) {
                 Text("${calDate.dayOfMonth}", style = NumStyle, fontSize = 22.sp, lineHeight = 22.sp, color = Pal.Text)
                 Text(calDate.format(DateTimeFormatter.ofPattern("MMM", tr)).uppercase(tr), color = Pal.Gold, fontSize = 8.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 10.sp)
             }
-            Column(Modifier.padding(start = Space.m).weight(1f)) {
+            Column(Modifier.padding(start = Space.m).weight(1f).clickable { takvim = calDate }) {
                 Text(calDate.format(DateTimeFormatter.ofPattern("EEEE", tr)), color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium)
                 Text(hijri(calDate), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.Medium, maxLines = 1)
             }
-            HolyTicker(holy)
+            Box(Modifier.clip(RoundedCornerShape(Radius.s)).clickable { mubarek = true }) { HolyTicker(holy) }
         }
+        // design M2 / C2 (design/design-system/takvim-secenekler.html)
+        if (mubarek) MubarekSheet(calDate, onClose = { mubarek = false }) { mubarek = false; takvim = it }
+        takvim?.let { TakvimSheet(it) { takvim = null } }
         // Cuma: the week's ayet once, the first time home is seen after the Cuma vakti enters; leaving home or × hides it
         val cumaGirdi = calDate.dayOfWeek == java.time.DayOfWeek.FRIDAY && now >= slots(store.lat, store.lng, calDate)[1].start
         var cumaKart by remember { mutableStateOf(false) }

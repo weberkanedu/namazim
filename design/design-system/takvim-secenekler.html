@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Takvim ve Mübarek Günler</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1240px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 48px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 32px Cormorant,serif;margin:40px 0 4px;color:var(--gold)}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1050px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px}
+.opt{width:360px}
+.opt h3{font:600 24px Cormorant,serif;margin:0;display:flex;gap:8px;align-items:center}
+.opt h3 em{font:600 10px Inter;font-style:normal;color:#0B1322;background:var(--gold);border-radius:999px;padding:3px 8px}
+.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:80px}.opt .d b{color:#F3EEE3}
+.phone{width:360px;height:760px;border-radius:42px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:34px;overflow:hidden;background:var(--ground)}
+.home{position:absolute;inset:0;filter:brightness(.45)}
+.hd{height:170px;background:linear-gradient(180deg,#26324E,#5D6E86 55%,#0B1322)}
+.date{display:flex;align-items:center;gap:8px;padding:6px 16px}
+.date .mb{width:36px;height:36px;border-radius:9px;border:1px solid rgb(232 190 116 / .45);display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px/1 Cormorant,serif}.date .mb i{font:600 7px Inter;color:var(--gold);font-style:normal}
+.date .t{font:500 11px/1.3 Inter}.date .t span{display:block;color:var(--gold);font-size:10px}
+.date .r{margin-left:auto;text-align:right;font:500 10px Inter;color:var(--muted)}.date .r b{display:block;font:600 15px Cormorant,serif;color:var(--gold)}
+.rose{width:150px;height:150px;border-radius:50%;margin:10px auto;background:radial-gradient(circle,#2A3D6E,#14213D)}
+.tapme{position:absolute;border:2px dashed var(--gold);border-radius:12px;pointer-events:none}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:120px;background:var(--card);border-radius:26px 26px 0 0;padding:10px 16px 20px;overflow-y:auto;scrollbar-width:none;box-shadow:0 -20px 40px #0008}
+.sheet .h{width:36px;height:4px;border-radius:2px;background:#3A4560;margin:0 auto 12px}
+.sheet h4{font:600 28px/1 Cormorant,serif;margin:0}.sheet .sub{font-size:12px;color:var(--muted);margin:4px 0 12px}
+.mon{font:600 9.5px Inter;letter-spacing:.15em;color:var(--muted);margin:16px 0 6px}
+.hd2{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.hd2 .bx{width:44px;height:46px;border-radius:12px;background:#0E1830;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.hd2 .bx b{font:600 20px/1 Cormorant,serif}.hd2 .bx i{font:600 8px Inter;font-style:normal;color:var(--gold)}
+.hd2 .tx{flex:1}.hd2 .tx b{display:block;font-size:13.5px;font-weight:600}.hd2 .tx span{font-size:11px;color:var(--muted)}
+.hd2 .k{text-align:right;font-size:11px;color:var(--muted)}.hd2 .k b{display:block;font:600 18px/1 Cormorant,serif;color:var(--gold)}
+.hd2.past{opacity:.38}
+.hd2.next{background:linear-gradient(90deg,rgb(232 190 116 / .12),transparent);border-radius:12px;padding:10px 8px;border-bottom:none;margin:2px -8px}
+.hd2.next .bx{background:var(--gold)}.hd2.next .bx b,.hd2.next .bx i{color:#0B1322}
+.tl{position:relative;padding-left:26px;margin-top:8px}
+.tl::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:#2A3550}
+.tl .it{position:relative;padding:8px 0 12px}
+.tl .it::before{content:"";position:absolute;left:-23px;top:12px;width:12px;height:12px;border-radius:50%;background:#2A3550;border:2px solid var(--card)}
+.tl .it.done::before{background:#5A6582}.tl .it.next::before{background:var(--gold);box-shadow:0 0 12px var(--gold)}
+.tl .it b{font-size:13.5px}.tl .it span{display:block;font-size:11px;color:var(--muted)}.tl .it em{font-style:normal;color:var(--gold);font-weight:600}
+.tl .it.done{opacity:.4}
+.yr{height:8px;border-radius:4px;background:var(--track);position:relative;margin:6px 0 4px}.yr i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--gold)}
+.yr b{position:absolute;top:-4px;width:2px;height:16px;background:#F3EEE3}
+.calh{display:flex;align-items:center;justify-content:space-between;margin:2px 0 8px}
+.calh b{font:600 24px/1 Cormorant,serif}.calh span{display:block;font-size:11px;color:var(--gold);margin-top:3px}.calh i{font-style:normal;color:var(--muted);font-size:18px;padding:0 6px}
+.seg{display:flex;background:#0E1830;border-radius:999px;padding:3px;margin:6px 0 10px}.seg span{flex:1;text-align:center;padding:6px 0;border-radius:999px;font:500 11.5px Inter;color:var(--muted);cursor:pointer}.seg span.on{background:rgb(232 190 116 / .18);color:var(--gold);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.grid .w{font-size:9.5px;color:var(--muted);text-align:center;padding-bottom:3px}
+.grid .c{height:46px;border-radius:9px;background:#0E1830;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.grid .c b{font:600 16px/1 Cormorant,serif}.grid .c small{font-size:8.5px;color:var(--gold);margin-top:2px;font-weight:600}
+.grid .c.o{opacity:.3}.grid .c.t{outline:2px solid var(--gold)}
+.grid .c.h1{background:rgb(232 190 116 / .12)}
+.grid .c .dot{position:absolute;top:4px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px var(--gold)}
+.grid .c.big b{font-size:18px}.grid .c.big small{color:var(--muted)}
+.day{margin-top:12px;background:#0E1830;border-radius:16px;padding:12px}
+.day b{font-size:14px}.day span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.vk{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:10px;text-align:center}.vk div{font-size:10px;color:var(--muted)}.vk div b{display:block;font:600 15px Cormorant,serif;color:#F3EEE3}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);margin-top:10px}
+.note{background:var(--card);border-radius:16px;padding:14px 16px;font-size:13px;line-height:1.7;color:var(--muted);max-width:1100px;margin-top:20px}.note b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Ana sayfa · tarih satırı · dokununca</div>
+  <h1>Mübarek günler ve iki takvim</h1>
+  <p class="lede">Ana sayfadaki tarih satırının iki yeri dokunulabilir olur: <b>sağdaki mübarek gün yazısı</b> bu yılın bütün mübarek günlerini, <b>soldaki tarih kutusu</b> miladi ve hicri takvimi açar. İkisi de ana sayfanın üstüne aşağıdan açılan bir sayfa (Ayarlar'daki gibi). Her biri için iki seçenek; altın kesik çizgi dokunulan yeri gösteriyor.</p>
+
+  <h2>1 · Mübarek günler</h2>
+  <div class="row" id="mg"></div>
+  <h2>2 · Takvim (miladi + hicri)</h2>
+  <div class="row" id="tk"></div>
+  <div class="note"><b>İkisi birbirine bağlı:</b> takvimde mübarek günler altın noktayla işaretli, bir güne dokununca o günün vakitleri ve varsa mübarek günü görünür; mübarek günler listesinde bir güne dokununca takvim o aya açılır.<br><b>Not:</b> taslaktaki tarihler yaklaşık. Uygulama hicri tarihleri Umm al-Qura takvimine göre hesaplıyor; Diyanet'in ilan ettiği tarihten bir gün sapabilir.</div>
+</div>
+<script>
+const TODAY=new Date(2026,10,10);
+const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const HAY=['Muharrem','Safer','Rebîülevvel','Rebîülâhir','Cemâziyelevvel','Cemâziyelâhir','Recep','Şaban','Ramazan','Şevval','Zilkade','Zilhicce'];
+const GUN=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+// hijri 1448 (approx.): 1 Cemâziyelâhir = 11 Kasım 2026; months alternate 30/29 around it
+const H0=new Date(2026,10,11);const HLEN=[30,29,30,29,30,29,30,29,30,29,30,29];
+function hijri(d){let diff=Math.round((d-H0)/864e5),m=5,y=1448;while(diff<0){m--;if(m<0){m=11;y--}diff+=HLEN[m]}while(diff>=HLEN[m]){diff-=HLEN[m];m++;if(m>11){m=0;y++}}return {d:diff+1,m,y}}
+const D=(y,m,d)=>new Date(y,m,d);
+const MG=[['Hicri Yılbaşı',D(2026,5,16)],['Aşure Günü',D(2026,5,25)],['Mevlid Kandili',D(2026,7,24)],['Üç Ayların Başlangıcı',D(2026,11,10)],['Regaib Kandili',D(2026,11,10)],['Miraç Kandili',D(2027,0,4)],['Berat Kandili',D(2027,0,22)],['Ramazan Başlangıcı',D(2027,1,8)],['Kadir Gecesi',D(2027,2,4)],['Ramazan Bayramı Arifesi',D(2027,2,9)],['Ramazan Bayramı',D(2027,2,10)],['Kurban Bayramı Arifesi',D(2027,4,16)],['Kurban Bayramı',D(2027,4,17)],['Hicri Yılbaşı (1449)',D(2027,5,6)]];
+const left=d=>Math.round((d-TODAY)/864e5);
+const leftTxt=n=>n===0?'bugün':n===1?'yarın':n>0?`${n} gün`:`${-n} gün önce`;
+const hstr=d=>{const h=hijri(d);return `${h.d} ${HAY[h.m]} ${h.y}`};
+const home=(tapR)=>`<div class="home"><div class="hd"></div><div class="date"><div class="mb">10<i>KAS</i></div><div class="t">Salı<span>${hstr(TODAY)}</span></div><div class="r">✦ Regaib Kandili<b>30 gün</b></div></div><div class="rose"></div></div><div class="tapme" style="${tapR?'left:212px;top:168px;width:118px;height:42px':'left:10px;top:168px;width:170px;height:42px'}"></div>`;
+const nextIdx=MG.findIndex(x=>left(x[1])>=0);
+// ---- M1 list by month
+function m1(){let s=`<div class="sheet"><div class="h"></div><h4>Mübarek günler</h4><div class="sub">Hicri 1448 · ${MG.length-1} gün · sıradaki <b style="color:var(--gold)">${MG[nextIdx][0]}</b>, ${leftTxt(left(MG[nextIdx][1]))}</div>`;let last='';
+ MG.forEach((x,i)=>{const d=x[1],key=AY[d.getMonth()]+' '+d.getFullYear();if(key!==last){s+=`<div class="mon">${key.toUpperCase()}</div>`;last=key}const n=left(d);
+  s+=`<div class="hd2 ${n<0?'past':i===nextIdx?'next':''}"><div class="bx"><b>${d.getDate()}</b><i>${AY[d.getMonth()].slice(0,3).toUpperCase()}</i></div><div class="tx"><b>${x[0]}</b><span>${GUN[d.getDay()]} · ${hstr(d)}</span></div><div class="k">${n<0?'geçti':`<b>${n===0?'bugün':n}</b>${n>0?'gün':''}`}</div></div>`});
+ return s+'</div>'}
+// ---- M2 timeline + year bar
+function m2(){const y0=MG[0][1],y1=MG[MG.length-1][1];const f=(TODAY-y0)/(y1-y0);
+ let s=`<div class="sheet"><div class="h"></div><h4>Mübarek günler</h4><div class="sub">Hicri 1448 yılı: yılın %${Math.round(f*100)}'i geride</div><div class="yr"><i style="width:${f*100}%"></i>${MG.slice(0,-1).map(x=>`<b style="left:${(x[1]-y0)/(y1-y0)*100}%;background:${left(x[1])<0?'#5A6582':'#E8BE74'}"></b>`).join('')}</div><div class="sub" style="display:flex;justify-content:space-between;margin-top:0"><span>Muharrem</span><span>Zilhicce</span></div><div class="tl">`;
+ MG.forEach((x,i)=>{const n=left(x[1]);s+=`<div class="it ${n<0?'done':i===nextIdx?'next':''}"><b>${x[0]}</b> ${n>=0?`<em>· ${leftTxt(n)}</em>`:''}<span>${x[1].getDate()} ${AY[x[1].getMonth()]} ${x[1].getFullYear()}, ${GUN[x[1].getDay()]} · ${hstr(x[1])}</span></div>`});
+ return s+'</div></div>'}
+// ---- calendars
+function grid(y,m,mode){const first=new Date(y,m,1),off=(first.getDay()+6)%7,n=new Date(y,m+1,0).getDate();
+ let s=['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].map(w=>`<div class="w">${w}</div>`).join('');for(let i=0;i<off;i++){const d=new Date(y,m,i-off+1);s+=cell(d,mode,true)}
+ for(let i=1;i<=n;i++)s+=cell(new Date(y,m,i),mode,false);let k=off+n;while(k%7){s+=cell(new Date(y,m,n+(k-off-n)+1),mode,true);k++}return `<div class="grid">${s}</div>`}
+function cell(d,mode,o){const h=hijri(d);const mg=MG.find(x=>+x[1]===+d);const t=+d===+TODAY;
+ const big=mode==='h'?h.d:d.getDate(),sm=mode==='h'?d.getDate():h.d;
+ return `<div class="c ${o?'o':''} ${t?'t':''} ${h.d===1?'h1':''} ${mode==='h'?'big':''}">${mg?'<span class="dot"></span>':''}<b>${big}</b><small>${h.d===1&&mode!=='h'?HAY[h.m].slice(0,4)+'.':sm}</small></div>`}
+const dayCard=`<div class="day"><b>10 Kasım 2026, Salı</b><span>${hstr(TODAY)}</span><div class="vk"><div>İmsak<b>05:55</b></div><div>Öğle<b>12:37</b></div><div>İkindi<b>15:20</b></div><div>Akşam<b>17:45</b></div><div>Yatsı<b>19:05</b></div></div></div>`;
+function c1(){return `<div class="sheet"><div class="h"></div><div class="calh"><i>‹</i><div style="text-align:center"><b>Kasım 2026</b><span>Cemâziyelevvel – Cemâziyelâhir 1448</span></div><i>›</i></div>${grid(2026,10,'m')}<div class="leg"><span>büyük: miladi gün</span><span style="color:var(--gold)">küçük altın: hicri gün</span><span>✦ mübarek gün</span></div>${dayCard}</div>`}
+function c2(){return `<div class="sheet"><div class="h"></div><div class="seg"><span>Miladi</span><span class="on">Hicri</span></div><div class="calh"><i>‹</i><div style="text-align:center"><b>Cemâziyelâhir 1448</b><span>11 Kasım – 9 Aralık 2026</span></div><i>›</i></div>${(()=>{const s0=H0,off=(s0.getDay()+6)%7;let s=['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].map(w=>`<div class="w">${w}</div>`).join('');for(let i=0;i<off;i++)s+=cell(new Date(s0.getTime()-(off-i)*864e5),'h',true);for(let i=0;i<29;i++)s+=cell(new Date(s0.getTime()+i*864e5),'h',false);let k=off+29;let j=29;while(k%7){s+=cell(new Date(s0.getTime()+j*864e5),'h',true);k++;j++}return `<div class="grid">${s}</div>`})()}<div class="leg"><span>büyük: hicri gün</span><span>küçük: miladi gün</span><span>✦ mübarek gün</span><span>Üstten Miladi / Hicri seçilir</span></div>${dayCard}</div>`}
+const MGO=[{n:'M1 · Ay ay liste',rec:1,d:'Bütün mübarek günler ay başlıklarıyla alt alta: tarih kutusu, adı, gün ve <b>hicri tarihi</b>, sağda kaç gün kaldığı. Geçenler soluk, sıradaki altınla vurgulu. En kolay okunanı.',h:m1()},
+ {n:'M2 · Yıl çizgisi',d:'Üstte hicri yılın ilerleme çubuğu, mübarek günler üstünde çentik; altında bir <b>zaman çizgisi</b>: geçenler gri, sıradaki parlayan altın nokta. Yılın neresinde olduğunu da gösterir.',h:m2()}];
+const TKO=[{n:'C1 · Tek takvim, iki tarih',rec:1,d:'Her günde <b>büyük miladi</b> gün, altında <b>küçük altın hicri</b> gün; hicri ay başlarında ayın adı yazar. Başlıkta iki takvimin ay adları. Mübarek günlerde altın nokta; güne dokununca altta o günün vakitleri.',h:c1()},
+ {n:'C2 · Miladi / Hicri seçmeli',d:'Üstte <b>Miladi | Hicri</b> seçici: Hicri seçilince takvim hicri ayla açılır (Cemâziyelâhir 1–29), büyük sayı hicri gün, küçük sayı miladi. İki takvimi de "kendi ayıyla" görmek isteyene.',h:c2()}];
+const box=(o,tapR)=>`<div class="opt"><h3>${o.n}${o.rec?'<em>ÖNERİM</em>':''}</h3><div class="d">${o.d}</div><div class="phone"><div class="scr">${home(tapR)}${o.h}</div></div></div>`;
+document.getElementById('mg').innerHTML=MGO.map(o=>box(o,true)).join('');
+document.getElementById('tk').innerHTML=TKO.map(o=>box(o,false)).join('');
+document.querySelectorAll('.seg span').forEach(s=>s.onclick=()=>{});
+</script>
+</body>
+</html>
