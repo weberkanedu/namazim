@@ -414,8 +414,9 @@ fun countdown(ms: Long): String {
 /** Ticks once a second so countdowns and statuses stay current. */
 @Composable
 fun rememberNow(): Long {
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
+    // `--el skytime <ms>` (SkyDebug.offsetMs) moves this clock: the header clip and home preview another hour or day
+    var now by remember { mutableLongStateOf(System.currentTimeMillis() + SkyDebug.offsetMs) }
+    LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() + SkyDebug.offsetMs } }
     return now
 }
 
@@ -502,7 +503,7 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
         } else {
 
         // "Namaz günü" imsakla başlar: gece yarısından sonra imsaka kadar dünün yatsısı hâlâ kılınabilir.
-        val calDate = LocalDate.now()
+        val calDate = java.time.Instant.ofEpochMilli(now).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
         val imsakToday = slots(store.lat, store.lng, calDate).first().start
         val today = if (now < imsakToday) calDate.minusDays(1) else calDate
         val d = dayTimes(store.lat, store.lng, today)
@@ -564,7 +565,10 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
         val cumaGirdi = calDate.dayOfWeek == java.time.DayOfWeek.FRIDAY && now >= slots(store.lat, store.lng, calDate)[1].start
         var cumaKart by remember { mutableStateOf(false) }
         LaunchedEffect(cumaGirdi) {
-            if (cumaGirdi && store.cumaAyetGun != calDate.toString()) { store.cumaAyetGun = calDate.toString(); cumaKart = true }
+            if (cumaGirdi && store.cumaAyetGun != calDate.toString()) {
+                if (SkyDebug.offsetMs == 0L) store.cumaAyetGun = calDate.toString()   // a `skytime` preview must not use up the real Friday
+                cumaKart = true
+            }
         }
         androidx.compose.animation.AnimatedVisibility(cumaKart, enter = fadeIn(tween(600)) + androidx.compose.animation.expandVertically(tween(500)), exit = fadeOut(tween(300)) + androidx.compose.animation.shrinkVertically(tween(300))) {
             val a = cumaAyeti(calDate)

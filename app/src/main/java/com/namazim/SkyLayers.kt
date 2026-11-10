@@ -28,7 +28,7 @@ fun haremClip(now: Long, imsak: Long, gunes: Long, ikindi: Long, aksam: Long): S
 /** Mekke/Medine header: a photoreal loop chosen by the time of day, cross-fading into the next when the vakit turns. */
 @Composable
 fun HaremSky(lat: Double, lng: Double, modifier: Modifier = Modifier) {
-    val now = rememberNow() + SkyDebug.offsetMs   // `--el skytime` previews the other clips
+    val now = rememberNow()   // includes `--el skytime`, which previews the other clips
     val d = dayTimes(lat, lng, java.time.LocalDate.now())
     val clip = haremClip(now, d.imsak, d.gunes, d.ikindi, d.aksam)
     androidx.compose.animation.Crossfade(clip, modifier, androidx.compose.animation.core.tween(1500), label = "harem") {

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The Friday launcher icon (C2 "Zümrüt"), used by the .GirisCuma alias from Thursday's akşam to Friday's akşam. -->
+<!-- The Friday launcher icon, used by the .GirisCuma alias from Thursday's akşam to Friday's akşam.
+     shortcut: the old gold L1 for now, since "Zümrüt" became the everyday icon (2026-11-10); a new Cuma design is being chosen. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_bg_cuma" />
-    <foreground android:drawable="@drawable/ic_logo_cuma" />
+    <background android:drawable="@drawable/ic_bg_gold" />
+    <foreground android:drawable="@drawable/ic_logo" />
     <monochrome android:drawable="@drawable/ic_logo_mono" />
 </adaptive-icon>
