@@ -7,5 +7,10 @@
     <string name="widget_gul_desc">Kıldıkça açılan gül, sıradaki vakit, canlı geri sayım ve Kıldım</string>
     <string name="widget_serit">Namazım · Şerit</string>
     <string name="widget_serit_desc">İnce şerit: vakit, geri sayım, yedi dilim ve Kıldım</string>
+    <!-- launcher shortcuts (long press on the app icon), res/xml/shortcuts.xml -->
+    <string name="sc_pusula">Pusula</string>
+    <string name="sc_zikirhane">Zikirhane</string>
+    <string name="sc_ozet">Bugün · Özet</string>
+    <string name="sc_tumu">İstikrar · Tümü</string>
 </resources>
 

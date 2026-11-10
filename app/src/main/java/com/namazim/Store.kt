@@ -213,6 +213,13 @@ class Store(context: Context) {
         get() = p.getBoolean("nagBurst", true)
         set(v) { StoreRev.n++; p.edit().putBoolean("nagBurst", v).apply() }
     /** Which öğüt (ayet/hadis) the next reminder shows; no StoreRev bump, nothing on screen depends on it. */
+    /** Defter's last section (0 Özet, 1 İstikrar, 2 Kaza) and İstikrar period (0 hafta … 3 tümü), so it opens where it was left. */
+    var defterSection: Int
+        get() = p.getInt("defterSection", 0)
+        set(v) { p.edit().putInt("defterSection", v).apply() }
+    var defterPeriod: Int
+        get() = p.getInt("defterPeriod", 2)
+        set(v) { p.edit().putInt("defterPeriod", v).apply() }
     /** The Friday whose Cuma ayet card was already shown on home (it shows once, after the Cuma vakti enters). */
     var cumaAyetGun: String
         get() = p.getString("cumaAyetGun", "") ?: ""

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long press on the app icon (MainActivity.acKisayol reads namazim://ac/...). Every launcher alias points here. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="tumu" android:enabled="true" android:icon="@drawable/sc_tumu"
+        android:shortcutShortLabel="@string/sc_tumu" android:shortcutLongLabel="@string/sc_tumu">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.namazim"
+            android:targetClass="com.namazim.MainActivity" android:data="namazim://ac/tumu" />
+    </shortcut>
+    <shortcut android:shortcutId="ozet" android:enabled="true" android:icon="@drawable/sc_ozet"
+        android:shortcutShortLabel="@string/sc_ozet" android:shortcutLongLabel="@string/sc_ozet">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.namazim"
+            android:targetClass="com.namazim.MainActivity" android:data="namazim://ac/ozet" />
+    </shortcut>
+    <shortcut android:shortcutId="zikirhane" android:enabled="true" android:icon="@drawable/sc_zikirhane"
+        android:shortcutShortLabel="@string/sc_zikirhane" android:shortcutLongLabel="@string/sc_zikirhane">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.namazim"
+            android:targetClass="com.namazim.MainActivity" android:data="namazim://ac/zikirhane" />
+    </shortcut>
+    <shortcut android:shortcutId="pusula" android:enabled="true" android:icon="@drawable/sc_pusula"
+        android:shortcutShortLabel="@string/sc_pusula" android:shortcutLongLabel="@string/sc_pusula">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.namazim"
+            android:targetClass="com.namazim.MainActivity" android:data="namazim://ac/pusula" />
+    </shortcut>
+</shortcuts>

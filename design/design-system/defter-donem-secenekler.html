@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defter Dönemleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:40px 20px 80px}
+.wrap{max-width:1200px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 28px Cormorant,serif;margin:40px 0 4px;color:var(--gold)}
+.lede{color:var(--muted);font-size:14.5px;line-height:1.65;max-width:980px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:24px;flex-wrap:wrap;margin-top:18px}
+.opt{width:360px}
+.opt h3{font:600 24px Cormorant,serif;margin:0}
+.opt .d{font-size:13px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:110px}.opt .d b{color:#F3EEE3}
+.phone{width:360px;height:720px;border-radius:40px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:32px;overflow:hidden;background:var(--ground)}
+.ttl{display:flex;align-items:flex-end;padding:46px 20px 0}.ttl b{font:600 40px/1 Cormorant,serif;flex:1}
+.tabs{display:flex;margin:14px 8px 0;border-bottom:1px solid var(--line)}
+.tabs span{flex:1;text-align:center;padding:12px 0;font:600 13px Inter;color:var(--muted);cursor:pointer;position:relative}
+.tabs span.on{color:var(--gold)}.tabs span.on::after{content:"";position:absolute;left:50%;bottom:-1px;width:32px;height:3px;margin-left:-16px;border-radius:3px 3px 0 0;background:var(--gold)}
+/* A: segmented pill */
+.pill{display:flex;margin:14px 20px 0;background:var(--card);border-radius:999px;padding:4px}
+.pill span{flex:1;text-align:center;padding:8px 0;border-radius:999px;font:500 12.5px Inter;color:var(--muted);cursor:pointer;transition:all .2s}
+.pill span.on{background:rgb(232 190 116 / .18);color:var(--gold);font-weight:600}
+/* B: period chip in title */
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid rgb(232 190 116 / .45);border-radius:999px;padding:7px 12px;font:600 12.5px Inter;color:var(--gold);cursor:pointer;margin-bottom:4px;position:relative}
+.menu{position:absolute;right:0;top:40px;background:#1A2540;border-radius:14px;padding:6px;box-shadow:0 14px 30px #000a;display:none;z-index:3;min-width:150px}
+.menu.open{display:block}.menu div{padding:10px 12px;border-radius:10px;font:500 13px Inter;color:#F3EEE3;white-space:nowrap}.menu div.on{color:var(--gold);background:rgb(232 190 116 / .1)}
+.menu div small{display:block;color:var(--muted);font-size:10.5px;font-weight:400}
+/* C: swipe cards */
+.dots{display:flex;justify-content:center;gap:6px;margin:10px 0 0}.dots i{width:6px;height:6px;border-radius:3px;background:#2A3550}.dots i.on{width:22px;background:var(--gold)}
+.swipe{display:flex;gap:8px;margin:12px 20px 0;overflow:hidden}
+.swipe span{flex:none;padding:7px 14px;border-radius:999px;border:1px solid #2A3550;font:500 12.5px Inter;color:var(--muted);cursor:pointer}
+.swipe span.on{border-color:var(--gold);color:var(--gold)}
+/* content */
+.body{padding:16px 20px}
+.big{font:600 40px/1 Cormorant,serif}.big small{font:500 14px Inter;color:#D5DBE6;margin-left:6px}
+.sub{font-size:12.5px;color:var(--muted);margin-top:6px}
+.viz{margin-top:14px;height:150px;border-radius:14px;background:var(--card);display:flex;align-items:flex-end;gap:3px;padding:12px}
+.viz i{flex:1;border-radius:3px;background:var(--gold)}
+.hint{position:absolute;left:12px;right:12px;bottom:84px;background:#F3EEE3;color:#0B1322;border-radius:14px;padding:10px 12px;font-size:11.5px;line-height:1.45}
+.hint b{font-weight:700}
+.dock{position:absolute;left:12px;right:12px;bottom:12px;height:56px;border-radius:28px;background:#16203Aee;display:flex;align-items:center;justify-content:space-around;font:500 11px Inter;color:var(--muted)}
+.dock .on{color:var(--gold);background:#22304F;padding:10px 18px;border-radius:22px}
+.note{background:var(--card);border-radius:16px;padding:16px 18px;font-size:13px;line-height:1.7;color:var(--muted);max-width:1100px;margin-top:22px}.note b{color:#F3EEE3}
+.lp{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;align-items:flex-start}
+.sheet{width:260px;background:#2B3346;border-radius:18px;padding:8px;box-shadow:0 16px 40px #000c}
+.sheet div{padding:11px 12px;border-radius:12px;font:500 13px Inter;display:flex;gap:10px;align-items:center}
+.sheet div i{width:22px;height:22px;border-radius:6px;background:rgb(232 190 116 / .25);flex:none}
+.lpcap{font-size:12.5px;color:var(--muted);max-width:420px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Defter · İstikrar · Hafta / Ay / Yıl / Tümü</div>
+  <h1>Tümü'ye bir dokunuş</h1>
+  <p class="lede">Bugün ana sayfadan Tümü'ye: <b>Defter → İstikrar → Tümü</b>, üç dokunuş; üstelik Defter her açılışta Özet'e, dönem de Yıl'a döner. İki sıra sekme de aynı görünüyor (altı çizili), göz hangisinin ana başlık olduğunu ayırmakta zorlanıyor. <b>Üç seçenekte de Defter kaldığın yeri hatırlar:</b> en son İstikrar › Tümü'deysen bir dahaki açılışta doğrudan oraya gelir.</p>
+
+  <h2>Görünüm ve kullanım</h2>
+  <div class="row" id="opts"></div>
+
+  <h2>Ek kısayol (üçüyle de olur)</h2>
+  <div class="lp">
+    <div class="sheet"><div><i></i>Bugün · Özet</div><div><i></i>İstikrar · Tümü</div><div><i></i>Kaza</div><div><i></i>Zikirhane</div></div>
+    <div class="lpcap"><b style="color:#F3EEE3">Uygulama ikonuna uzun bas:</b> telefonun kendi kısayol menüsü açılır; "İstikrar · Tümü" ile uygulama doğrudan oraya açılır. Ayrıca dock'taki <b style="color:#F3EEE3">Defter'e uzun basınca</b> küçük bir menüden Özet / İstikrar / Kaza seçilir.</div>
+  </div>
+  <div class="note"><b>Önerim:</b> A + hatırlama + ikon kısayolu. En az değişiklikle en büyük fark: ikinci sıra artık başlık gibi değil, dönem seçici gibi görünür; Defter kaldığın yerden açılır, Tümü bir dokunuş uzakta kalır.</div>
+</div>
+<script>
+const P=['Hafta','Ay','Yıl','Tümü'];
+const DATA=[
+ {big:'5/7',s:'gün tam · bu hafta',sub:'31 vakitten 29\'u kılındı',bars:[1,1,.8,1,1,.6,1]},
+ {big:'22',s:'gün tam · Kasım',sub:'vakitlerin %94\'ü kılındı',bars:[.6,.8,1,.9,.7,1,1,.9,1,.8,1,1,.9,1,1,.7,.9,1,1,.8]},
+ {big:'5',s:'gün tam · 2026',sub:'6 gün · vakitlerin %100\'ü kılındı',bars:[0,0,0,0,0,0,0,0,0,0,.4,1]},
+ {big:'26',s:'vakit · ilk günden beri',sub:'en uzun seri 5 gün · ne zaman kılıyorsun ↓',bars:[.1,.2,.3,.4,.5,.55,.6,.7,.8,.85,.9,1]},
+];
+const content=p=>`<div class="body"><div class="big">${DATA[p].big}<small>${DATA[p].s}</small></div><div class="sub">${DATA[p].sub}</div><div class="viz">${DATA[p].bars.map(h=>`<i style="height:${Math.max(4,h*100)}%"></i>`).join('')}</div></div>`;
+const tabs=`<div class="tabs"><span>Özet</span><span class="on">İstikrar</span><span>Kaza</span></div>`;
+const dock=`<div class="dock"><span>Namaz</span><span>Zikir</span><span>Okuma</span><span class="on">Defter</span></div>`;
+const OPTS=[
+ {n:'A · Kapsül seçici',d:'İkinci sıra <b>yuvarlak bir kapsüle</b> döner: seçili dönem altın zeminle dolar. Ana sekmelerle karışmaz, parmakla kolay vurulur. Dönem ekranda kaydırarak da değişir (sağa kaydır → Tümü).',
+  r:p=>`<div class="ttl"><b>Defter</b></div>${tabs}<div class="pill">${P.map((x,i)=>`<span class="${i===p?'on':''}" data-p="${i}">${x}</span>`).join('')}</div>${content(p)}`},
+ {n:'B · Başlıkta dönem',d:'İkinci sıra tamamen kalkar; dönem, başlığın sağında <b>tek bir altın düğme</b> ("Tümü ▾"). Dokununca küçük menü açılır. Ekranda bir sıra yer kazanılır, ama dönem değiştirmek iki dokunuş.',
+  r:p=>`<div class="ttl"><b>Defter</b><span class="chip" data-m>${P[p]} ▾<div class="menu">${P.map((x,i)=>`<div class="${i===p?'on':''}" data-p="${i}">${x}<small>${['son 7 gün','bu ay','bu yıl','ilk günden beri'][i]}</small></div>`).join('')}</div></span></div>${tabs}${content(p)}`},
+ {n:'C · Kaydırmalı dönemler',d:'Dönemler yan yana kartlar gibi: <b>parmakla sola kaydırınca</b> Hafta → Ay → Yıl → Tümü. Üstte küçük etiketler ve noktalar nerede olduğunu gösterir. En akıcısı; ama Tümü\'ye gitmek için üç kaydırma gerekebilir (hatırlama bunu çözer).',
+  r:p=>`<div class="ttl"><b>Defter</b></div>${tabs}<div class="swipe">${P.map((x,i)=>`<span class="${i===p?'on':''}" data-p="${i}">${x}</span>`).join('')}</div><div class="dots">${P.map((_,i)=>`<i class="${i===p?'on':''}"></i>`).join('')}</div>${content(p)}<div class="hint"><b>← kaydır →</b> dönemler arasında geçiş</div>`},
+];
+const st=[3,3,3];
+function draw(){
+ document.getElementById('opts').innerHTML=OPTS.map((o,i)=>`<div class="opt"><h3>${o.n}</h3><div class="d">${o.d}</div><div class="phone"><div class="scr" data-o="${i}">${o.r(st[i])}${dock}</div></div></div>`).join('');
+ document.querySelectorAll('.scr').forEach(s=>{const o=+s.dataset.o;
+  s.querySelectorAll('[data-p]').forEach(e=>e.onclick=ev=>{ev.stopPropagation();st[o]=+e.dataset.p;draw()});
+  const m=s.querySelector('[data-m]');if(m)m.onclick=()=>m.querySelector('.menu').classList.toggle('open');
+  // swipe (mouse drag / touch) for A and C
+  let x0=null;s.onpointerdown=e=>x0=e.clientX;s.onpointerup=e=>{if(x0==null)return;const dx=e.clientX-x0;x0=null;if(Math.abs(dx)>40&&o!==1){st[o]=Math.max(0,Math.min(3,st[o]+(dx<0?1:-1)));draw()}};
+ });
+}
+draw();
+</script>
+</body>
+</html>

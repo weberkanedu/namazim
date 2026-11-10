@@ -85,6 +85,7 @@ class MainActivity : ComponentActivity() {
 
     private var reminderKey by mutableStateOf<String?>(null)
     private var startTab by mutableIntStateOf(0)
+    private var navN by mutableIntStateOf(0)   // bumps on every tab request, so asking for the same tab again still moves there
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,7 +101,8 @@ class MainActivity : ComponentActivity() {
         startTab = intent.getIntExtra("tab", 0) // lets `adb shell am start -e tab N` open a tab for testing
         SkyDebug.offsetMs = intent.getLongExtra("skytime", 0L) // `--el skytime` previews another hour of the sky
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
-        SkyDebug.mSection = intent.getIntExtra("msection", 0) // `--ei msection 1` opens Muhasebe > Gidişat
+        DefterYer.yukle(Store(this))
+        acKisayol(intent)
         SkyDebug.zSection = intent.getIntExtra("zsection", 0) // `--ei zsection 1` opens Zikir > Takip
         // `--ez resetentries true` (debug builds): Ayarlar › Kayıtları sıfırla without tapping; tracking restarts at the next imsak
         if (intent.getBooleanExtra("resetentries", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
@@ -127,19 +129,37 @@ class MainActivity : ComponentActivity() {
         // `--es ikon imsak|ogle|ikindi|zumrut|yatsi|cuma` (debug builds): force the launcher icon; it switches when the app goes to the background
         if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0)
             intent.getStringExtra("ikon")?.let { SkyDebug.ikon = it.takeIf { k -> k in listOf("imsak", "ogle", "ikindi", "zumrut", "yatsi", "cuma") } }
-        SkyDebug.gPeriod = intent.getIntExtra("gperiod", 2) // `--ei gperiod 0..3` opens Gidişat on Hafta/Ay/Yıl/Tümü
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
             setContent { AppTheme { WidgetPreview() } }
             return
         }
-        setContent { AppTheme { App(reminderKey, startTab) { reminderKey = null } } }
+        setContent { AppTheme { App(reminderKey, startTab, navN) { reminderKey = null } } }
+    }
+
+    /**
+     * Launcher shortcuts (res/xml/shortcuts.xml: namazim://ac/pusula|zikirhane|ozet|tumu) and the debug extras
+     * `--ei msection 0..2` / `--ei gperiod 0..3`, which open Defter on a section / İstikrar period.
+     */
+    private fun acKisayol(intent: Intent) {
+        val store = Store(this)
+        if (intent.hasExtra("msection") || intent.hasExtra("gperiod"))
+            DefterYer.git(store, intent.getIntExtra("msection", DefterYer.section), intent.getIntExtra("gperiod", -1).takeIf { it >= 0 })
+        if (intent.data?.scheme != "namazim") return
+        navN++
+        when (intent.data?.lastPathSegment) {
+            "pusula" -> startTab = 1
+            "zikirhane" -> { SkyDebug.zSection = 0; startTab = 5 }
+            "ozet" -> { DefterYer.git(store, 0); startTab = 3 }
+            "tumu" -> { DefterYer.git(store, 1, 3); startTab = 3 }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        acKisayol(intent)
         intent.getStringExtra(EXTRA_SLOT)?.let { reminderKey = it }
-        if (intent.hasExtra("tab")) startTab = intent.getIntExtra("tab", startTab)
+        if (intent.hasExtra("tab")) { startTab = intent.getIntExtra("tab", startTab); navN++ }
     }
 
     override fun onResume() {
@@ -180,7 +200,7 @@ fun HolyTicker(days: List<Pair<HolyDay, String>>) {
 val LocalDockPad = compositionLocalOf { 0.dp }
 
 @Composable
-fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
+fun App(reminderKey: String?, startTab: Int, navN: Int = 0, onReminderClosed: () -> Unit) {
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     // first run: the setup screens instead of the app (Kurulum.kt), then the tour once
@@ -197,7 +217,7 @@ fun App(reminderKey: String?, startTab: Int, onReminderClosed: () -> Unit) {
     LaunchedEffect(Unit) { if (!store.turDone && Tur.adim < 0 && reminderKey == null) Tur.adim = 0 }
     var tab by remember { mutableIntStateOf(startTab) }
     // `am start --ei tab N` on a running instance moves to that tab (useful for screenshots)
-    LaunchedEffect(startTab) { tab = startTab }
+    LaunchedEffect(startTab, navN) { tab = startTab }
     // Kıble (1) ve Ayarlar (4) sekme değil, ana sayfanın başlığından açılır: dock gizlenir, geri ana sayfaya döner
     val subPage = tab == 1 || tab == 4
     BackHandler(subPage) { tab = 0 }

@@ -26,7 +26,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -1119,13 +1121,26 @@ fun PageTabs(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     }
 }
 
+/** Where Defter is (section, İstikrar period): kept in Store so Defter opens where it was left; shortcuts and debug extras set it. */
+object DefterYer {
+    var section by mutableIntStateOf(0)
+    var period by mutableIntStateOf(3)   // 0 hafta, 1 ay, 2 yıl, 3 tümü
+    fun yukle(store: Store) { section = store.defterSection; period = store.defterPeriod }
+    fun git(store: Store, sec: Int, per: Int? = null) {
+        section = sec; store.defterSection = sec
+        if (per != null) { period = per; store.defterPeriod = per }
+    }
+}
+
 /** Muhasebe holds the overview (like Vakit's "Özet"), the history and the kaza list. */
 @Composable
 fun MuhasebeScreen() {
-    var section by remember { mutableIntStateOf(SkyDebug.mSection) }
+    val ctx = LocalContext.current
+    val store = remember { Store(ctx) }
+    val section = DefterYer.section
     Column(Modifier.fillMaxSize()) {
         ScreenTitle("Defter", rule = false)
-        Box(Modifier.turHedef("deftersekme")) { PageTabs(listOf("Özet", "İstikrar", "Kaza"), section) { section = it } }
+        Box(Modifier.turHedef("deftersekme")) { PageTabs(listOf("Özet", "İstikrar", "Kaza"), section) { DefterYer.git(store, it) } }
         Box(Modifier.weight(1f).clipToBounds()) {
             when (section) {
                 0 -> MuhasebeOzet()
@@ -1334,7 +1349,8 @@ private fun MuhasebeGidisat() {
     StoreRev.n.let { }
     val store = remember { Store(ctx) }
     if (!store.hasLocation) return NeedLocation()
-    var period by remember { mutableIntStateOf(SkyDebug.gPeriod) } // 0 hafta, 1 ay, 2 yıl, 3 tümü
+    val period = DefterYer.period   // 0 hafta, 1 ay, 2 yıl, 3 tümü; kept across visits
+    fun setPeriod(p: Int) { DefterYer.git(store, 1, p.coerceIn(0, 3)) }
     val today = LocalDate.now()
     val first = store.firstDay
     val prayed = store.prayed()
@@ -1412,8 +1428,19 @@ private fun MuhasebeGidisat() {
     val dayFmt = java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", tr)
     fun pct(f: Float) = "%${(f * 100).roundToInt()}"
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
-        SubTabs(listOf("Hafta", "Ay", "Yıl", "Tümü"), period) { period = it }
+    // a sideways swipe anywhere on the page moves to the next / previous period (design A, defter-donem-secenekler.html)
+    val haptic = LocalHapticFeedback.current
+    Column(Modifier.fillMaxSize()
+        .pointerInput(Unit) {
+            var acc = 0f
+            detectHorizontalDragGestures(onDragStart = { acc = 0f }, onDragEnd = {
+                val step = when { acc < -90.dp.toPx() -> 1; acc > 90.dp.toPx() -> -1; else -> 0 }
+                val to = (DefterYer.period + step).coerceIn(0, 3)
+                if (to != DefterYer.period) { setPeriod(to); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
+            }) { _, d -> acc += d }
+        }
+        .verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
+        SubTabs(listOf("Hafta", "Ay", "Yıl", "Tümü"), period) { setPeriod(it) }
 
         // ---- hero: one big number, what it means under it
         Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl)) {
@@ -1645,17 +1672,22 @@ private fun NafileCard(period: Int, start: LocalDate, from: Int, elapsed: Int, k
 /** Secondary tabs for a section's periods: plain labels, a full-width gold line under the selected one. */
 @Composable
 private fun SubTabs(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
-    Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.s).fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth()) {
-            options.forEachIndexed { i, label ->
-                val on = i == selected
-                Box(Modifier.weight(1f).height(44.dp).clickable { onSelect(i) }, contentAlignment = Alignment.Center) {
-                    Text(label, color = if (on) Pal.Text else Pal.Muted, fontSize = Type.body2, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
-                    if (on) Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(2.dp).background(Pal.Gold))
-                }
+    // design A "Kapsül" (design/design-system/defter-donem-secenekler.html): a capsule, the chosen period filled with gold,
+    // so it reads as a picker and not as a second row of section tabs
+    Row(
+        Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).fillMaxWidth().clip(CircleShape).background(Pal.Card).padding(4.dp),
+    ) {
+        options.forEachIndexed { i, label ->
+            val on = i == selected
+            val bg by animateColorAsState(if (on) Pal.Gold.copy(alpha = .18f) else Color.Transparent, tween(200), label = "kapsul")
+            Box(
+                Modifier.weight(1f).height(38.dp).clip(CircleShape).background(bg).clickable { onSelect(i) }
+                    .semantics { this.selected = on; role = Role.Tab },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(label, color = if (on) Pal.Gold else Pal.Muted, fontSize = Type.body2, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium)
             }
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Pal.Line))
     }
 }
 
