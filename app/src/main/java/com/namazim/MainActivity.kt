@@ -223,7 +223,8 @@ fun App(reminderKey: String?, startTab: Int, navN: Int = 0, onReminderClosed: ()
     LaunchedEffect(startTab, navN) { tab = startTab }
     // Kıble (1) ve Ayarlar (4) sekme değil, ana sayfanın başlığından açılır: dock gizlenir, geri ana sayfaya döner
     val subPage = tab == 1 || tab == 4
-    BackHandler(subPage) { tab = 0 }
+    // back from any page but home goes home first (Zikir, Okuma, Defter too); an open tesbihat closes with it
+    BackHandler(tab != 0) { TesbihatNav.key = null; tab = 0 }
     Box(Modifier.fillMaxSize().background(Pal.Ground)) {
         // floating dock: pages run under it (they end with LocalDockPad of space), only the island covers them
         val dockPad = if (subPage) 0.dp else 62.dp + Space.s * 2 + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
