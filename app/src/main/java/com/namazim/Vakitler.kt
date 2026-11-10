@@ -557,7 +557,6 @@ private fun VakitSerit(s: Slot, prayedAt: Long?, dl: List<Dilim>, now: Long, mod
     val beat = heartbeat()
     val len = (s.end - s.start).toFloat()
     fun f(t: Long) = ((t - s.start) / len).coerceIn(0f, 1f)
-    val nowIn = dilimOf(s, now)
     val density = LocalDensity.current
     val paint = remember { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { textAlign = android.graphics.Paint.Align.CENTER } }
     val fzBand = faziletBand(s, dl)
@@ -606,6 +605,9 @@ private fun VakitSerit(s: Slot, prayedAt: Long?, dl: List<Dilim>, now: Long, mod
             Triple(0f, hm(s.start), Pal.Muted),
             band?.let { Triple(f(it.first), hm(it.first), Pal.Gold) }?.takeIf { it.first > .08f },
             band?.let { Triple(f(it.second), hm(it.second), Pal.Gold) }?.takeIf { it.first < .92f },
+            // where kerahat begins (yatsı: past half the night; ikindi: the yellowing), unless the faziletli end already says it
+            kerBand?.let { Triple(f(it.first), hm(it.first), Pal.Warn) }
+                ?.takeIf { k -> k.first in .08f..0.92f && band?.let { kotlin.math.abs(f(it.second) - k.first) > .1f } != false },
             Triple(1f, hm(s.end), Pal.Muted),
         )
         Layout({ labels.forEach { Text(it.second, color = it.third, fontSize = Type.micro, fontWeight = if (it.third == Pal.Muted) FontWeight.Normal else FontWeight.SemiBold) } },
@@ -614,16 +616,6 @@ private fun VakitSerit(s: Slot, prayedAt: Long?, dl: List<Dilim>, now: Long, mod
             layout(cons.maxWidth, ps.maxOf { it.height }) {
                 ps.forEachIndexed { i, p -> p.place((labels[i].first * cons.maxWidth - p.width / 2f).toInt().coerceIn(0, cons.maxWidth - p.width), 0) }
             }
-        }
-        if (prayedAt == null && now < s.end) {
-            fun kalan(t: Long) = ((t - now) / 60_000L).let { m -> if (m >= 60) "${m / 60} sa ${m % 60} dk" else "${maxOf(m, 1)} dk" }
-            val (txt, col) = when {
-                dl[nowIn] == Dilim.KERAHAT -> "Kerahat vakti" to Pal.Warn
-                fzBand != null && now < fzBand.first -> "Faziletli vakit ${hm(fzBand.first)}'de başlar" to Pal.Text
-                fzBand != null && now < fzBand.second -> "Faziletli vakit · ${kalan(fzBand.second)} kaldı" to Pal.Gold
-                else -> "Vakit sürüyor" to Pal.Text
-            }
-            Text(txt, Modifier.fillMaxWidth().padding(top = Space.xs), color = col, fontSize = Type.body2, textAlign = TextAlign.Center)
         }
     }
 }
