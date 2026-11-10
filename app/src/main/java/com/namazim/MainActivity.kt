@@ -103,6 +103,7 @@ class MainActivity : ComponentActivity() {
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
         DefterYer.yukle(Store(this))
         acKisayol(intent)
+        SkyDebug.asagi = intent.getBooleanExtra("asagi", false) // `--ez asagi true`: İstikrar opens scrolled to the bottom
         SkyDebug.zSection = intent.getIntExtra("zsection", 0) // `--ei zsection 1` opens Zikir > Takip
         // `--ez resetentries true` (debug builds): Ayarlar › Kayıtları sıfırla without tapping; tracking restarts at the next imsak
         if (intent.getBooleanExtra("resetentries", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {

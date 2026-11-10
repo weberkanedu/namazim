@@ -1412,6 +1412,9 @@ private fun MuhasebeGidisat() {
 
     // a sideways swipe anywhere on the page moves to the next / previous period (design A, defter-donem-secenekler.html)
     val haptic = LocalHapticFeedback.current
+    val scroll = rememberScrollState()
+    // `--ez asagi true` (debug): open scrolled to the bottom, for screenshots of the lower cards
+    LaunchedEffect(data) { if (SkyDebug.asagi) { kotlinx.coroutines.delay(300); scroll.scrollTo(scroll.maxValue) } }
     Column(Modifier.fillMaxSize()
         .pointerInput(Unit) {
             var acc = 0f
@@ -1421,7 +1424,7 @@ private fun MuhasebeGidisat() {
                 if (to != DefterYer.period) { setPeriod(to); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
             }) { _, d -> acc += d }
         }
-        .verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
+        .verticalScroll(scroll).padding(bottom = LocalDockPad.current)) {
         SubTabs(listOf("Hafta", "Ay", "Yıl", "Tümü"), period) { setPeriod(it) }
 
         // each period its own view (design/design-system/istikrar-son.html, 2026-11-11)
@@ -1451,44 +1454,31 @@ private fun MuhasebeGidisat() {
         }
 
 
-        // ---- Namazları ne zaman kılıyoruz: yalnızca "Tümü"de (kısa dönemde ortalama yanıltır)
+        // ---- Namazları ne zaman kılıyoruz: yalnızca "Tümü"de (kısa dönemde ortalama yanıltır).
+        // Design N2 "Kadranlar" (design/design-system/ne-zaman-secenekler.html, 2026-11-11): a half dial per vakit.
         if (period == 3) {
+            val today = slots(store.lat, store.lng, store.prayerDay())
+            // shortcut: every prayer is judged against today's slices (summer / winter borders move a little); store the slice per prayer if that matters
+            val dl = Vakit.entries.map { store.dilimler(today[it.ordinal]) }
+            val all = Vakit.entries.flatMap { vk -> data.fracs[vk.name].orEmpty().map { dl[vk.ordinal][(it * 7).toInt().coerceIn(0, 6)] } }
             InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.l).fillMaxWidth()) {
                 Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = Type.micro, letterSpacing = .8.sp)
-                Spacer(Modifier.height(Space.s))
-                // seven slices per vakit (Fazilet.kt): how many times each slice was used; gold underline = faziletli for the mezhep
-                val today = slots(store.lat, store.lng, store.prayerDay())
-                Vakit.entries.forEach { vk ->
-                    val bins = IntArray(7)
-                    data.fracs[vk.name].orEmpty().forEach { bins[(it * 7).toInt().coerceIn(0, 6)]++ }
-                    val most = bins.maxOrNull() ?: 0
-                    val top = if (most == 0) -1 else bins.indexOfFirst { it == most }
-                    val fz = store.dilimler(today[vk.ordinal])
-                    Row(Modifier.padding(top = Space.m), verticalAlignment = Alignment.Bottom) {
-                        Text(vk.ad, Modifier.width(58.dp), color = Pal.Text, fontSize = Type.body2)
-                        Row(Modifier.weight(1f).height(44.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
-                            for (j in 0 until 7) Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
-                                val hFrac = if (most == 0) 0f else bins[j].toFloat() / most
-                                Box(Modifier.fillMaxWidth().fillMaxHeight((hFrac * .82f).coerceAtLeast(.05f))
-                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                    .background(if (j == top) Pal.Gold else Pal.Gold.copy(alpha = if (bins[j] > 0) .4f else .1f)))
-                                Box(Modifier.padding(top = 2.dp).fillMaxWidth().height(2.dp)
-                                    .background(if (fz[j] == Dilim.FAZILET) Pal.Gold else Color.Transparent))
-                            }
-                        }
-                        Text(if (top < 0) "—" else "çoğunlukla\n${DILIM_ADI[top]}", Modifier.width(92.dp).padding(start = Space.s),
-                            color = if (top < 0) Pal.Muted else Pal.Text, fontSize = Type.micro, lineHeight = 14.sp, textAlign = TextAlign.End)
+                if (all.isNotEmpty()) Text(altin("Faziletli vakitte kıldığın namazlar: **%${all.count { it == Dilim.FAZILET } * 100 / all.size}**"),
+                    Modifier.padding(top = Space.xs), color = Pal.Text, fontSize = Type.body, lineHeight = 22.sp)
+                Text("Her vakit bir kadran: soldan sağa vakit girer, çıkar. Altın yay faziletli dilim, ibre çoğunlukla kıldığın an.",
+                    Modifier.padding(top = 2.dp), color = Pal.Muted, fontSize = Type.label, lineHeight = 16.sp)
+                Vakit.entries.chunked(2).forEach { pair ->
+                    Row(Modifier.padding(top = Space.s), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                        pair.forEach { vk -> Kadran(vk.ad, data.fracs[vk.name].orEmpty(), dl[vk.ordinal], today[vk.ordinal], Modifier.weight(1f)) }
                     }
                 }
-                Row(Modifier.padding(start = 58.dp, end = 92.dp, top = 4.dp)) {
-                    for (j in 1..7) Text("$j", Modifier.weight(1f), color = Pal.Muted, fontSize = 9.sp, textAlign = TextAlign.Center)
+                Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.m), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(14.dp, 5.dp).clip(CircleShape).background(Pal.Gold)); Text("faziletli", color = Pal.Muted, fontSize = Type.micro)
+                    Box(Modifier.size(14.dp, 5.dp).clip(CircleShape).background(Pal.Warn.copy(alpha = .6f))); Text("kerahat", color = Pal.Muted, fontSize = Type.micro)
+                    Box(Modifier.size(10.dp, 2.dp).background(Color(0xFFFFF4DC))); Text("ibre: çoğunlukla kıldığın an", color = Pal.Muted, fontSize = Type.micro)
                 }
-                Spacer(Modifier.height(Space.s))
-                Text(
-                    "Her vakit girişten çıkışa yedi eşit dilim. Altın çizgili dilimler seçtiğin mezhebe göre (Ayarlar › Sen) faziletli vakit. " +
-                        "Bu grafik bir ölçü değil, kendi düzenini görmen için; niyet ve istikrar öndedir.",
-                    color = Pal.Muted, fontSize = Type.micro, lineHeight = 16.sp,
-                )
+                Text("Faziletli dilimler seçtiğin mezhebe göre (Ayarlar › Sen). Bu bir ölçü değil, kendi düzenini görmen için; niyet ve istikrar öndedir.",
+                    Modifier.padding(top = Space.s), color = Pal.Muted, fontSize = Type.micro, lineHeight = 15.sp)
             }
         }
         Spacer(Modifier.height(Space.xl))
@@ -2058,5 +2048,41 @@ private fun TumuGorunum(d: Donem, first: LocalDate, tr: java.util.Locale) {
                 }
             }
         }
+    }
+}
+
+/** One vakit as a half dial (left = the vakit enters, right = it ends): gold over the faziletli slices, peach over kerahat,
+ *  a dot per prayer where it fell, the needle at the median. [fracs] = each prayer's place in its vakit, 0..1. */
+@Composable
+private fun Kadran(ad: String, fracs: List<Float>, dl: List<Dilim>, slot: Slot, modifier: Modifier) {
+    val fz = if (fracs.isEmpty()) -1 else fracs.count { dl[(it * 7).toInt().coerceIn(0, 6)] == Dilim.FAZILET } * 100 / fracs.size
+    val med = fracs.sorted().let { if (it.isEmpty()) null else it[it.size / 2] }
+    Column(modifier.clip(RoundedCornerShape(Radius.m)).background(Color(0xFF0E1830)).padding(top = Space.s, bottom = Space.s),
+        horizontalAlignment = Alignment.CenterHorizontally) {
+        Canvas(Modifier.fillMaxWidth().height(78.dp)) {
+            val stroke = 11.dp.toPx()
+            val r = minOf(size.width / 2 - stroke - 6.dp.toPx(), size.height - stroke - 6.dp.toPx())
+            val c = Offset(size.width / 2, size.height - 6.dp.toPx())
+            val box = Size(2 * r, 2 * r); val tl = Offset(c.x - r, c.y - r)
+            fun pt(t: Float, rr: Float): Offset {
+                val a = Math.toRadians(180.0 + 180.0 * t)
+                return Offset(c.x + rr * kotlin.math.cos(a).toFloat(), c.y + rr * kotlin.math.sin(a).toFloat())
+            }
+            drawArc(Pal.Track, 180f, 180f, false, tl, box, style = Stroke(stroke, cap = StrokeCap.Round))
+            for (j in 0 until 7) {
+                val col = when (dl[j]) { Dilim.FAZILET -> Pal.Gold; Dilim.KERAHAT -> Pal.Warn.copy(alpha = .55f); else -> null } ?: continue
+                drawArc(col, 180f + j * 180f / 7, 180f / 7 + .5f, false, tl, box, style = Stroke(stroke, cap = StrokeCap.Butt))
+            }
+            // each prayer a soft dot inside the arc, spread a little so a crowded slice reads as a cluster
+            fracs.forEachIndexed { q, f -> drawCircle(Color(0xFFFFF4DC).copy(alpha = .7f), 1.9.dp.toPx(), pt(f, r - stroke - 3.dp.toPx() - (q % 3) * 4.5.dp.toPx())) }
+            if (med != null) drawLine(Color(0xFFFFF4DC), c, pt(med, r + 2.dp.toPx()), 2.5.dp.toPx(), cap = StrokeCap.Round)
+            drawCircle(Pal.Gold, 4.5.dp.toPx(), c)
+        }
+        Row(Modifier.fillMaxWidth().padding(horizontal = Space.s)) {
+            Text(hm(slot.start), Modifier.weight(1f), color = Pal.Muted.copy(alpha = .6f), fontSize = 9.sp)
+            Text(hm(slot.end), color = Pal.Muted.copy(alpha = .6f), fontSize = 9.sp)
+        }
+        Text(ad, color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
+        Text(altin(if (fz < 0) "henüz kayıt yok" else "**%$fz** faziletli"), color = Pal.Muted, fontSize = Type.label)
     }
 }
