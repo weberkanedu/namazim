@@ -212,9 +212,9 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         Text("SESLER", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                         SesSecici("Hazırlan sesi", store.prepSound) { store.prepSound = it; Reminders.createChannels(ctx); changed() }
                         SesSecici("\"Kıldın mı?\" sesi", store.nagSound) { store.nagSound = it; Reminders.createChannels(ctx); changed() }
-                        Text("CUMA", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
-                        SwitchRow("Cuma'da uygulama ikonu yeşile dönsün", store.cumaIkon) { store.cumaIkon = it; changed() }
-                        Text("Perşembe akşamından Cuma akşamına kadar. Bazı telefonlarda ikon değişirken ana ekrandan bir an kaybolup geri gelir; sorun olursa kapat.",
+                        Text("UYGULAMA İKONU", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                        SwitchRow("İkon vakte göre değişsin", store.ikonDegissin) { store.ikonDegissin = it; changed(); Reminders.ikonuAyarla(ctx) }
+                        Text("İmsak sedef, öğle altın, ikindi gün batımı, akşam zümrüt, yatsı gece nuru; Perşembe akşamından Cuma akşamına yıldızlı Cuma ikonu. Kapalıyken hep zümrüt. İkon değişirken ana ekranda bir an kaybolup geri gelebilir.",
                             color = Pal.Muted, fontSize = Type.label, lineHeight = 16.sp)
                     }
                     "hedef" -> {

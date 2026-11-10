@@ -37,6 +37,8 @@ class LogicTest {
         assertEquals(true, cumaVakti(cuma.minusDays(1), 100, 50)); assertEquals(false, cumaVakti(cuma.minusDays(1), 10, 50))
         assertEquals(true, cumaVakti(cuma, 10, 50)); assertEquals(false, cumaVakti(cuma, 100, 50))
         assertEquals(false, cumaVakti(cuma.plusDays(1), 10, 50))
+        // one icon per vakit; ikindi and akşam were swapped on purpose (akşam is the everyday Zümrüt)
+        assertEquals(listOf("imsak", "ogle", "ikindi", "zumrut", "yatsi"), Vakit.entries.map { ikonAdi(it) })
     }
 
     @Test fun cuzOfPage() {

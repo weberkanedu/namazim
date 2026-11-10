@@ -83,29 +83,46 @@ object Reminders {
         }
     }
 
+    /** Launcher alias of each icon (manifest); `.Giris` is Zümrüt. */
+    private val ALIAS = mapOf("zumrut" to "Giris", "imsak" to "GirisImsak", "ogle" to "GirisOgle", "ikindi" to "GirisIkindi",
+        "yatsi" to "GirisYatsi", "cuma" to "GirisCuma")
+
     /**
-     * Turns the launcher icon to the Cuma one and back (two activity-aliases, one enabled at a time). Called from the
-     * background (alarms, boot, the app going to the background): the launcher may redraw or briefly drop the icon.
+     * Turns the launcher icon to the one of the vakit we are in (Cuma from Thursday's akşam to Friday's akşam), one alias
+     * enabled at a time, and sets a quiet alarm for the next vakit. The launcher redraws the icon on each change.
      */
     fun ikonuAyarla(ctx: Context) {
         val s = Store(ctx)
         if (!s.hasLocation) return
+        val now = System.currentTimeMillis()
         val today = LocalDate.now()
-        val cuma = SkyDebug.cumaIkon ?: (s.cumaIkon && cumaVakti(today, System.currentTimeMillis(), dayTimes(s.lat, s.lng, today).aksam))
+        val near = nearSlots(s)
+        val slot = near.firstOrNull { now in it.start until it.end } ?: near.first { it.start > now }
+        val ikon = SkyDebug.ikon ?: when {
+            !s.ikonDegissin -> "zumrut"
+            cumaVakti(today, now, dayTimes(s.lat, s.lng, today).aksam) -> "cuma"
+            else -> ikonAdi(slot.vakit)
+        }
         val pm = ctx.packageManager
         fun set(name: String, on: Boolean) {
             val c = android.content.ComponentName(ctx, "com.namazim.$name")
-            val now = when (pm.getComponentEnabledSetting(c)) {
+            val was = when (pm.getComponentEnabledSetting(c)) {
                 android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
                 android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> name == "Giris"   // as in the manifest
                 else -> false
             }
-            if (now != on) pm.setComponentEnabledSetting(c,
+            if (was != on) pm.setComponentEnabledSetting(c,
                 if (on) android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED else android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 android.content.pm.PackageManager.DONT_KILL_APP)
         }
         // the new entry first, so there is never a moment without a launcher icon
-        if (cuma) { set("GirisCuma", true); set("Giris", false) } else { set("Giris", true); set("GirisCuma", false) }
+        val want = ALIAS.getValue(ikon)
+        set(want, true)
+        ALIAS.values.filter { it != want }.forEach { set(it, false) }
+        // next change: the next vakit start (akşam also bounds Cuma); not a wake-up, it runs when the phone is next in use
+        val next = near.map { it.start }.filter { it > now }.minOrNull() ?: return
+        ctx.getSystemService(AlarmManager::class.java).setAndAllowWhileIdle(AlarmManager.RTC, next + 1000,
+            PendingIntent.getBroadcast(ctx, 2, Intent(ctx, IkonReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
     }
 
     /** Show every reminder that came due since the last run (alarms can coalesce or arrive late). */
@@ -272,6 +289,10 @@ class SnoozeReceiver : BroadcastReceiver() {
         val key = intent.getStringExtra("key") ?: return
         Reminders.snooze(ctx, key, Vakit.valueOf(intent.getStringExtra("vakit") ?: return))
     }
+}
+
+class IkonReceiver : BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) { Reminders.ikonuAyarla(ctx); NamazimWidget.refresh(ctx) }
 }
 
 class AlarmReceiver : BroadcastReceiver() {

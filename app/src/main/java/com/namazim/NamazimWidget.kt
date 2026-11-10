@@ -15,7 +15,7 @@ import java.time.LocalDate
 /**
  * 1×1 home-screen widget, the "canlı ikon": the icon of the vakit we are in (design/design-system/vakit-ikon-secenekler.html,
  * 2026-11-10): İmsak Sedef, Öğle Altın zümrüt, İkindi Gün batımı, Akşam Zümrüt, Yatsı Gece nuru, a Friday's öğle the Cuma icon.
- * The launcher icon itself stays put (changing it five times a day makes launchers drop or reshuffle it).
+ * The launcher icon follows the same family (Reminders.ikonuAyarla), except that Cuma there lasts from Thursday's akşam.
  */
 class NamazimWidget : AppWidgetProvider() {
 
@@ -46,12 +46,12 @@ class NamazimWidget : AppWidgetProvider() {
         private data class State(val label: String, val art: Int)
 
         /** The art of a vakit; a Friday's öğle gets the Cuma icon (for everyone: it is the day's picture, not the prayer's name). */
-        fun vakitArt(s: Slot): Int = when {
-            s.vakit == Vakit.OGLE && s.date.dayOfWeek == java.time.DayOfWeek.FRIDAY -> R.drawable.wg_vakit_cuma
-            s.vakit == Vakit.SABAH -> R.drawable.wg_vakit_imsak
-            s.vakit == Vakit.OGLE -> R.drawable.wg_vakit_ogle
-            s.vakit == Vakit.IKINDI -> R.drawable.wg_vakit_ikindi
-            s.vakit == Vakit.AKSAM -> R.drawable.wg_vakit_zumrut
+        fun vakitArt(s: Slot): Int = when (if (s.vakit == Vakit.OGLE && s.date.dayOfWeek == java.time.DayOfWeek.FRIDAY) "cuma" else ikonAdi(s.vakit)) {
+            "cuma" -> R.drawable.wg_vakit_cuma
+            "imsak" -> R.drawable.wg_vakit_imsak
+            "ogle" -> R.drawable.wg_vakit_ogle
+            "ikindi" -> R.drawable.wg_vakit_ikindi
+            "zumrut" -> R.drawable.wg_vakit_zumrut
             else -> R.drawable.wg_vakit_yatsi
         }
 

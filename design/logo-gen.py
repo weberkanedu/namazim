@@ -207,6 +207,17 @@ def emit_family(drawable):
         glow = ('    <item>\n        <shape android:shape="rectangle">\n            <gradient android:type="radial" android:centerX="0.5" android:centerY="1.0" '
                 'android:gradientRadius="60dp" android:startColor="#F2FFE3A3" android:centerColor="#8CF2A65A" android:endColor="#00F2A65A" />\n'
                 '        </shape>\n    </item>\n') if name == "ikindi" else ""
+        # launcher entry per icon (Reminders.ikonuAyarla): zumrut is the plain ic_launcher
+        mip = drawable.replace("drawable", "mipmap-anydpi") + ("/ic_launcher.xml" if name == "zumrut" else f"/ic_launcher_{name}.xml")
+        with open(mip, "w", encoding="utf-8") as fh:
+            fh.write(f'''<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon {name}: {what} {GEN} -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_bg_{name}" />
+    <foreground android:drawable="@drawable/ic_logo_{name}" />
+    <monochrome android:drawable="@drawable/ic_logo_mono" />
+</adaptive-icon>
+''')
         with open(f"{drawable}/wg_vakit_{name}.xml", "w", encoding="utf-8") as fh:
             fh.write(f'''<?xml version="1.0" encoding="utf-8"?>
 <!-- The 1×1 widget's art for {name}: background and rose in one. {GEN} -->

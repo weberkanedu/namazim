@@ -62,3 +62,8 @@ fun inFazilet(s: Slot, d: List<Dilim>, at: Long?): Boolean =
 /** The Cuma icon's time: from Thursday's akşam (Cuma gecesi) until Friday's akşam; [aksam] = akşam of [day]. */
 fun cumaVakti(day: java.time.LocalDate, now: Long, aksam: Long): Boolean =
     (day.dayOfWeek == java.time.DayOfWeek.THURSDAY && now >= aksam) || (day.dayOfWeek == java.time.DayOfWeek.FRIDAY && now < aksam)
+
+/** The icon of a vakit (launcher and 1×1 widget; design/design-system/vakit-ikon-secenekler.html): Akşam is Zümrüt. */
+fun ikonAdi(v: Vakit): String = when (v) {
+    Vakit.SABAH -> "imsak"; Vakit.OGLE -> "ogle"; Vakit.IKINDI -> "ikindi"; Vakit.AKSAM -> "zumrut"; Vakit.YATSI -> "yatsi"
+}

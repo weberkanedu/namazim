@@ -198,8 +198,8 @@ class Store(context: Context) {
     var girdiSes: Boolean
         get() = p.getBoolean("girdiSes", true)
         set(v) { StoreRev.n++; p.edit().putBoolean("girdiSes", v).apply() }
-    /** Turn the launcher icon to the Cuma one from Thursday's akşam to Friday's akşam. */
-    var cumaIkon: Boolean
+    /** The launcher icon follows the vakit, and is the Cuma one from Thursday's akşam to Friday's akşam (pref key kept from the Cuma-only switch). */
+    var ikonDegissin: Boolean
         get() = p.getBoolean("cumaIkon", true)
         set(v) { StoreRev.n++; p.edit().putBoolean("cumaIkon", v).apply() }
     var faziletSes: Boolean

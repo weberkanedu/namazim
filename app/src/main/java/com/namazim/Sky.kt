@@ -43,4 +43,4 @@ fun skyBodies(lat: Double, lng: Double, millis: Long): SkyBodies {
 }
 
 /** Testing aid: `adb shell am start -n com.namazim/.MainActivity --el skytime 43200000` shifts the header clock. */
-object SkyDebug { var cumaIkon: Boolean? = null; var kurulum = -1; var offsetMs = 0L; var kible: Float? = null; var mSection = 0; var zSection = 0; var gPeriod = 2 }
+object SkyDebug { var ikon: String? = null; var kurulum = -1; var offsetMs = 0L; var kible: Float? = null; var mSection = 0; var zSection = 0; var gPeriod = 2 }

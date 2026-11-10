@@ -124,9 +124,9 @@ class MainActivity : ComponentActivity() {
             SkyDebug.kurulum = intent.getIntExtra("kurulum", -1)
             intent.getIntExtra("tur", -1).takeIf { it >= 0 }?.let { Tur.adim = it }
         }
-        // `--ei cumaikon 1|0` (debug builds): force the Cuma launcher icon on or off; it switches when the app goes to the background
-        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0 && intent.hasExtra("cumaikon"))
-            SkyDebug.cumaIkon = intent.getIntExtra("cumaikon", 0) == 1
+        // `--es ikon imsak|ogle|ikindi|zumrut|yatsi|cuma` (debug builds): force the launcher icon; it switches when the app goes to the background
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0)
+            intent.getStringExtra("ikon")?.let { SkyDebug.ikon = it.takeIf { k -> k in listOf("imsak", "ogle", "ikindi", "zumrut", "yatsi", "cuma") } }
         SkyDebug.gPeriod = intent.getIntExtra("gperiod", 2) // `--ei gperiod 0..3` opens Gidişat on Hafta/Ay/Yıl/Tümü
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
