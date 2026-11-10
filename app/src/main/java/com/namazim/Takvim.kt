@@ -138,8 +138,7 @@ fun TakvimSheet(start: LocalDate, onClose: () -> Unit) {
                 listOf("Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz").forEach { Text(it, Modifier.weight(1f), color = Pal.Muted, fontSize = Type.micro, textAlign = TextAlign.Center) }
             }
             val first = ay.minusDays((ay.dayOfWeek.value - 1).toLong())
-            val n = ChronoUnit.DAYS.between(first, ayBitis).toInt()
-            val cells = (0 until ((n + 6) / 7) * 7).map { first.plusDays(it.toLong()) }
+            val cells = (0 until 42).map { first.plusDays(it.toLong()) }   // always six weeks: the sheet keeps its height, the arrows stay put
             cells.chunked(7).forEach { week ->
                 Row(Modifier.padding(top = 3.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                     week.forEach { d ->

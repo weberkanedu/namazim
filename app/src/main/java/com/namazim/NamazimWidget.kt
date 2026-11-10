@@ -75,11 +75,12 @@ class NamazimWidget : AppWidgetProvider() {
         /** The icon's caption, e.g. "İkindi 15:27" (also used by the debug preview screen). */
         internal fun label(ctx: Context): String = state(ctx).label
 
-        /** The round icon as a bitmap: the vakit's art, clipped to a circle. */
+        /** The icon as a bitmap: the vakit's art in a rounded square. */
         internal fun art(ctx: Context, px: Int): Bitmap {
             val bmp = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
             val c = Canvas(bmp)
-            c.clipPath(Path().apply { addCircle(px / 2f, px / 2f, px / 2f, Path.Direction.CW) })
+            // a rounded square like the launcher's own icons: a circle looked smaller than its neighbours (owner, 2026-11-11)
+            c.clipPath(Path().apply { addRoundRect(0f, 0f, px.toFloat(), px.toFloat(), px * .28f, px * .28f, Path.Direction.CW) })
             ctx.getDrawable(state(ctx).art)?.apply { setBounds(0, 0, px, px); draw(c) }
             return bmp
         }

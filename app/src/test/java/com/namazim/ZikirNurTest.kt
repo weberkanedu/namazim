@@ -7,6 +7,14 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ZikirNurTest {
+    @Test fun reorder() {
+        val all = listOf("A", "B", "C", "D").map { Zikir(it, 33) }
+        assertEquals(listOf("B", "C", "A", "D"), sirala(all, listOf("A", "B", "C", "D"), 0, 2).map { it.name })
+        assertEquals(listOf("D", "A", "B", "C"), sirala(all, listOf("A", "B", "C", "D"), 3, 0).map { it.name })
+        // a hidden one (B) keeps its place while C moves above A on screen
+        assertEquals(listOf("C", "A", "B", "D"), sirala(all, listOf("A", "C", "D"), 1, 0).map { it.name })
+    }
+
     @Test fun meaningsEndWithAPeriod() {
         assertEquals("Allah en büyüktür.", cumle("Allah en büyüktür"))
         assertEquals("Allah en büyüktür.", cumle("Allah en büyüktür. "))

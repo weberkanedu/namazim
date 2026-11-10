@@ -1,6 +1,10 @@
 package com.namazim
 
 import android.os.VibrationEffect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.zIndex
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -323,7 +327,13 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Un
     val days = (0L until 5L).map { store.prayerDay().minusDays(it) }
     val logs = days.map { store.zikirCounts(it) }
     val rows = zikirs.map { Counter(it.name, it.name, it.target) }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current).padding(horizontal = Space.l, vertical = Space.m)) {
+    // drag to reorder: hold a row, move it, let go (owner, 2026-11-11)
+    var surukle by remember { mutableStateOf<Int?>(null) }
+    var dy by remember { mutableStateOf(0f) }
+    var satirH by remember { mutableStateOf(1f) }
+    val hedef = surukle?.let { (it + kotlin.math.round(dy / satirH).toInt()).coerceIn(0, rows.lastIndex) }
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState(), enabled = surukle == null).padding(bottom = LocalDockPad.current).padding(horizontal = Space.l, vertical = Space.m)) {
         Row(Modifier.fillMaxWidth().padding(start = Space.l, end = Space.l, bottom = Space.s), verticalAlignment = Alignment.CenterVertically) {
             Spacer(Modifier.weight(1f))
             days.forEachIndexed { k, d ->
@@ -336,6 +346,32 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Un
         }
         AppCard(Modifier.fillMaxWidth()) {
             rows.forEachIndexed { r, z ->
+                // while a row is dragged, the ones it passes step aside by one row
+                val kay = when {
+                    surukle == null || hedef == null || r == surukle -> 0f
+                    r in (surukle!! + 1)..hedef -> -satirH
+                    r in hedef until surukle!! -> satirH
+                    else -> 0f
+                }
+                Column(
+                    Modifier.zIndex(if (r == surukle) 1f else 0f)
+                        .onSizeChanged { if (r == 0) satirH = it.height.toFloat().coerceAtLeast(1f) }
+                        .graphicsLayer { translationY = if (r == surukle) dy else kay }
+                        .clip(RoundedCornerShape(Radius.s))
+                        .background(if (r == surukle) Pal.Track else Color.Transparent)
+                        .pointerInput(z.key, rows.size) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = { surukle = r; dy = 0f; haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress) },
+                                onDrag = { ch, d -> ch.consume(); dy += d.y },
+                                onDragEnd = {
+                                    val from = surukle; val to = hedef
+                                    if (from != null && to != null && from != to) store.zikirs = sirala(store.zikirs, rows.map { it.key }, from, to)
+                                    surukle = null; dy = 0f
+                                },
+                                onDragCancel = { surukle = null; dy = 0f },
+                            )
+                        },
+                ) {
                 if (r > 0) HorizontalDivider(Modifier.padding(vertical = Space.xs), color = Pal.Line)
                 // every row the same: one line of name (a long one ends in "…", Zikirhane shows it whole), the target under it
                 Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -349,6 +385,7 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Un
                     }
                     logs.forEach { log -> TakipCell(zikirCell(log[z.key] ?: 0, z.target)) }
                 }
+                }
             }
         }
         // design K1 (design/design-system/kutuphane-secenekler.html): the built-in library, by section, with search
@@ -359,7 +396,7 @@ private fun ZikirTakip(store: Store, zikirs: List<Zikir>, onOpen: (String) -> Un
             contentAlignment = Alignment.Center,
         ) { Text("＋  Kütüphaneden ekle", color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold) }
         Spacer(Modifier.height(Space.m))
-        Text("Zikir adına dokununca Zikirhane o zikirle açılır. Zikirhane'de saydıkça bugünün sütunu kendiliğinden dolar. Hedef sonrası ekstralar hedefe sayılmaz.",
+        Text("Zikir adına dokununca Zikirhane o zikirle açılır. Sırasını değiştirmek için bir satıra basılı tut ve sürükle. Zikirhane'de saydıkça bugünün sütunu kendiliğinden dolar. Hedef sonrası ekstralar hedefe sayılmaz.",
             Modifier.padding(horizontal = Space.s), color = Pal.Muted.copy(alpha = .7f), fontSize = Type.label, lineHeight = 17.sp)
     }
 }
@@ -511,4 +548,17 @@ private fun ZikirSheet(store: Store, zikirs: List<Zikir>, onClose: () -> Unit) {
             }
         }
     }
+}
+
+/** The whole list after moving the visible row [from] to [to]; [shown] = the names on screen in order. Zikirs not on
+ *  screen (the default 33s while tesbihat counting is off) keep their places. */
+fun sirala(all: List<Zikir>, shown: List<String>, from: Int, to: Int): List<Zikir> {
+    val moved = all.firstOrNull { it.name == shown[from] } ?: return all
+    val order = shown.toMutableList().apply { add(to, removeAt(from)) }
+    val rest = all.filter { it.name != moved.name }.toMutableList()
+    // put it before the row that now follows it, or after the one that now comes before it
+    val after = order.getOrNull(to + 1)?.let { n -> rest.indexOfFirst { it.name == n } } ?: -1
+    val before = order.getOrNull(to - 1)?.let { n -> rest.indexOfFirst { it.name == n } } ?: -1
+    rest.add(if (after >= 0) after else if (before >= 0) before + 1 else rest.size, moved)
+    return rest
 }

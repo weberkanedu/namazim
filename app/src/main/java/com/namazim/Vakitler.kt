@@ -204,7 +204,13 @@ fun VakitlerBody(
                 Bead(st[i], on, Modifier.size(20.dp))
                 Spacer(Modifier.width(Space.m))
                 Column(Modifier.weight(1f)) {
-                    Text(adlar[i], color = if (on) Pal.Gold else Pal.Text, fontSize = 15.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(adlar[i], color = if (on) Pal.Gold else Pal.Text, fontSize = 15.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                        // Cuma namazı is not farz on women: the row stays Öğle, with a quiet note that it is Friday
+                        if (store.kadin && s.vakit == Vakit.OGLE && s.date.dayOfWeek == java.time.DayOfWeek.FRIDAY)
+                            Text("Cuma günü", Modifier.padding(start = Space.s).border(1.dp, Pal.Gold.copy(alpha = .5f), CircleShape)
+                                .padding(horizontal = 7.dp, vertical = 1.dp), color = Pal.Gold, fontSize = 10.sp)
+                    }
                     val at = store.prayedAt(s.key)?.let { " · " + hm(it) } ?: ""
                     when (st[i]) {
                         VState.VAKTINDE -> Text("vaktinde$at", color = Pal.Gold, fontSize = Type.micro)

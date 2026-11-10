@@ -27,6 +27,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.rememberScrollState
@@ -42,6 +44,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.ui.text.withStyle
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -1414,12 +1417,28 @@ private fun MuhasebeGidisat() {
     LaunchedEffect(data) { if (SkyDebug.asagi) { kotlinx.coroutines.delay(300); scroll.scrollTo(scroll.maxValue) } }
     Column(Modifier.fillMaxSize()
         .pointerInput(Unit) {
-            var acc = 0f
-            detectHorizontalDragGestures(onDragStart = { acc = 0f }, onDragEnd = {
-                val step = when { acc < -90.dp.toPx() -> 1; acc > 90.dp.toPx() -> -1; else -> 0 }
-                val to = (DefterYer.period + step).coerceIn(0, 3)
-                if (to != DefterYer.period) { setPeriod(to); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
-            }) { _, d -> acc += d }
+            // watched in the Initial pass and never consumed, so the vertical scroll keeps working; on release a
+            // mostly sideways move (long enough, or short and quick) changes the period (owner, 2026-11-11: the old
+            // drag detector lost swipes that started a little diagonal)
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false, pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                var last = down.position; var lastT = down.uptimeMillis
+                while (true) {
+                    val e = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                    val c = e.changes.firstOrNull { it.id == down.id } ?: break
+                    last = c.position; lastT = c.uptimeMillis
+                    if (!c.pressed) break
+                }
+                val dx = last.x - down.position.x; val dy = last.y - down.position.y
+                val ms = (lastT - down.uptimeMillis).coerceAtLeast(1)
+                val sideways = kotlin.math.abs(dx) > 1.6f * kotlin.math.abs(dy)
+                val far = kotlin.math.abs(dx) > 64.dp.toPx()
+                val flick = kotlin.math.abs(dx) > 32.dp.toPx() && kotlin.math.abs(dx) / ms > .6f
+                if (sideways && (far || flick)) {
+                    val to = (DefterYer.period + if (dx < 0) 1 else -1).coerceIn(0, 3)
+                    if (to != DefterYer.period) { setPeriod(to); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
+                }
+            }
         }
         .verticalScroll(scroll).padding(bottom = LocalDockPad.current)) {
         SubTabs(listOf("Hafta", "Ay", "Yıl", "Tümü"), period) { setPeriod(it) }
@@ -1455,18 +1474,22 @@ private fun MuhasebeGidisat() {
         // Design N2 "Kadranlar" (design/design-system/ne-zaman-secenekler.html, 2026-11-11): a half dial per vakit.
         if (period == 3) {
             val today = slots(store.lat, store.lng, store.prayerDay())
-            // shortcut: every prayer is judged against today's slices (summer / winter borders move a little); store the slice per prayer if that matters
+            // the arcs are today's slices, a picture; the percentages below come from each prayer's own day
             val dl = Vakit.entries.map { store.dilimler(today[it.ordinal]) }
-            val all = Vakit.entries.flatMap { vk -> data.fracs[vk.name].orEmpty().map { dl[vk.ordinal][(it * 7).toInt().coerceIn(0, 6)] } }
+            // the share is counted per prayer against its own day's slices (vVakt, Store.onTime); the arcs show today's
+            val kilinan = data.vKept.sum()
             InfoCard(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.xl, bottom = Space.l).fillMaxWidth()) {
                 Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = Type.micro, letterSpacing = .8.sp)
-                if (all.isNotEmpty()) Text(altin("Faziletli vakitte kıldığın namazlar: **%${all.count { it == Dilim.FAZILET } * 100 / all.size}**"),
+                if (kilinan > 0) Text(altin("Faziletli vakitte kıldığın namazlar: **%${data.vVakt.sum() * 100 / kilinan}**"),
                     Modifier.padding(top = Space.xs), color = Pal.Text, fontSize = Type.body, lineHeight = 22.sp)
                 Text("Her vakit bir kadran: soldan sağa vakit girer, çıkar. Altın yay faziletli dilim, ibre çoğunlukla kıldığın an.",
                     Modifier.padding(top = 2.dp), color = Pal.Muted, fontSize = Type.label, lineHeight = 16.sp)
                 Vakit.entries.chunked(2).forEach { pair ->
                     Row(Modifier.padding(top = Space.s), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                        pair.forEach { vk -> Kadran(vk.ad, data.fracs[vk.name].orEmpty(), dl[vk.ordinal], today[vk.ordinal], Modifier.weight(1f)) }
+                        pair.forEach { vk ->
+                            val k = vk.ordinal
+                            Kadran(vk.ad, data.fracs[vk.name].orEmpty(), dl[k], today[k], if (data.vKept[k] == 0) -1 else data.vVakt[k] * 100 / data.vKept[k], Modifier.weight(1f))
+                        }
                     }
                 }
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.m), verticalAlignment = Alignment.CenterVertically) {
@@ -2047,19 +2070,27 @@ private fun TumuGorunum(d: Donem, first: LocalDate, tr: java.util.Locale) {
                 }
             }
         }
-        if (next >= 0 && next < goals.lastIndex) Text(
-            if (uzak) "Uzak hedefleri gizle" else "Sonraki ${goals.size - next - 1} hedefi göster",
-            Modifier.padding(top = Space.xs).clip(CircleShape).clickable { uzak = !uzak }.padding(horizontal = Space.m, vertical = Space.s),
-            color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold,
-        )
+        if (next >= 0 && next < goals.lastIndex) Row(
+            Modifier.clip(RoundedCornerShape(Radius.m)).clickable { uzak = !uzak }.padding(vertical = Space.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // a chevron on the ladder's line: down opens the far goals, up folds them again
+            val turn by animateFloatAsState(if (uzak) 180f else 0f, tween(250), label = "ok")
+            Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(32.dp).clip(CircleShape).border(1.dp, Pal.Gold.copy(alpha = .5f), CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.KeyboardArrowDown, if (uzak) "Uzak hedefleri gizle" else "Sonraki hedefleri göster",
+                        tint = Pal.Gold, modifier = Modifier.size(22.dp).graphicsLayer { rotationZ = turn })
+                }
+            }
+            Text(if (uzak) "" else "${goals.size - next - 1} hedef daha", Modifier.padding(start = Space.m), color = Pal.Muted, fontSize = Type.label)
+        }
     }
 }
 
 /** One vakit as a half dial (left = the vakit enters, right = it ends): gold over the faziletli slices, peach over kerahat,
  *  a dot per prayer where it fell, the needle at the median. [fracs] = each prayer's place in its vakit, 0..1. */
 @Composable
-private fun Kadran(ad: String, fracs: List<Float>, dl: List<Dilim>, slot: Slot, modifier: Modifier) {
-    val fz = if (fracs.isEmpty()) -1 else fracs.count { dl[(it * 7).toInt().coerceIn(0, 6)] == Dilim.FAZILET } * 100 / fracs.size
+private fun Kadran(ad: String, fracs: List<Float>, dl: List<Dilim>, slot: Slot, fz: Int, modifier: Modifier) {
     val med = fracs.sorted().let { if (it.isEmpty()) null else it[it.size / 2] }
     Column(modifier.clip(RoundedCornerShape(Radius.m)).background(Color(0xFF0E1830)).padding(top = Space.s, bottom = Space.s),
         horizontalAlignment = Alignment.CenterHorizontally) {
