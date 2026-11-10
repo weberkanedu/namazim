@@ -198,6 +198,10 @@ class Store(context: Context) {
     var girdiSes: Boolean
         get() = p.getBoolean("girdiSes", true)
         set(v) { StoreRev.n++; p.edit().putBoolean("girdiSes", v).apply() }
+    /** Turn the launcher icon to the Cuma one from Thursday's akşam to Friday's akşam. */
+    var cumaIkon: Boolean
+        get() = p.getBoolean("cumaIkon", true)
+        set(v) { StoreRev.n++; p.edit().putBoolean("cumaIkon", v).apply() }
     var faziletSes: Boolean
         get() = p.getBoolean("faziletSes", true)
         set(v) { StoreRev.n++; p.edit().putBoolean("faziletSes", v).apply() }
@@ -209,6 +213,10 @@ class Store(context: Context) {
         get() = p.getBoolean("nagBurst", true)
         set(v) { StoreRev.n++; p.edit().putBoolean("nagBurst", v).apply() }
     /** Which öğüt (ayet/hadis) the next reminder shows; no StoreRev bump, nothing on screen depends on it. */
+    /** The Friday whose Cuma ayet card was already shown on home (it shows once, after the Cuma vakti enters). */
+    var cumaAyetGun: String
+        get() = p.getString("cumaAyetGun", "") ?: ""
+        set(v) { p.edit().putString("cumaAyetGun", v).apply() }
     var ogutIndex: Int
         get() = p.getInt("ogutIndex", 0)
         set(v) { p.edit().putInt("ogutIndex", v).apply() }
@@ -459,7 +467,7 @@ class Store(context: Context) {
      * Location, every setting, the zikir list and the reminder chain's state stay. Tracking restarts at [startAt].
      */
     fun resetEntries(startAt: Long = System.currentTimeMillis()): Boolean {
-        val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "prepSound", "nagSound", "girdiSes", "faziletSes", "prepOffsets", "readGoal",
+        val keep = setOf("lat", "lng", "city", "nagEvery", "nagBurst", "prepSound", "nagSound", "girdiSes", "faziletSes", "cumaIkon", "prepOffsets", "readGoal",
             "kazaRate", "showExtras", "snoozeMin", "zikirs", "lastBackup", "backupNagUntil", "lastFired",
             "askTesbihat", "tesbihatCounts", "ogutIndex", "tesbihLogV2", "mezhep", "cinsiyet", "ozelGunGizli", "nafileTakip", "kurulum", "tanitim")
         val e = p.edit()

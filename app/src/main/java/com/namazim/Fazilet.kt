@@ -58,3 +58,7 @@ fun faziletBand(s: Slot, d: List<Dilim>): Pair<Long, Long>? {
 /** Prayed in a faziletli slice: the gül's "Vaktinde" petal. */
 fun inFazilet(s: Slot, d: List<Dilim>, at: Long?): Boolean =
     at != null && at >= s.start && at < s.end && d[dilimOf(s, at)] == Dilim.FAZILET
+
+/** The Cuma icon's time: from Thursday's akşam (Cuma gecesi) until Friday's akşam; [aksam] = akşam of [day]. */
+fun cumaVakti(day: java.time.LocalDate, now: Long, aksam: Long): Boolean =
+    (day.dayOfWeek == java.time.DayOfWeek.THURSDAY && now >= aksam) || (day.dayOfWeek == java.time.DayOfWeek.FRIDAY && now < aksam)

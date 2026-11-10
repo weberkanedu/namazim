@@ -11,6 +11,12 @@ import java.time.LocalDate
 enum class Vakit(val ad: String) { SABAH("Sabah"), OGLE("Öğle"), IKINDI("İkindi"), AKSAM("Akşam"), YATSI("Yatsı") }
 
 /** One prayer on one day. [key] identifies it in storage; [nagEnd] is when reminders stop. */
+/** "Cuma" for a man's Friday öğle (the Cuma namazı is farz on men; for women it stays öğle), else the vakit's name. */
+fun Slot.ad(kadin: Boolean): String =
+    if (vakit == Vakit.OGLE && date.dayOfWeek == java.time.DayOfWeek.FRIDAY && !kadin) "Cuma" else vakit.ad
+/** The name on a row: the first one is "İmsak" (sabah starts at imsak), Friday öğle is "Cuma" for men. */
+fun Slot.satir(kadin: Boolean): String = if (vakit == Vakit.SABAH) "İmsak" else ad(kadin)
+
 data class Slot(val vakit: Vakit, val date: LocalDate, val start: Long, val end: Long, val nagEnd: Long) {
     val key get() = "$date|$vakit"
 }

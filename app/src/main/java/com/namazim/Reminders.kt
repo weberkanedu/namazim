@@ -83,6 +83,31 @@ object Reminders {
         }
     }
 
+    /**
+     * Turns the launcher icon to the Cuma one and back (two activity-aliases, one enabled at a time). Called from the
+     * background (alarms, boot, the app going to the background): the launcher may redraw or briefly drop the icon.
+     */
+    fun ikonuAyarla(ctx: Context) {
+        val s = Store(ctx)
+        if (!s.hasLocation) return
+        val today = LocalDate.now()
+        val cuma = SkyDebug.cumaIkon ?: (s.cumaIkon && cumaVakti(today, System.currentTimeMillis(), dayTimes(s.lat, s.lng, today).aksam))
+        val pm = ctx.packageManager
+        fun set(name: String, on: Boolean) {
+            val c = android.content.ComponentName(ctx, "com.namazim.$name")
+            val now = when (pm.getComponentEnabledSetting(c)) {
+                android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+                android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> name == "Giris"   // as in the manifest
+                else -> false
+            }
+            if (now != on) pm.setComponentEnabledSetting(c,
+                if (on) android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED else android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                android.content.pm.PackageManager.DONT_KILL_APP)
+        }
+        // the new entry first, so there is never a moment without a launcher icon
+        if (cuma) { set("GirisCuma", true); set("Giris", false) } else { set("Giris", true); set("GirisCuma", false) }
+    }
+
     /** Show every reminder that came due since the last run (alarms can coalesce or arrive late). */
     fun fire(ctx: Context) {
         val s = Store(ctx)
@@ -98,6 +123,7 @@ object Reminders {
             .forEach { notify(ctx, it, now) }
         p.edit().putLong("lastFired", now).apply()
         scheduleNext(ctx)
+        ikonuAyarla(ctx)
     }
 
     fun markPrayed(ctx: Context, key: String, vakit: Vakit) {
@@ -184,20 +210,21 @@ object Reminders {
 
     private fun notify(ctx: Context, r: Reminder, now: Long) {
         val v = r.slot.vakit
+        val ad = r.slot.ad(Store(ctx).kadin)
         val left = (r.slot.end - now) / MIN
         val (channel, title, text) = if (r.prep) {
-            Triple(channelFor("hazirlik", ctx), "${v.ad} vaktine ${(r.slot.start - now + MIN - 1) / MIN} dk", "Abdestini al, namaza hazırlan.")
+            Triple(channelFor("hazirlik", ctx), "$ad vaktine ${(r.slot.start - now + MIN - 1) / MIN} dk", "Abdestini al, namaza hazırlan.")
         } else if (r.kind == Ses.FAZILET) {
-            Triple("ses_fazilet", if (r.at == r.slot.start) "${v.ad} vakti girdi · en faziletli vakit" else "${v.ad}: en faziletli vakit",
+            Triple("ses_fazilet", if (r.at == r.slot.start) "$ad vakti girdi · en faziletli vakit" else "$ad: en faziletli vakit",
                 "Şimdi kılmanın tam vakti.")
         } else if (r.kind == Ses.GIRDI) {
             val o = nextOgut(Store(ctx))
-            Triple(if (Store(ctx).girdiSes) "ses_girdi" else channelFor("israr", ctx), "${v.ad} vakti girdi — kıldın mı?", "${o.text}\n— ${o.source}")
+            Triple(if (Store(ctx).girdiSes) "ses_girdi" else channelFor("israr", ctx), "$ad vakti girdi — kıldın mı?", "${o.text}\n— ${o.source}")
         } else if (r.slot.nagEnd - now <= 30 * MIN) {
-            Triple(channelFor("israr", ctx), "${v.ad} vakti çıkıyor!", "Son $left dakika. Kazaya bırakma, hemen kıl.")
+            Triple(channelFor("israr", ctx), "$ad vakti çıkıyor!", "Son $left dakika. Kazaya bırakma, hemen kıl.")
         } else {
             val o = nextOgut(Store(ctx))
-            Triple(channelFor("israr", ctx), "${v.ad} vakti — kıldın mı?", "${o.text}\n— ${o.source}")
+            Triple(channelFor("israr", ctx), "$ad vakti — kıldın mı?", "${o.text}\n— ${o.source}")
         }
         val done = PendingIntent.getBroadcast(
             ctx, v.ordinal + 1,
@@ -260,7 +287,7 @@ class PrayedReceiver : BroadcastReceiver() {
 
 /** Boot, clock or timezone change, app update: the pending alarm is gone or wrong, so re-arm it. */
 class RescheduleReceiver : BroadcastReceiver() {
-    override fun onReceive(ctx: Context, intent: Intent) = Reminders.scheduleNext(ctx)
+    override fun onReceive(ctx: Context, intent: Intent) { Reminders.scheduleNext(ctx); Reminders.ikonuAyarla(ctx) }
 }
 
 

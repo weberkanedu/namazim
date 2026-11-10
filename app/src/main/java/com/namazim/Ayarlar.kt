@@ -212,6 +212,10 @@ fun AyarlarScreen(onBack: () -> Unit) {
                         Text("SESLER", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
                         SesSecici("Hazırlan sesi", store.prepSound) { store.prepSound = it; Reminders.createChannels(ctx); changed() }
                         SesSecici("\"Kıldın mı?\" sesi", store.nagSound) { store.nagSound = it; Reminders.createChannels(ctx); changed() }
+                        Text("CUMA", Modifier.padding(top = Space.s), color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp)
+                        SwitchRow("Cuma'da uygulama ikonu yeşile dönsün", store.cumaIkon) { store.cumaIkon = it; changed() }
+                        Text("Perşembe akşamından Cuma akşamına kadar. Bazı telefonlarda ikon değişirken ana ekrandan bir an kaybolup geri gelir; sorun olursa kapat.",
+                            color = Pal.Muted, fontSize = Type.label, lineHeight = 16.sp)
                     }
                     "hedef" -> {
                         ValueRow("Günlük okuma hedefi", "${store.readGoal} sayfa") { openDialog("goal", "${store.readGoal}") }

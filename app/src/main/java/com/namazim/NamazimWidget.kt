@@ -81,7 +81,7 @@ class NamazimWidget : AppWidgetProvider() {
             // Right after a prayer time has passed, the hand still shows the one you owe.
             val owed = todaySlots.firstOrNull { now in it.start until it.end && !s.isPrayed(it.key) }
             val idx = owed?.vakit?.ordinal ?: next.vakit.ordinal
-            val label = if (owed != null) "${owed.vakit.ad} · kıl" else "${next.vakit.ad} ${hm(next.start)}"
+            val label = if (owed != null) "${owed.ad(s.kadin)} · kıl" else "${next.ad(s.kadin)} ${hm(next.start)}"
             return State(label, accent, top, bottom, idx, prayed)
         }
 

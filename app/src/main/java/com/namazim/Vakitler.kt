@@ -118,6 +118,7 @@ fun VakitlerBody(
     val cur = slots.indexOfFirst { now in it.start until it.end }   // -1 between güneş and öğle
     val c = slots.getOrNull(cur)
     val cs = st.getOrNull(cur)
+    val adlar = slots.map { it.satir(store.kadin) }   // "Cuma" in place of Öğle on a man's Friday
     var sheet by remember { mutableStateOf<Int?>(null) }
     val toggle = { i: Int ->
         val s = slots[i]
@@ -145,8 +146,8 @@ fun VakitlerBody(
         else -> Triple(
             if (next.second == "Güneş doğuşuna") next.second else "${next.second} vaktine", countdown(next.first - now),
             when (cs) {
-                VState.VAKTINDE -> "${c!!.vakit.ad} vaktinde kılındı"
-                VState.KILINDI -> "${c!!.vakit.ad} kılındı"
+                VState.VAKTINDE -> "${c!!.ad(store.kadin)} vaktinde kılındı"
+                VState.KILINDI -> "${c!!.ad(store.kadin)} kılındı"
                 else -> "kaldı"
             },
         )
@@ -159,7 +160,7 @@ fun VakitlerBody(
     Column(Modifier.fillMaxWidth()) {
         if (store.kadin) OzelGunHome(store, now) { ozel = it }
         val arc = if (inBand) (band!!.second - now).toFloat() / (band.second - band.first) else null
-        VakitGul(st, cur, arc, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp).turHedef("gul").alpha(if (ozelNow != null) .35f else 1f)) { i ->
+        VakitGul(st, cur, arc, inKerahat, Modifier.align(Alignment.CenterHorizontally).size(236.dp).turHedef("gul").alpha(if (ozelNow != null) .35f else 1f), adlar) { i ->
             if (i == cur && st[i] == VState.ACIK) toggle(i) else sheet = i
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = Space.xl), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -181,8 +182,8 @@ fun VakitlerBody(
             AnimatedContent(mode, Modifier.padding(start = Space.xl, end = Space.xl, top = Space.m).turHedef("kildim"),
                 transitionSpec = { (fadeIn(tween(350)) + slideInVertically(tween(350)) { it / 3 }) togetherWith fadeOut(tween(200)) }, label = "kildim") { m ->
                 when (m) {
-                    0 -> GoldButton(ACCUSATIVE[cur] + " kıldım" + if (inBand) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }
-                    1 -> TesbihatCard(c.vakit.ad, onEl = { tesbihEl(c.key) }, onApp = { onTesbihat(c.key) },
+                    0 -> GoldButton((if (adlar[cur] == "Cuma") "Cumayı" else ACCUSATIVE[cur]) + " kıldım" + if (inBand) " · vaktinde" else "", Modifier.fillMaxWidth(), Icons.Default.Check) { toggle(cur) }
+                    1 -> TesbihatCard(c.ad(store.kadin), onEl = { tesbihEl(c.key) }, onApp = { onTesbihat(c.key) },
                         onLater = { later = later + c.key })
                     // no undo button here: one stray touch would take the prayer back. Undo is in the vakit sheet (petal or row).
                     else -> Spacer(Modifier.fillMaxWidth())
@@ -203,7 +204,7 @@ fun VakitlerBody(
                 Bead(st[i], on, Modifier.size(20.dp))
                 Spacer(Modifier.width(Space.m))
                 Column(Modifier.weight(1f)) {
-                    Text(ROW_NAME[i], color = if (on) Pal.Gold else Pal.Text, fontSize = 15.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                    Text(adlar[i], color = if (on) Pal.Gold else Pal.Text, fontSize = 15.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
                     val at = store.prayedAt(s.key)?.let { " · " + hm(it) } ?: ""
                     when (st[i]) {
                         VState.VAKTINDE -> Text("vaktinde$at", color = Pal.Gold, fontSize = Type.micro)
@@ -235,7 +236,7 @@ fun VakitlerBody(
         val at = store.prayedAt(s.key)?.let { " · " + hm(it) } ?: ""
         ModalBottomSheet({ sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
             Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().padding(bottom = Space.xl), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                Text("${s.vakit.ad} namazı", style = NumStyle, fontSize = Type.title, color = Pal.Text)
+                Text("${s.ad(store.kadin)} namazı", style = NumStyle, fontSize = Type.title, color = Pal.Text)
                 Text("${hm(s.start)} – ${hm(s.end)}" + (faziletBand(s, store.dilimler(s))?.let { " · faziletli dilim ${hm(it.first)}–${hm(it.second)}" } ?: ""),
                     color = Pal.Muted, fontSize = Type.body2)
                 val (msg, col) = when (x) {
@@ -373,7 +374,7 @@ private fun Bead(state: VState, live: Boolean, modifier: Modifier) {
 /** The logo rose: petal i = vakit i clockwise from the top. Outer petal fills gold when prayed, the inner one opens
  *  when it was on time; over the current petal a gold arc shrinks with the time left for "vaktinde". */
 @Composable
-private fun VakitGul(st: List<VState>, cur: Int, arc: Float?, kerahat: Boolean, modifier: Modifier, onPetal: (Int) -> Unit) {
+private fun VakitGul(st: List<VState>, cur: Int, arc: Float?, kerahat: Boolean, modifier: Modifier, names: List<String> = ROW_NAME, onPetal: (Int) -> Unit) {
     val measurer = rememberTextMeasurer()
     val fill = st.map { animateFloatAsState(if (it == VState.VAKTINDE || it == VState.KILINDI) 1f else 0f, spring(.45f, 220f), label = "fill").value }
     val inner = st.map { animateFloatAsState(if (it == VState.VAKTINDE) 1f else 0f, spring(.4f, 150f), label = "inner").value }
@@ -459,7 +460,7 @@ private fun VakitGul(st: List<VState>, cur: Int, arc: Float?, kerahat: Boolean, 
                 x == VState.KAZA -> Pal.Warn
                 else -> Pal.Muted
             }
-            val l = measurer.measure(ROW_NAME[i], TextStyle(color = col, fontSize = 11.sp, fontWeight = FontWeight.SemiBold))
+            val l = measurer.measure(names[i], TextStyle(color = col, fontSize = 11.sp, fontWeight = FontWeight.SemiBold))
             val p = pt(91f, a)
             drawText(l, topLeft = Offset(p.x - l.size.width / 2f, p.y - l.size.height / 2f))
         }

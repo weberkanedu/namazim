@@ -124,6 +124,9 @@ class MainActivity : ComponentActivity() {
             SkyDebug.kurulum = intent.getIntExtra("kurulum", -1)
             intent.getIntExtra("tur", -1).takeIf { it >= 0 }?.let { Tur.adim = it }
         }
+        // `--ei cumaikon 1|0` (debug builds): force the Cuma launcher icon on or off; it switches when the app goes to the background
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0 && intent.hasExtra("cumaikon"))
+            SkyDebug.cumaIkon = intent.getIntExtra("cumaikon", 0) == 1
         SkyDebug.gPeriod = intent.getIntExtra("gperiod", 2) // `--ei gperiod 0..3` opens Gidişat on Hafta/Ay/Yıl/Tümü
         if (intent.getBooleanExtra("keepawake", false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (intent.getBooleanExtra("widgetpreview", false)) {
@@ -142,6 +145,12 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         Reminders.scheduleNext(this)
+    }
+
+    // the Cuma icon turns while the app is out of sight: some launchers redraw the icon when it changes
+    override fun onStop() {
+        super.onStop()
+        Reminders.ikonuAyarla(this)
     }
 }
 
@@ -498,7 +507,7 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
         val today = if (now < imsakToday) calDate.minusDays(1) else calDate
         val d = dayTimes(store.lat, store.lng, today)
         val tomorrow = dayTimes(store.lat, store.lng, today.plusDays(1))
-        val events = listOf(d.imsak to "İmsak", d.gunes to "Güneş doğuşuna", d.ogle to "Öğle", d.ikindi to "İkindi",
+        val events = listOf(d.imsak to "İmsak", d.gunes to "Güneş doğuşuna", d.ogle to slots(store.lat, store.lng, today)[1].ad(store.kadin), d.ikindi to "İkindi",
             d.aksam to "Akşam", d.yatsi to "Yatsı", tomorrow.imsak to "İmsak")
         val next = events.first { it.first > now }
         val ex = extras(d, tomorrow.imsak)
@@ -513,6 +522,12 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
                 .background(Brush.verticalGradient(
                     0f to Color.Transparent, 0.45f to Pal.Ground.copy(alpha = .72f), 1f to Pal.Ground,
                 )))
+            // Cuma: a gold line over the bottom of the picture, all day (design C, design/design-system/cuma-secenekler.html)
+            if (calDate.dayOfWeek == java.time.DayOfWeek.FRIDAY) Text(
+                "✦  Cumanız mübarek olsun  ✦", Modifier.align(Alignment.BottomCenter).padding(bottom = Space.xs),
+                style = NumStyle.copy(shadow = androidx.compose.ui.graphics.Shadow(Pal.Gold.copy(alpha = .7f), blurRadius = 18f)),
+                fontSize = 19.sp, letterSpacing = 1.sp, color = Color(0xFFFFE3A3),
+            )
             Row(
                 Modifier.statusBarsPadding().fillMaxWidth().padding(start = Space.m, end = Space.s, top = Space.s),
                 verticalAlignment = Alignment.CenterVertically,
@@ -544,6 +559,28 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
                 Text(hijri(calDate), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.Medium, maxLines = 1)
             }
             HolyTicker(holy)
+        }
+        // Cuma: the week's ayet once, the first time home is seen after the Cuma vakti enters; leaving home or × hides it
+        val cumaGirdi = calDate.dayOfWeek == java.time.DayOfWeek.FRIDAY && now >= slots(store.lat, store.lng, calDate)[1].start
+        var cumaKart by remember { mutableStateOf(false) }
+        LaunchedEffect(cumaGirdi) {
+            if (cumaGirdi && store.cumaAyetGun != calDate.toString()) { store.cumaAyetGun = calDate.toString(); cumaKart = true }
+        }
+        androidx.compose.animation.AnimatedVisibility(cumaKart, enter = fadeIn(tween(600)) + androidx.compose.animation.expandVertically(tween(500)), exit = fadeOut(tween(300)) + androidx.compose.animation.shrinkVertically(tween(300))) {
+            val a = cumaAyeti(calDate)
+            Row(
+                Modifier.padding(start = Space.xl, end = Space.s, top = Space.xs).fillMaxWidth().clip(RoundedCornerShape(Radius.m))
+                    .background(Pal.Card).border(1.dp, Pal.Gold.copy(alpha = .25f), RoundedCornerShape(Radius.m))
+                    .padding(start = Space.m, top = Space.s, bottom = Space.s),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("CUMA", color = Pal.Gold, fontSize = Type.micro, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+                    Text("\"${a.text}\"", Modifier.padding(top = 2.dp), color = Pal.Text, fontSize = Type.body2, lineHeight = 19.sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                    Text(a.source, Modifier.padding(top = 2.dp), color = Pal.Gold, fontSize = Type.label)
+                }
+                IconButton(onClick = { cumaKart = false }) { Icon(Icons.Default.Close, "Kapat", tint = Pal.Muted, modifier = Modifier.size(18.dp)) }
+            }
         }
 
             val todaySlots = slots(store.lat, store.lng, today)
@@ -600,7 +637,7 @@ fun ReminderScreen(key: String, onClose: () -> Unit) {
         Image(painterResource(R.drawable.ic_logo_mono), null, Modifier.size(150.dp))   // the "Beş vakit gülü"
         }
         Spacer(Modifier.height(Space.xxl))
-        Text("${slot.vakit.ad} vakti girdi".uppercase(Locale("tr")), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+        Text("${slot.ad(store.kadin)} vakti girdi".uppercase(Locale("tr")), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
         Text("Kıldın mı?", style = NumStyle, fontSize = 60.sp, color = Pal.Text)
         // one öğüt per opening of this page, the next in turn
         val ogut = remember(key) { nextOgut(store) }

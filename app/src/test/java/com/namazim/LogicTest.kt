@@ -28,6 +28,17 @@ class LogicTest {
         assertEquals(Ses.FAZILET, later.first { it.at == 32 * min }.kind)
     }
 
+    @Test fun cuma() {
+        val cuma = LocalDate.of(2026, 11, 13)   // a Friday
+        val ogle = Slot(Vakit.OGLE, cuma, 0, 1, 1)
+        assertEquals("Cuma", ogle.ad(kadin = false)); assertEquals("Öğle", ogle.ad(kadin = true))
+        assertEquals("Öğle", ogle.copy(date = cuma.plusDays(1)).ad(kadin = false))
+        // icon: Thursday after akşam and Friday before akşam
+        assertEquals(true, cumaVakti(cuma.minusDays(1), 100, 50)); assertEquals(false, cumaVakti(cuma.minusDays(1), 10, 50))
+        assertEquals(true, cumaVakti(cuma, 10, 50)); assertEquals(false, cumaVakti(cuma, 100, 50))
+        assertEquals(false, cumaVakti(cuma.plusDays(1), 10, 50))
+    }
+
     @Test fun cuzOfPage() {
         assertEquals(1, cuz(1)); assertEquals(1, cuz(21)); assertEquals(2, cuz(22))
         assertEquals(29, cuz(581)); assertEquals(30, cuz(582)); assertEquals(30, cuz(604))

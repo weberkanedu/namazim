@@ -50,7 +50,6 @@ object VakitWidgets {
         }
     }
 
-    private val ROW = listOf("İmsak", "Öğle", "İkindi", "Akşam", "Yatsı")
     private val GOLD = 0xFFE8BE74.toInt()
     private val TEXT = 0xFFF3EEE3.toInt()
     private val MUTED = 0xFFC9D0DE.toInt()
@@ -59,7 +58,7 @@ object VakitWidgets {
     /** What the widgets say right now. */
     private class Durum(
         val slots: List<Slot>, val cur: Int, val curDone: Boolean, val prayed: Set<Int>, val onTime: Set<Int>,
-        val k: String, val big: String, val sub: String, val target: Long, val ozel: Boolean, val photo: Int, val dilim: List<Dilim>?, val nowFrac: Float,
+        val k: String, val big: String, val sub: String, val target: Long, val ozel: Boolean, val photo: Int, val dilim: List<Dilim>?, val nowFrac: Float, val kadin: Boolean,
     )
 
     private fun durum(ctx: Context): Durum? {
@@ -85,13 +84,13 @@ object VakitWidgets {
         }
         val (k, big, sub, target) = when {
             ozel -> listOf("ÖZEL GÜN", hm(next.start), "takip duraklatıldı", next.start)
-            c != null && !curDone && !s.exempt(c) -> listOf("${ROW[cur]} vakti".uppercase(tr), hm(c.start), "vaktin çıkmasına", c.end)
-            else -> listOf("${ROW[next.vakit.ordinal]} vaktine".uppercase(tr), hm(next.start), if (curDone) "${ROW[cur]} kılındı" else "kaldı", next.start)
+            c != null && !curDone && !s.exempt(c) -> listOf("${c.satir(s.kadin)} vakti".uppercase(tr), hm(c.start), "vaktin çıkmasına", c.end)
+            else -> listOf("${next.satir(s.kadin)} vaktine".uppercase(tr), hm(next.start), if (curDone) "${c!!.satir(s.kadin)} kılındı" else "kaldı", next.start)
         }
         return Durum(
             sl, cur, curDone, sl.filter { s.isPrayed(it.key) }.map { it.vakit.ordinal }.toSet(),
             sl.filter { s.onTime(it) }.map { it.vakit.ordinal }.toSet(), k as String, big as String, sub as String, target as Long, ozel, photo,
-            c?.let { s.dilimler(it) }, c?.let { ((now - it.start).toFloat() / (it.end - it.start)).coerceIn(0f, 1f) } ?: 0f,
+            c?.let { s.dilimler(it) }, c?.let { ((now - it.start).toFloat() / (it.end - it.start)).coerceIn(0f, 1f) } ?: 0f, s.kadin,
         )
     }
 
@@ -144,7 +143,7 @@ object VakitWidgets {
                 d.slots.forEachIndexed { i, s ->
                     val on = i == focus
                     v.setInt(rows[i], "setBackgroundResource", if (on) R.drawable.wg_row_on else R.drawable.wg_row_off)
-                    v.setTextViewText(names[i], ROW[i] + if (i in d.prayed && !on) " ✓" else "")
+                    v.setTextViewText(names[i], s.satir(d.kadin) + if (i in d.prayed && !on) " ✓" else "")
                     v.setTextColor(names[i], if (on) INK else if (i in d.prayed) GOLD else MUTED)
                     v.setTextViewText(times[i], hm(s.start))
                     v.setTextColor(times[i], if (on) INK else TEXT)
@@ -154,7 +153,7 @@ object VakitWidgets {
                 v.setImageViewBitmap(R.id.w_rose, gulBitmap(360, d.prayed, d.onTime, if (d.cur >= 0 && !d.curDone) d.cur else -1))
                 val xs = listOf(R.id.w_x0, R.id.w_x1, R.id.w_x2, R.id.w_x3, R.id.w_x4)
                 d.slots.forEachIndexed { i, s ->
-                    v.setTextViewText(xs[i], "${ROW[i].take(3)}\n${hm(s.start)}")
+                    v.setTextViewText(xs[i], "${s.satir(d.kadin).let { if (it == "Cuma") it else it.take(3) }}\n${hm(s.start)}")
                     v.setTextColor(xs[i], if (i == focus) GOLD else MUTED)
                 }
             }

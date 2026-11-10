@@ -40,3 +40,18 @@ fun nextOgut(store: Store): Ogut {
     store.ogutIndex = (i + 1) % OGUTLER.size
     return OGUTLER[i % OGUTLER.size]
 }
+
+/** One ayet or hadis about Cuma, shown once on home after the Cuma vakti enters; a different one each Friday. */
+val CUMA_AYETLERI = listOf(
+    Ogut("Ey iman edenler! Cuma günü namaz için çağrı yapıldığında Allah'ı anmaya koşun, alışverişi bırakın.", "Cuma 62:9"),
+    Ogut("Güneşin doğduğu en hayırlı gün Cuma günüdür.", "Hadis · Müslim, Cum'a 17"),
+    Ogut("Namaz kılınınca yeryüzüne dağılın, Allah'ın lütfundan rızık arayın ve Allah'ı çok anın ki kurtuluşa eresiniz.", "Cuma 62:10"),
+    Ogut("Cuma günü bana çokça salavat getirin; sizin salavatınız bana sunulur.", "Hadis · Ebû Dâvûd, Salât 207"),
+    Ogut("Cuma gününde bir saat vardır ki, Müslüman kul o saate denk gelip Allah'tan hayır dilerse Allah onu ona verir.", "Hadis · Buhârî, Cum'a 37"),
+    Ogut("Şüphesiz Allah ve melekleri Peygamber'e salât eder. Ey iman edenler, siz de ona salât edin ve tam bir teslimiyetle selam verin.", "Ahzâb 33:56"),
+    Ogut("Cuma günü gusledip temizlenen, güzel koku sürünüp namaza giden ve imam hutbe okurken susan kişinin, iki Cuma arasındaki günahları bağışlanır.", "Hadis · Buhârî, Cum'a 6"),
+    Ogut("Cuma günü Kehf sûresini okuyana, iki Cuma arası bir nur verilir.", "Hadis · Hâkim, Müstedrek 2/399"),
+)
+
+/** The Cuma ayet of the week that holds [day]: weeks counted from the epoch, so every Friday brings the next one. */
+fun cumaAyeti(day: java.time.LocalDate): Ogut = CUMA_AYETLERI[Math.floorMod(day.toEpochDay() / 7, CUMA_AYETLERI.size.toLong()).toInt()]
