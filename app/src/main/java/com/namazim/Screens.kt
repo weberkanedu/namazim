@@ -1390,7 +1390,7 @@ private fun MuhasebeGidisat() {
                     if (m == 1) { kept++; vKept[k]++; counts[i]++ }
                     if (m == 1 && store.onTime(sl)) { vakt[i][k] = true; vVakt[k]++; onTime++ }
                     // namazları ne zaman kılıyoruz: her işaretin vakit penceresindeki yeri
-                    val at = store.prayedAt(sl.key) ?: continue
+                    val at = (if (m == 1) store.prayedAt(sl.key) else null) ?: continue
                     if (at < sl.start || sl.end <= sl.start) continue
                     fracs.getOrPut(sl.vakit.name) { mutableListOf() }.add(((at - sl.start).toFloat() / (sl.end - sl.start)).coerceIn(0f, 1f))
                 }

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geri Al ve Saat</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322;--warn:#F4B08F}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1240px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1050px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:24px;flex-wrap:wrap;margin-top:22px}
+.opt{width:360px}
+.opt h3{font:600 24px Cormorant,serif;margin:0;color:var(--gold)}
+.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:96px}.opt .d b{color:#F3EEE3}
+.phone{width:360px;height:740px;border-radius:42px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:34px;overflow:hidden;background:var(--ground)}
+.bg{position:absolute;inset:0;padding:40px 18px;filter:brightness(.5)}
+.bg .rose{width:170px;height:170px;border-radius:50%;margin:30px auto;background:radial-gradient(circle,#2A3D6E,#14213D)}
+.bg .l{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #18223A;font-size:13px}
+.snack{position:absolute;left:14px;right:14px;bottom:86px;background:#22304F;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px #000a;font-size:13px}
+.snack span{flex:1}.snack b{color:var(--gold);font-weight:700;letter-spacing:.03em}
+.snack i{position:absolute;left:14px;right:14px;bottom:0;height:3px;border-radius:2px;background:var(--gold);transform-origin:left;animation:t 5s linear infinite}
+@keyframes t{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.dock{position:absolute;left:22px;right:22px;bottom:22px;height:50px;border-radius:25px;background:#16203Af2}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:250px;background:var(--card);border-radius:26px 26px 0 0;padding:10px 18px 18px;box-shadow:0 -20px 40px #0008}
+.sheet .h{width:36px;height:4px;border-radius:2px;background:#3A4560;margin:0 auto 12px}
+.sheet h4{font:600 30px/1 Cormorant,serif;margin:0}.sheet .sub{font-size:12px;color:var(--muted);margin:6px 0 12px}
+.st{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.st div{flex:1}.st b{display:block;font-size:13.5px}.st small{font-size:11px;color:var(--muted)}
+.st .v{font:600 22px Cormorant,serif;color:var(--gold)}.st .c{font-size:12px;color:var(--gold);font-weight:600;border:1px solid rgb(232 190 116 / .5);border-radius:999px;padding:5px 11px}
+.tag{display:inline-block;font-size:10.5px;color:#0B1322;background:var(--gold);border-radius:999px;padding:2px 8px;font-weight:600}
+.btn{margin-top:14px;border-radius:999px;padding:12px;text-align:center;font:600 13px Inter;border:1px solid #2A3550;color:var(--muted)}
+.picker{position:absolute;left:24px;right:24px;top:180px;background:#1A2540;border-radius:24px;padding:18px;box-shadow:0 20px 60px #000c}
+.picker b{font-size:13px;color:var(--muted)}
+.dial{display:flex;justify-content:center;align-items:center;gap:6px;margin:14px 0}
+.dial div{font:600 52px/1 Cormorant,serif;padding:6px 14px;border-radius:14px;background:#0E1830}.dial div.on{color:var(--gold);outline:2px solid rgb(232 190 116 / .6)}
+.dial span{font:600 40px Cormorant,serif;color:var(--muted)}
+.band{height:8px;border-radius:4px;background:var(--track);position:relative;margin:6px 0 4px}.band i{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--gold)}.band b{position:absolute;top:-5px;width:3px;height:18px;border-radius:2px;background:#FFF4D6}
+.pk{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+.acts{display:flex;justify-content:flex-end;gap:16px;margin-top:14px;font:600 13px Inter}.acts span{color:var(--muted)}.acts span.ok{color:var(--gold)}
+.ask{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:26px 26px 0 0;padding:12px 18px 24px;box-shadow:0 -20px 40px #0008}
+.ask h4{font:600 26px/1.1 Cormorant,serif;margin:6px 0 4px}.ask p{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.5}
+.ch{border:1px solid #2A3550;border-radius:14px;padding:12px 14px;margin:8px 0}.ch b{display:block;font-size:13.5px}.ch span{font-size:11.5px;color:var(--muted)}
+.ch.on{border-color:var(--gold);background:rgb(232 190 116 / .08)}.ch.on b{color:var(--gold)}
+.gold{margin-top:12px;border-radius:999px;padding:13px;text-align:center;font:600 14px Inter;background:var(--gold);color:#0B1322}
+.note{background:var(--card);border-radius:16px;padding:14px 16px;font-size:13px;line-height:1.7;color:var(--muted);max-width:1100px;margin-top:22px}.note b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Kıldım · geri al · kılınma saati</div>
+  <h1>Yanlış dokunuş namazı geç yapmasın</h1>
+  <p class="lede">Seçtiğin üç çözümün uygulamada nasıl görüneceği. <b>1. Geri al saati unutmasın</b> görünmez çalışır: geri alıp aynı namazı tekrar işaretlersen ilk saat (ve tesbihatı) kendiliğinden geri gelir; ekranda bir şey değişmez. Aşağıdakiler 2. ve 4. çözüm.</p>
+  <div class="row">
+    <div class="opt"><h3>2 · "Vazgeç" düğmesi</h3><div class="d">Vakit sayfasında <b>Geri al</b>'a basınca altta 5 saniye "Öğle geri alındı · VAZGEÇ" yazısı durur; altındaki ince çizgi süreyi gösterir. VAZGEÇ'e dokununca namaz saatiyle ve tesbihatıyla geri gelir.</div>
+      <div class="phone"><div class="scr"><div class="bg"><div class="rose"></div><div class="l"><span>İmsak ✓</span><b>05:55</b></div><div class="l"><span>Öğle</span><b>12:37</b></div><div class="l"><span>İkindi ✓</span><b>15:20</b></div></div>
+        <div class="snack"><span>Öğle geri alındı</span><b>VAZGEÇ</b><i></i></div><div class="dock"></div></div></div></div>
+    <div class="opt"><h3>4a · Kıldığın saat, vakit sayfasında</h3><div class="d">Kılınmış bir vaktin sayfasında yeni bir satır: <b>"Kıldığın saat 13:12 · Değiştir"</b>, yanında vaktinde mi değil mi. Değiştir'e dokununca saat seçici açılır; şerit faziletli dilimi ve seçtiğin anı gösterir. Saat vakit içinde olmalı, sonra olamaz.</div>
+      <div class="phone"><div class="scr"><div class="bg"><div class="rose"></div></div>
+        <div class="sheet"><div class="h"></div><h4>Öğle namazı</h4><div class="sub">12:37 – 15:20 · faziletli dilim 12:37–13:23</div>
+          <div class="st"><div><b>Kılındı</b><small>13:12'de işaretlendi</small></div><span class="tag">vaktinde</span></div>
+          <div class="st"><div><b>Kıldığın saat</b><small>Geç işaretlediysen düzelt</small></div><span class="v">13:12</span><span class="c">Değiştir</span></div>
+          <div class="st"><div><b>Tesbihat</b><small>Zikirhane'de çekildi</small></div><span style="color:var(--gold)">✓</span></div>
+          <div class="btn">Geri al</div></div>
+        <div class="picker"><b>Öğleyi ne zaman kıldın?</b><div class="dial"><div>13</div><span>:</span><div class="on">05</div></div>
+          <div class="band"><i style="left:0;width:28.6%"></i><b style="left:16.7%"></b></div><div class="pk"><span>12:37 girdi</span><span>15:20 çıkar</span></div>
+          <div style="font-size:12px;color:var(--gold);margin-top:8px">✓ faziletli dilimde · vaktinde sayılır</div>
+          <div class="acts"><span>Vazgeç</span><span class="ok">Kaydet</span></div></div></div></div></div>
+    <div class="opt"><h3>4b · Geç işaretlerken sorsun</h3><div class="d">Faziletli dilim bittikten sonra <b>Kıldım</b>'a basınca kısa bir soru: <b>Ne zaman kıldın?</b> "Şimdi" (bugünkü gibi) ya da "Daha önce" (saat seç). Faziletli dilimde basarken hiçbir şey sormaz. İstersen bu soruyu hiç koymayız, sadece 4a kalır.</div>
+      <div class="phone"><div class="scr"><div class="bg"><div class="rose"></div><div class="l"><span>Öğle</span><b>12:37</b></div></div>
+        <div class="ask"><div style="width:36px;height:4px;border-radius:2px;background:#3A4560;margin:0 auto"></div><h4>Öğleyi ne zaman kıldın?</h4><p>Faziletli dilim 13:23'te bitti. Daha önce kıldıysan saatini seç; vaktinde sayılsın.</p>
+          <div class="ch"><b>Şimdi kıldım</b><span>14:40</span></div><div class="ch on"><b>Daha önce kıldım</b><span>saatini seç · 13:05</span></div><div class="gold">Kaydet</div></div></div></div></div>
+  </div>
+  <div class="note"><b>Güvenlik:</b> seçilen saat vaktin giriş ve çıkışı arasında olmak zorunda; gelecek bir saat seçilemez. Saat değişince gül, vaktinde yaprağı, İstikrar ve kadranlar kendiliğinden yeni saate göre hesaplanır.</div>
+</div>
+</body>
+</html>

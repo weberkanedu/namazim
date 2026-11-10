@@ -251,6 +251,7 @@ fun App(reminderKey: String?, startTab: Int, navN: Int = 0, onReminderClosed: ()
             }
         }
         if (!subPage) Box(Modifier.align(Alignment.BottomCenter).turHedef("dock")) { SeherNav(tab) { tab = it } }
+        GeriAlBandi(Modifier.align(Alignment.BottomCenter).padding(bottom = dockPad + Space.s))
         if (Tur.adim >= 0) TurOverlay(onTab = { tab = it }) { Tur.adim = -1; store.turDone = true; tab = 0 }
         if (reminderKey != null) ReminderScreen(reminderKey, onReminderClosed)
     }

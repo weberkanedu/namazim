@@ -1,5 +1,8 @@
 package com.namazim
 
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -122,7 +125,7 @@ fun VakitlerBody(
     var sheet by remember { mutableStateOf<Int?>(null) }
     val toggle = { i: Int ->
         val s = slots[i]
-        if (store.isPrayed(s.key)) { Reminders.unmarkPrayed(ctx, s.key); store.setTesbihat(s.key, null) }
+        if (store.isPrayed(s.key)) { Reminders.unmarkPrayed(ctx, s.key); GeriAl.goster(s.key, s.vakit, s.ad(store.kadin)) }
         else if (now >= s.start) {
             Reminders.markPrayed(ctx, s.key, s.vakit)
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -254,6 +257,17 @@ fun VakitlerBody(
                     VState.GECTI -> "Takip başlamadan önceydi" to Pal.Muted
                 }
                 Text(msg, color = col, fontSize = Type.body, fontWeight = FontWeight.Medium)
+                // the time it was prayed: marked late, it can be set to when it really was (inside the vakit, not ahead of now)
+                if (store.isPrayed(s.key)) Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Kıldığın saat", color = Pal.Text, fontSize = Type.body2)
+                        Text("Geç işaretlediysen düzelt", color = Pal.Muted, fontSize = Type.label)
+                    }
+                    Text(store.prayedAt(s.key)?.let { hm(it) } ?: "—", style = NumStyle, fontSize = 22.sp, color = Pal.Gold)
+                    TextButton(onClick = { saatSec(ctx, s, now) { store.markPrayed(s.key, it); Reminders.scheduleNext(ctx) } }) {
+                        Text("Değiştir", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
+                    }
+                }
                 val chips = rowExtras(i, ex, gunes)
                 if (chips.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     chips.forEach { ExtraChip(it, now, store, s.date) }
@@ -597,5 +611,45 @@ private fun VakitSerit(s: Slot, prayedAt: Long?, dl: List<Dilim>, now: Long, mod
             "Şu an: ${DILIM_ADI[nowIn]} (${nowIn + 1}/7)", Modifier.fillMaxWidth().padding(top = Space.xs),
             color = if (dl[nowIn] == Dilim.KERAHAT) Pal.Warn else Pal.Text, fontSize = Type.body2, textAlign = TextAlign.Center,
         )
+    }
+}
+
+/** A time picker for when [s] was really prayed: the answer must fall inside the vakit and not after [now]. */
+fun saatSec(ctx: android.content.Context, s: Slot, now: Long, onAt: (Long) -> Unit) {
+    val zone = java.time.ZoneId.systemDefault()
+    val was = java.time.Instant.ofEpochMilli(s.start).atZone(zone)
+    android.app.TimePickerDialog(ctx, { _, h, mi ->
+        // yatsı runs past midnight: the clock time may belong to the next day
+        val at = listOf(s.date, s.date.plusDays(1)).map { it.atTime(h, mi).atZone(zone).toInstant().toEpochMilli() }
+            .firstOrNull { it >= s.start && it < s.end && it <= now }
+        if (at != null) onAt(at)
+        else android.widget.Toast.makeText(ctx, "Vaktin içinde, şu andan önce bir saat seç (${hm(s.start)} – ${hm(minOf(s.end, now))})", android.widget.Toast.LENGTH_LONG).show()
+    }, was.hour, was.minute, true).show()
+}
+
+/** The "… geri alındı · VAZGEÇ" band after an undo: five seconds to take it back (design 2 of geri-al-secenekler.html). */
+object GeriAl {
+    var key by mutableStateOf<String?>(null); private set
+    var vakit by mutableStateOf(Vakit.SABAH); private set
+    var ad by mutableStateOf(""); private set
+    var t0 by mutableLongStateOf(0L); private set
+    fun goster(k: String, v: Vakit, a: String) { key = k; vakit = v; ad = a; t0 = System.currentTimeMillis() }
+    fun kapat() { key = null }
+}
+
+@Composable
+fun GeriAlBandi(modifier: Modifier) {
+    val ctx = LocalContext.current
+    val k = GeriAl.key ?: return
+    val kalan = remember(GeriAl.t0) { Animatable(1f) }
+    LaunchedEffect(GeriAl.t0) { kalan.animateTo(0f, tween(5000, easing = LinearEasing)); GeriAl.kapat() }
+    Box(modifier.fillMaxWidth().padding(horizontal = Space.l).clip(RoundedCornerShape(Radius.m)).background(Color(0xFF22304F))) {
+        Row(Modifier.fillMaxWidth().padding(start = Space.m), verticalAlignment = Alignment.CenterVertically) {
+            Text("${GeriAl.ad} geri alındı", Modifier.weight(1f), color = Pal.Text, fontSize = Type.body2)
+            TextButton(onClick = { Reminders.markPrayed(ctx, k, GeriAl.vakit); GeriAl.kapat() }) {
+                Text("VAZGEÇ", color = Pal.Gold, fontWeight = FontWeight.Bold, letterSpacing = .5.sp)
+            }
+        }
+        Box(Modifier.align(Alignment.BottomStart).padding(horizontal = Space.m).fillMaxWidth(kalan.value).height(3.dp).clip(CircleShape).background(Pal.Gold))
     }
 }

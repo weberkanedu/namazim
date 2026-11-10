@@ -127,18 +127,25 @@ class Store(context: Context) {
     // --- Prayed log, keyed by Slot.key
     fun isPrayed(key: String) = key in prayed()
     fun prayed(): Set<String> = p.getStringSet("prayed", emptySet())!!
-    fun markPrayed(key: String, at: Long = System.currentTimeMillis()) {
+    /** Marks [key] prayed at [at]; without [at], a prayer marked before and undone gets its first time back
+     *  (owner, 2026-11-11: an undo and a re-mark made a prayer prayed on time look late), else now. */
+    fun markPrayed(key: String, at: Long? = null) {
         StoreRev.n++
-        p.edit().putStringSet("prayed", prayed() + key).putLong("prayedAt_$key", at).apply()
+        val e = p.edit().putStringSet("prayed", prayed() + key).putLong("prayedAt_$key", at ?: prayedAt(key) ?: System.currentTimeMillis())
+        // the tesbihat the undo put aside comes back with it
+        p.getString("tesbihatEski_$key", null)?.let { e.putString("tesbihat_$key", it).remove("tesbihatEski_$key") }
+        e.apply()
         runCatching { VakitWidgets.refreshAll(appCtx) }
     }
-    /** Undo a mis-tap on the timeline. */
+    /** Undo a mis-tap: the time stays (for a re-mark), the tesbihat is put aside. */
     fun unmarkPrayed(key: String) {
         StoreRev.n++
-        p.edit().putStringSet("prayed", prayed() - key).apply()
+        val e = p.edit().putStringSet("prayed", prayed() - key)
+        tesbihat(key)?.let { e.putString("tesbihatEski_$key", it).remove("tesbihat_$key") }
+        e.apply()
         runCatching { VakitWidgets.refreshAll(appCtx) }
     }
-    /** When the prayer was marked (for the "12:41'de kılındı" line). */
+    /** When the prayer was marked (for the "12:41'de kılındı" line); also kept after an undo, so check [isPrayed]. */
     fun prayedAt(key: String): Long? = p.getLong("prayedAt_$key", 0L).takeIf { it > 0 }
 
     // --- Kaza, keyed by Vakit name or "VITIR"
