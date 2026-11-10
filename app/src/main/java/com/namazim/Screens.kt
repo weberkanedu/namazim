@@ -2010,7 +2010,9 @@ private fun TumuGorunum(d: Donem, first: LocalDate, tr: java.util.Locale) {
         // ---- the ladder, top to bottom: reached gold, the next one framed with its progress, the rest locked
         SectionLabel("HEDEFLER", Modifier.padding(top = Space.xl, bottom = Space.s))
         val next = goals.indexOfFirst { !it.tamam }
-        goals.forEachIndexed { i, g ->
+        var uzak by remember { mutableStateOf(false) }   // the goals after the next one, folded until asked for
+        val gorunen = if (uzak || next < 0) goals.size else next + 1
+        goals.take(gorunen).forEachIndexed { i, g ->
             val hal = when { g.tamam -> 0; i == next -> 1; else -> 2 }
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                 Column(Modifier.width(44.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -2025,7 +2027,7 @@ private fun TumuGorunum(d: Donem, first: LocalDate, tr: java.util.Locale) {
                         if (hal == 2) Icon(Icons.Default.Lock, null, tint = Pal.Muted.copy(alpha = .5f), modifier = Modifier.size(16.dp))
                         else Text(g.isaret, color = if (hal == 0) Pal.Ground else Pal.Gold, fontSize = if (g.isaret.length > 2) 13.sp else 17.sp, fontWeight = FontWeight.Bold)
                     }
-                    if (i < goals.lastIndex) Box(Modifier.width(2.dp).weight(1f).background(if (hal == 0) Pal.Gold else Pal.Border))
+                    if (i < gorunen - 1) Box(Modifier.width(2.dp).weight(1f).background(if (hal == 0) Pal.Gold else Pal.Border))
                 }
                 Column(
                     Modifier.weight(1f).padding(start = Space.m, bottom = Space.m).alpha(if (hal == 2) .55f else 1f)
@@ -2045,6 +2047,11 @@ private fun TumuGorunum(d: Donem, first: LocalDate, tr: java.util.Locale) {
                 }
             }
         }
+        if (next >= 0 && next < goals.lastIndex) Text(
+            if (uzak) "Uzak hedefleri gizle" else "Sonraki ${goals.size - next - 1} hedefi göster",
+            Modifier.padding(top = Space.xs).clip(CircleShape).clickable { uzak = !uzak }.padding(horizontal = Space.m, vertical = Space.s),
+            color = Pal.Gold, fontSize = Type.body2, fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 

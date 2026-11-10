@@ -193,7 +193,8 @@ fun HolyTicker(days: List<Pair<HolyDay, String>>) {
         val (d, left) = days[i % days.size]
         Column(horizontalAlignment = Alignment.End) {
             Text("✦ ${d.name}", color = Pal.Muted, fontSize = Type.label, maxLines = 1)
-            Text(left, style = NumStyle, fontSize = 18.sp, lineHeight = 20.sp, color = Pal.Gold)
+            // a little room on the right and below: Cormorant's "n" overhangs its box and was cut
+            Text(left, Modifier.padding(end = 2.dp, bottom = 1.dp), style = NumStyle, fontSize = 18.sp, lineHeight = 20.sp, color = Pal.Gold)
         }
     }
 }
@@ -509,8 +510,9 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
     val scope = rememberCoroutineScope()
     var locating by remember { mutableStateOf(false) }
     // `--es acik takvim|mubarek` (debug) opens one of them at start, for screenshots
-    var takvim by remember { mutableStateOf<LocalDate?>(if (SkyDebug.acik == "takvim") LocalDate.now() else null) }   // the calendar, opened on this day
-    var mubarek by remember { mutableStateOf(SkyDebug.acik == "mubarek") }
+    val acik = remember { SkyDebug.acik.also { SkyDebug.acik = null } }   // used once: coming back to home must not reopen it
+    var takvim by remember { mutableStateOf<LocalDate?>(if (acik == "takvim") LocalDate.now() else null) }   // the calendar, opened on this day
+    var mubarek by remember { mutableStateOf(acik == "mubarek") }
 
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) {
@@ -593,7 +595,7 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
                 Text(calDate.format(DateTimeFormatter.ofPattern("EEEE", tr)), color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.Medium)
                 Text(hijri(calDate), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.Medium, maxLines = 1)
             }
-            Box(Modifier.clip(RoundedCornerShape(Radius.s)).clickable { mubarek = true }) { HolyTicker(holy) }
+            Box(Modifier.clickable { mubarek = true }) { HolyTicker(holy) }
         }
         // design M2 / C2 (design/design-system/takvim-secenekler.html)
         if (mubarek) MubarekSheet(calDate, onClose = { mubarek = false }) { mubarek = false; takvim = it }
