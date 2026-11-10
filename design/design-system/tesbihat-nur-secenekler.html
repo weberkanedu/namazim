@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tesbihat Nuru</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--ground:#0B1322}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1240px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 48px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1050px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:24px;flex-wrap:wrap;margin-top:22px}
+.opt{width:360px}
+.opt h3{font:600 25px Cormorant,serif;margin:0;color:var(--gold);display:flex;gap:8px;align-items:center}
+.opt h3 em{font:600 10px Inter;font-style:normal;color:#0B1322;background:var(--gold);border-radius:999px;padding:3px 8px}
+.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:76px}.opt .d b{color:#F3EEE3}
+.phone{width:360px;height:740px;border-radius:42px;background:#000;padding:10px;position:relative;user-select:none}
+.scr{position:absolute;inset:10px;border-radius:34px;overflow:hidden;background:radial-gradient(120% 70% at 50% 55%,#1A2230 0%,#0B1322 70%);cursor:pointer}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.top{position:absolute;left:0;right:0;top:26px;text-align:center;font:600 10px Inter;letter-spacing:.16em;color:var(--muted);pointer-events:none}
+.steps{position:absolute;left:0;right:0;top:44px;display:flex;justify-content:center;gap:6px;pointer-events:none}.steps i{width:22px;height:4px;border-radius:2px;background:#2A3550}.steps i.on{background:var(--gold)}.steps i.done{background:#8C7A5A}
+.name{position:absolute;left:0;right:0;top:250px;text-align:center;font:600 22px Cormorant,serif;pointer-events:none}
+.mean{position:absolute;left:20px;right:20px;top:282px;text-align:center;font-size:12px;color:var(--muted);pointer-events:none}
+.count{position:absolute;left:0;right:0;top:400px;text-align:center;pointer-events:none}.count b{font:600 84px/1 Cormorant,serif}.count span{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.hint{position:absolute;left:0;right:0;bottom:30px;text-align:center;font-size:11.5px;color:#5A6582;pointer-events:none}
+.ctl{display:flex;gap:8px;margin-top:10px}
+.ctl span{flex:1;text-align:center;background:var(--card);border-radius:999px;padding:8px;font:500 12px Inter;color:var(--muted);cursor:pointer}
+.ctl span:hover{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Namaz sonrası tesbihat · Zikirhane'de çekerken</div>
+  <h1>Her tesbih bir nur, nurlar yazıyı tamamlar</h1>
+  <p class="lede">Senin fikrin: zikri çektikçe dokunduğun yerden çıkan nurlar yukarı uçuyor ve üstte <b>büyük, silik yazılmış Arapça</b> Sübhânallah / Elhamdülillah / Allâhu ekber'e yerleşiyor; 33'e varınca yazı <b>parlak ve belirgin</b> oluyor, sonra sıradaki kelime silik olarak beliriyor. Sadece <b>namaz sonrası tesbihatta</b>; normal Zikirhane bugünkü gibi kalır. Telefonların içine <b>dokun</b> (ya da "33 çek"e bas): üç farklı dolma biçimi.</p>
+  <div class="row" id="row"></div>
+</div>
+<script>
+const WORDS=[['سُبْحَانَ ٱللّٰهِ','Sübhânallah','Allah her türlü noksanlıktan uzaktır.'],['ٱلْحَمْدُ لِلّٰهِ','Elhamdülillah','Hamd Allah içindir.'],['ٱللّٰهُ أَكْبَرُ','Allâhu ekber','Allah en büyüktür.']];
+const TARGET=33;
+const OPTS=[
+ {n:'V1 · Nur tozu',rec:1,d:'Yazı <b>binlerce küçük ışık noktasından</b> oluşur, önce sönük. Her tesbihte dokunduğun yerden nurlar uçar ve yazının <b>rastgele bir köşesine konar</b>, orası yanar. 33\'te bütün yazı ışıl ışıl, hafif bir parlama.',mode:'dust'},
+ {n:'V2 · Sağdan sola yazılış',d:'Nurlar yazının <b>ucuna</b> gider ve yazı, Arapça okunduğu gibi <b>sağdan sola</b> kalemle yazılıyormuş gibi altınla dolar. Her tesbih bir parça daha. Hattat hissi.',mode:'rtl'},
+ {n:'V3 · Işıkla dolma',d:'Yazı baştan bütün halde ama <b>silik</b>; her nur geldiğinde yazının <b>tamamı biraz daha parlar</b>, ardında hafif bir hale büyür. En sade, en sakin.',mode:'glow'},
+];
+function makePhone(o,idx){
+ const wrap=document.createElement('div');wrap.className='opt';
+ wrap.innerHTML=`<h3>${o.n}${o.rec?'<em>ÖNERİM</em>':''}</h3><div class="d">${o.d}</div><div class="phone"><div class="scr"><canvas></canvas><div class="top">NAMAZ SONRASI TESBİHAT</div><div class="steps"><i></i><i></i><i></i></div><div class="name"></div><div class="mean"></div><div class="count"><b>0</b><span>/ 33</span></div><div class="hint">ekranın her yerine dokun</div></div></div><div class="ctl"><span data-a="1">+1</span><span data-a="33">33 çek</span><span data-a="r">baştan</span></div>`;
+ document.getElementById('row').appendChild(wrap);
+ const scr=wrap.querySelector('.scr'),cv=wrap.querySelector('canvas'),ctx=cv.getContext('2d');
+ const W=340,H=720,DPR=2;cv.width=W*DPR;cv.height=H*DPR;ctx.scale(DPR,DPR);
+ let wi=0,count=0,motes=[],pts=[],lit=0,flash=0,swap=0,glowT=0;
+ const TX=W/2,TY=150;
+ function textCanvas(word){const c=document.createElement('canvas');c.width=W*DPR;c.height=200*DPR;const x=c.getContext('2d');x.scale(DPR,DPR);x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.direction='rtl';
+   let fs=64;x.font=`700 ${fs}px Amiri`;while(x.measureText(word).width>W-40){fs-=2;x.font=`700 ${fs}px Amiri`}x.fillText(word,W/2,100);return c}
+ let tc=null,box=null;
+ function setup(){const w=WORDS[wi][0];tc=textCanvas(w);
+   // the word's pixels as points (V1) and its bounding box (V2)
+   const d=tc.getContext('2d').getImageData(0,0,tc.width,tc.height).data;pts=[];let x0=1e9,x1=-1;
+   for(let y=0;y<tc.height;y+=4)for(let x=0;x<tc.width;x+=4){if(d[(y*tc.width+x)*4+3]>140){pts.push({x:x/DPR,y:y/DPR+TY-100,on:0,t:Math.random()});x0=Math.min(x0,x/DPR);x1=Math.max(x1,x/DPR)}}
+   pts.sort(()=>Math.random()-.5);box={x0,x1};lit=0;
+   wrap.querySelector('.name').textContent=WORDS[wi][1];wrap.querySelector('.mean').textContent=WORDS[wi][2];
+   wrap.querySelectorAll('.steps i').forEach((e,i)=>e.className=i<wi?'done':i===wi?'on':'');}
+ function tap(x,y){if(swap>0)return;count++;wrap.querySelector('.count b').textContent=count;
+   const n=6;for(let i=0;i<n;i++){let tx,ty;
+     if(o.mode==='dust'){const k=Math.min(pts.length-1,Math.floor(count/TARGET*pts.length*(i+1)/n));const p=pts[Math.floor(Math.random()*Math.max(1,k))]||pts[0];tx=p.x;ty=p.y}
+     else if(o.mode==='rtl'){const f=count/TARGET;tx=box.x1-(box.x1-box.x0)*f+Math.random()*12-6;ty=TY+Math.random()*40-20}
+     else{tx=TX+Math.random()*120-60;ty=TY+Math.random()*30-15}
+     motes.push({x:x+Math.random()*20-10,y:y+Math.random()*20-10,sx:x,sy:y,tx,ty,t:0,d:.9+Math.random()*.5,s:1.5+Math.random()*2})}
+   if(navigator.vibrate)navigator.vibrate(8);
+   if(count>=TARGET){flash=1;setTimeout(()=>{swap=1},900)}}
+ function arrive(){if(o.mode==='dust'){const want=Math.floor(count/TARGET*pts.length);while(lit<want){pts[lit].on=1;lit++}}}
+ scr.addEventListener('pointerdown',e=>{const r=scr.getBoundingClientRect();tap((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)});
+ wrap.querySelectorAll('.ctl span').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='r'){wi=0;count=0;motes=[];flash=0;swap=0;wrap.querySelector('.count b').textContent=0;setup();return}
+   const k=a==='1'?1:TARGET-count;let i=0;const iv=setInterval(()=>{if(i++>=k||count>=TARGET){clearInterval(iv);return}tap(W/2+Math.random()*120-60,470+Math.random()*120)},a==='1'?0:110)});
+ function frame(){ctx.clearRect(0,0,W,H);
+   const f=Math.min(1,count/TARGET);
+   // the word
+   if(o.mode==='dust'){ctx.save();ctx.globalAlpha=.10;ctx.drawImage(tc,0,TY-100,W,200);ctx.restore();
+     for(let i=0;i<lit;i++){const p=pts[i];p.on=Math.min(1,p.on+.05);const tw=.75+.25*Math.sin(performance.now()/400+p.t*20);ctx.fillStyle=`rgba(255,${226+Math.round(20*p.t)},${170+Math.round(40*p.t)},${p.on*tw})`;ctx.fillRect(p.x-1,p.y-1,2.2,2.2)}}
+   else if(o.mode==='rtl'){ctx.save();ctx.globalAlpha=.12;ctx.drawImage(tc,0,TY-100,W,200);ctx.restore();
+     const shown=Math.min(1,f);const cut=box.x1-(box.x1-box.x0)*shown-4;ctx.save();ctx.beginPath();ctx.rect(cut,TY-100,W-cut,200);ctx.clip();
+     ctx.shadowColor='rgba(232,190,116,.8)';ctx.shadowBlur=14;ctx.globalCompositeOperation='source-over';
+     const g=document.createElement('canvas');g.width=tc.width;g.height=tc.height;const gx=g.getContext('2d');gx.drawImage(tc,0,0);gx.globalCompositeOperation='source-in';const lg=gx.createLinearGradient(0,0,0,g.height);lg.addColorStop(0,'#FFF1C9');lg.addColorStop(1,'#E2A64E');gx.fillStyle=lg;gx.fillRect(0,0,g.width,g.height);
+     ctx.drawImage(g,0,TY-100,W,200);ctx.restore();
+     if(shown<1){ctx.fillStyle='rgba(255,240,200,.9)';ctx.beginPath();ctx.arc(cut,TY,3,0,7);ctx.fill()}}
+   else{glowT+=(f-glowT)*.08;const g=document.createElement('canvas');g.width=tc.width;g.height=tc.height;const gx=g.getContext('2d');gx.drawImage(tc,0,0);gx.globalCompositeOperation='source-in';gx.fillStyle='#F2D79B';gx.fillRect(0,0,g.width,g.height);
+     ctx.save();ctx.globalAlpha=.12+.88*glowT;ctx.shadowColor='rgba(232,190,116,.9)';ctx.shadowBlur=6+26*glowT;ctx.drawImage(g,0,TY-100,W,200);ctx.restore()}
+   // completion flash
+   if(flash>0){ctx.save();const rg=ctx.createRadialGradient(TX,TY,10,TX,TY,220);rg.addColorStop(0,`rgba(255,233,176,${.45*flash})`);rg.addColorStop(1,'rgba(255,233,176,0)');ctx.fillStyle=rg;ctx.fillRect(0,0,W,H);ctx.restore();flash=Math.max(0,flash-.012)}
+   // motes: from the touch up to their place, with a slight curve, a short tail
+   motes=motes.filter(m=>{m.t+=1/60/m.d;const t=Math.min(1,m.t),e=t*t*(3-2*t);const cx=(m.sx+m.tx)/2+(m.sx<m.tx?-60:60);const cy=Math.min(m.sy,m.ty)+40;
+     const x=(1-e)*(1-e)*m.sx+2*(1-e)*e*cx+e*e*m.tx,y=(1-e)*(1-e)*m.sy+2*(1-e)*e*cy+e*e*m.ty;
+     ctx.fillStyle=`rgba(255,236,190,${.9*(1-t*.3)})`;ctx.shadowColor='rgba(232,190,116,.9)';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(x,y,m.s*(1-.4*t),0,7);ctx.fill();ctx.shadowBlur=0;
+     if(t>=1){arrive();return false}return true});
+   // next word: the finished one fades up, the next appears faint
+   if(swap>0){swap+=.03;if(swap>=1.6){swap=0;if(wi<2){wi++;count=0;wrap.querySelector('.count b').textContent=0;setup()}else{wrap.querySelector('.name').textContent='Tesbihat tamam';wrap.querySelector('.mean').textContent='Allah kabul etsin.'}}}
+   requestAnimationFrame(frame)}
+ document.fonts.ready.then(()=>{setup();frame()});
+}
+OPTS.forEach(makePhone);
+</script>
+</body>
+</html>

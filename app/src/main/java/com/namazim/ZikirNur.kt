@@ -1,5 +1,13 @@
 package com.namazim
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -302,6 +310,65 @@ fun NurBursts(bursts: SnapshotStateList<Burst>, modifier: Modifier) {
                 drawCircle(Color(0xFFFFE7B0).copy(alpha = .35f * (1 - m)), 6.dp.toPx(), p)
                 drawCircle(Color(0xFFFFF4DC).copy(alpha = 1 - m), 2.5.dp.toPx(), p)
             }
+        }
+    }
+}
+
+/** A mote of light flying from [from] to [to] (page coordinates), leaving at [t0] for [ms]. */
+class Mote(val from: Offset, val to: Offset, val t0: Long, val ms: Int)
+
+/** Tesbihat: the zikir's Arabic, big and faint, writing itself in gold from right to left as [f] goes 0 → 1.
+ *  [onKalem] gets the pen tip (root coordinates) so the motes know where to fly. [flash] = the glow at a full word. */
+@Composable
+fun NurYazi(ar: String, f: Float, flash: Float, onKalem: (Offset) -> Unit) {
+    // the gold follows the motes: it moves once they are mostly there
+    val shown by androidx.compose.animation.core.animateFloatAsState(f.coerceIn(0f, 1f), tween(700, delayMillis = 350), label = "yazi")
+    val style = androidx.compose.ui.text.TextStyle(fontSize = 54.sp, lineHeight = 70.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    var w by remember { mutableStateOf(0f) }
+    var pos by remember { mutableStateOf(Offset.Zero) }
+    var h by remember { mutableStateOf(0f) }
+    LaunchedEffect(f, w, pos) { if (w > 0f) onKalem(Offset(pos.x + w * (1 - f.coerceIn(0f, 1f)), pos.y + h / 2)) }
+    Box(
+        Modifier.padding(horizontal = Space.l).onGloballyPositioned { w = it.size.width.toFloat(); h = it.size.height.toFloat(); pos = it.positionInRoot() }
+            .drawBehind {
+                if (flash > 0f) drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE9B0).copy(alpha = .45f * flash), Color.Transparent)),
+                    radius = size.maxDimension * .75f, center = center)
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(ar, style = style.copy(color = Pal.Text.copy(alpha = .13f)))
+        Text(ar, Modifier.drawWithContent {
+            // only the left edge cuts: the glow above, below and to the right must not be clipped into a box
+            clipRect(left = size.width * (1 - shown), top = -size.height, right = size.width * 2, bottom = size.height * 2) { this@drawWithContent.drawContent() }
+            // the pen tip, a small light where the writing is
+            if (shown in .001f..0.999f) drawCircle(Color(0xFFFFF0C8).copy(alpha = .9f), 3.dp.toPx(), Offset(size.width * (1 - shown), size.height / 2))
+        }, style = style.copy(
+            brush = Brush.verticalGradient(listOf(Color(0xFFFFF1C9), Color(0xFFE2A64E))),
+            shadow = androidx.compose.ui.graphics.Shadow(Pal.Gold.copy(alpha = .75f), blurRadius = 22f),
+        ))
+    }
+}
+
+/** The motes in flight: a curve from the touch up to the pen tip; the frame loop runs only while one is flying. */
+@Composable
+fun NurMotes(motes: SnapshotStateList<Mote>, modifier: Modifier) {
+    var now by remember { mutableLongStateOf(frameClock()) }
+    LaunchedEffect(motes.isNotEmpty()) {
+        while (motes.isNotEmpty()) {
+            withFrameMillis { now = frameClock() }
+            motes.removeAll { now - it.t0 > it.ms }
+        }
+    }
+    Canvas(modifier) {
+        motes.forEach { m ->
+            val t = ((now - m.t0).toFloat() / m.ms).coerceIn(0f, 1f)
+            if (now < m.t0) return@forEach
+            val e = t * t * (3 - 2 * t)
+            // a quadratic curve that swings out sideways on the way up
+            val c = Offset((m.from.x + m.to.x) / 2 + (if (m.from.x < m.to.x) -60.dp.toPx() else 60.dp.toPx()), minOf(m.from.y, m.to.y) + 40.dp.toPx())
+            val p = m.from * ((1 - e) * (1 - e)) + c * (2 * (1 - e) * e) + m.to * (e * e)
+            drawCircle(Color(0xFFFFE7B0).copy(alpha = .35f * (1 - .5f * t)), 6.dp.toPx(), p)
+            drawCircle(Color(0xFFFFF4DC).copy(alpha = 1 - .3f * t), (2.6f - 1.2f * t).dp.toPx(), p)
         }
     }
 }

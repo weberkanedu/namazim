@@ -1,6 +1,10 @@
 package com.namazim
 
 import android.os.VibrationEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.foundation.gestures.detectTapGestures
 import android.os.VibratorManager
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -229,6 +233,13 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
         vibrator?.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
         scope.launch { glow.snapTo(1f); glow.animateTo(0f, tween(900)) }
     }
+    // design V2 "Sağdan sola yazılış" (design/design-system/tesbihat-nur-secenekler.html, 2026-11-11)
+    val motes = remember { mutableStateListOf<Mote>() }
+    var root by remember { mutableStateOf(Offset.Zero) }
+    var kalem by remember { mutableStateOf<Offset?>(null) }   // the pen tip of the word, in this page's coordinates
+    var yazilan by remember(key) { mutableIntStateOf(shown) }   // the word on screen lingers a moment once it is full
+    LaunchedEffect(shown) { if (shown != yazilan) { delay(1100); yazilan = shown } }
+    Box(Modifier.fillMaxSize().onGloballyPositioned { root = it.positionInRoot() }) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = Space.xl, end = Space.s, top = Space.l), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -252,11 +263,14 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
                 }
             }
         }
-        Box(
-            Modifier.weight(1f).fillMaxWidth()
-                .semantics { contentDescription = "$vakit tesbihatı, ${DEFAULT_ZIKIRS[shown].name} ${counts[shown]}. Saymak için dokun." }
-                .clickable(remember { MutableInteractionSource() }, indication = null, enabled = step >= 0) {
-                    val n = counts.toMutableList().also { it[step]++ }
+        var alan by remember { mutableStateOf(Offset.Zero) }
+        fun say(at: Offset?) {
+            if (step < 0) return
+            // six motes from the touch to where the pen is now; the gold follows as they land
+            val from = at?.let { it + alan - root }
+            val to = kalem
+            if (from != null && to != null) repeat(6) { motes += Mote(from, to, frameClock() + it * 25L, 650 + (0..350).random()) }
+            val n = counts.toMutableList().also { it[step]++ }
                     counts = n
                     store.setTesbihProgress(key, n)
                     StoreRev.n++   // the progress counts toward today's zikir on read
@@ -267,24 +281,31 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
                             scope.launch { delay(1400); onDone() }
                         }
                     } else vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
-                },
+        }
+        Box(
+            Modifier.weight(1f).fillMaxWidth()
+                .onGloballyPositioned { alan = it.positionInRoot() }
+                .semantics { contentDescription = "$vakit tesbihatı, ${DEFAULT_ZIKIRS[shown].name} ${counts[shown]}. Saymak için dokun." }
+                .clickable(remember { MutableInteractionSource() }, indication = null, enabled = step >= 0) { say(null) }
+                .pointerInput(step) { detectTapGestures { if (step >= 0) say(it) } },
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (step < 0) Text("Tesbihat tamam", style = NumStyle, fontSize = Type.h2, color = Pal.Gold) else NurHead(DEFAULT_ZIKIRS[shown].name)
+                val z = DEFAULT_ZIKIRS[yazilan]
+                val ar = zikirArabic(z.name)
+                NurYazi(ar?.first ?: z.name, counts[yazilan].toFloat() / z.target, glow.value) { kalem = it - root }
+                Text(z.name, Modifier.padding(top = Space.s), style = NumStyle, fontSize = Type.h2, color = Pal.Text)
+                if (ar != null) Text(cumle(ar.second), color = Pal.Muted, fontSize = Type.label)
+                Spacer(Modifier.height(Space.xl))
+                Text(if (step < 0) "99" else "${counts[shown]}", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
+                Text(if (step < 0) "Allah kabul etsin" else "/ ${DEFAULT_ZIKIRS[shown].target}", color = Pal.Muted, fontSize = Type.body)
                 Spacer(Modifier.height(Space.l))
-                Box(contentAlignment = Alignment.Center) {
-                    NurRing(counts[shown], DEFAULT_ZIKIRS[shown].target, glow.value, Modifier.size(260.dp).turHedef("halka"))
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(if (step < 0) "99" else "${counts[shown]}", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
-                        Text(if (step < 0) "Allah kabul etsin" else "/ ${DEFAULT_ZIKIRS[shown].target}", color = Pal.Muted, fontSize = Type.body)
-                    }
-                }
-                Spacer(Modifier.height(Space.s))
                 Text(if (step < 0) "ana sayfaya dönülüyor" else "her yere dokun", color = Pal.Muted.copy(alpha = .6f), fontSize = Type.label)
             }
         }
         Spacer(Modifier.height(LocalDockPad.current))
+    }
+    NurMotes(motes, Modifier.fillMaxSize())
     }
 }
 
