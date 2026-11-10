@@ -1,5 +1,10 @@
 package com.namazim
 
+import kotlin.math.roundToInt
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.clipPath
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -1471,7 +1476,7 @@ private fun MuhasebeGidisat() {
 
 
         // ---- Namazları ne zaman kılıyoruz: yalnızca "Tümü"de (kısa dönemde ortalama yanıltır).
-        // Design N2 "Kadranlar" (design/design-system/ne-zaman-secenekler.html, 2026-11-11): a half dial per vakit.
+        // Design K1 "Dilimli kadran" (design/design-system/ne-zaman-karma.html, N1 × N2, 2026-11-11): a half dial of seven slices per vakit.
         if (period == 3) {
             val today = slots(store.lat, store.lng, store.prayerDay())
             // the arcs are today's slices, a picture; the percentages below come from each prayer's own day
@@ -1482,7 +1487,7 @@ private fun MuhasebeGidisat() {
                 Text("NAMAZLARINI NE ZAMAN KILIYORSUN", color = Pal.Muted, fontSize = Type.micro, letterSpacing = .8.sp)
                 if (kilinan > 0) Text(altin("Faziletli vakitte kıldığın namazlar: **%${data.vVakt.sum() * 100 / kilinan}**"),
                     Modifier.padding(top = Space.xs), color = Pal.Text, fontSize = Type.body, lineHeight = 22.sp)
-                Text("Her vakit bir kadran: soldan sağa vakit girer, çıkar. Altın yay faziletli dilim, ibre çoğunlukla kıldığın an.",
+                Text("Her vakit yedi dilimli bir kadran: soldan sağa vakit girer, çıkar. Dilim ne kadar parlaksa orada o kadar çok kıldın, üstünde payı. Dıştaki altın çizgi faziletli dilim, ibre çoğunlukla kıldığın an.",
                     Modifier.padding(top = 2.dp), color = Pal.Muted, fontSize = Type.label, lineHeight = 16.sp)
                 Vakit.entries.chunked(2).forEach { pair ->
                     Row(Modifier.padding(top = Space.s), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
@@ -1493,9 +1498,10 @@ private fun MuhasebeGidisat() {
                     }
                 }
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.m), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(14.dp, 5.dp).clip(CircleShape).background(Pal.Gold)); Text("faziletli", color = Pal.Muted, fontSize = Type.micro)
+                    Box(Modifier.size(14.dp, 3.dp).clip(CircleShape).background(Pal.Gold)); Text("faziletli", color = Pal.Muted, fontSize = Type.micro)
+                    Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(Pal.Gold)); Text("çok kıldığın", color = Pal.Muted, fontSize = Type.micro)
                     Box(Modifier.size(14.dp, 5.dp).clip(CircleShape).background(Pal.Warn.copy(alpha = .6f))); Text("kerahat", color = Pal.Muted, fontSize = Type.micro)
-                    Box(Modifier.size(10.dp, 2.dp).background(Color(0xFFFFF4DC))); Text("ibre: çoğunlukla kıldığın an", color = Pal.Muted, fontSize = Type.micro)
+                    Box(Modifier.size(10.dp, 2.dp).background(Color(0xFFFFF4DC))); Text("ibre", color = Pal.Muted, fontSize = Type.micro)
                 }
                 Text("Faziletli dilimler seçtiğin mezhebe göre (Ayarlar › Sen). Bu bir ölçü değil, kendi düzenini görmen için; niyet ve istikrar öndedir.",
                     Modifier.padding(top = Space.s), color = Pal.Muted, fontSize = Type.micro, lineHeight = 15.sp)
@@ -2087,30 +2093,72 @@ private fun TumuGorunum(d: Donem, first: LocalDate, tr: java.util.Locale) {
     }
 }
 
-/** One vakit as a half dial (left = the vakit enters, right = it ends): gold over the faziletli slices, peach over kerahat,
- *  a dot per prayer where it fell, the needle at the median. [fracs] = each prayer's place in its vakit, 0..1. */
+
+/** One vakit as a half dial (left = the vakit enters, right = it ends), design K1 of design/design-system/ne-zaman-karma.html
+ *  (2026-11-11): the arc is the seven slices, each as bright as how often you prayed in it with its share written on it,
+ *  a thin gold line outside the faziletli slices, kerahat hatched peach, the needle at the median. [fracs] = each prayer's place in its vakit, 0..1. */
 @Composable
 private fun Kadran(ad: String, fracs: List<Float>, dl: List<Dilim>, slot: Slot, fz: Int, modifier: Modifier) {
     val med = fracs.sorted().let { if (it.isEmpty()) null else it[it.size / 2] }
+    val bins = IntArray(7).also { b -> fracs.forEach { b[(it * 7).toInt().coerceIn(0, 6)]++ } }
+    val mx = bins.max()
+    val density = LocalDensity.current
+    val paint = remember { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        textAlign = android.graphics.Paint.Align.CENTER; typeface = android.graphics.Typeface.DEFAULT_BOLD } }
     Column(modifier.clip(RoundedCornerShape(Radius.m)).background(Color(0xFF0E1830)).padding(top = Space.s, bottom = Space.s),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        Canvas(Modifier.fillMaxWidth().height(78.dp)) {
-            val stroke = 11.dp.toPx()
-            val r = minOf(size.width / 2 - stroke - 6.dp.toPx(), size.height - stroke - 6.dp.toPx())
-            val c = Offset(size.width / 2, size.height - 6.dp.toPx())
-            val box = Size(2 * r, 2 * r); val tl = Offset(c.x - r, c.y - r)
-            fun pt(t: Float, rr: Float): Offset {
-                val a = Math.toRadians(180.0 + 180.0 * t)
-                return Offset(c.x + rr * kotlin.math.cos(a).toFloat(), c.y + rr * kotlin.math.sin(a).toFloat())
+        Canvas(Modifier.fillMaxWidth().height(86.dp)) {
+            val band = 19.dp.toPx()
+            val r2 = minOf(size.width / 2 - 9.dp.toPx(), size.height - 9.dp.toPx())
+            val r1 = r2 - band
+            val c = Offset(size.width / 2, size.height - 4.dp.toPx())
+            val gap = 1.2f / 180f  // a hair (1.2°) between slices, in fractions of the dial
+            fun ang(t: Float) = Math.PI * (1 + t)  // t 0..1 → 180°..360°, screen y down
+            fun pt(t: Float, rr: Float) = Offset(c.x + rr * kotlin.math.cos(ang(t)).toFloat(), c.y + rr * kotlin.math.sin(ang(t)).toFloat())
+            fun seg(t0: Float, t1: Float, ra: Float, rb: Float) = Path().apply {
+                arcTo(androidx.compose.ui.geometry.Rect(c, rb), 180f + 180f * t0, 180f * (t1 - t0), true)
+                arcTo(androidx.compose.ui.geometry.Rect(c, ra), 180f + 180f * t1, -180f * (t1 - t0), false)
+                close()
             }
-            drawArc(Pal.Track, 180f, 180f, false, tl, box, style = Stroke(stroke, cap = StrokeCap.Round))
             for (j in 0 until 7) {
-                val col = when (dl[j]) { Dilim.FAZILET -> Pal.Gold; Dilim.KERAHAT -> Pal.Warn.copy(alpha = .55f); else -> null } ?: continue
-                drawArc(col, 180f + j * 180f / 7, 180f / 7 + .5f, false, tl, box, style = Stroke(stroke, cap = StrokeCap.Butt))
+                val t0 = j / 7f + gap / 2; val t1 = (j + 1) / 7f - gap / 2
+                val path = seg(t0, t1, r1, r2)
+                drawPath(path, Pal.Track)
+                if (dl[j] == Dilim.KERAHAT) clipPath(path) {
+                    val step = 4.dp.toPx(); var x = c.x - r2 - size.height
+                    while (x < c.x + r2) { drawLine(Pal.Warn.copy(alpha = .45f), Offset(x, c.y), Offset(x + size.height, c.y - size.height), 1.5.dp.toPx()); x += step }
+                }
+                val f = if (mx == 0) 0f else bins[j] / mx.toFloat()
+                if (bins[j] > 0) drawPath(path, Pal.Gold.copy(alpha = .15f + .85f * f))
+                if (dl[j] == Dilim.FAZILET) drawPath(seg(t0, t1, r2 + 2.5.dp.toPx(), r2 + 5.dp.toPx()), Pal.Gold)
+                // the share, written only at a size where it stays wholly inside its slice (never spills over)
+                if (bins[j] > 0) {
+                    val pct = (bins[j] * 100f / fracs.size).roundToInt()
+                    val m = pt((j + .5f) / 7, (r1 + r2) / 2)
+                    val pad = 1.5.dp.toPx()
+                    fun fits(w: Float, h: Float) = listOf(-1f to -1f, 1f to -1f, -1f to 1f, 1f to 1f).all { (sx, sy) ->
+                        val x = m.x + sx * w / 2 - c.x; val y = m.y + sy * h / 2 - c.y
+                        val d = kotlin.math.sqrt(x * x + y * y)
+                        val t = ((Math.atan2(y.toDouble(), x.toDouble()) + 2 * Math.PI) % (2 * Math.PI) / Math.PI - 1).toFloat()
+                        d >= r1 + pad && d <= r2 - pad && t >= t0 + pad / d / Math.PI.toFloat() && t <= t1 - pad / d / Math.PI.toFloat()
+                    }
+                    val label = listOf("%$pct", "$pct").firstNotNullOfOrNull { txt ->
+                        listOf(10f, 9f, 8f, 7f).firstNotNullOfOrNull { sp ->
+                            paint.textSize = with(density) { sp.sp.toPx() }
+                            val fm = paint.fontMetrics
+                            val h = fm.descent - fm.ascent - 2 * 1.dp.toPx()
+                            if (fits(paint.measureText(txt), h)) txt to sp else null
+                        }
+                    }
+                    if (label != null) {
+                        paint.textSize = with(density) { label.second.sp.toPx() }
+                        paint.color = (if (f > .55f) Pal.Ground else Pal.Text).toArgb()
+                        val fm = paint.fontMetrics
+                        drawContext.canvas.nativeCanvas.drawText(label.first, m.x, m.y - (fm.ascent + fm.descent) / 2, paint)
+                    }
+                }
             }
-            // each prayer a soft dot inside the arc, spread a little so a crowded slice reads as a cluster
-            fracs.forEachIndexed { q, f -> drawCircle(Color(0xFFFFF4DC).copy(alpha = .7f), 1.9.dp.toPx(), pt(f, r - stroke - 3.dp.toPx() - (q % 3) * 4.5.dp.toPx())) }
-            if (med != null) drawLine(Color(0xFFFFF4DC), c, pt(med, r + 2.dp.toPx()), 2.5.dp.toPx(), cap = StrokeCap.Round)
+            if (med != null) drawLine(Color(0xFFFFF4DC), c, pt(med, r1 - 3.dp.toPx()), 2.5.dp.toPx(), cap = StrokeCap.Round)
             drawCircle(Pal.Gold, 4.5.dp.toPx(), c)
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = Space.s)) {
@@ -2119,5 +2167,6 @@ private fun Kadran(ad: String, fracs: List<Float>, dl: List<Dilim>, slot: Slot, 
         }
         Text(ad, color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
         Text(altin(if (fz < 0) "henüz kayıt yok" else "**%$fz** faziletli"), color = Pal.Muted, fontSize = Type.label)
+        if (mx > 0) Text("çoğunlukla ${DILIM_ADI[bins.indexOf(mx)]}", color = Pal.Muted, fontSize = Type.micro, textAlign = TextAlign.Center)
     }
 }

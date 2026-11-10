@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ne Zaman · Karma</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3;--card:#121D33;--ground:#0B1322}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1240px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1050px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:24px;flex-wrap:wrap;margin-top:22px}
+.opt{width:370px}
+.opt h3{font:600 25px Cormorant,serif;margin:0;color:var(--gold)}
+.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:96px}.opt .d b{color:#F3EEE3}
+.phone{width:370px;height:780px;border-radius:42px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:34px;background:var(--ground);overflow-y:auto;scrollbar-width:none;padding:24px 16px 30px}
+.card{background:var(--card);border-radius:22px;padding:14px}
+.cap{font:600 9.5px Inter;letter-spacing:.15em;color:var(--muted)}
+.say{font-size:15px;margin:8px 0 2px}.say b{color:var(--gold)}
+.small{font-size:11.5px;color:var(--muted);line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.dial{background:#0E1830;border-radius:16px;padding:8px 6px 8px;text-align:center}
+.dial.wide{grid-column:span 2}
+.dial b{display:block;font-size:13px}.dial span{font-size:10.5px;color:var(--muted)}.dial em{font-style:normal;color:var(--gold);font-weight:600}
+.rowv{display:flex;align-items:center;gap:10px;background:#0E1830;border-radius:16px;padding:8px 10px;margin-top:8px}
+.rowv .n{width:58px}.rowv .n b{display:block;font-size:13px}.rowv .n span{font-size:10.5px;color:var(--muted)}.rowv .n em{font-style:normal;color:var(--gold);font-weight:600}
+.key{display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);margin-top:12px}.key span{display:flex;align-items:center;gap:5px}
+svg text{font-family:Inter}
+.tg{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.tg button{background:#121D33;color:#A9B2C3;border:1px solid #2A3755;border-radius:999px;padding:8px 14px;font:600 12px Inter;cursor:pointer}.tg button.on{background:#E8BE74;color:#0B1322;border-color:#E8BE74}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">"Namazlarını ne zaman kılıyorsun" · N1 × N2</div>
+  <h1>Isı şeridi ile kadranın karışımı</h1>
+  <p class="lede">N2'nin kadranı ve ibresi, N1'in <b>yedi dilimi, dilim dilim doluluğu ve içindeki sayılar</b>. Bugün uygulamada N2 var; bunlar yerine geçebilecek iki karışım. Veriler örnek.</p>
+  <div class="tg"><button data-k="1" data-m="sayi" onclick="set(1,'sayi')">3 hafta · sayı</button><button data-k="8" data-m="sayi" onclick="set(8,'sayi')">6 ay · ~150</button><button data-k="50" data-m="sayi" onclick="set(50,'sayi')">3 yıl · ~1000</button><button data-k="50" data-m="yuzde" onclick="set(50,'yuzde')">3 yıl · yüzde</button></div>
+  <div class="row" id="row"></div>
+</div>
+<script>
+const VAK=['Sabah','Öğle','İkindi','Akşam','Yatsı'];
+const FZ=[[0,0,0,1,1,1,0],[1,1,0,0,0,0,0],[0,1,1,1,1,0,0],[1,1,0,0,0,0,0],[1,1,1,0,0,0,0]];
+const KER=[[0,0,0,0,0,0,1],[0,0,0,0,0,0,0],[0,0,0,0,0,1,1],[0,0,0,0,0,0,0],[0,0,0,0,1,1,1]];
+const BASE=[[1,2,5,8,4,2,1],[9,6,2,1,1,0,0],[0,3,6,5,2,1,0],[17,3,1,0,0,0,0],[6,7,3,1,1,0,0]];
+let K=1,MODE='sayi';let BINS=BASE;
+const lbl=(i,j)=>MODE==='yuzde'?Math.round(BINS[i][j]/tot(BINS[i])*100)+'%':BINS[i][j];
+const START=['05:57','12:37','15:19','17:41','19:07'],END=['07:15','15:19','17:41','19:07','05:57'];
+const tot=b=>b.reduce((a,c)=>a+c,0);
+const fz=i=>Math.round(BINS[i].reduce((a,c,j)=>a+(FZ[i][j]?c:0),0)/tot(BINS[i])*100);
+const all=Math.round(BINS.reduce((a,b,i)=>a+b.reduce((x,c,j)=>x+(FZ[i][j]?c:0),0),0)/BINS.reduce((a,b)=>a+tot(b),0)*100);
+const med=i=>{const b=BINS[i],t=tot(b);let a=0;for(let j=0;j<7;j++){a+=b[j];if(a>=t/2){const into=(t/2-(a-b[j]))/Math.max(b[j],1);return (j+into)/7}}return .5};
+const DIL=['vaktin hemen başı','vaktin başı','ortasından önce','vaktin ortası','ortasından sonra','sonlara doğru','vaktin sonu'];
+const enCok=i=>BINS[i].indexOf(Math.max(...BINS[i]));
+const hatch=`<defs><pattern id="h" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="5" fill="#F4B08F"/></pattern></defs>`;
+// ---------- K1: the dial made of the seven slices; each slice glows by how often you prayed there, its count on it
+function k1dial(i,W=150,H=94){const cx=W/2,cy=H-12,R=58,w=17;const ang=t=>Math.PI*(1-t);const pt=(t,r)=>[cx+r*Math.cos(ang(t)),cy-r*Math.sin(ang(t))];
+ const seg=(a,b,r1,r2)=>{const p1=pt(a,r2),p2=pt(b,r2),p3=pt(b,r1),p4=pt(a,r1);return `M${p1} A${r2},${r2} 0 0 1 ${p2} L${p3} A${r1},${r1} 0 0 0 ${p4}Z`};
+ const b=BINS[i],mx=Math.max(...b);let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${hatch}`;
+ for(let j=0;j<7;j++){const a=j/7+.004,bb=(j+1)/7-.004,f=b[j]/mx;
+  s+=`<path d="${seg(a,bb,R-w,R)}" fill="#1C2943"/>`;if(KER[i][j])s+=`<path d="${seg(a,bb,R-w,R)}" fill="url(#h)" opacity=".5"/>`;
+  if(b[j])s+=`<path d="${seg(a,bb,R-w,R)}" fill="#E8BE74" opacity="${.15+.85*f}"/>`;
+  if(FZ[i][j])s+=`<path d="${seg(a,bb,R+3,R+6)}" fill="#E8BE74"/>`;
+  if(b[j]){const m=pt((j+.5)/7,R-w/2);s+=`<text x="${m[0]}" y="${m[1]+3.5}" font-size="9.5" font-weight="700" fill="${f>.55?'#0B1322':'#F3EEE3'}" text-anchor="middle">${lbl(i,j)}</text>`}}
+ const m=med(i),tip=pt(m,R-w-3);s+=`<line x1="${cx}" y1="${cy}" x2="${tip[0]}" y2="${tip[1]}" stroke="#FFF4D6" stroke-width="2.5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="5" fill="#E8BE74"/>`;
+ s+=`<text x="${cx-R+w/2}" y="${H-1}" font-size="8.5" fill="#5A6582" text-anchor="middle">${START[i]}</text><text x="${cx+R-w/2}" y="${H-1}" font-size="8.5" fill="#5A6582" text-anchor="middle">${END[i]}</text></svg>`;return s}
+function k1(){return `<div class="card"><div class="cap">NAMAZLARINI NE ZAMAN KILIYORSUN</div><div class="say">Faziletli vakitte kıldığın namazlar: <b>%${all}</b></div><div class="small">Kadran yedi dilim: ne kadar parlaksa o dilimde o kadar çok kıldın, içinde sayısı. Dıştaki altın çizgi faziletli dilim, ibre ortalaman.</div><div class="grid">${VAK.map((n,i)=>`<div class="dial ${i===4?'wide':''}">${k1dial(i)}<b>${n}</b><span><em>%${fz(i)}</em> faziletli · çoğunlukla ${DIL[enCok(i)]}</span></div>`).join('')}</div>
+ <div class="key"><span><i style="width:14px;height:4px;border-radius:2px;background:#E8BE74"></i>faziletli dilim</span><span><i style="width:12px;height:12px;border-radius:3px;background:#E8BE74"></i>çok kıldığın</span><span><i style="width:12px;height:12px;border-radius:3px;background:repeating-linear-gradient(45deg,#F4B08F66 0 2px,transparent 2px 4px)"></i>kerahat</span><span><i style="width:10px;height:2px;background:#FFF4D6"></i>ibre: ortalaman</span></div></div>`}
+// ---------- K2: per vakit a row: a small dial (needle) on the left, the heat strip on the right
+function mini(i){const W=58,H=36,cx=W/2,cy=H-4,R=24;const ang=t=>Math.PI*(1-t);const pt=(t,r)=>[cx+r*Math.cos(ang(t)),cy-r*Math.sin(ang(t))];
+ const arc=(a,b,r)=>{const p0=pt(a,r),p1=pt(b,r);return `M${p0} A${r},${r} 0 0 1 ${p1}`};
+ const f0=FZ[i].indexOf(1),f1=FZ[i].lastIndexOf(1)+1;const m=med(i),tip=pt(m,R+1);
+ return `<svg width="${W}" height="${H}"><path d="${arc(0,1,R)}" fill="none" stroke="#1C2943" stroke-width="6" stroke-linecap="round"/><path d="${arc(f0/7,f1/7,R)}" fill="none" stroke="#E8BE74" stroke-width="6"/><line x1="${cx}" y1="${cy}" x2="${tip[0]}" y2="${tip[1]}" stroke="#FFF4D6" stroke-width="2" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="3" fill="#E8BE74"/></svg>`}
+function strip(i){const b=BINS[i],mx=Math.max(...b);let s=`<svg width="100%" viewBox="0 0 214 40">${hatch}`;
+ for(let j=0;j<7;j++){const x=j*30.5,f=b[j]/mx;s+=`<rect x="${x}" y="6" width="28" height="20" rx="6" fill="#1C2943"/>`;if(KER[i][j])s+=`<rect x="${x}" y="6" width="28" height="20" rx="6" fill="url(#h)" opacity=".5"/>`;
+  if(b[j])s+=`<rect x="${x}" y="6" width="28" height="20" rx="6" fill="#E8BE74" opacity="${.15+.85*f}"/>`;if(FZ[i][j])s+=`<rect x="${x+.75}" y="6.75" width="26.5" height="18.5" rx="5.5" fill="none" stroke="#E8BE74" stroke-width="1.5"/>`;
+  if(b[j])s+=`<text x="${x+14}" y="19.5" font-size="9.5" font-weight="700" fill="${f>.55?'#0B1322':'#F3EEE3'}" text-anchor="middle">${lbl(i,j)}</text>`}
+ s+=`<circle cx="${med(i)*214}" cy="33" r="3" fill="#FFF4D6"/><text x="0" y="40" font-size="7.5" fill="#5A6582">${START[i]}</text><text x="214" y="40" font-size="7.5" fill="#5A6582" text-anchor="end">${END[i]}</text></svg>`;return s}
+function k2(){return `<div class="card"><div class="cap">NAMAZLARINI NE ZAMAN KILIYORSUN</div><div class="say">Faziletli vakitte kıldığın namazlar: <b>%${all}</b></div><div class="small">Solda kadran: ibre ortalaman. Sağda yedi dilim: içindeki sayı o dilimde kaç kez kıldığın, altın çerçeve faziletli dilim.</div>
+ ${VAK.map((n,i)=>`<div class="rowv"><div class="n"><b>${n}</b><span><em>%${fz(i)}</em></span></div>${mini(i)}<div style="flex:1">${strip(i)}</div></div>`).join('')}
+ <div class="key"><span><i style="width:12px;height:12px;border-radius:3px;border:1.5px solid #E8BE74"></i>faziletli dilim</span><span><i style="width:12px;height:12px;border-radius:3px;background:#E8BE74"></i>çok kıldığın</span><span><i style="width:12px;height:12px;border-radius:3px;background:repeating-linear-gradient(45deg,#F4B08F66 0 2px,transparent 2px 4px)"></i>kerahat</span></div></div>`}
+const O=[{n:'K1 · Dilimli kadran',d:'N2\'nin kadranı, ama yay <b>yedi dilime</b> bölünmüş (N1 gibi): her dilim, o dilimde kaç kez kıldıysan o kadar parlak, <b>içinde sayısı</b> yazar. Faziletli dilimler dışta ince altın bir çizgiyle işaretli, kerahat taralı turuncu. İbre ortalaman. Her vakit kendi kutusunda.',h:k1()},
+ {n:'K2 · Kadran + şerit satırı',d:'Her vakit <b>tek satır</b>: solda küçük kadran (altın faziletli yay + ibre), sağda N1\'in yedi dilimli <b>ısı şeridi</b> ve sayıları. Daha az yer kaplar, beş vakit alt alta karşılaştırılır.',h:k2()}];
+function ciz(){O[0].h=k1();O[1].h=k2();
+document.getElementById('row').innerHTML=O.map(o=>`<div class="opt"><h3>${o.n}</h3><div class="d">${o.d}</div><div class="phone"><div class="scr">${o.h}</div></div></div>`).join('')}
+function set(k,m){K=k;MODE=m;BINS=BASE.map(b=>b.map(c=>c*k));document.querySelectorAll('.tg button').forEach(x=>x.classList.toggle('on',x.dataset.k==k&&x.dataset.m==m));ciz()}
+set(1,'sayi');
+</script>
+</body>
+</html>
