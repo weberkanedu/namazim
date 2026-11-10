@@ -131,19 +131,54 @@ class Store(context: Context) {
      *  (owner, 2026-11-11: an undo and a re-mark made a prayer prayed on time look late), else now. */
     fun markPrayed(key: String, at: Long? = null) {
         StoreRev.n++
-        val e = p.edit().putStringSet("prayed", prayed() + key).putLong("prayedAt_$key", at ?: prayedAt(key) ?: System.currentTimeMillis())
+        val was = isPrayed(key)
+        val s = if (was) null else slotOf(key)
+        val now = System.currentTimeMillis()
+        val ended = s != null && s.end <= now
+        val first = prayedAt(key)
+        // marked after its vakit ended and no time given: kept just inside the vakit and flagged "saat bilinmiyor" (never on time)
+        val t = at ?: first ?: if (ended) s!!.end - 60_000L else now
+        val writtenOff = s != null && kazaSayildi(s)
+        val e = p.edit().putStringSet("prayed", prayed() + key).putLong("prayedAt_$key", t)
+        if (at != null) e.remove("saatsiz_$key") else if (first == null && ended) e.putBoolean("saatsiz_$key", true)
         // the tesbihat the undo put aside comes back with it
         p.getString("tesbihatEski_$key", null)?.let { e.putString("tesbihat_$key", it).remove("tesbihatEski_$key") }
         e.apply()
+        // a prayer already written off as kaza and marked afterwards (phone off, forgot): the kaza comes off
+        if (writtenOff) kazaDuzelt(s!!, -1)
         runCatching { VakitWidgets.refreshAll(appCtx) }
     }
-    /** Undo a mis-tap: the time stays (for a re-mark), the tesbihat is put aside. */
+    /** Undo a mis-tap: the time stays (for a re-mark), the tesbihat is put aside; a vakit already over goes back to kaza. */
     fun unmarkPrayed(key: String) {
         StoreRev.n++
+        val s = if (isPrayed(key)) slotOf(key) else null
         val e = p.edit().putStringSet("prayed", prayed() - key)
         tesbihat(key)?.let { e.putString("tesbihatEski_$key", it).remove("tesbihat_$key") }
         e.apply()
+        if (s != null && kazaSayildi(s)) kazaDuzelt(s, +1)
         runCatching { VakitWidgets.refreshAll(appCtx) }
+    }
+    /** "yyyy-mm-dd|VAKIT" → its slot. */
+    private fun slotOf(key: String): Slot? = runCatching {
+        val (d, v) = key.split('|')
+        slots(lat, lng, LocalDate.parse(d))[Vakit.valueOf(v).ordinal]
+    }.getOrNull()
+    /** settleKaza has already passed this vakit: unprayed, it is counted as kaza. */
+    private fun kazaSayildi(s: Slot) = s.end <= maxOf(settledUntil, since) && s.end > since && !exempt(s)
+    private fun kazaDuzelt(s: Slot, n: Int) { addKaza(s.vakit, n); if (s.vakit == Vakit.YATSI) addKaza("VITIR", n) }
+    /** Marked after its vakit, without a time: counted as prayed, not on time. */
+    fun saatsiz(key: String) = p.getBoolean("saatsiz_$key", false)
+    /** When home was last opened, for the "while you were away" card (Gecmis.kt). */
+    var sonAcilis: Long
+        get() = p.getLong("sonAcilis", 0L)
+        set(v) { p.edit().putLong("sonAcilis", v).apply() }
+    /** Prayers written off as kaza since [sonAcilis], in the last seven prayer days: the return card asks about them. */
+    fun donusKazalari(now: Long = System.currentTimeMillis()): List<Slot> {
+        val from = sonAcilis
+        if (from == 0L || !hasLocation) return emptyList()
+        val today = prayerDay(now)
+        return (6L downTo 0L).flatMap { slots(lat, lng, today.minusDays(it)) }
+            .filter { it.end in (from + 1)..now && !isPrayed(it.key) && tracked(it) }
     }
     /** When the prayer was marked (for the "12:41'de kılındı" line); also kept after an undo, so check [isPrayed]. */
     fun prayedAt(key: String): Long? = p.getLong("prayedAt_$key", 0L).takeIf { it > 0 }

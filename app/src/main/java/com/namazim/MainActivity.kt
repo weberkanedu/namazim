@@ -515,6 +515,13 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
     val acik = remember { SkyDebug.acik.also { SkyDebug.acik = null } }   // used once: coming back to home must not reopen it
     var takvim by remember { mutableStateOf<LocalDate?>(if (acik == "takvim") LocalDate.now() else null) }   // the calendar, opened on this day
     var mubarek by remember { mutableStateOf(acik == "mubarek") }
+    // the "while you were away" card: what went to kaza since home was last opened (debug `--es acik donus`: yesterday, as a sample)
+    var donus by remember {
+        mutableStateOf(
+            if (acik == "donus" && store.hasLocation) slots(store.lat, store.lng, store.prayerDay().minusDays(1))
+            else store.donusKazalari().let { if (it.size < 2) { store.sonAcilis = System.currentTimeMillis(); emptyList() } else it },
+        )
+    }
 
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) {
@@ -630,6 +637,8 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
 
             val todaySlots = slots(store.lat, store.lng, today)
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
+                // design A1 (gecmis-duzelt-secenekler.html): two or more vakits went to kaza while the app was not opened
+                if (donus.isNotEmpty()) DonusKarti(store, donus) { donus = emptyList(); store.sonAcilis = System.currentTimeMillis() }
                 VakitlerBody(todaySlots, now, d.gunes, ex, next, onTesbihat) {
                     // once a month without a backup: one quiet band, "Sonra" hides it for another 30 days
                     if (store.backupDue(now)) Row(

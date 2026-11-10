@@ -242,7 +242,7 @@ fun VakitlerBody(
     sheet?.let { i ->
         val s = slots[i]
         val x = st[i]
-        val at = store.prayedAt(s.key)?.let { " · " + hm(it) } ?: ""
+        val at = if (store.saatsiz(s.key)) " · saat bilinmiyor" else store.prayedAt(s.key)?.let { " · " + hm(it) } ?: ""
         ModalBottomSheet({ sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Pal.Card) {
             Column(Modifier.padding(horizontal = Space.xl).navigationBarsPadding().padding(bottom = Space.xl), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 Text("${s.ad(store.kadin)} namazı", style = NumStyle, fontSize = Type.title, color = Pal.Text)
@@ -263,7 +263,7 @@ fun VakitlerBody(
                         Text("Kıldığın saat", color = Pal.Text, fontSize = Type.body2)
                         Text("Geç işaretlediysen düzelt", color = Pal.Muted, fontSize = Type.label)
                     }
-                    Text(store.prayedAt(s.key)?.let { hm(it) } ?: "—", style = NumStyle, fontSize = 22.sp, color = Pal.Gold)
+                    Text(if (store.saatsiz(s.key)) "—" else store.prayedAt(s.key)?.let { hm(it) } ?: "—", style = NumStyle, fontSize = 22.sp, color = Pal.Gold)
                     TextButton(onClick = { saatSec(ctx, s, now) { store.markPrayed(s.key, it); Reminders.scheduleNext(ctx) } }) {
                         Text("Değiştir", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
                     }

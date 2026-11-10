@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geçmişi Düzelt</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322;--warn:#F4B08F}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1240px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 30px Cormorant,serif;margin:36px 0 4px;color:var(--gold)}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1050px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px}
+.opt{width:360px}
+.opt h3{font:600 23px Cormorant,serif;margin:0;display:flex;gap:8px;align-items:center}
+.opt h3 em{font:600 10px Inter;font-style:normal;color:#0B1322;background:var(--gold);border-radius:999px;padding:3px 8px}
+.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:80px}.opt .d b{color:#F3EEE3}
+.phone{width:360px;height:760px;border-radius:42px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:34px;overflow:hidden;background:var(--ground)}
+.body{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding-bottom:90px}
+.hd{height:130px;background:linear-gradient(180deg,#26324E,#5D6E86 55%,#0B1322)}
+.date{display:flex;align-items:center;gap:8px;padding:4px 16px;font-size:11px}.date .mb{width:34px;height:34px;border-radius:9px;border:1px solid rgb(232 190 116 / .45);display:flex;align-items:center;justify-content:center;font:600 17px Cormorant,serif}
+.dim{filter:brightness(.45)}
+.card{margin:12px 14px 0;background:linear-gradient(135deg,rgb(244 176 143 / .14),rgb(18 29 51 / 1));border:1px solid rgb(244 176 143 / .45);border-radius:20px;padding:14px}
+.card .t{font:600 22px/1.1 Cormorant,serif}.card p{font-size:12px;color:#D5DBE6;margin:4px 0 10px;line-height:1.5}
+.day{margin-top:10px}.day .n{font:600 10px Inter;letter-spacing:.12em;color:var(--muted);margin-bottom:6px}
+.vs{display:flex;gap:5px}
+.v{flex:1;border-radius:10px;padding:7px 0;text-align:center;font-size:10.5px;border:1px solid #2A3550;color:var(--muted);cursor:pointer;user-select:none}
+.v b{display:block;font:600 13px Inter;margin-bottom:1px}
+.v.x{border-color:rgb(244 176 143 / .6);color:var(--warn)}
+.v.on{background:var(--gold);border-color:var(--gold);color:#0B1322}
+.v.ok{opacity:.35}
+.btns{display:flex;gap:8px;margin-top:12px}.btns span{flex:1;text-align:center;border-radius:999px;padding:11px;font:600 12.5px Inter;cursor:pointer}
+.btns .g{background:var(--gold);color:#0B1322}.btns .o{border:1px solid #2A3550;color:var(--muted)}
+.rose{width:120px;height:120px;border-radius:50%;margin:16px auto;background:radial-gradient(circle,#2A3D6E,#14213D)}
+.full{position:absolute;inset:0;background:var(--ground);padding:46px 18px 20px;overflow-y:auto;scrollbar-width:none}
+.full h4{font:600 32px/1.05 Cormorant,serif;margin:8px 0 6px}.full p{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 6px}
+.ill{width:72px;height:72px;border-radius:50%;background:rgb(232 190 116 / .12);display:flex;align-items:center;justify-content:center;font-size:30px}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:170px;background:var(--card);border-radius:26px 26px 0 0;padding:10px 16px 20px;box-shadow:0 -20px 40px #0008;overflow-y:auto;scrollbar-width:none}
+.sheet .h{width:36px;height:4px;border-radius:2px;background:#3A4560;margin:0 auto 12px}
+.sheet h4{font:600 26px/1 Cormorant,serif;margin:0}.sheet .sub{font-size:12px;color:var(--gold);margin:4px 0 10px}
+.r{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.r .n{width:56px;font-size:13.5px}.r .s{flex:1;font-size:11.5px;color:var(--muted)}.r .s b{color:var(--gold);font-weight:600}.r .s.x b{color:var(--warn)}
+.r .a{font-size:12px;font-weight:600;color:var(--gold);border:1px solid rgb(232 190 116 / .5);border-radius:999px;padding:6px 12px;cursor:pointer}
+.r .a.u{color:var(--muted);border-color:#2A3550}
+.r .tm{font:600 18px Cormorant,serif;color:#F3EEE3;margin-right:4px}
+.note{background:var(--card);border-radius:16px;padding:14px 16px;font-size:13px;line-height:1.7;color:var(--muted);max-width:1100px;margin-top:22px}.note b{color:#F3EEE3}
+.dock{position:absolute;left:22px;right:22px;bottom:22px;height:50px;border-radius:25px;background:#16203Af2}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Telefon kapalı kaldıysa · geçmişi düzeltmek</div>
+  <h1>Kıldıkların kazaya kalmasın</h1>
+  <p class="lede">Telefon iki gün kapalı kaldı, sen kıldın ama işaretleyemedin; uygulama vakitleri çıkınca kazaya yazdı. <b>A</b> dönüşte bunu kendisi fark edip sorar; <b>B</b> sonradan da geçmiş bir günü düzeltmeyi sağlar. İkisinde de: işaretlediğin vakit kazadan düşer, geri alırsan kaza geri yazılır; en fazla <b>7 gün</b> geriye gidilir. Kutulara dokunarak dene.</p>
+
+  <h2>A · Dönüşte sorsun</h2>
+  <div class="row" id="a"></div>
+  <h2>B · Geçmiş bir günü düzelt</h2>
+  <div class="row" id="b"></div>
+  <div class="note"><b>Saat:</b> geriye dönük işaretlenen vakit "kılındı" sayılır; saatini bilmiyorsan <b>vaktinde sayılmaz</b> (gül ve İstikrar dürüst kalsın). İstersen B'de "Saat" ile vaktin içinden bir saat seçersin, faziletli dilimdeyse vaktinde sayılır.<br><b>Ne zaman sorulur (A):</b> uygulama açıldığında son açılıştan beri <b>2 ya da daha fazla</b> vakit kazaya yazıldıysa. Tek bir vakit kaçtıysa sormaz (o gerçekten kaçmış olabilir); B ile düzeltilir.</div>
+</div>
+<script>
+const DAYS=[['Pazar 8 Kasım',['v','x','x','x','x']],['Pazartesi 9 Kasım',['x','x','x','x','x']],['Salı 10 Kasım',['x','v','n','n','n']]];
+const VK=['Sabah','Öğle','İkindi','Akşam','Yatsı'];
+const kazaN=DAYS.reduce((a,d)=>a+d[1].filter(x=>x==='x').length,0);
+const pills=(d,i)=>`<div class="day"><div class="n">${d[0].toUpperCase()}</div><div class="vs">${d[1].map((s,k)=>s==='n'?`<div class="v ok"><b>${VK[k].slice(0,1)}</b>—</div>`:s==='v'?`<div class="v ok"><b>${VK[k].slice(0,1)}</b>✓</div>`:`<div class="v x" data-t><b>${VK[k].slice(0,1)}</b>kaza</div>`).join('')}</div></div>`;
+const homeBg=`<div class="hd"></div><div class="date"><div class="mb">10</div><span>Salı · 30 Cemaziyelevvel 1448</span></div>`;
+const A=[
+ {n:'A1 · Ana sayfada kart',rec:1,d:'Ana sayfanın en üstünde, gülün üzerinde turuncu çerçeveli bir kart. Kazaya yazılan vakitler gün gün kutucuk; kıldıklarına dokun (altın olur), <b>Kaydet</b>. "Hiçbirini kılmadım" kartı kapatır. Ana sayfa arkada kullanılabilir kalır.',
+  h:`<div class="body">${homeBg}<div class="card"><div class="t">2 gündür uğramadın</div><p>${kazaN} vakit kazaya yazıldı. Telefon kapalıyken kıldıkların varsa işaretle; kazadan düşer.</p>${DAYS.map(pills).join('')}<div class="btns"><span class="o">Hiçbirini kılmadım</span><span class="g">Kaydet</span></div></div><div class="dim"><div class="rose"></div></div></div><div class="dock"></div>`},
+ {n:'A2 · Açılışta tam sayfa',d:'Uygulama açılınca önce bu sayfa gelir (kurulum ekranları gibi): bir kandil, "Hoş geldin, seni özledik" ve aynı kutucuklar. Kaçırılması zor, ama bir adım daha.',
+  h:`<div class="full"><div class="ill">🕯️</div><h4>Hoş geldin, seni özledik</h4><p>2 gündür uğramadın; ${kazaN} vakit kazaya yazıldı. Telefon kapalıyken kıldıkların varsa işaretle.</p>${DAYS.map(pills).join('')}<div class="btns" style="margin-top:22px"><span class="o">Hiçbirini kılmadım</span><span class="g">Kaydet</span></div></div>`},
+];
+const B=[
+ {n:'B1 · Takvimden',rec:1,d:'Takvimde bir güne dokununca altta o günün kartı; artık her vaktin yanında <b>Kıldım</b> ya da <b>Geri al</b> ve <b>Saat</b>. Son 7 gün düzeltilebilir, daha eskisi sadece gösterilir.',
+  h:`<div class="body dim">${homeBg}<div class="rose"></div></div><div class="sheet"><div class="h"></div><h4>9 Kasım 2026, Pazartesi</h4><div class="sub">29 Cemaziyelevvel 1448</div>
+   ${VK.map((n,k)=>`<div class="r"><span class="n">${n}</span><span class="s x"><b>kazaya yazıldı</b></span><span class="a">Kıldım</span></div>`).join('').replace('<span class="s x"><b>kazaya yazıldı</b></span><span class="a">Kıldım</span>','<span class="s"><b>kılındı</b> · saat bilinmiyor</span><span class="tm">—</span><span class="a u">Saat</span>')}
+   <div style="font-size:11px;color:var(--muted);margin-top:10px">Kıldım'a dokununca o vakit kazadan düşer. Geri al'da kaza geri yazılır.</div></div>`},
+ {n:'B2 · İstikrar › Hafta\'dan',d:'İstikrar\'daki gün gün listede bir güne dokununca aynı sayfa açılır. Hafta görünümünde zaten "hangi gün ne kaçtı" görüyorsun; düzeltmek de oradan tek dokunuş.',
+  h:`<div class="body dim" style="padding:40px 16px"><div style="font:600 13px Inter;color:var(--gold)">Özet · İstikrar · Kaza</div><div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">${['Sal 10','Pzt 9','Paz 8'].map(x=>`<div style="display:flex;gap:6px;align-items:center;font-size:12px"><span style="width:44px">${x}</span>${'<i style="width:24px;height:24px;border-radius:7px;border:1.5px solid #F4B08F"></i>'.repeat(4)}</div>`).join('')}</div></div>
+   <div class="sheet" style="top:230px"><div class="h"></div><h4>9 Kasım 2026, Pazartesi</h4><div class="sub">İstikrar › Hafta'dan açıldı</div>${VK.map(n=>`<div class="r"><span class="n">${n}</span><span class="s x"><b>kazaya yazıldı</b></span><span class="a">Kıldım</span></div>`).join('')}</div>`},
+];
+const box=o=>`<div class="opt"><h3>${o.n}${o.rec?'<em>ÖNERİM</em>':''}</h3><div class="d">${o.d}</div><div class="phone"><div class="scr">${o.h}</div></div></div>`;
+document.getElementById('a').innerHTML=A.map(box).join('');
+document.getElementById('b').innerHTML=B.map(box).join('');
+document.querySelectorAll('[data-t]').forEach(e=>e.onclick=()=>{e.classList.toggle('on');e.lastChild.textContent=e.classList.contains('on')?'kıldım':'kaza'});
+document.querySelectorAll('.r .a:not(.u)').forEach(e=>e.onclick=()=>{const s=e.previousElementSibling;if(e.textContent==='Kıldım'){e.textContent='Geri al';e.classList.add('u');s.className='s';s.innerHTML='<b>kılındı</b> · saat bilinmiyor'}else{e.textContent='Kıldım';e.classList.remove('u');s.className='s x';s.innerHTML='<b>kazaya yazıldı</b>'}});
+</script>
+</body>
+</html>

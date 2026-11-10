@@ -171,14 +171,8 @@ fun TakvimSheet(start: LocalDate, onClose: () -> Unit) {
                 Text(secili.format(GUN_AY_YIL), color = Pal.Text, fontSize = Type.body2, fontWeight = FontWeight.SemiBold)
                 Text(hijri(secili), color = Pal.Gold, fontSize = Type.label)
                 holy[secili]?.forEach { Text("✦ ${it.name}", Modifier.padding(top = 2.dp), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold) }
-                if (store.hasLocation) Row(Modifier.padding(top = Space.s)) {
-                    slots(store.lat, store.lng, secili).forEach { s ->
-                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(s.satir(store.kadin), color = Pal.Muted, fontSize = Type.micro)
-                            Text(hm(s.start), style = NumStyle, fontSize = 16.sp, color = Pal.Text)
-                        }
-                    }
-                }
+                // design B1 (gecmis-duzelt-secenekler.html): each vakit with its state; within the last week it can be put right
+                Column(Modifier.padding(top = Space.s)) { GunVakitleri(store, secili) }
             }
         }
     }
