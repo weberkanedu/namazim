@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vakit İkonları</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:40px 20px 80px}
+.wrap{max-width:1200px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 30px Cormorant,serif;margin:44px 0 4px;color:var(--gold)}
+.lede{color:var(--muted);font-size:14.5px;line-height:1.65;max-width:980px}.lede b{color:#F3EEE3}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;margin-top:20px}
+.ic{background:linear-gradient(160deg,#3A4F6E,#1D2A40);border-radius:24px;padding:22px 16px 18px;text-align:center}
+.ic svg{width:132px;height:132px;border-radius:34px;box-shadow:0 10px 30px #0009}
+.ic b{display:block;margin-top:12px;font:600 21px Cormorant,serif;color:var(--gold)}
+.ic span{font-size:12px;color:#D5DBE6;line-height:1.5}
+.day{display:flex;gap:14px;flex-wrap:wrap;margin-top:20px}
+.v{width:170px;background:var(--card);border-radius:20px;padding:16px 10px;text-align:center}
+.v svg{width:88px;height:88px;border-radius:24px;box-shadow:0 8px 22px #0008}
+.v b{display:block;font:600 19px Cormorant,serif;margin-top:8px}.v span{font-size:11.5px;color:var(--muted);line-height:1.45}
+.v.cuma{outline:1.5px solid var(--gold)}
+.home{margin-top:22px;width:380px;max-width:100%;height:300px;border-radius:30px;padding:22px;position:relative;overflow:hidden;transition:background 1s}
+.home .apps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 10px}
+.home .a{text-align:center;font:500 10px Inter;color:#fff}.home .a i{display:block;width:52px;height:52px;border-radius:15px;margin:0 auto 5px;background:#ffffff30}
+.home .a svg{width:58px;height:58px;border-radius:16px;display:block;margin:0 auto 4px;box-shadow:0 5px 14px #0007}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.seg span{padding:7px 14px;border-radius:999px;background:var(--card);font:500 12.5px Inter;color:var(--muted);cursor:pointer}
+.seg span.on{background:rgb(232 190 116 / .16);color:var(--gold)}
+.note{background:var(--card);border-radius:16px;padding:16px 18px;font-size:13px;line-height:1.7;color:var(--muted);margin-top:18px;max-width:1000px}.note b{color:#F3EEE3}
+.cols{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">İkonlar · Cuma karışımı · vakit vakit</div>
+  <h1>Gece nuru × sekiz köşe yıldız</h1>
+  <p class="lede">Önce Cuma için <b>K1 Gece nuru ile K5 Sekiz köşe yıldızın</b> üç karışımı. Sonra senin fikrin: K4 çıkınca kalan beş tasarım <b>beş vakte</b> dağıtılırsa gün nasıl görünür.</p>
+
+  <h2>1 · Cuma: üç karışım</h2>
+  <div class="grid" id="mix"></div>
+
+  <h2>2 · Akşam için yeni tasarım</h2>
+  <p class="lede">Sekiz köşe yıldız artık yalnız Cuma'nın. Akşama üç yeni seçenek:</p>
+  <div class="grid" id="aksam"></div>
+
+  <h2>3 · Her vakte bir ikon</h2>
+  <p class="lede">Eşleştirme vaktin rengine göre: şafak sedef, öğle güneşi altın, ikindi zümrüt, akşam (aşağıda A1 ile), yatsı gece nuru. Cuma'da öğle vaktinde Cuma ikonu.</p>
+  <div class="day" id="day"></div>
+  <div class="cols">
+    <div>
+      <div class="seg" id="seg"></div>
+      <div class="home" id="home"></div>
+    </div>
+    <div class="note" style="flex:1;min-width:300px"><b>Saçma değil, ama telefonun ikonu için riskli.</b> Android ikonun gün içinde değişmesi için yapılmamış; her değişimde telefon uygulamayı "kaldırılıp yeniden eklenmiş" gibi görür. Günde beş kez:<br>
+    • Xiaomi'de ikon her vakitte birkaç saniye kaybolup geri gelir; bazı telefonlarda ana ekrandan tamamen düşer.<br>
+    • Ana ekrandaki klasör yerleri, bildirim rozetleri karışabilir.<br>
+    • Kullanıcı uygulamayı ararken her seferinde başka bir ikon görür.<br><br>
+    <b>Önerim:</b> telefonun ikonu sabit kalsın (her gün Zümrüt, Cuma'da karışım). Beş vakit ikonu ise ana ekrandaki <b>1×1 canlı ikon widget'ına</b> girsin: o zaten vakte göre değişiyor, hiçbir risk olmadan her vakitte kendi tasarımına döner. Soldaki ana ekranda üst sıradaki "Namazım" böyle bir widget; vakitlere dokunup değişimi gör.</div>
+  </div>
+</div>
+<script>
+const CX=54,CY=54,R=27;
+const P=(r,a)=>{const t=(a-90)*Math.PI/180;return [CX+r*Math.cos(t),CY+r*Math.sin(t)]};
+const f=p=>p[0].toFixed(2)+','+p[1].toFixed(2);
+function petal(r0,r1,a0,a1){const w=a1-a0;return `M${f(P(r0,a0))} C${f(P(r1*1.02,a0-w*.08))} ${f(P(r1*1.16,a0+w*.34))} ${f(P(r1,a0+w*.5))} C${f(P(r1*1.16,a1-w*.34))} ${f(P(r1*1.02,a1+w*.08))} ${f(P(r0,a1))}`}
+const OUT=[0,1,2,3,4].map(i=>petal(R*.34,R,i*72-40,i*72+40));
+const INN=[0,1,2,3,4].map(i=>petal(R*.16,R*.6,i*72+36-38,i*72+36+38));
+let bud='M';for(let k=0;k<61;k++){const th=k/60*Math.PI*3.2,r=R*.24*(1-k/68);bud+=(k?' L':'')+f([CX+r*Math.cos(th),CY+r*Math.sin(th)])}
+const rose=({fill,edge,inner=edge,sw=1.5})=>OUT.map(d=>`<path d="${d} Z" fill="${fill}" stroke="${edge}" stroke-width="${sw}" stroke-linejoin="round"/>`).join('')+
+  INN.map(d=>`<path d="${d}" fill="none" stroke="${inner}" stroke-width="${sw*.86}" stroke-linecap="round"/>`).join('')+`<path d="${bud}" fill="none" stroke="${inner}" stroke-width="${sw*.9}" stroke-linecap="round"/>`;
+const rays=(c,n,a,r0=30,r1=56,w=3,rot=0)=>[...Array(n)].map((_,i)=>{const t=i/n*360+rot;return `<path d="M${f(P(r0,t-w))} L${f(P(r1,t))} L${f(P(r0,t+w))}Z" fill="${c}" opacity="${i%2?a*.5:a}"/>`}).join('');
+const lg=(id,a,b,c)=>`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".5" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></linearGradient>`;
+const star=(r,c,w,o,fill='none')=>{let d='';for(let k=0;k<2;k++){const pts=[0,1,2,3].map(i=>f(P(r,i*90+k*45)));d+=`M${pts.join(' L')} Z `}return `<path d="${d}" fill="${fill}" fill-rule="nonzero" stroke="${c}" stroke-width="${w}" opacity="${o}" stroke-linejoin="round"/>`};
+const big=g=>`<g transform="translate(54 54) scale(1.06) translate(-54 -54)">${g}</g>`;
+const svg=inner=>`<svg viewBox="0 0 108 108">${inner}</svg>`;
+let uid=0;
+const night=()=>{const id='n'+(uid++);return `<defs>${lg(id,'#1B2B52','#101B36','#070D1D')}<radialGradient id="${id}g"><stop offset="0" stop-color="#FFE3A3" stop-opacity=".5"/><stop offset="1" stop-color="#FFE3A3" stop-opacity="0"/></radialGradient></defs><rect width="108" height="108" fill="url(#${id})"/><circle cx="54" cy="54" r="44" fill="url(#${id}g)"/>`};
+const goldRose=big(rose({fill:'#E8BE74',edge:'#FFF4D6'}));
+const MIX=[
+ {n:'M1 · Yıldızlı nur',s:'Gece mavisi, ışınlar yıldızın köşelerinden dışarı taşar; ince altın sekiz köşe gülü çevreler.',
+  g:()=>night()+rays('#FFE3A3',16,.30,40,58,2.2,22.5)+star(43,'#E8BE74',1.6,.95)+goldRose},
+ {n:'M2 · Dolu yıldız',s:'Gülün arkasında hafif dolu altın yıldız, kenarında çift çizgi; ışın yok, daha sakin ve çini gibi.',
+  g:()=>night()+star(45,'#E8BE74',1.4,.9,'rgba(232,190,116,.16)')+star(39,'#E8BE74',.7,.5)+goldRose},
+ {n:'M3 · Kandil',s:'Yıldız çizgisi ve aradan sızan uzun ince ışınlar, merkezde güçlü parıltı: en parlak, en "nur" olan.',
+  g:()=>night()+`<circle cx="54" cy="54" r="30" fill="#FFE3A3" opacity=".12"/>`+rays('#FFF4D6',32,.38,26,60,1.4)+star(42,'#FFE3A3',1.2,.85)+goldRose},
+];
+// chosen 2026-11-10: M2's filled star and double line, with M3's star line and long thin rays leaking between the points
+MIX.unshift({n:'Cuma · seçilen',s:'M2\'nin dolu yıldızı ve çift çizgisi + M3\'ün yıldız çizgisi ve köşelerin arasından sızan uzun ince ışınlar. Sekiz köşe yalnız Cuma\'ya ait.',sel:1,
+  g:()=>night()+`<circle cx="54" cy="54" r="30" fill="#FFE3A3" opacity=".08"/>`+rays('#FFF4D6',32,.32,30,60,1.3,5.625)+star(45,'#E8BE74',1.4,.92,'rgba(232,190,116,.16)')+star(39,'#E8BE74',.7,.5)+star(42,'#FFE3A3',1,.7)+goldRose});
+document.getElementById('mix').innerHTML=MIX.map(x=>`<div class="ic" style="${x.sel?'outline:2px solid var(--gold)':''}">${svg(x.g())}<b>${x.n}</b><span>${x.s}</span></div>`).join('');
+
+// akşam: the star frame now belongs to Cuma, so three new ones without it
+const AKSAM=[
+ {n:'A1 · Gün batımı',s:'Kızıldan laciverde zemin, altta batan güneşin altın yayı ve ondan yükselen kısa ışınlar.',
+  g:()=>{const id='g'+(uid++);return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A2F63"/><stop offset=".55" stop-color="#8E3B4A"/><stop offset="1" stop-color="#E0874F"/></linearGradient><radialGradient id="${id}s" cx=".5" cy="1.02" r=".5"><stop offset="0" stop-color="#FFE3A3" stop-opacity=".95"/><stop offset=".45" stop-color="#F2A65A" stop-opacity=".55"/><stop offset="1" stop-color="#F2A65A" stop-opacity="0"/></radialGradient></defs><rect width="108" height="108" fill="url(#${id})"/><rect width="108" height="108" fill="url(#${id}s)"/>${[...Array(9)].map((_,i)=>{const t=-80+i*20;return `<path d="M${f([54+34*Math.sin(t*Math.PI/180),110-34*Math.cos(t*Math.PI/180)])} L${f([54+70*Math.sin(t*Math.PI/180),110-70*Math.cos(t*Math.PI/180)])}" stroke="#FFE3A3" stroke-width="1.2" opacity=".35"/>`}).join('')}${big(rose({fill:'#E8BE74',edge:'#FFF4D6'}))}`}},
+ {n:'A2 · Hilal',s:'Akşam moru zemin, gülün arkasında büyük ince altın hilal: akşamla görünen yeni ay.',
+  g:()=>{const id='h'+(uid++);return `<defs>${lg(id,'#4A3A78','#2C2656','#141433')}</defs><rect width="108" height="108" fill="url(#${id})"/><path d="M76 16 a40 40 0 1 0 0 76 a32 32 0 1 1 0 -76Z" fill="#E8BE74" opacity=".55"/>${big(rose({fill:'#E8BE74',edge:'#FFF4D6'}))}`}},
+ {n:'A3 · Bakır',s:'Bakır-kiremit zemin, zümrüt yapraklar ve krem kenar; akşam ışığının sıcak tonu.',
+  g:()=>{const id='b'+(uid++);return `<defs>${lg(id,'#E39A64','#B8603A','#6E2F22')}</defs><rect width="108" height="108" fill="url(#${id})"/>${rays('#FFE3C2',16,.25)}${big(rose({fill:'#1C6650',edge:'#FFE9C8',inner:'#FFE9C8'}))}`}},
+];
+document.getElementById('aksam').innerHTML=AKSAM.map(x=>`<div class="ic">${svg(x.g())}<b>${x.n}</b><span>${x.s}</span></div>`).join('');
+
+const ZUM=()=>{const id='z'+(uid++);return `<defs>${lg(id,'#2E8A6C','#1C6650','#0F3D30')}</defs><rect width="108" height="108" fill="url(#${id})"/>`};
+const SET=[
+ {v:'İmsak',t:'05:57',n:'Sedef',s:'şafak beyazı',g:()=>{const id='s'+(uid++);return `<defs>${lg(id,'#FFFDF6','#F2EADB','#D9CCB4')}</defs><rect width="108" height="108" fill="url(#${id})"/>${rays('#E5B565',16,.28)}${big(rose({fill:'#1F7259',edge:'#C99A4A',inner:'#F6E3B8'}))}`},bg:'linear-gradient(180deg,#F3C9A1,#8E9CC4)'},
+ {v:'Öğle',t:'12:37',n:'Altın zümrüt',s:'tepedeki güneş',g:()=>{const id='a'+(uid++);return `<defs>${lg(id,'#FFE3A3','#E5B565','#B07A28')}</defs><rect width="108" height="108" fill="url(#${id})"/>${rays('#FFFFFF',16,.35)}${big(rose({fill:'#1C6650',edge:'#0F3D30',inner:'#FFF0C8'}))}`},bg:'linear-gradient(180deg,#7FB6E8,#CFE3F2)'},
+ {v:'İkindi',t:'15:19',n:'Zümrüt',s:'her günün ikonu',g:()=>ZUM()+rays('#E8BE74',16,.22)+big(rose({fill:'#E3B35E',edge:'#FFF0C8'})),bg:'linear-gradient(180deg,#E9B66F,#6E8DB8)'},
+ {v:'Akşam',t:'17:41',n:'Gün batımı (A1)',s:'seçenekler yukarıda',g:AKSAM[0].g,bg:'linear-gradient(180deg,#C2604A,#3A3F6E)'},
+ {v:'Yatsı',t:'19:05',n:'Gece nuru',s:'gecenin kandili',g:()=>night()+rays('#FFE3A3',24,.35,28,58,2.4)+goldRose,bg:'linear-gradient(180deg,#0B1530,#1C2B52)'},
+ {v:'Cuma',t:'Cuma öğle',n:'Gece nuru + yıldız',s:'Cuma vaktinde',g:MIX[0].g,bg:'linear-gradient(180deg,#5F8FC8,#BCD6EE)',cuma:1},
+];
+document.getElementById('day').innerHTML=SET.map(x=>`<div class="v ${x.cuma?'cuma':''}">${svg(x.g())}<b>${x.v}</b><span>${x.n} · ${x.s}</span></div>`).join('');
+let cur=0;
+function home(){const x=SET[cur];
+ document.getElementById('seg').innerHTML=SET.map((y,i)=>`<span class="${i===cur?'on':''}" data-i="${i}">${y.v}</span>`).join('');
+ const h=document.getElementById('home');h.style.background=x.bg;
+ h.innerHTML=`<div class="apps"><div class="a">${svg(x.g())}${x.v} ${x.t.length<6?x.t:''}</div><div class="a"><i></i>Saat</div><div class="a"><i></i>Hava</div><div class="a"><i></i>Notlar</div>
+  <div class="a"><i></i>Telefon</div><div class="a">${svg(ZUM()+rays('#E8BE74',16,.22)+big(rose({fill:'#E3B35E',edge:'#FFF0C8'})))}Namazım</div><div class="a"><i></i>Mesajlar</div><div class="a"><i></i>Kamera</div></div>
+  <div style="position:absolute;left:22px;bottom:16px;font-size:11px;color:#fff;opacity:.85">üstte: 1×1 widget (vakte göre değişir) · altta: telefonun ikonu (sabit)</div>`;
+ document.querySelectorAll('#seg span').forEach(s=>s.onclick=()=>{cur=+s.dataset.i;home()});
+}
+home();
+</script>
+</body>
+</html>

@@ -367,9 +367,18 @@ fun WidgetPreview() {
         Modifier.fillMaxSize().background(Pal.Ground), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xl)) {
-            Image(painterResource(R.drawable.ic_logo), "Logo", Modifier.size(108.dp))
-            Image(bmp, "Canlı ikon", Modifier.size(144.dp))
+        Image(bmp, "Canlı ikon", Modifier.size(144.dp))
+        // the whole family: İmsak, Öğle, İkindi, Akşam, Yatsı, Cuma (the 1×1 shows the one of the moment)
+        Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+            listOf(R.drawable.wg_vakit_imsak, R.drawable.wg_vakit_ogle, R.drawable.wg_vakit_ikindi, R.drawable.wg_vakit_zumrut,
+                R.drawable.wg_vakit_yatsi, R.drawable.wg_vakit_cuma).forEach { res ->
+                val b = remember(res) {
+                    android.graphics.Bitmap.createBitmap(160, 160, android.graphics.Bitmap.Config.ARGB_8888).also { bm ->
+                        ctx.getDrawable(res)?.apply { setBounds(0, 0, 160, 160); draw(android.graphics.Canvas(bm)) }
+                    }.asImageBitmap()
+                }
+                Image(b, null, Modifier.size(54.dp).clip(RoundedCornerShape(14.dp)))
+            }
         }
         Spacer(Modifier.height(Space.s))
         Text(NamazimWidget.label(ctx), color = Pal.Text, fontSize = Type.micro, fontWeight = FontWeight.Medium)
