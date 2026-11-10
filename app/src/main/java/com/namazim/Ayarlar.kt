@@ -114,7 +114,6 @@ fun AyarlarScreen(onBack: () -> Unit) {
     // yedek: dosyayı kullanıcı seçtiği yere yazar (Drive, İndirilenler…); geri yüklemeden önce içeriği gösterilir
     var backupMsg by remember { mutableStateOf("") }
     var pending by remember { mutableStateOf<Store.Backup?>(null) }
-    var confirmReset by remember { mutableStateOf(false) }
     val saveBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         backupMsg = try {
@@ -302,37 +301,12 @@ fun AyarlarScreen(onBack: () -> Unit) {
                                 Text("Seç", color = Pal.Gold, fontWeight = FontWeight.SemiBold)
                             }
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text("Kayıtları sıfırla", color = Pal.Text, fontSize = Type.body)
-                                Text("Namaz, kaza, okuma ve zikir kayıtları silinir; ayarlar kalır", color = Pal.Muted, fontSize = Type.label)
-                            }
-                            TextButton(onClick = { confirmReset = true }) { Text("Sıfırla", color = Pal.Warn, fontWeight = FontWeight.SemiBold) }
-                        }
                         if (backupMsg.isNotEmpty()) Text(backupMsg, color = Pal.Gold, fontSize = Type.label)
                     }
                 }
             }
         }
     }
-
-    if (confirmReset) AlertDialog(
-        onDismissRequest = { confirmReset = false },
-        containerColor = Pal.Card,
-        title = { Text("Kayıtlar sıfırlansın mı?", color = Pal.Text) },
-        text = {
-            Text("Kılınan namaz işaretleri, kaza sayıları, okuma ve zikir kayıtları silinir; takip şu andan başlar. " +
-                "Konum, hatırlatma ayarları, hedefler ve zikir listen kalır. Geri almak için önce yedek alabilirsin.",
-                color = Pal.Muted, fontSize = Type.body2, lineHeight = 19.sp)
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                backupMsg = if (store.resetEntries()) "Kayıtlar sıfırlandı." else "Sıfırlanamadı; kayıtların değişmedi."
-                confirmReset = false; changed()
-            }) { Text("Sıfırla", color = Pal.Warn) }
-        },
-        dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Vazgeç", color = Pal.Muted) } },
-    )
 
     pending?.let { b ->
         val tr = java.util.Locale("tr")

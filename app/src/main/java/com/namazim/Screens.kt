@@ -776,16 +776,14 @@ fun OkumaScreen() {
 
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockPad.current)) {
-        ScreenTitle("Okuma") {
-            if (store.hatim > 0) Text("${store.hatim} hatim", Modifier.clip(CircleShape).background(Pal.Gold.copy(alpha = .14f))
-                .padding(horizontal = Space.m, vertical = Space.xs), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
-        }
-
+        // no page title (the dock already names the page, 2026-11-11): today's total opens the page
         // ---- today, across every reading
-        Column(Modifier.padding(start = Space.xl, end = Space.xl, top = Space.s)) {
+        Column(Modifier.statusBarsPadding().padding(start = Space.xl, end = Space.xl, top = Space.l)) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Text("$target", style = NumStyle, fontSize = Type.display, lineHeight = Type.display, color = Pal.Text)
-                Text("sayfa bugün", Modifier.padding(start = Space.xs, bottom = 7.dp), color = Pal.Muted, fontSize = Type.body)
+                Text("sayfa bugün", Modifier.weight(1f).padding(start = Space.xs, bottom = 7.dp), color = Pal.Muted, fontSize = Type.body)
+                if (store.hatim > 0) Text("${store.hatim} hatim", Modifier.padding(bottom = 7.dp).clip(CircleShape).background(Pal.Gold.copy(alpha = .14f))
+                    .padding(horizontal = Space.m, vertical = Space.xs), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold)
             }
             Text(
                 when { target == 0 -> "Bugün için hedef yok; bir okumaya bitiş tarihi ver."; done >= target -> "Bugünkü okuma tamam, elhamdülillah."; else -> "$done / $target okundu" },
@@ -1141,8 +1139,7 @@ fun MuhasebeScreen() {
     val store = remember { Store(ctx) }
     val section = DefterYer.section
     Column(Modifier.fillMaxSize()) {
-        ScreenTitle("Defter", rule = false)
-        Box(Modifier.turHedef("deftersekme")) { PageTabs(listOf("Özet", "İstikrar", "Kaza"), section) { DefterYer.git(store, it) } }
+        Box(Modifier.statusBarsPadding().padding(top = Space.s).turHedef("deftersekme")) { PageTabs(listOf("Özet", "İstikrar", "Kaza"), section) { DefterYer.git(store, it) } }
         Box(Modifier.weight(1f).clipToBounds()) {
             when (section) {
                 0 -> MuhasebeOzet()

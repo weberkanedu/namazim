@@ -102,8 +102,7 @@ fun ZikirScreen(onTesbihatDone: () -> Unit = {}) {
     // a zikir picked in Takip: Zikirhane opens on it
     var pick by rememberSaveable { mutableStateOf<String?>(null) }
     Column(Modifier.fillMaxSize()) {
-        ScreenTitle("Zikir", rule = false)
-        Box(Modifier.turHedef("zikirsekme")) { PageTabs(listOf("Zikirhane", "Takip"), section) { section = it } }
+        Box(Modifier.statusBarsPadding().padding(top = Space.s).turHedef("zikirsekme")) { PageTabs(listOf("Zikirhane", "Takip"), section) { section = it } }
         if (section == 0) { Zikirhane(store, zikirs, pick); Spacer(Modifier.height(LocalDockPad.current)) }
         else ZikirTakip(store, zikirs) { pick = it; section = 0 }
     }
