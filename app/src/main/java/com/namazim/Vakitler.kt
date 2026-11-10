@@ -1,5 +1,7 @@
 package com.namazim
 
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Animatable
@@ -547,50 +549,56 @@ private fun AraSerit(gunes: Long, ogle: Long, ex: List<Extra>, now: Long, modifi
     }
 }
 
-/** The current vakit in seven slices: faziletli gold, güzel half gold, the rest dark, kerahat / mekruh hatched peach;
- *  a light walks with the clock and the slice it is in is named under the strip. */
+/** The current vakit as one hairline (design Ç4 of design/design-system/vakit-cizgi-secenekler.html, 2026-11-11):
+ *  the faziletli part gold and the kerahat peach, each named over a small bracket; the part already gone dim,
+ *  a small diamond walks with the clock, a tick where it was prayed. */
 @Composable
 private fun VakitSerit(s: Slot, prayedAt: Long?, dl: List<Dilim>, now: Long, modifier: Modifier) {
     val beat = heartbeat()
     val len = (s.end - s.start).toFloat()
     fun f(t: Long) = ((t - s.start) / len).coerceIn(0f, 1f)
     val nowIn = dilimOf(s, now)
+    val density = LocalDensity.current
+    val paint = remember { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { textAlign = android.graphics.Paint.Align.CENTER } }
+    val fzBand = faziletBand(s, dl)
+    val k0 = dl.indexOfFirst { it == Dilim.KERAHAT }
+    val kerBand = if (k0 < 0) null else dilimStart(s, k0) to dilimStart(s, dl.indexOfLast { it == Dilim.KERAHAT } + 1)
     Column(modifier) {
-        Canvas(Modifier.fillMaxWidth().height(24.dp)) {
-            val h = 12.dp.toPx()
-            val y0 = (size.height - h) / 2
-            val gap = 3.dp.toPx()
+        Canvas(Modifier.fillMaxWidth().height(40.dp)) {
             val w = size.width
-            val rr = CornerRadius(h / 2)
-            for (j in 0 until 7) {
-                val x0 = j * w / 7 + if (j > 0) gap / 2 else 0f
-                val x1 = (j + 1) * w / 7 - if (j < 6) gap / 2 else 0f
-                val past = prayedAt != null || j < nowIn
-                val col = when (dl[j]) {
-                    Dilim.FAZILET -> Pal.Gold.copy(alpha = if (past) .28f else 1f)
-                    Dilim.GUZEL -> Pal.Gold.copy(alpha = if (past) .16f else .45f)
-                    Dilim.KERAHAT -> Pal.Warn.copy(alpha = .18f)
-                    Dilim.VAKIT -> Pal.Track
-                }
-                drawRoundRect(col, Offset(x0, y0), Size(x1 - x0, h), rr)
-                if (dl[j] == Dilim.KERAHAT) clipPath(Path().apply { addRoundRect(RoundRect(x0, y0, x1, y0 + h, rr)) }) {
-                    var x = x0 - h
-                    while (x < x1) { drawLine(Pal.Warn.copy(alpha = .55f), Offset(x, y0 + h), Offset(x + h, y0), 2.dp.toPx()); x += 6.dp.toPx() }
-                }
+            val u = 1.dp.toPx()
+            val cy = 30.dp.toPx()
+            val h = 3.dp.toPx()
+            drawRoundRect(Color(0xFF2A3755), Offset(0f, cy - h / 2), Size(w, h), CornerRadius(h / 2))
+            // güzel slices (Şâfiî's second best, etc.): a faint gold, no name
+            for (j in 0 until 7) if (dl[j] == Dilim.GUZEL)
+                drawRect(Pal.Gold.copy(alpha = .35f), Offset(j * w / 7, cy - h / 2), Size(w / 7, h))
+            paint.textSize = with(density) { 10.sp.toPx() }
+            var lastRight = -1f
+            fun bracket(r: Pair<Long, Long>, col: Color, name: String, bold: Boolean) {
+                val x0 = f(r.first) * w; val x1 = f(r.second) * w
+                drawRect(col, Offset(x0, cy - h / 2 - u), Size(x1 - x0, h + 2 * u))
+                val top = cy - 10 * u
+                drawPath(Path().apply { moveTo(x0, cy - 5 * u); lineTo(x0, top); lineTo(x1, top); lineTo(x1, cy - 5 * u) },
+                    col.copy(alpha = .6f), style = Stroke(u))
+                paint.color = col.toArgb(); paint.isFakeBoldText = bold
+                val tw = paint.measureText(name)
+                val tx = ((x0 + x1) / 2).coerceIn(tw / 2, w - tw / 2)
+                // the name only where it does not run into the other one
+                if (tx - tw / 2 > lastRight + 4 * u) { drawContext.canvas.nativeCanvas.drawText(name, tx, top - 4 * u, paint); lastRight = tx + tw / 2 }
             }
+            fzBand?.let { bracket(it, Pal.Gold, "faziletli", true) }
+            kerBand?.let { bracket(it, Pal.Warn.copy(alpha = .8f), "kerahat", false) }
             val nx = f(now) * w
-            drawRoundRect(Pal.Ground.copy(alpha = .55f), Offset(0f, y0), Size(nx, h), rr)   // the part already gone
-            val cy = size.height / 2
+            drawRect(Pal.Ground.copy(alpha = .55f), Offset(0f, cy - h / 2 - 2 * u), Size(nx, h + 4 * u))   // the part already gone
             if (prayedAt != null) {
                 val px = f(prayedAt) * w
-                drawCircle(Pal.Gold, 8.dp.toPx(), Offset(px, cy))
-                val u = 1.dp.toPx()
-                drawPath(Path().apply { moveTo(px - 3.5f * u, cy); lineTo(px - 1f * u, cy + 2.5f * u); lineTo(px + 3.5f * u, cy - 2.5f * u) },
-                    Pal.Ground, style = Stroke(1.8f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
-            }
-            if (now < s.end && prayedAt == null) {
-                drawCircle(Pal.Gold.copy(alpha = .22f + .25f * beat.value), (11f + 5f * beat.value) * 1.dp.toPx(), Offset(nx, cy))
-                drawCircle(Cream, 8.dp.toPx(), Offset(nx, cy))
+                drawCircle(Pal.Gold, 7.dp.toPx(), Offset(px, cy))
+                drawPath(Path().apply { moveTo(px - 3f * u, cy); lineTo(px - .8f * u, cy + 2.2f * u); lineTo(px + 3f * u, cy - 2.2f * u) },
+                    Pal.Ground, style = Stroke(1.7f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            } else if (now < s.end) {
+                drawCircle(Pal.Gold.copy(alpha = .15f + .2f * beat.value), (8f + 4f * beat.value) * u, Offset(nx, cy))
+                drawPath(Path().apply { moveTo(nx, cy - 7 * u); lineTo(nx + 6 * u, cy); lineTo(nx, cy + 7 * u); lineTo(nx - 6 * u, cy); close() }, Cream)
             }
         }
         val band = faziletBand(s, dl)
@@ -607,10 +615,16 @@ private fun VakitSerit(s: Slot, prayedAt: Long?, dl: List<Dilim>, now: Long, mod
                 ps.forEachIndexed { i, p -> p.place((labels[i].first * cons.maxWidth - p.width / 2f).toInt().coerceIn(0, cons.maxWidth - p.width), 0) }
             }
         }
-        if (prayedAt == null && now < s.end) Text(
-            "Şu an: ${DILIM_ADI[nowIn]} (${nowIn + 1}/7)", Modifier.fillMaxWidth().padding(top = Space.xs),
-            color = if (dl[nowIn] == Dilim.KERAHAT) Pal.Warn else Pal.Text, fontSize = Type.body2, textAlign = TextAlign.Center,
-        )
+        if (prayedAt == null && now < s.end) {
+            fun kalan(t: Long) = ((t - now) / 60_000L).let { m -> if (m >= 60) "${m / 60} sa ${m % 60} dk" else "${maxOf(m, 1)} dk" }
+            val (txt, col) = when {
+                dl[nowIn] == Dilim.KERAHAT -> "Kerahat vakti" to Pal.Warn
+                fzBand != null && now < fzBand.first -> "Faziletli vakit ${hm(fzBand.first)}'de başlar" to Pal.Text
+                fzBand != null && now < fzBand.second -> "Faziletli vakit · ${kalan(fzBand.second)} kaldı" to Pal.Gold
+                else -> "Vakit sürüyor" to Pal.Text
+            }
+            Text(txt, Modifier.fillMaxWidth().padding(top = Space.xs), color = col, fontSize = Type.body2, textAlign = TextAlign.Center)
+        }
     }
 }
 

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vakit Çizgisi</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3;--ground:#0B1322}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1300px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1050px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px}
+.opt{width:300px}
+.opt h3{font:600 24px Cormorant,serif;margin:0;color:var(--gold)}
+.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:118px}.opt .d b{color:#F3EEE3}
+.ph{background:var(--ground);border-radius:26px;padding:22px 18px;margin-bottom:12px;border:1px solid #1A2540}
+.cap{font:600 10px Inter;letter-spacing:.2em;color:var(--gold);text-align:center}
+.cnt{font:500 44px/1 Cormorant,serif;text-align:center;margin:8px 0 6px}
+.sub{font-size:13px;text-align:center;color:#F3EEE3;margin-bottom:16px}
+.st{font-size:10px;color:#5A6582;letter-spacing:.12em;margin:0 0 6px 4px}
+.line{font-size:12.5px;text-align:center;margin-top:8px}
+svg text{font-family:Inter}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Ana sayfa · vakit şeridi</div>
+  <h1>Yedi dilim yerine tek çizgi</h1>
+  <p class="lede">Bugünkü şerit vakti <b>yedi kutuya</b> bölüyor. Bunlar <b>tek, kesintisiz bir çizgi</b>. Faziletli kısım, kerahat ve şu an hâlâ belli. Her seçenekte iki an: üstte <b>İkindi 16:10, henüz kılınmadı</b>; altta <b>Yatsı, 19:40'ta kılındı</b>. En solda karşılaştırma için bugünkü şerit.</p>
+  <div class="row" id="row"></div>
+</div>
+<script>
+const W=264;
+const hatch=(id)=>`<defs><pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.4" height="6" fill="#F4B08F" opacity=".6"/></pattern><filter id="gl${id}"><feGaussianBlur stdDeviation="3"/></filter></defs>`;
+// scenarios: times as fractions of the vakit
+const A={ad:'İkindi',cap:'İKİNDİ VAKTİNİN ÇIKMASINA',cnt:'1:35:12',sub:'Faziletli vakit 16:40\'a kadar',start:'15:20',end:'17:45',fz:[1/7,5/7],fzT:['15:41','16:40'],ker:[5/7,1],kerT:'17:00',now:(50/145),prayed:null,line:'Faziletli vakit · 30 dk kaldı'};
+const B={ad:'Yatsı',cap:'İMSAK VAKTİNE',cnt:'7:58:55',sub:'Yatsı vaktinde kılındı',start:'19:05',end:'05:56',fz:[0,3/7],fzT:['19:05','22:11'],ker:[3.6/7,1],kerT:'00:31',now:(172/651),prayed:(35/651),line:null};
+let uid=0;
+function times(sc,y,col){return `<text x="0" y="${y}" font-size="10.5" fill="#A9B2C3">${sc.start}</text><text x="${W}" y="${y}" font-size="10.5" fill="#A9B2C3" text-anchor="end">${sc.end}</text>`}
+function check(x,y,r=8){return `<circle cx="${x}" cy="${y}" r="${r}" fill="#E8BE74"/><path d="M${x-3.5} ${y} l2.5 2.5 l4.5 -5" stroke="#0B1322" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`}
+// ---- now: seven slices (for comparison)
+function bugun(sc){const id='h'+uid++;let s=`<svg width="${W}" height="54">${hatch(id)}`;const g=3,h=12,y=8;
+ for(let j=0;j<7;j++){const x0=j*W/7+(j?g/2:0),x1=(j+1)*W/7-(j<6?g/2:0),c=(j+.5)/7;const fz=c>sc.fz[0]&&c<sc.fz[1],ker=c>sc.ker[0];const past=sc.prayed!=null||c<sc.now;
+  s+=`<rect x="${x0}" y="${y}" width="${x1-x0}" height="${h}" rx="6" fill="${fz?'#E8BE74':ker?'#F4B08F':'#1C2943'}" opacity="${fz?(past?.28:1):ker?.18:1}"/>`;if(ker)s+=`<rect x="${x0}" y="${y}" width="${x1-x0}" height="${h}" rx="6" fill="url(#${id})"/>`}
+ s+=`<rect x="0" y="${y}" width="${sc.now*W}" height="${h}" rx="6" fill="#0B1322" opacity=".55"/>`;
+ if(sc.prayed!=null)s+=check(sc.prayed*W,y+h/2);else s+=`<circle cx="${sc.now*W}" cy="${y+h/2}" r="13" fill="#E8BE74" opacity=".3"/><circle cx="${sc.now*W}" cy="${y+h/2}" r="8" fill="#FFF4DC"/>`;
+ s+=times(sc,44)+`<text x="${sc.fz[1]*W}" y="44" font-size="10.5" fill="#E8BE74" font-weight="600" text-anchor="middle">${sc.fzT[1]}</text></svg>`;
+ return s+(sc.prayed==null?`<div class="line">Şu an: vaktin başı (3/7)</div>`:'')}
+// ---- Ç1 İnce çizgi: one 4dp line, gold over faziletli, hatched peach kerahat, the gone part dim, a light at now
+function c1(sc){const id='h'+uid++;const y=18,h=5;let s=`<svg width="${W}" height="56">${hatch(id)}`;
+ s+=`<rect x="0" y="${y}" width="${W}" height="${h}" rx="2.5" fill="#1C2943"/>`;
+ s+=`<rect x="${sc.fz[0]*W}" y="${y}" width="${(sc.fz[1]-sc.fz[0])*W}" height="${h}" rx="2.5" fill="#E8BE74"/>`;
+ s+=`<rect x="${sc.ker[0]*W}" y="${y}" width="${(sc.ker[1]-sc.ker[0])*W}" height="${h}" rx="2.5" fill="#F4B08F" opacity=".25"/><rect x="${sc.ker[0]*W}" y="${y}" width="${(sc.ker[1]-sc.ker[0])*W}" height="${h}" rx="2.5" fill="url(#${id})"/>`;
+ s+=`<rect x="0" y="${y-1}" width="${sc.now*W}" height="${h+2}" fill="#0B1322" opacity=".6"/>`;
+ if(sc.prayed!=null)s+=check(sc.prayed*W,y+h/2,7);else s+=`<circle cx="${sc.now*W}" cy="${y+h/2}" r="11" fill="#E8BE74" opacity=".28"/><circle cx="${sc.now*W}" cy="${y+h/2}" r="6" fill="#FFF4DC"/>`;
+ s+=times(sc,48)+`<text x="${sc.fz[1]*W-3}" y="48" font-size="10.5" fill="#E8BE74" font-weight="600" text-anchor="end">${sc.fzT[1]}</text><text x="${sc.ker[0]*W+3}" y="48" font-size="10.5" fill="#F4B08F" text-anchor="start">${sc.kerT}</text></svg>`;
+ return s+(sc.line?`<div class="line" style="color:#E8BE74">${sc.line}</div>`:'')}
+// ---- Ç2 Kıl diye dolan: the line fills from the start to now; past the faziletli end it turns cream, in kerahat peach; ticks mark the thresholds
+function c2(sc){const y=20,h=6;let s=`<svg width="${W}" height="58"><defs><linearGradient id="g${uid}" x1="0" x2="1"><stop offset="0" stop-color="#C99A4E"/><stop offset="1" stop-color="#F6D79B"/></linearGradient></defs>`;
+ const n=sc.prayed!=null?sc.prayed:sc.now;
+ s+=`<rect x="0" y="${y}" width="${W}" height="${h}" rx="3" fill="#1C2943"/>`;
+ s+=`<rect x="0" y="${y}" width="${n*W}" height="${h}" rx="3" fill="url(#g${uid++})"/>`;
+ [[sc.fz[1],'#E8BE74',sc.fzT[1],'end',-3],[sc.ker[0],'#F4B08F',sc.kerT,'start',3]].forEach(([t,c,l,an,dx])=>{s+=`<rect x="${t*W-1}" y="${y-6}" width="2" height="${h+12}" rx="1" fill="${c}"/><text x="${t*W+dx}" y="${y-8}" font-size="10" fill="${c}" text-anchor="${an}" font-weight="600">${l}</text>`});
+ if(sc.prayed!=null)s+=check(n*W,y+h/2,8);else s+=`<circle cx="${n*W}" cy="${y+h/2}" r="12" fill="#E8BE74" opacity=".3"/><circle cx="${n*W}" cy="${y+h/2}" r="6.5" fill="#FFF4DC"/>`;
+ s+=times(sc,52)+`</svg>`;return s+(sc.line?`<div class="line" style="color:#E8BE74">${sc.line}</div>`:'')}
+// ---- Ç3 Eriyen çizgi: what is left of the vakit; the line shortens from the left as time passes, the faziletli part is gold and runs out first
+function c3(sc){const id='h'+uid++;const y=18,h=8;let s=`<svg width="${W}" height="56">${hatch(id)}`;const n=sc.now;
+ s+=`<rect x="0" y="${y+h/2-.5}" width="${n*W}" height="1" fill="#2A3755"/>`;
+ const a=Math.max(n,sc.fz[0]);if(sc.fz[1]>a)s+=`<rect x="${a*W}" y="${y}" width="${(sc.fz[1]-a)*W}" height="${h}" rx="4" fill="#E8BE74" filter="url(#gl${id})" opacity=".6"/><rect x="${a*W}" y="${y}" width="${(sc.fz[1]-a)*W}" height="${h}" rx="4" fill="#E8BE74"/>`;
+ const b=Math.max(n,sc.fz[1]);if(sc.ker[0]>b)s+=`<rect x="${b*W+2}" y="${y+1}" width="${(sc.ker[0]-b)*W-4}" height="${h-2}" rx="3" fill="#3A4A6B"/>`;
+ s+=`<rect x="${sc.ker[0]*W}" y="${y+1}" width="${(sc.ker[1]-sc.ker[0])*W}" height="${h-2}" rx="3" fill="url(#${id})"/>`;
+ if(sc.prayed!=null)s+=check(sc.prayed*W,y+h/2,7);
+ s+=`<circle cx="${n*W}" cy="${y+h/2}" r="4" fill="#FFF4DC"/>`;
+ s+=times(sc,48)+`<text x="${sc.fz[1]*W}" y="48" font-size="10.5" fill="#E8BE74" font-weight="600" text-anchor="middle">${sc.fzT[1]}</text></svg>`;
+ return s+(sc.line?`<div class="line" style="color:#E8BE74">${sc.line}</div>`:'')}
+// ---- Ç4 Çizgi + üst yazı: a hairline; the faziletli part as a gold bracket with its name above, kerahat with its name; the clock as a small diamond
+function c4(sc){const id='h'+uid++;const y=30,h=3;let s=`<svg width="${W}" height="64">${hatch(id)}`;
+ s+=`<rect x="0" y="${y}" width="${W}" height="${h}" rx="1.5" fill="#2A3755"/>`;
+ const f0=sc.fz[0]*W,f1=sc.fz[1]*W;s+=`<rect x="${f0}" y="${y-1}" width="${f1-f0}" height="${h+2}" rx="2" fill="#E8BE74"/><path d="M${f0} ${y-5} v-5 h${f1-f0} v5" stroke="#E8BE74" stroke-width="1" fill="none" opacity=".6"/><text x="${(f0+f1)/2}" y="${y-14}" font-size="10" fill="#E8BE74" text-anchor="middle" font-weight="600">faziletli</text>`;
+ const k0=sc.ker[0]*W,k1=sc.ker[1]*W;s+=`<rect x="${k0}" y="${y-1}" width="${k1-k0}" height="${h+2}" fill="#F4B08F" opacity=".7"/><path d="M${k0} ${y-5} v-5 h${k1-k0} v5" stroke="#F4B08F" stroke-width="1" fill="none" opacity=".6"/><text x="${(k0+k1)/2}" y="${y-14}" font-size="10" fill="#F4B08F" text-anchor="middle">kerahat</text>`;
+ s+=`<rect x="0" y="${y-2}" width="${sc.now*W}" height="${h+4}" fill="#0B1322" opacity=".55"/>`;
+ if(sc.prayed!=null)s+=check(sc.prayed*W,y+h/2,7);else{const x=sc.now*W,c=y+h/2;s+=`<path d="M${x} ${c-7} l6 7 l-6 7 l-6 -7z" fill="#FFF4DC"/>`}
+ s+=times(sc,56)+`<text x="${f1}" y="56" font-size="10.5" fill="#E8BE74" font-weight="600" text-anchor="middle">${sc.fzT[1]}</text></svg>`;
+ return s+(sc.line?`<div class="line" style="color:#E8BE74">${sc.line}</div>`:'')}
+const card=(sc,f)=>`<div class="ph"><div class="cap">${sc.cap}</div><div class="cnt">${sc.cnt}</div><div class="sub">${sc.sub}</div>${f(sc)}</div>`;
+const O=[
+ {n:'Bugün · yedi dilim',d:'Şu anki şerit, karşılaştırmak için.',f:bugun},
+ {n:'Ç1 · İnce çizgi',d:'<b>Tek ince çizgi</b> (bugünkünün yarısı kalınlığında). Faziletli kısmı altın, kerahat taralı turuncu, geçen kısım sönük; şu an parlayan bir nokta. Altında "Faziletli vakit · 30 dk kaldı". Bugünkünün en sade hali.',f:c1},
+ {n:'Ç2 · Dolan çizgi',d:'Çizgi vaktin başından <b>şu ana kadar dolar</b>, zaman ilerledikçe uzar. Faziletli vaktin bitişi ve kerahatin başı çizgiyi kesen <b>iki küçük çentik</b>, saatleri üstünde. Kıldığında dolma orada durur, ✓ konur.',f:c2},
+ {n:'Ç3 · Eriyen çizgi',d:'Tersi: çizgi <b>kalan vakti</b> gösterir ve soldan eriyerek kısalır. Önce parlayan altın kısım (faziletli) biter, sonra koyu kısım, en son taralı kerahat. "Ne kadar kaldı" en çabuk bununla okunur.',f:c3},
+ {n:'Ç4 · Çizgi + yazı',d:'Kıl gibi ince bir çizgi; faziletli kısım ve kerahat üstünde <b>adlarıyla, küçük birer parantezle</b> işaretli. Şu an küçük bir elmas. Yazıyla anlatıldığı için ilk bakışta en anlaşılır olanı.',f:c4},
+];
+document.getElementById('row').innerHTML=O.map(o=>`<div class="opt"><h3>${o.n}</h3><div class="d">${o.d}</div><div class="st">KILINMADI</div>${card(A,o.f)}<div class="st">KILINDI</div>${card(B,o.f)}</div>`).join('');
+</script>
+</body>
+</html>
