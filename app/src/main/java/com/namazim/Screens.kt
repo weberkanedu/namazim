@@ -1841,7 +1841,7 @@ private fun HaftaGorunum(d: Donem, tr: java.util.Locale) {
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(Pal.Line))
         }
-        Text("Dolu kutu vaktinde, çerçeveli sonra kılındı, şeftali kaza. ▲▼ geçen haftanın aynı gününe göre vaktinde farkı.",
+        Text("Dolu kutu vaktinde, çerçeveli sonra kılındı, turuncu kaza. ▲▼ geçen haftanın aynı gününe göre vaktinde farkı.",
             Modifier.padding(top = Space.s), color = Pal.Muted, fontSize = Type.micro, lineHeight = 15.sp)
     }
 }
