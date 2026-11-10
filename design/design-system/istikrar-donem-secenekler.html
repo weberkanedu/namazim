@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İstikrar Dönemleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--late:#9A8660;--warn:#F4B08F;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322;--good:#8FD3A8}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1240px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 48px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1000px}.lede b{color:#F3EEE3}
+.per{margin-top:40px;border-top:1px solid #1A2232;padding-top:22px}
+.per h2{font:600 38px Cormorant,serif;margin:0;color:var(--gold)}.per .q{color:#D5DBE6;font-size:14.5px;margin:2px 0 14px;line-height:1.6}.per .q b{color:var(--gold)}
+.row{display:flex;gap:22px;flex-wrap:wrap}
+.opt{width:360px}
+.opt h3{font:600 22px Cormorant,serif;margin:0 0 2px;display:flex;gap:8px;align-items:center}
+.opt h3 em{font:600 10px Inter;font-style:normal;color:#0B1322;background:var(--gold);border-radius:999px;padding:3px 8px;letter-spacing:.05em}
+.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:0 0 10px;min-height:58px}
+.phone{width:360px;height:700px;border-radius:40px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:32px;background:var(--ground);overflow-y:auto;scrollbar-width:none;padding:0 18px 90px}
+.top{display:flex;align-items:flex-end;padding-top:36px}.top b{font:600 30px/1 Cormorant,serif;flex:1}
+.pill{display:flex;margin:12px 0 0;background:var(--card);border-radius:999px;padding:4px}
+.pill span{flex:1;text-align:center;padding:7px 0;border-radius:999px;font:500 12px Inter;color:var(--muted)}.pill span.on{background:rgb(232 190 116 / .18);color:var(--gold);font-weight:600}
+.say{font-size:16px;line-height:1.5;margin:18px 0 4px;color:#F3EEE3}.say b{color:var(--gold);font-weight:600}
+.small{font-size:12px;color:var(--muted)}
+.dock{position:absolute;left:22px;right:22px;bottom:22px;height:50px;border-radius:25px;background:#16203Af2;display:flex;align-items:center;justify-content:space-around;font:500 10.5px Inter;color:var(--muted)}
+.dock .on{color:var(--gold);background:#22304F;padding:9px 16px;border-radius:20px}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:12px 0}.key span{display:flex;align-items:center;gap:6px}
+.mk{display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.mk.v{background:var(--gold);color:#0B1322}.mk.k{border:2px solid var(--gold);color:var(--gold)}.mk.x{background:transparent;color:var(--warn);border:2px solid var(--warn)}.mk.n{background:#1C2943}
+table.grid{width:100%;border-collapse:collapse;margin-top:12px}
+table.grid th{font:500 11px Inter;color:var(--muted);padding:4px 0}table.grid td{text-align:center;padding:6px 0}
+table.grid td.n{text-align:left;font-size:13px;padding-right:6px}
+.dayrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.dayrow .dn{width:58px;font-size:13px}.dayrow .dn small{display:block;color:var(--muted);font-size:10.5px}
+.dayrow .ps{display:flex;gap:5px;flex:1}.dayrow .r{font-size:12px;color:var(--muted);text-align:right;width:70px}.dayrow .r b{color:#F3EEE3;font-weight:600;font-size:14px;display:block}
+.pv{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700}
+.pv.v{background:var(--gold);color:#0B1322}.pv.k{border:1.5px solid var(--gold);color:var(--gold)}.pv.x{border:1.5px solid var(--warn);color:var(--warn)}.pv.n{background:#16203A;color:#3A4560}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.cmp div{background:var(--card);border-radius:16px;padding:12px}.cmp b{display:block;font:600 34px/1 Cormorant,serif}.cmp span{font-size:11.5px;color:var(--muted)}
+.hb{margin:10px 0}.hb .l{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}.hb .l b{color:var(--gold)}
+.hb .t{height:10px;border-radius:5px;background:var(--track);overflow:hidden;position:relative}.hb .t i{position:absolute;top:0;bottom:0;left:0;border-radius:5px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
+.cal .h{font-size:10.5px;color:var(--muted);text-align:center}
+.cal .c{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.cal .c small{font-size:9px;font-weight:600;opacity:.8}
+.wk{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.wk .n{width:72px}.wk .n small{display:block;color:var(--muted);font-size:10.5px}
+.wk .t{flex:1;height:12px;border-radius:6px;background:var(--track);overflow:hidden;display:flex}.wk .r{width:56px;text-align:right}.wk .r b{font-size:14px}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line)}.mrow .n{width:52px}.mrow .t{flex:1;height:12px;border-radius:6px;background:var(--track);overflow:hidden;display:flex}.mrow .r{width:84px;text-align:right;font-size:12px;color:var(--muted)}.mrow .r b{color:var(--gold);font-size:13px}
+.karne{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.karne div{background:var(--card);border-radius:16px;padding:14px}.karne b{display:block;font:600 36px/1 Cormorant,serif}.karne span{font-size:12px;color:var(--muted);line-height:1.4;display:block;margin-top:4px}.karne .g b{color:var(--gold)}
+.yol{position:relative;margin:16px 0 0 10px;padding-left:22px;border-left:2px solid #2A3550}
+.yol div{position:relative;padding:0 0 18px}.yol div::before{content:"";position:absolute;left:-30px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--gold)}
+.yol div.next::before{background:var(--ground);border:2px solid var(--gold)}
+.yol b{display:block;font-size:14px}.yol span{font-size:12px;color:var(--muted)}
+svg text{font-family:Inter}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Defter · İstikrar · her dönemin kendi dili</div>
+  <h1>Her döneme en uygun gösterim</h1>
+  <p class="lede">Her dönem başka bir soruya cevap verir, o yüzden her birine o soruyu en kolay okutan gösterimi seçelim. Hepsinde ortak kural: <b>önce bir cümle</b> (ne oldu, insan diliyle), sonra <b>tek bir görsel</b>, etiketleri üstünde, renk ezberlemeden okunur. Her dönem için üç aday var; birini seç, dördünü birlikte uygularım. <b>Önerdiklerim işaretli.</b></p>
+  <div class="key"><span><i class="mk v">✓</i>vaktinde kılındı</span><span><i class="mk k">✓</i>sonra kılındı</span><span><i class="mk x">✕</i>kaza</span><span><i class="mk n"></i>henüz gelmedi</span></div>
+  <div id="per"></div>
+</div>
+<script>
+// ---------------- data: 100 days ending today (10 Kasım 2026), slowly getting better
+const TODAY=new Date(2026,10,10);
+const VAK=['Sabah','Öğle','İkindi','Akşam','Yatsı'],VK=['S','Ö','İ','A','Y'];
+const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const GUN=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'],G3=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+function rng(s){return()=>{s=(s*16807)%2147483647;return s/2147483647}}
+const r=rng(31),DAYS=[];
+for(let i=99;i>=0;i--){const d=new Date(TODAY.getTime()-i*864e5),prog=(100-i)/100;
+  DAYS.push({d,v:[0,1,2,3,4].map(k=>{if(i===0&&k>=2)return 'n';if(r()<(.08-.05*prog)*(k===0?2:1))return 'x';return r()<[.45,.7,.35,.9,.6][k]+.22*prog?'v':'k'}),pages:r()<.7?Math.round(r()*12+2):0})}
+const st=days=>{let v=0,k=0,x=0,due=0,full=0;days.forEach(d=>{let ok=0,dd=0;d.v.forEach(c=>{if(c==='n')return;dd++;due++;if(c==='v'){v++;ok++}else if(c==='k'){k++;ok++}else x++});if(dd===5&&ok===5)full++});return{v,k,x,due,full,kil:v+k}};
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const week=DAYS.slice(-7),prevWeek=DAYS.slice(-14,-7),month=DAYS.slice(-30);
+const mk=c=>`<span class="mk ${c}">${c==='v'||c==='k'?'✓':c==='x'?'✕':''}</span>`;
+const head=p=>`<div class="top"><b>İstikrar</b></div><div class="pill">${['Hafta','Ay','Yıl','Tümü'].map((x,i)=>`<span class="${i===p?'on':''}">${x}</span>`).join('')}</div>`;
+const dock='<div class="dock"><span>Namaz</span><span>Zikir</span><span>Okuma</span><span class="on">Defter</span></div>';
+const ws=st(week),pws=st(prevWeek),ms=st(month);
+// best / worst vakit of a set of days, by days prayed on time
+const rank=days=>VAK.map((n,i)=>[i,days.filter(d=>d.v[i]==='v').length,days.filter(d=>d.v[i]!=='n').length]).sort((a,b)=>a[1]/Math.max(a[2],1)-b[1]/Math.max(b[2],1));
+const ACC=['Sabahı','Öğleyi','İkindiyi','Akşamı','Yatsıyı'];
+
+// ---------------- HAFTA
+const H=[
+ {n:'H1 · Tik tablosu',rec:1,d:'Okul karnesi gibi: satırlar vakit, sütunlar gün. Her kutuda bir işaret. 35 namazın hepsi tek bakışta.',
+  h:`<div class="say">Bu hafta <b>${ws.kil}/${ws.due}</b> vakit kıldın, <b>${ws.v}</b>'i vaktinde.</div><div class="small">Geçen hafta ${pws.kil}/${pws.due} · ${pws.v} vaktinde</div>
+   <table class="grid"><tr><th></th>${week.map(d=>`<th>${G3[(d.d.getDay()+6)%7]}<br><span style="color:#F3EEE3">${d.d.getDate()}</span></th>`).join('')}</tr>
+   ${VAK.map((n,i)=>`<tr><td class="n">${n}</td>${week.map(d=>`<td>${mk(d.v[i])}</td>`).join('')}</tr>`).join('')}</table>
+   ${(()=>{const w=rank(week)[0];return `<div class="say" style="font-size:13.5px;margin-top:16px">En çok geciktirdiğin: <b>${VAK[w[0]]}</b> (${w[2]} günün ${w[2]-w[1]}'inde vaktinde değil).</div>`})()}`},
+ {n:'H2 · Gün gün liste',d:'Her gün bir satır: gün adı, beş vaktin baş harfi kutularda, sağda o günün özeti. Telefonda en rahat kaydırılan.',
+  h:`<div class="say">Bu hafta <b>${ws.full}</b> gün beş vakti tamamladın.</div>`+week.slice().reverse().map(d=>{const s=st([d]);return `<div class="dayrow"><div class="dn">${GUN[(d.d.getDay()+6)%7].slice(0,3)}<small>${d.d.getDate()} Kas</small></div><div class="ps">${d.v.map((c,i)=>`<span class="pv ${c}">${VK[i]}</span>`).join('')}</div><div class="r"><b>${s.kil}/${s.due}</b>${s.v} vaktinde</div></div>`}).join('')},
+ {n:'H3 · Geçen haftayla',d:'Grafik yok: bu hafta ile geçen haftanın sayıları yan yana, her vakit için tek çubuk ve fark.',
+  h:`<div class="say">Geçen haftadan <b>${ws.v-pws.v>=0?ws.v-pws.v+' namaz daha':pws.v-ws.v+' namaz daha az'}</b> vaktinde kıldın.</div>
+   <div class="cmp"><div><b>${ws.kil}/${ws.due}</b><span>bu hafta kılındı</span></div><div><b style="color:var(--gold)">${ws.v}</b><span>bu hafta vaktinde</span></div><div><b style="color:#7A86A0">${pws.kil}/${pws.due}</b><span>geçen hafta</span></div><div><b style="color:#7A86A0">${pws.v}</b><span>geçen hafta vaktinde</span></div></div>`+
+   VAK.map((n,i)=>{const a=week.filter(d=>d.v[i]==='v').length,b=prevWeek.filter(d=>d.v[i]==='v').length;return `<div class="hb"><div class="l"><span>${n}</span><span>${a} gün vaktinde <b>${a-b>0?'▲'+(a-b):a-b<0?'▼'+(b-a):'='}</b></span></div><div class="t"><i style="width:${a/7*100}%;background:var(--gold)"></i></div></div>`}).join('')},
+];
+// ---------------- AY
+const off=(month[0].d.getDay()+6)%7;
+const dayCol=d=>{const s=st([d]);if(d.v.includes('x'))return ['#3A2A2A','#F4B08F'];if(s.due<5)return ['#16203A','#7A86A0'];if(s.v===5)return ['#E8BE74','#0B1322'];if(s.v>=3)return ['#B79A5E','#0B1322'];return ['#4E4636','#F3EEE3']};
+const weeks=[];for(let i=0;i<month.length;i+=7)weeks.push(month.slice(i,i+7));
+const A=[
+ {n:'A1 · Renkli takvim',rec:1,d:'Telefonun takvimi gibi: her gün tek renk. Altın = beşi vaktinde, açık altın = çoğu vaktinde, koyu = kılındı ama geç, şeftali çerçeve = kaza var.',
+  h:`<div class="say">Son 30 günde <b>${ms.full}</b> gün beş vakti tamamladın; <b>${month.filter(d=>st([d]).v===5).length}</b> gün hepsi vaktindeydi.</div>
+   <div class="cal">${['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].map(g=>`<div class="h">${g}</div>`).join('')}${'<div></div>'.repeat(off)}${month.map(d=>{const [bg,fg]=dayCol(d);const x=d.v.includes('x');return `<div class="c" style="background:${x?'transparent':bg};color:${fg};${x?'border:2px solid #F4B08F':''}">${d.d.getDate()}<small>${st([d]).v}/5</small></div>`}).join('')}</div>
+   <div class="key" style="font-size:11px"><span><i style="width:12px;height:12px;border-radius:4px;background:#E8BE74"></i>5 vaktinde</span><span><i style="width:12px;height:12px;border-radius:4px;background:#B79A5E"></i>3–4</span><span><i style="width:12px;height:12px;border-radius:4px;background:#4E4636"></i>0–2</span><span><i style="width:12px;height:12px;border-radius:4px;border:2px solid #F4B08F"></i>kaza var</span></div>`},
+ {n:'A2 · Hafta hafta',d:'Ayı dört–beş haftaya böler; her hafta bir satır, kaç vakit kılındı ve kaçı vaktinde. Gidişat yukarıdan aşağı okunur.',
+  h:`<div class="say">Ay boyunca vaktinde kılma <b>${pct(st(weeks[0]).v,st(weeks[0]).due)}%'den ${pct(st(weeks[weeks.length-1]).v,st(weeks[weeks.length-1]).due)}%'e</b> çıktı.</div>`+weeks.map((w,i)=>{const s=st(w);return `<div class="wk"><div class="n">${i+1}. hafta<small>${w[0].d.getDate()}–${w[w.length-1].d.getDate()} ${AY[w[w.length-1].d.getMonth()].slice(0,3)}</small></div><div class="t"><i style="width:${pct(s.v,s.due)}%;background:#E8BE74"></i><i style="width:${pct(s.k,s.due)}%;background:#6E5F45"></i></div><div class="r"><b>${s.kil}/${s.due}</b><br><span class="small">${pct(s.v,s.due)}% vakt.</span></div></div>`}).join('')},
+ {n:'A3 · Vakit karnesi',d:'Ayın özeti vakit vakit: her vakit için "30 günün kaçında vaktinde, kaçında sonra, kaçında kaza" düz yazıyla ve tek çubukla.',
+  h:`${(()=>{const r=rank(month);return `<div class="say">Bu ay en iyi <b>${VAK[r[4][0]]}</b>, en zayıf <b>${VAK[r[0][0]]}</b>.</div>`})()}`+VAK.map((n,i)=>{const v=month.filter(d=>d.v[i]==='v').length,k=month.filter(d=>d.v[i]==='k').length,x=month.filter(d=>d.v[i]==='x').length;return `<div class="hb" style="margin:14px 0"><div class="l"><span style="font-weight:600">${n}</span><span><b>${v}</b> vaktinde · ${k} sonra${x?` · <span style="color:var(--warn)">${x} kaza</span>`:''}</span></div><div class="t" style="display:flex"><i style="position:static;width:${v/30*100}%;background:#E8BE74"></i><i style="position:static;width:${k/30*100}%;background:#6E5F45"></i><i style="position:static;width:${x/30*100}%;background:#F4B08F"></i></div></div>`}).join('')},
+];
+// ---------------- YIL
+const months=AY.map((n,m)=>DAYS.filter(d=>d.d.getMonth()===m&&d.d.getFullYear()===2026));
+const Y=[
+ {n:'Y1 · Ay ay sütunlar',rec:1,d:'Yılın 12 ayı yan yana sütun; sütunun boyu o ay vaktinde kılma oranı, üstünde yüzdesi yazılı. Henüz gelmemiş aylar boş.',
+  h:(()=>{let s=`<svg width="100%" viewBox="0 0 324 200"><line x1="0" x2="324" y1="170" y2="170" stroke="#1E2940"/>`;months.forEach((m,i)=>{const x=i*27+3;if(!m.length){s+=`<rect x="${x}" y="164" width="21" height="6" rx="3" fill="#16203A"/>`}else{const p=pct(st(m).v,st(m).due);const h=p/100*140;s+=`<rect x="${x}" y="${170-h}" width="21" height="${h}" rx="5" fill="#E8BE74"/><text x="${x+10.5}" y="${164-h}" font-size="10" font-weight="600" fill="#F3EEE3" text-anchor="middle">${p}</text>`}s+=`<text x="${x+10.5}" y="186" font-size="10" fill="#A9B2C3" text-anchor="middle">${AY[i].slice(0,1)}</text>`});
+   return `${(()=>{const has=months.map((m,i)=>[i,m.length?pct(st(m).v,st(m).due):-1]).filter(x=>x[1]>=0).sort((a,b)=>b[1]-a[1]);return `<div class="say">2026'nın en iyi ayı <b>${AY[has[0][0]]} (%${has[0][1]})</b>.</div>`})()}<div class="small" style="margin-bottom:8px">Sütun = o ay vaktinde kılınanların yüzdesi</div>${s}</svg>`})()},
+ {n:'Y2 · 12 ay listesi',d:'Her ay bir satır: ayın adı, bir çubuk ve yanında "kılındı · vaktinde" yazıyla. En okunaklısı, ama ekranı daha çok kaplar.',
+  h:`<div class="say">Bu yıl <b>${st(DAYS).kil}</b> vakit kıldın; <b>%${pct(st(DAYS).v,st(DAYS).due)}</b>'i vaktinde.</div>`+months.map((m,i)=>{if(!m.length)return `<div class="mrow" style="opacity:.4"><span class="n">${AY[i].slice(0,3)}</span><div class="t"></div><span class="r">—</span></div>`;const s=st(m);return `<div class="mrow"><span class="n">${AY[i].slice(0,3)}</span><div class="t"><i style="width:${pct(s.v,s.due)}%;background:#E8BE74"></i><i style="width:${pct(s.k,s.due)}%;background:#6E5F45"></i></div><span class="r"><b>%${pct(s.v,s.due)}</b> vaktinde</span></div>`}).join('')},
+ {n:'Y3 · Yıl takvimi (bugünkü)',d:'Bugünkü ısı haritası: yılın her günü küçük bir kare. Uzun vadede güzel ama küçük ve renk tonları ayırt etmek zor; karşılaştırma için koydum.',
+  h:(()=>{const off2=(new Date(2026,0,1).getDay()+6)%7;const map={};DAYS.forEach(d=>map[d.d.toDateString()]=d);let s=`<svg width="100%" viewBox="0 0 324 100">`;for(let i=0;i<365;i++){const d=new Date(2026,0,1+i);const w=Math.floor((i+off2)/7),dw=(i+off2)%7;const day=map[d.toDateString()];const v=day?st([day]).v:-1;s+=`<rect x="${w*6.1}" y="${dw*12+10}" width="5" height="10" rx="1.5" fill="${v<0?'#16203A':['#2E2A22','#4E4636','#6E5F45','#9A8660','#C4A260','#E8BE74'][v]}"/>`}
+   return `<div class="say">Yılın her günü bir kare.</div>${s}</svg>`})()},
+];
+// ---------------- TÜMÜ
+const all=st(DAYS);let best=0,run=0;DAYS.forEach(d=>{if(d.v.every(c=>c!=='x')){run++;best=Math.max(best,run)}else run=0});
+const allMonths=[];DAYS.forEach(d=>{const k=d.d.getMonth();if(!allMonths.length||allMonths[allMonths.length-1].m!==k)allMonths.push({m:k,d:[]});allMonths[allMonths.length-1].d.push(d)});
+const T=[
+ {n:'T1 · Karne',rec:1,d:'Grafik yok, büyük rakamlar: ilk günden beri ne kadar yol aldığın altı kartta. Altında ay ay vaktinde yüzdesi tek satırda.',
+  h:`<div class="say"><b>${DAYS.length} gündür</b> Namazım'la birliktesin.</div><div class="karne"><div><b>${all.kil}</b><span>vakit namaz kıldın</span></div><div class="g"><b>%${pct(all.v,all.due)}</b><span>vaktinde kılındı</span></div><div><b>${all.full}</b><span>gün beşi de tamam</span></div><div class="g"><b>${best}</b><span>gün en uzun kazasız seri</span></div><div><b>${DAYS.reduce((a,b)=>a+b.pages,0)}</b><span>sayfa okudun</span></div><div><b>${all.x}</b><span>vakit kazaya kaldı</span></div></div>
+   <div class="say" style="font-size:13px;margin-top:18px">Vaktinde kılma ay ay: ${allMonths.map(m=>`<b>${AY[m.m].slice(0,3)} %${pct(st(m.d).v,st(m.d).due)}</b>`).join(' → ')}</div>`},
+ {n:'T2 · Gidişat çizgisi',d:'İlk aydan bugüne vaktinde kılma yüzdesi tek çizgi, her noktanın üstünde yüzdesi. "İyiye mi gidiyorum" sorusunun cevabı.',
+  h:(()=>{const vals=allMonths.map(m=>pct(st(m.d).v,st(m.d).due));const W=290,Hh=150;const pts=vals.map((v,i)=>[20+(vals.length<2?W/2:i/(vals.length-1)*W),Hh-v/100*(Hh-20)]);
+   let s=`<svg width="100%" viewBox="0 0 330 ${Hh+26}">${[50,100].map(g=>`<line x1="20" x2="310" y1="${Hh-g/100*(Hh-20)}" y2="${Hh-g/100*(Hh-20)}" stroke="#1A2338" stroke-dasharray="3 4"/><text x="0" y="${Hh-g/100*(Hh-20)+3}" font-size="9" fill="#5A6582">%${g}</text>`).join('')}<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#E8BE74" stroke-width="2.5"/>`+pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#E8BE74"/><text x="${p[0]}" y="${p[1]-11}" font-size="12" font-weight="600" fill="#F3EEE3" text-anchor="middle">%${vals[i]}</text><text x="${p[0]}" y="${Hh+18}" font-size="11" fill="#A9B2C3" text-anchor="middle">${AY[allMonths[i].m].slice(0,3)}</text>`).join('');
+   return `<div class="say">Vaktinde kılman <b>%${vals[0]}'den %${vals[vals.length-1]}'e</b> çıktı. Elhamdülillah.</div>${s}</svg><div class="karne"><div><b>${all.kil}</b><span>vakit namaz</span></div><div class="g"><b>${best}</b><span>gün en uzun seri</span></div></div>`})()},
+ {n:'T3 · Yolculuk',d:'Kilometre taşları bir yol gibi alt alta: geçtiğin taşlar dolu, sıradaki boş halka ve ona ne kaldığı. Motive eden bir anlatım.',
+  h:`<div class="say"><b>${DAYS.length} gündür</b> yoldasın; sıradaki durak <b>100 tam gün</b>.</div><div class="yol">
+   <div><b>İlk gün</b><span>${DAYS[0].d.getDate()} ${AY[DAYS[0].d.getMonth()]} 2026</span></div><div><b>İlk tam gün</b><span>beş vakit, hiç kaza yok</span></div><div><b>7 gün seri</b><span>bir hafta hiç kaçırmadın</span></div>${all.kil>=400?'<div><b>400 vakit</b><span>'+all.kil+' vakit kıldın</span></div>':''}<div><b>${best} gün seri</b><span>en uzun serin</span></div><div class="next"><b>100 tam gün</b><span>${all.full}/100 · ${100-all.full} gün kaldı</span></div><div class="next" style="opacity:.6"><b>Bir yıl</b><span>${365-DAYS.length} gün kaldı</span></div></div>`},
+];
+const PER=[['Hafta','Bu hafta hangi gün hangi vakti kaçırdım?',H,0],['Ay','Bu ay hangi günler iyiydi, gidişat nasıl?',A,1],['Yıl','Yıl içinde aylar nasıl gitti?',Y,2],['Tümü','Başladığımdan beri ne kadar yol aldım?',T,3]];
+document.getElementById('per').innerHTML=PER.map(([n,q,opts,p])=>`<div class="per"><h2>${n}</h2><div class="q">Cevap verdiği soru: <b>${q}</b></div><div class="row">${opts.map(o=>`<div class="opt"><h3>${o.n}${o.rec?'<em>ÖNERİM</em>':''}</h3><div class="d">${o.d}</div><div class="phone"><div class="scr">${head(p)}${o.h}</div>${dock}</div></div>`).join('')}</div></div>`).join('');
+</script>
+</body>
+</html>

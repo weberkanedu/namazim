@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İstikrar Grafikleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322;--warn:#F4B08F;--late:#8C7A5A}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:40px 20px 80px}
+.wrap{max-width:1200px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+h2{font:600 30px Cormorant,serif;margin:40px 0 4px;color:var(--gold)}
+.lede{color:var(--muted);font-size:14.5px;line-height:1.65;max-width:1000px}.lede b{color:#F3EEE3}
+.seg{display:inline-flex;background:var(--card);border-radius:999px;padding:4px;margin-top:14px}
+.seg span{padding:8px 16px;border-radius:999px;font:500 13px Inter;color:var(--muted);cursor:pointer}.seg span.on{background:rgb(232 190 116 / .16);color:var(--gold)}
+.row{display:flex;gap:22px;flex-wrap:wrap;margin-top:16px}
+.opt{width:370px;background:var(--ground);border-radius:26px;padding:20px;border:1px solid #1A2338}
+.opt h3{font:600 23px Cormorant,serif;margin:0}.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:4px 0 14px;min-height:76px}.opt .d b{color:#F3EEE3}
+.hero{font:600 40px/1 Cormorant,serif}.hero small{font:500 13px Inter;color:#D5DBE6;margin-left:6px}
+.sub{font-size:12px;color:var(--muted);margin:6px 0 14px}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:10px}.leg span{display:flex;align-items:center;gap:5px}.leg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.cap{font:600 10px Inter;letter-spacing:.14em;color:var(--muted);margin:16px 0 8px}
+.note{background:var(--card);border-radius:16px;padding:16px 18px;font-size:13px;line-height:1.7;color:var(--muted);max-width:1100px;margin-top:22px}.note b{color:#F3EEE3}
+svg text{font-family:Inter}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Defter · İstikrar · Ay ve Tümü</div>
+  <h1>Düz çizgi yerine anlam</h1>
+  <p class="lede">Sorun: bugünkü grafikler sadece "kılındı mı" sayıyor; hepsini kılınca her şey %100'de düz bir çizgi. Oysa elimizde daha anlamlı bir bilgi var: <b>vaktinde mi kılındı</b> (mezhebine göre faziletli dilimde), <b>vaktin hangi anında</b> kılındı, <b>seri</b>. Aşağıdaki seçenekler bunları gösterir; %100 kılsan da grafikte konuşacak bir şey kalır. Verinin azken ve çokken nasıl göründüğünü değiştirip bak.</p>
+  <div class="seg" id="mode"><span class="on" data-m="az">Bugünkü veri (6 gün)</span><span data-m="cok">3 ay sonra</span></div>
+
+  <h2>Ay</h2>
+  <div class="row" id="ay"></div>
+  <h2>Tümü</h2>
+  <div class="row" id="tumu"></div>
+  <div class="note"><b>Önerim:</b> Ay için <b>A1 · Ay takvimi</b> (bir bakışta hangi gün ne olmuş görünür, telefondaki takvim alışkanlığına uyar), Tümü için <b>T2 · Ay ay sütunlar</b> (zamanla büyür, gidişatı gösterir). "Vakit vakit" çubukları da her iki dönemde <b>vaktinde oranı</b>nı göstersin: kılındı %100 olsa bile vaktinde %60 ise çubuk onu söyler.</div>
+</div>
+<script>
+// fake data: per day, per vakit: 'v' vaktinde, 'k' kılındı (geç), 'x' kaza, '' before start, with the time-in-vakit 0..1
+function rng(seed){return ()=>{seed=(seed*16807)%2147483647;return seed/2147483647}}
+function gen(days,seed){const r=rng(seed);const out=[];for(let d=0;d<days;d++){const day=[];for(let v=0;v<5;v++){const x=r();const t=Math.min(.98,Math.pow(r(),1.6)*(v===4?.7:1));
+ day.push(x<.06?{s:'x'}:{s:t<(v===0?.55:.3)&&!(v===0&&t<.28)?'v':'k',t})}out.push(day)}return out}
+let mode='az';
+const C={v:'#E8BE74',k:'#8C7A5A',x:'#F4B08F',e:'#1C2943'};
+const VAK=['Sabah','Öğle','İkindi','Akşam','Yatsı'];
+function data(){
+  if(mode==='az'){ // the owner's real week: all prayed, vaktinde varies
+    const d=gen(6,7).map(day=>day.map((c,i)=>({s:c.s==='x'?'v':c.s,t:c.t})));return d}
+  return gen(92,11)}
+const pct=(n,d)=>d?Math.round(n/d*100):0;
+function stats(D){let v=0,k=0,x=0;D.forEach(day=>day.forEach(c=>{if(c.s==='v')v++;else if(c.s==='k')k++;else if(c.s==='x')x++}));return {v,k,x,n:v+k+x}}
+
+// ---------- Ay
+function ayTakvim(D){ // last 30 days as a month calendar, each day 5 dots
+  const days=D.slice(-30);
+  // real dates: the last day is today, 10 Kasım 2026 (a Tuesday)
+  const first=new Date(2026,10,10-(days.length-1));const off=(first.getDay()+6)%7;let s=`<svg viewBox="0 0 330 ${40+Math.ceil((days.length+off)/7)*44}" width="100%">`;
+  ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].forEach((w,i)=>s+=`<text x="${i*47+23}" y="12" font-size="10" fill="#A9B2C3" text-anchor="middle">${w}</text>`);
+  days.forEach((day,j)=>{const p=j+off,cx=(p%7)*47+23,cy=Math.floor(p/7)*44+38;const full=day.every(c=>c.s==='v');
+   s+=`<circle cx="${cx}" cy="${cy}" r="19" fill="${full?'rgba(232,190,116,.16)':'#121D33'}" ${full?'stroke="#E8BE74" stroke-width="1"':''}/>`;
+   day.forEach((c,v)=>{const a=(v*72-90)*Math.PI/180;s+=`<circle cx="${cx+11*Math.cos(a)}" cy="${cy+11*Math.sin(a)}" r="4" fill="${C[c.s]||C.e}"/>`});
+   s+=`<text x="${cx}" y="${cy+3.5}" font-size="9" fill="#F3EEE3" text-anchor="middle">${new Date(first.getTime()+j*864e5).getDate()}</text>`});
+  return s+'</svg>'}
+function ayYigin(D){ // stacked bars per day
+  const days=D.slice(-30);const w=330/Math.max(days.length,10);let s=`<svg viewBox="0 0 330 150" width="100%"><line x1="0" y1="130" x2="330" y2="130" stroke="#1E2940"/>`;
+  days.forEach((day,j)=>{let y=130;['v','k','x'].forEach(t=>{const n=day.filter(c=>c.s===t).length;if(n){const h=n*22;s+=`<rect x="${j*w+w*.15}" y="${y-h}" width="${w*.7}" height="${h-2}" rx="3" fill="${C[t]}"/>`;y-=h}})});
+  s+=`<text x="0" y="146" font-size="10" fill="#A9B2C3">30 gün önce</text><text x="330" y="146" font-size="10" fill="#A9B2C3" text-anchor="end">bugün</text>`;return s+'</svg>'}
+function ayNokta(D){ // when in the vakit: each prayer a dot along its vakit, gold zone = faziletli
+  const days=D.slice(-30);let s=`<svg viewBox="0 0 330 190" width="100%">`;
+  VAK.forEach((n,v)=>{const y=18+v*36;s+=`<text x="0" y="${y+4}" font-size="11" fill="#F3EEE3">${n}</text><rect x="58" y="${y-9}" width="262" height="18" rx="9" fill="#121D33"/>`;
+   const fz=v===0?[.43,.86]:v===2?[.14,.71]:[0,.29];s+=`<rect x="${58+fz[0]*262}" y="${y-9}" width="${(fz[1]-fz[0])*262}" height="18" rx="9" fill="rgba(232,190,116,.14)"/>`;
+   days.forEach(day=>{const c=day[v];if(c.t!=null)s+=`<circle cx="${58+c.t*262}" cy="${y}" r="3.2" fill="${c.s==='v'?'#E8BE74':'#C9B48A'}" opacity=".85"/>`})});
+  s+=`<text x="58" y="186" font-size="10" fill="#A9B2C3">vakit girer</text><text x="320" y="186" font-size="10" fill="#A9B2C3" text-anchor="end">çıkar</text>`;return s+'</svg>'}
+function vakitBars(D){const rows=VAK.map((n,v)=>{let vv=0,k=0,t=0;D.forEach(day=>{const c=day[v];if(c.s){t++;if(c.s==='v')vv++;else if(c.s==='k')k++}});return [n,vv,k,t]});
+ return `<div class="cap">VAKİT VAKİT · VAKTİNDE ORANI</div>`+rows.map(([n,v,k,t])=>`<div style="display:flex;align-items:center;gap:10px;margin:8px 0;font-size:12.5px"><span style="width:52px">${n}</span><div style="flex:1;height:8px;border-radius:4px;background:#1C2943;display:flex;overflow:hidden"><i style="width:${pct(v,t)}%;background:#E8BE74"></i><i style="width:${pct(k,t)}%;background:#8C7A5A"></i></div><span style="width:40px;text-align:right;color:#E8BE74">%${pct(v,t)}</span></div>`).join('')}
+
+// ---------- Tümü
+function tumAylar(D){ // per month (30-day blocks) stacked share
+  const m=[];for(let i=0;i<D.length;i+=30)m.push(D.slice(i,i+30));const names=['Eyl','Eki','Kas','Ara'];const w=Math.min(70,300/Math.max(m.length,1));
+  let s=`<svg viewBox="0 0 330 170" width="100%"><line x1="0" y1="140" x2="330" y2="140" stroke="#1E2940"/>`;
+  m.forEach((blk,i)=>{const st=stats(blk);let y=140;const x=i*(w+14)+10;['v','k','x'].forEach(t=>{const h=st[t]/Math.max(st.n,1)*120;if(h>0){s+=`<rect x="${x}" y="${y-h}" width="${w}" height="${Math.max(h-2,1)}" rx="4" fill="${C[t]}"/>`;y-=h}});
+   s+=`<text x="${x+w/2}" y="${140-st.v/Math.max(st.n,1)*120+14}" font-size="11" font-weight="600" fill="#0B1322" text-anchor="middle">%${pct(st.v,st.n)}</text><text x="${x+w/2}" y="156" font-size="10" fill="#A9B2C3" text-anchor="middle">${names[(i+(mode==='az'?2:0))%4]}</text>`});
+  return s+'</svg>'}
+function tumZincir(D){ // one bead per day since start
+  const cols=15;let s=`<svg viewBox="0 0 330 ${Math.ceil(D.length/cols)*22+10}" width="100%">`;
+  D.forEach((day,j)=>{const st=stats([day]);const x=(j%cols)*22+11,y=Math.floor(j/cols)*22+11;const col=st.x?C.x:st.v===5?C.v:st.v>=3?'#C9A766':C.k;
+   s+=`<circle cx="${x}" cy="${y}" r="8" fill="${col}"/>${st.v===5?`<circle cx="${x}" cy="${y}" r="3" fill="#FFF4D6"/>`:''}`});
+  return s+'</svg>'}
+function tumHalka(D){ // big ring: vaktinde / geç / kaza share since start, plus best month
+  const st=stats(D);const R=62,c=2*Math.PI*R;let a=0;let s=`<svg viewBox="0 0 330 170" width="100%"><g transform="translate(90 85) rotate(-90)">`;
+  ['v','k','x'].forEach(t=>{const f=st[t]/Math.max(st.n,1);s+=`<circle r="${R}" fill="none" stroke="${C[t]}" stroke-width="16" stroke-dasharray="${f*c} ${c}" stroke-dashoffset="${-a*c}"/>`;a+=f});
+  s+=`</g><text x="90" y="82" font-size="26" font-family="Cormorant" font-weight="600" fill="#F3EEE3" text-anchor="middle">%${pct(st.v,st.n)}</text><text x="90" y="100" font-size="10" fill="#A9B2C3" text-anchor="middle">vaktinde</text>`;
+  s+=`<text x="180" y="55" font-size="12" fill="#E8BE74">● vaktinde ${st.v}</text><text x="180" y="80" font-size="12" fill="#C9B48A">● sonra kılındı ${st.k}</text><text x="180" y="105" font-size="12" fill="#F4B08F">● kaza ${st.x}</text><text x="180" y="135" font-size="11" fill="#A9B2C3">${D.length} gün · ${st.n} vakit</text>`;
+  return s+'</svg>'}
+
+const legend=`<div class="leg"><span><i style="background:#E8BE74"></i>vaktinde</span><span><i style="background:#8C7A5A"></i>sonra kılındı</span><span><i style="background:#F4B08F"></i>kaza</span></div>`;
+function draw(){const D=data();const st=stats(D);
+ const AY=[
+  {n:'A1 · Ay takvimi',d:'Ayın her günü bir daire, içinde <b>beş nokta</b> (beş vakit): altın = vaktinde, koyu = sonra kılındı, şeftali = kaza. Beşi de vaktinde olan gün altın halkayla parlar.',g:ayTakvim(D)},
+  {n:'A2 · Günlük sütunlar',d:'Her gün bir sütun, üç renkten oluşur: <b>vaktinde / sonra / kaza</b>. %100 kılsan da sütunun ne kadarı altın, o görünür.',g:ayYigin(D)},
+  {n:'A3 · Vaktin neresinde',d:'Her vakit bir şerit; ay içindeki her namaz, <b>vaktin hangi anında kılındıysa</b> orada bir nokta. Altın bölge faziletli dilim. Noktalar sola toplanıyorsa erken kılıyorsun.',g:ayNokta(D)},
+ ];
+ const TU=[
+  {n:'T1 · Halka',d:'Başladığın günden beri bütün namazların <b>vaktinde / sonra / kaza</b> payı tek halkada, ortada vaktinde oranı.',g:tumHalka(D)},
+  {n:'T2 · Ay ay sütunlar',d:'Her ay bir sütun, üç renkli: ayların birbirine göre <b>gidişatı</b> görünür; vaktinde oranı sütunun üstünde. Zaman geçtikçe zenginleşir.',g:tumAylar(D)},
+  {n:'T3 · Gün zinciri',d:'İlk günden bugüne <b>her gün bir boncuk</b>: altın ve ortası parlak = beşi vaktinde, açık altın = 3–4 vaktinde, koyu = sonra kılındı, şeftali = kaza vardı. Tesbih gibi uzar.',g:tumZincir(D)},
+ ];
+ const box=(o,hero)=>`<div class="opt"><h3>${o.n}</h3><div class="d">${o.d}</div>${hero}${o.g}${legend}</div>`;
+ const heroAy=`<div class="hero">%${pct(st.v,st.n)}<small>vaktinde · %${pct(st.v+st.k,st.n)} kılındı</small></div><div class="sub">Son 30 gün</div>`;
+ const heroT=`<div class="hero">${st.v+st.k}<small>vakit · ${D.length} gün</small></div><div class="sub">ilk günden beri · %${pct(st.v,st.n)}'i vaktinde</div>`;
+ document.getElementById('ay').innerHTML=AY.map(o=>box(o,heroAy)).join('')+`<div class="opt" style="width:370px">${vakitBars(D)}<div class="d" style="min-height:0;margin-top:10px">Bugünkü "Vakit vakit" çubukları da artık <b>vaktinde oranı</b>nı gösterir (altın), sonra kılınanlar koyu altın: hepsi %100 kılınsa bile fark görünür.</div></div>`;
+ document.getElementById('tumu').innerHTML=TU.map(o=>box(o,heroT)).join('');}
+document.querySelectorAll('#mode span').forEach(s=>s.onclick=()=>{mode=s.dataset.m;document.querySelectorAll('#mode span').forEach(x=>x.classList.toggle('on',x===s));draw()});
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İstikrar Son Hali</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322;--good:#8FD3A8}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1600px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 48px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1100px}.lede b{color:#F3EEE3}
+.seg{display:inline-flex;background:var(--card);border-radius:999px;padding:4px;margin:14px 0 4px}
+.seg span{padding:8px 15px;border-radius:999px;font:500 13px Inter;color:var(--muted);cursor:pointer}.seg span.on{background:rgb(232 190 116 / .16);color:var(--gold)}
+.cols{display:flex;gap:26px;overflow-x:auto;padding:16px 0 10px}
+.col{flex:none;width:370px}
+.col h2{font:600 32px Cormorant,serif;margin:0;color:var(--gold)}
+.col ol{margin:6px 0 14px;padding-left:18px;font-size:12.5px;color:var(--muted);line-height:1.55;min-height:150px}.col ol b{color:#F3EEE3}
+.phone{width:370px;height:780px;border-radius:42px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:34px;background:var(--ground);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#2A3550 transparent;padding:0 18px 96px}
+.ttl{font:600 34px/1 Cormorant,serif;padding-top:38px}
+.tabs{display:flex;margin:12px -10px 0;border-bottom:1px solid var(--line)}
+.tabs span{flex:1;text-align:center;padding:11px 0;font:600 12.5px Inter;color:var(--muted);position:relative}
+.tabs span.on{color:var(--gold)}.tabs span.on::after{content:"";position:absolute;left:50%;bottom:-1px;width:30px;height:3px;margin-left:-15px;border-radius:3px 3px 0 0;background:var(--gold)}
+.pill{display:flex;margin:12px 0 0;background:var(--card);border-radius:999px;padding:4px}
+.pill span{flex:1;text-align:center;padding:7px 0;border-radius:999px;font:500 12px Inter;color:var(--muted)}.pill span.on{background:rgb(232 190 116 / .18);color:var(--gold);font-weight:600}
+.dock{position:absolute;left:22px;right:22px;bottom:22px;height:52px;border-radius:26px;background:#16203Af5;display:flex;align-items:center;justify-content:space-around;font:500 10.5px Inter;color:var(--muted);box-shadow:0 -10px 30px #0B1322}
+.dock .on{color:var(--gold);background:#22304F;padding:9px 16px;border-radius:20px}
+.cap{font:600 9.5px Inter;letter-spacing:.15em;color:var(--muted);margin:22px 0 8px}
+.say{font-size:15px;line-height:1.5;margin:6px 0;color:#F3EEE3}.say b{color:var(--gold);font-weight:600}
+.small{font-size:11.5px;color:var(--muted)}
+.up{color:var(--good)}.dn{color:var(--warn)}.eq{color:var(--muted)}
+/* hafta */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+.cmp div{background:var(--card);border-radius:16px;padding:12px}.cmp b{display:block;font:600 32px/1 Cormorant,serif}.cmp span{font-size:11px;color:var(--muted)}
+.cmp .old b{color:#7A86A0}
+.sums{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.sums div{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.45}.sums div i{font-style:normal;color:var(--gold)}.sums b{color:var(--gold);font-weight:600}
+.dayrow{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.dayrow .dn{width:46px;font-size:13px}.dayrow .dn small{display:block;color:var(--muted);font-size:10px}
+.dayrow .ps{display:flex;gap:4px;flex:1}
+.pv{width:25px;height:25px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700}
+.pv.v{background:var(--gold);color:#0B1322}.pv.k{border:1.5px solid var(--gold);color:var(--gold)}.pv.x{border:1.5px solid var(--warn);color:var(--warn)}.pv.n{background:#16203A;color:#3A4560}
+.dayrow .r{text-align:right;width:64px;font-size:11px;color:var(--muted)}.dayrow .r b{display:block;color:#F3EEE3;font-size:13.5px}
+.dayrow .tr{width:30px;text-align:right;font-size:11.5px;font-weight:700}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);margin-top:10px}.legend span{display:flex;gap:4px;align-items:center}
+/* ay */
+.cal{display:grid;grid-template-columns:repeat(7,1fr) 62px;gap:4px;margin-top:10px;align-items:center}
+.cal .h{font-size:10px;color:var(--muted);text-align:center}
+.cal .c{aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.cal .c small{font-size:8.5px;font-weight:600;opacity:.85}
+.cal .w{font-size:10px;color:var(--muted);text-align:right;line-height:1.3}.cal .w b{display:block;color:#F3EEE3;font-size:12.5px}.cal .w em{font-style:normal;color:var(--gold);font-weight:600}
+.hb{margin:13px 0}.hb .l{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}.hb .l b{color:var(--gold)}
+.hb .t{height:10px;border-radius:5px;background:var(--track);overflow:hidden;display:flex}
+/* yil (current top kept) */
+.hero{font:600 46px/1 Cormorant,serif;margin-top:18px}.hero small{font:500 15px Inter;color:#D5DBE6;margin-left:6px}
+.heat{margin-top:16px}
+.mrow{display:flex;align-items:center;gap:9px;padding:8px 0;font-size:12.5px;border-bottom:1px solid var(--line)}.mrow .n{width:34px}.mrow .t{flex:1;height:11px;border-radius:6px;background:var(--track);overflow:hidden;display:flex}.mrow .r{width:96px;text-align:right;font-size:11px;color:var(--muted)}.mrow .r b{color:var(--gold);font-size:12.5px}
+.mrow.off{opacity:.35}
+/* tumu */
+.karne{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.karne div{background:var(--card);border-radius:16px;padding:13px}.karne b{display:block;font:600 34px/1 Cormorant,serif}.karne span{font-size:11.5px;color:var(--muted);line-height:1.4;display:block;margin-top:4px}.karne .g b{color:var(--gold)}
+.lvl{margin-top:20px;background:linear-gradient(135deg,rgb(232 190 116 / .16),rgb(232 190 116 / .03));border:1px solid rgb(232 190 116 / .3);border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center}
+.lvl .badge{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE9B0,#C8913C);display:flex;align-items:center;justify-content:center;font:600 22px Cormorant,serif;color:#0B1322;flex:none;box-shadow:0 0 18px rgb(232 190 116 / .35)}
+.lvl b{display:block;font-size:14px}.lvl span{font-size:11.5px;color:var(--muted)}
+.lvl .t{height:6px;border-radius:3px;background:var(--track);margin-top:7px;overflow:hidden}.lvl .t i{display:block;height:100%;background:var(--gold);border-radius:3px}
+.goals{position:relative;margin:14px 0 0 0;padding-left:0}
+.goal{display:flex;gap:12px;position:relative;padding-bottom:14px}
+.goal::before{content:"";position:absolute;left:21px;top:44px;bottom:0;width:2px;background:#2A3550}
+.goal:last-child::before{display:none}
+.goal.done::before{background:var(--gold)}
+.medal{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:18px;position:relative;z-index:1}
+.done .medal{background:radial-gradient(circle at 35% 30%,#FFE9B0,#C8913C);color:#0B1322;box-shadow:0 0 14px rgb(232 190 116 / .35)}
+.next .medal{background:var(--ground);border:2px solid var(--gold);color:var(--gold)}
+.lock .medal{background:#121D33;border:1.5px dashed #3A4560;color:#4A5570}
+.goal .body{flex:1;background:var(--card);border-radius:14px;padding:10px 12px}
+.next .body{border:1px solid rgb(232 190 116 / .35)}
+.lock .body{opacity:.55}
+.goal b{display:block;font-size:13.5px}.goal span{font-size:11.5px;color:var(--muted)}
+.goal .pb{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:10.5px;color:var(--muted)}.goal .pb div{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden}.goal .pb i{display:block;height:100%;background:var(--gold);border-radius:3px}
+.goal .when{color:var(--gold);font-size:11px;font-weight:600}
+.keep{margin-top:22px;border:1px dashed #2A3550;border-radius:14px;padding:12px;font-size:11.5px;color:var(--muted);line-height:1.5}.keep b{color:#F3EEE3}
+svg text{font-family:Inter}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Defter · İstikrar · senin seçtiklerinle birleşik hali</div>
+  <h1>İstikrar, son hali</h1>
+  <p class="lede">Dört sekme senin tarifine göre birleştirildi. Telefonların içinde aşağı kaydır; her telefonun üstünde parçaların nereden geldiği yazıyor. Üstteki düğmeyle <b>"3 ay sonra"</b> ile <b>"bugün (6 gün)"</b> arasında geçip az veride nasıl göründüğüne de bak (özellikle hedefler).</p>
+  <div class="seg" id="mode"><span class="on" data-m="cok">3 ay sonra</span><span data-m="az">Bugün (6 gün)</span></div>
+  <div class="cols" id="cols"></div>
+</div>
+<script>
+const TODAY=new Date(2026,10,10);
+const VAK=['Sabah','Öğle','İkindi','Akşam','Yatsı'],VK=['S','Ö','İ','A','Y'];
+const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const G3=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+function rng(s){return()=>{s=(s*16807)%2147483647;return s/2147483647}}
+let mode='cok',DAYS=[];
+function build(){const r=rng(31);DAYS=[];const n=mode==='cok'?100:6;
+ for(let i=n-1;i>=0;i--){const d=new Date(TODAY.getTime()-i*864e5),prog=(n-i)/n;
+  DAYS.push({d,v:[0,1,2,3,4].map(k=>{if(i===0&&k>=2)return 'n';if(mode==='az')return r()<[.6,.8,.4,.95,.6][k]?'v':'k';if(r()<(.08-.05*prog)*(k===0?2:1))return 'x';return r()<[.45,.7,.35,.9,.6][k]+.22*prog?'v':'k'}),pages:r()<.7?Math.round(r()*12+2):0,kaza:mode==='cok'&&r()<.5?1:0})}}
+const st=days=>{let v=0,k=0,x=0,due=0,full=0;days.forEach(d=>{let ok=0,dd=0;d.v.forEach(c=>{if(c==='n')return;dd++;due++;if(c==='v'){v++;ok++}else if(c==='k'){k++;ok++}else x++});if(dd===5&&ok===5)full++});return{v,k,x,due,full,kil:v+k}};
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const tri=(a,b)=>a>b?`<span class="up">▲${a-b}</span>`:a<b?`<span class="dn">▼${b-a}</span>`:`<span class="eq">=</span>`;
+const head=p=>`<div class="ttl">Defter</div><div class="tabs"><span>Özet</span><span class="on">İstikrar</span><span>Kaza</span></div><div class="pill">${['Hafta','Ay','Yıl','Tümü'].map((x,i)=>`<span class="${i===p?'on':''}">${x}</span>`).join('')}</div>`;
+const dock='<div class="dock"><span>Namaz</span><span>Zikir</span><span>Okuma</span><span class="on">Defter</span></div>';
+const rank=days=>VAK.map((n,i)=>[i,days.filter(d=>d.v[i]==='v').length,days.filter(d=>d.v[i]!=='n').length]).sort((a,b)=>a[1]/Math.max(a[2],1)-b[1]/Math.max(b[2],1));
+
+// ---------------- HAFTA: H3 cards → summaries (H2 + H3) → H2 list with ▲▼ against the same day last week
+function hafta(){const w=DAYS.slice(-7),pw=DAYS.slice(-14,-7),a=st(w),b=st(pw),has=pw.length>0;const worst=rank(w)[0];
+ const diff=a.v-b.v;
+ return `<div class="cmp"><div><b>${a.kil}/${a.due}</b><span>bu hafta kılındı</span></div><div><b style="color:var(--gold)">${a.v}</b><span>bu hafta vaktinde</span></div>
+   <div class="old"><b>${has?b.kil+'/'+b.due:'—'}</b><span>geçen hafta kılındı</span></div><div class="old"><b>${has?b.v:'—'}</b><span>geçen hafta vaktinde</span></div></div>
+  <div class="sums"><div><i>✦</i><span>Bu hafta <b>${a.full}</b> gün beş vakti tamamladın.</span></div>
+   ${has?`<div><i>✦</i><span>Geçen haftadan <b>${diff>=0?diff+' namaz daha':(-diff)+' namaz daha az'}</b> vaktinde kıldın.</span></div>`:'<div><i>✦</i><span>Geçen haftayla karşılaştırma ilk haftan bitince başlar.</span></div>'}
+   <div><i>✦</i><span>En çok geciktirdiğin: <b>${VAK[worst[0]]}</b> (${worst[2]} günün ${worst[2]-worst[1]}'inde vaktinde değil).</span></div></div>
+  <div class="cap">GÜN GÜN · GEÇEN HAFTANIN AYNI GÜNÜYLE</div>`+
+  w.slice().reverse().map((d,j)=>{const s=st([d]);const prev=pw[pw.length-1-j];
+   // only the vakits already due today count, so a day in progress is not "behind" last week
+   const pv=prev?prev.v.filter((c,i)=>c==='v'&&d.v[i]!=='n').length:null;
+   return `<div class="dayrow"><div class="dn">${G3[(d.d.getDay()+6)%7]}<small>${d.d.getDate()} ${AY[d.d.getMonth()].slice(0,3)}</small></div><div class="ps">${d.v.map((c,i)=>`<span class="pv ${c}">${VK[i]}</span>`).join('')}</div><div class="r"><b>${s.kil}/${s.due}</b>${s.v} vaktinde</div><div class="tr">${pv==null?'':tri(s.v,pv)}</div></div>`}).join('')+
+  `<div class="legend"><span><span class="pv v" style="width:16px;height:16px;font-size:8px">S</span>vaktinde</span><span><span class="pv k" style="width:16px;height:16px;font-size:8px">S</span>sonra</span><span><span class="pv x" style="width:16px;height:16px;font-size:8px">S</span>kaza</span><span><b class="up">▲</b>/<b class="dn">▼</b> geçen haftanın aynı gününe göre vaktinde farkı</span></div>`}
+
+// ---------------- AY: A1 calendar with a week score at the end of each row (from A2) → A3 vakit karnesi
+function ay(){const m=DAYS.slice(-30),s=st(m);const off=(m[0].d.getDay()+6)%7;
+ const cells=[...Array(off).fill(null),...m];while(cells.length%7)cells.push(null);
+ const col=d=>{const q=st([d]);if(d.v.includes('x'))return ['transparent','#F4B08F','border:2px solid #F4B08F'];if(q.due<5)return ['#16203A','#7A86A0',''];if(q.v===5)return ['#E8BE74','#0B1322',''];if(q.v>=3)return ['#B79A5E','#0B1322',''];return ['#4E4636','#F3EEE3','']};
+ let g=['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].map(x=>`<div class="h">${x}</div>`).join('')+'<div class="h" style="text-align:right">hafta</div>';
+ for(let i=0;i<cells.length;i+=7){const row=cells.slice(i,i+7);row.forEach(d=>{if(!d){g+='<div></div>';return}const [bg,fg,bd]=col(d);g+=`<div class="c" style="background:${bg};color:${fg};${bd}">${d.d.getDate()}<small>${st([d]).v}/5</small></div>`});
+  const ws=st(row.filter(Boolean));g+=`<div class="w"><b>${ws.kil}/${ws.due}</b><em>%${pct(ws.v,ws.due)}</em> vakt.</div>`}
+ const r=rank(m);
+ return `<div class="say" style="margin-top:16px">Son 30 günde <b>${s.full}</b> gün beş vakti tamamladın; <b>${m.filter(d=>st([d]).v===5).length}</b> gün hepsi vaktindeydi.</div>
+  <div class="cal">${g}</div>
+  <div class="legend"><span><i style="width:11px;height:11px;border-radius:3px;background:#E8BE74"></i>5 vaktinde</span><span><i style="width:11px;height:11px;border-radius:3px;background:#B79A5E"></i>3–4</span><span><i style="width:11px;height:11px;border-radius:3px;background:#4E4636"></i>0–2</span><span><i style="width:11px;height:11px;border-radius:3px;border:2px solid #F4B08F"></i>kaza var</span></div>
+  <div class="cap">VAKİT KARNESİ</div><div class="say" style="font-size:13.5px">Bu ay en iyi <b>${VAK[r[4][0]]}</b>, en zayıf <b>${VAK[r[0][0]]}</b>.</div>`+
+  VAK.map((n,i)=>{const v=m.filter(d=>d.v[i]==='v').length,k=m.filter(d=>d.v[i]==='k').length,x=m.filter(d=>d.v[i]==='x').length,t=m.filter(d=>d.v[i]!=='n').length;
+   return `<div class="hb"><div class="l"><span style="font-weight:600">${n}</span><span><b>${v}</b> vaktinde · ${k} sonra${x?` · <span style="color:var(--warn)">${x} kaza</span>`:''}</span></div><div class="t"><i style="width:${v/t*100}%;background:#E8BE74"></i><i style="width:${k/t*100}%;background:#6E5F45"></i><i style="width:${x/t*100}%;background:#F4B08F"></i></div></div>`}).join('')}
+
+// ---------------- YIL: today's top unchanged (hero, sub, heatmap, legend) → Y2 month list
+function yil(){const y=DAYS.filter(d=>d.d.getFullYear()===2026),s=st(y);
+ const off=(new Date(2026,0,1).getDay()+6)%7;const map={};y.forEach(d=>map[d.d.toDateString()]=d);
+ const start=new Date(2026,5,1);// the current heatmap shows the last ~23 weeks (Haz → Ara)
+ let h=`<svg width="100%" viewBox="0 0 330 140">`;const wk0=Math.floor(((start-new Date(2026,0,1))/864e5+off)/7);
+ for(let i=0;i<365;i++){const d=new Date(2026,0,1+i);const w=Math.floor((i+off)/7)-wk0,dw=(i+off)%7;if(w<0)continue;const day=map[d.toDateString()];
+  let col='#16203A';if(day){const q=st([day]);col=['#5A6582','#4A4030','#6E5F45','#8C7A5A','#B79A5E','#E8BE74'][q.kil]}if(d>TODAY)col='#121A2C';
+  h+=`<rect x="${w*10.6}" y="${dw*15+22}" width="8.6" height="12.6" rx="2.5" fill="${col}"/>`}
+ ['Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'].forEach((m,i)=>{const d=new Date(2026,5+i,1);const w=Math.floor(((d-new Date(2026,0,1))/864e5+off)/7)-wk0;h+=`<text x="${w*10.6+2}" y="12" font-size="10" fill="#A9B2C3">${m}</text>`});
+ h+='</svg>';
+ const months=AY.map((n,i)=>y.filter(d=>d.d.getMonth()===i));
+ return `<div class="hero">${s.full}<small>gün tam · 2026</small></div><div class="say" style="font-size:13.5px;color:#D5DBE6">${y.length} gün · vakitlerin %${pct(s.kil,s.due)}'i kılındı</div>
+  <div class="heat">${h}</div><div class="legend"><span>hiç</span>${['#5A6582','#4A4030','#6E5F45','#8C7A5A','#B79A5E','#E8BE74'].map(c=>`<i style="width:11px;height:11px;border-radius:3px;background:${c}"></i>`).join('')}<span>beş vakit</span></div>
+  <div class="small" style="margin-top:6px">↑ bugünkü Yıl ekranının üstü, aynen kalır</div>
+  <div class="cap">AY AY · VAKTİNDE KILMA</div>`+months.map((m,i)=>{if(!m.length)return `<div class="mrow off"><span class="n">${AY[i].slice(0,3)}</span><div class="t"></div><span class="r">—</span></div>`;const q=st(m);
+   return `<div class="mrow"><span class="n">${AY[i].slice(0,3)}</span><div class="t"><i style="width:${pct(q.v,q.due)}%;background:#E8BE74"></i><i style="width:${pct(q.k,q.due)}%;background:#6E5F45"></i><i style="width:${pct(q.x,q.due)}%;background:#F4B08F"></i></div><span class="r"><b>%${pct(q.v,q.due)}</b> vaktinde<br>${q.kil}/${q.due} kılındı</span></div>`}).join('')}
+
+// ---------------- TÜMÜ: T1 karne → goals ladder (game-like)
+function tumu(){const s=st(DAYS);let best=0,run=0;DAYS.forEach(d=>{if(d.v.every(c=>c!=='x')){run++;best=Math.max(best,run)}else run=0});
+ const pages=DAYS.reduce((a,b)=>a+b.pages,0);
+ const firstFull=DAYS.find(d=>st([d]).full);const fmt=d=>`${d.getDate()} ${AY[d.getMonth()]}`;
+ // the goal ladder: each one reached in turn; what counts, the target, the icon
+ const G=[
+  ['İlk gün','Namazım\'la yola çıktın',1,DAYS.length,'☾'],
+  ['İlk tam gün','beş vakit, hiç kaza yok',1,s.full,'✦'],
+  ['7 gün seri','bir hafta hiç kaçırmadan',7,best,'7'],
+  ['100 vakit','yüz vakit namaz',100,s.kil,'💯'],
+  ['Kırk gün','40 gün hiç kaçırmadan; büyüklerin "kırk gün" sabrı',40,best,'40'],
+  ['400 vakit','dört yüz vakit',400,s.kil,'✧'],
+  ['100 tam gün','beşi de kılınmış yüz gün',100,s.full,'❀'],
+  ['1000 vakit','bin vakit namaz',1000,s.kil,'★'],
+  ['Bir yıl','365 gün Namazım\'la',365,DAYS.length,'☀'],
+ ];
+ let nextShown=false;const done=G.filter(g=>g[3]>=g[2]).length;
+ const goals=G.map(([n,dsc,goal,have,ic])=>{const ok=have>=goal;let cls=ok?'done':(!nextShown?(nextShown=true,'next'):'lock');
+  const p=Math.min(100,Math.round(have/goal*100));
+  return `<div class="goal ${cls}"><div class="medal">${ok?ic:cls==='next'?ic:'🔒'}</div><div class="body"><b>${n}</b><span>${dsc}</span>${ok?`<div class="when">✓ kazanıldı</div>`:`<div class="pb"><div><i style="width:${p}%"></i></div>${Math.min(have,goal)}/${goal}</div>`}</div></div>`}).join('');
+ const lvl=done;
+ return `<div class="say" style="margin-top:16px"><b>${DAYS.length} gündür</b> Namazım'la birliktesin.</div>
+  <div class="karne"><div><b>${s.kil}</b><span>vakit namaz kıldın</span></div><div class="g"><b>%${pct(s.v,s.due)}</b><span>vaktinde kılındı</span></div><div><b>${s.full}</b><span>gün beşi de tamam</span></div><div class="g"><b>${best}</b><span>gün en uzun kazasız seri</span></div><div><b>${pages}</b><span>sayfa okudun</span></div><div><b>${s.x}</b><span>vakit kazaya kaldı</span></div></div>
+  <div class="lvl"><div class="badge">${lvl}</div><div style="flex:1"><b>${G.length} hedeften ${done}'i tamam</b><span>Sıradaki: ${G.find(g=>g[3]<g[2])?.[0]||'hepsi tamam'}</span><div class="t"><i style="width:${done/G.length*100}%"></i></div></div></div>
+  <div class="cap">HEDEFLER · YUKARIDAN AŞAĞI</div><div class="goals">${goals}</div>
+  <div class="keep"><b>Altta aynen kalanlar:</b> "Namazlarını ne zaman kılıyorsun" grafiği ve nafile takibi açıksa Nafileler kartı.</div>`}
+
+const COLS=[
+ ['Hafta',0,hafta,['<b>H3</b>\'ün dört kartı: bu hafta / geçen hafta, kılındı ve vaktinde','<b>H2</b> ve <b>H3</b>\'ün özet cümleleri, kartların hemen altında','<b>H2</b>\'nin gün listesi; her günün sonunda <b>H3</b>\'ün ▲▼ işareti: o gün geçen haftanın aynı gününe göre kaç namaz daha çok / az vaktinde']],
+ ['Ay',1,ay,['<b>A1</b>\'in renkli takvimi','Her haftanın satır sonunda <b>A2</b>\'nin değerlendirmesi: <b>32/35 · %74 vakt.</b>','Altında <b>A3</b>\'ün vakit karnesi']],
+ ['Yıl',2,yil,['Bugünkü Yıl ekranının <b>üstü hiç değişmeden</b>: büyük sayı, alt satır, yıl takvimi ve renk açıklaması','Bugünkü alt kısım (En iyi ay, BU YIL kutuları) kalkar','Yerine <b>Y2</b>\'nin 12 ay listesi']],
+ ['Tümü',3,tumu,['<b>T1</b>\'in karnesi (altı kart)','<b>T3</b> oyun gibi hedeflere döndü: üstte seviye kartı ("9 hedeften 5\'i tamam"), altta yukarıdan aşağı hedefler','Kazanılanlar altın madalya, sıradaki altın çerçeveli ve ilerleme çubuklu, sonrakiler kilitli']],
+];
+function draw(){build();document.getElementById('cols').innerHTML=COLS.map(([n,p,f,notes])=>`<div class="col"><h2>${n}</h2><ol>${notes.map(x=>`<li>${x}</li>`).join('')}</ol><div class="phone"><div class="scr">${head(p)}${f()}</div>${dock}</div></div>`).join('')}
+document.querySelectorAll('#mode span').forEach(s=>s.onclick=()=>{mode=s.dataset.m;document.querySelectorAll('#mode span').forEach(x=>x.classList.toggle('on',x===s));draw()});
+draw();
+</script>
+</body>
+</html>

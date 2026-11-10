@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İstikrar Yeniden</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--late:#8C7A5A;--warn:#F4B08F;--muted:#A9B2C3;--card:#121D33;--line:#1E2940;--track:#1C2943;--ground:#0B1322;--good:#8FD3A8}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1560px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 48px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:14.5px;line-height:1.7;max-width:1100px}.lede b{color:#F3EEE3}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:18px 0 6px;max-width:1300px}
+.rules div{background:var(--card);border-radius:16px;padding:14px 16px;font-size:12.5px;line-height:1.55;color:var(--muted)}.rules b{display:block;color:#F3EEE3;font-size:13.5px;margin-bottom:4px}
+.key{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:10px 0}.key span{display:flex;align-items:center;gap:6px}.key i{width:12px;height:12px;border-radius:4px;display:inline-block}
+.bar{position:sticky;top:0;z-index:5;background:#06080Dee;padding:10px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;background:var(--card);border-radius:999px;padding:4px}
+.seg span{padding:8px 15px;border-radius:999px;font:500 13px Inter;color:var(--muted);cursor:pointer}.seg span.on{background:rgb(232 190 116 / .16);color:var(--gold)}
+.dir{margin-top:34px;border-top:1px solid #1A2232;padding-top:24px}
+.dir h2{font:600 34px Cormorant,serif;margin:0;color:var(--gold)}.dir .d{color:var(--muted);font-size:14px;line-height:1.6;max-width:1100px;margin:4px 0 14px}.dir .d b{color:#F3EEE3}
+.phones{display:flex;gap:18px;overflow-x:auto;padding-bottom:10px}
+.ph{flex:none;width:360px}
+.ph .lbl{font:600 13px Inter;color:var(--gold);margin:0 0 8px 6px}
+.phone{width:360px;height:760px;border-radius:40px;background:#000;padding:10px;position:relative}
+.scr{position:absolute;inset:10px;border-radius:32px;background:var(--ground);overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding-bottom:90px}
+.ttl{font:600 36px/1 Cormorant,serif;padding:40px 20px 0}
+.tabs{display:flex;margin:12px 8px 0;border-bottom:1px solid var(--line)}
+.tabs span{flex:1;text-align:center;padding:11px 0;font:600 12.5px Inter;color:var(--muted);position:relative}
+.tabs span.on{color:var(--gold)}.tabs span.on::after{content:"";position:absolute;left:50%;bottom:-1px;width:30px;height:3px;margin-left:-15px;border-radius:3px 3px 0 0;background:var(--gold)}
+.pill{display:flex;margin:12px 16px 0;background:var(--card);border-radius:999px;padding:4px}
+.pill span{flex:1;text-align:center;padding:7px 0;border-radius:999px;font:500 12px Inter;color:var(--muted)}.pill span.on{background:rgb(232 190 116 / .18);color:var(--gold);font-weight:600}
+.sec{padding:0 16px}
+.cap{font:600 9.5px Inter;letter-spacing:.15em;color:var(--muted);margin:20px 0 8px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.kpi{background:var(--card);border-radius:14px;padding:10px 10px 9px}
+.kpi b{display:block;font:600 26px/1 Cormorant,serif}.kpi span{display:block;font-size:10.5px;color:var(--muted);margin-top:3px}
+.kpi em{font-style:normal;font-size:10px;font-weight:600}.up{color:var(--good)}.dn{color:var(--warn)}
+.insight{margin-top:12px;background:linear-gradient(135deg,rgb(232 190 116 / .12),transparent);border:1px solid rgb(232 190 116 / .22);border-radius:14px;padding:11px 12px;font-size:12px;line-height:1.5;color:#E9E2D2}
+.insight b{color:var(--gold)}
+.vrow{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:12px}
+.vrow .n{width:46px}.vrow .b{flex:1;height:9px;border-radius:5px;background:var(--track);display:flex;overflow:hidden}.vrow .p{width:34px;text-align:right;color:var(--gold);font-weight:600;font-size:11px}
+.other{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.other div{background:var(--card);border-radius:14px;padding:10px}.other b{display:block;font:600 22px/1 Cormorant,serif}.other span{font-size:10.5px;color:var(--muted)}
+.other svg{display:block;margin-top:6px}
+.dock{position:absolute;left:22px;right:22px;bottom:22px;height:50px;border-radius:25px;background:#16203Af2;display:flex;align-items:center;justify-content:space-around;font:500 10.5px Inter;color:var(--muted)}
+.dock .on{color:var(--gold);background:#22304F;padding:9px 16px;border-radius:20px}
+svg text{font-family:Inter}
+.empty{font-size:12px;color:var(--muted);text-align:center;padding:20px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Defter · İstikrar · baştan</div>
+  <h1>İstikrar: anlamlı ve tutarlı</h1>
+  <p class="lede">Bugünkü İstikrar'da her sekme başka bir şey sayıyor (Hafta "kaç vakit", Ay "yüzde", Yıl "tam gün", Tümü "toplam") ve hepsi sadece <b>kılındı mı</b>ya bakıyor; hepsini kılınca grafikler düz çizgiye döner. Yeni İstikrar'da dört sekme <b>aynı iskeleti</b> paylaşır, sadece zaman ölçeği değişir. Üç farklı görsel dil hazırladım; her birinin dört sekmesi de tam ekran aşağıda, telefonun içinde kaydırarak bakabilirsin.</p>
+  <div class="rules">
+    <div><b>1 · Aynı üç sayı</b>Her sekmenin başında: <b>kılındı</b>, <b>vaktinde</b> (mezhebine göre faziletli dilimde) ve <b>tam gün</b> (beşi de kılınan gün), yanında önceki döneme göre ▲▼.</div>
+    <div><b>2 · Aynı renkler</b>Her grafikte altın = vaktinde, koyu altın = sonra kılındı, şeftali = kaza, lacivert = henüz gelmedi. Bir kez öğrenilir.</div>
+    <div><b>3 · Ana görsel</b>Dönemin ölçeğine göre değişir ama aynı dili konuşur: hafta 7 gün, ay 30 gün, yıl 12 ay, tümü ilk günden bugüne.</div>
+    <div><b>4 · Vakit vakit + tek cümle</b>Beş vaktin vaktinde payı ve tek bir öneri cümlesi ("İkindiyi en çok geciktiriyorsun"). Altta okuma, kaza ve zikir aynı düzende.</div>
+  </div>
+  <div class="key"><span><i style="background:#E8BE74"></i>vaktinde</span><span><i style="background:#8C7A5A"></i>sonra kılındı</span><span><i style="background:#F4B08F"></i>kaza</span><span><i style="background:#1C2943"></i>henüz gelmedi / kayıt yok</span></div>
+  <div class="bar"><div class="seg" id="mode"><span class="on" data-m="cok">3 ay sonra (dolu veri)</span><span data-m="az">Bugün (6 gün)</span></div></div>
+  <div id="dirs"></div>
+</div>
+<script>
+// ---------------------------------------------------------------- data
+const TODAY=new Date(2026,10,10);
+const VAK=['Sabah','Öğle','İkindi','Akşam','Yatsı'];
+const AYLAR=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const GUN=['Pt','Sa','Ça','Pe','Cu','Ct','Pz'];
+const C={v:'#E8BE74',k:'#8C7A5A',x:'#F4B08F',n:'#1C2943'};
+function rng(seed){return ()=>{seed=(seed*16807)%2147483647;return seed/2147483647}}
+let mode='cok', DAYS=[];
+function build(){
+  const r=rng(mode==='cok'?23:5);const n=mode==='cok'?100:6;DAYS=[];
+  for(let i=n-1;i>=0;i--){const d=new Date(TODAY.getTime()-i*864e5);const prog=(n-i)/n;// slowly getting better
+    const v=[0,1,2,3,4].map(k=>{
+      if(i===0&&k>=2)return {s:'n'};               // today: ikindi, akşam, yatsı not yet
+      if(mode==='az')return {s:r()<[.55,.75,.35,.9,.5][k]?'v':'k',t:r()*.8};
+      const miss=r()<(.07-.04*prog)*(k===0?2:1);if(miss)return {s:'x'};
+      const onTime=r()<[.45,.7,.35,.9,.6][k]+.2*prog;const t=onTime?r()*.28:.3+r()*.6;return {s:onTime?'v':'k',t}});
+    DAYS.push({d,v,pages:r()<.7?Math.round(r()*12+2):0,zikir:Math.min(1,r()*1.3),kaza:mode==='cok'&&r()<.5?Math.round(r()*2+1):0});}
+}
+const sameMonth=(a,b)=>a.getMonth()===b.getMonth()&&a.getFullYear()===b.getFullYear();
+function stats(days){let v=0,k=0,x=0,full=0,due=0;const pv=VAK.map(()=>({v:0,k:0,x:0}));
+  days.forEach(day=>{let ok=0,dd=0;day.v.forEach((c,i)=>{if(c.s==='n')return;dd++;due++;if(c.s==='v'){v++;pv[i].v++;ok++}else if(c.s==='k'){k++;pv[i].k++;ok++}else{x++;pv[i].x++}});if(dd===5&&ok===5)full++});
+  return {v,k,x,due,full,pv,pages:days.reduce((a,b)=>a+b.pages,0),kaza:days.reduce((a,b)=>a+b.kaza,0),zikir:days.length?days.reduce((a,b)=>a+b.zikir,0)/days.length:0}}
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+function period(p){const n=[7,30,365,99999][p];const cur=DAYS.slice(-n);const prev=p<3?DAYS.slice(-2*n,-n):[];return {cur,prev}}
+
+// ---------------------------------------------------------------- shared pieces
+function kpis(p){const {cur,prev}=period(p);const a=stats(cur),b=stats(prev);
+  const d=(x,y)=>!prev.length||!y.due?'':(()=>{const dv=x-y;return `<em class="${dv>=0?'up':'dn'}">${dv>=0?'▲':'▼'}${Math.abs(dv)}</em>`})();
+  const kil=pct(a.v+a.k,a.due),vak=pct(a.v,a.due);
+  return `<div class="kpis"><div class="kpi"><b>%${kil}</b><span>kılındı ${d(kil,pct(b.v+b.k,b.due))}</span></div><div class="kpi"><b style="color:var(--gold)">%${vak}</b><span>vaktinde ${d(vak,pct(b.v,b.due))}</span></div><div class="kpi"><b>${a.full}</b><span>tam gün ${prev.length?d(a.full,b.full):''}</span></div></div>`}
+function vakitBars(p){const s=stats(period(p).cur);return `<div class="cap">VAKİT VAKİT · VAKTİNDE PAYI</div>`+s.pv.map((q,i)=>{const t=q.v+q.k+q.x;return `<div class="vrow"><span class="n">${VAK[i]}</span><div class="b"><i style="width:${pct(q.v,t)}%;background:${C.v}"></i><i style="width:${pct(q.k,t)}%;background:${C.k}"></i><i style="width:${pct(q.x,t)}%;background:${C.x}"></i></div><span class="p">%${pct(q.v,t)}</span></div>`}).join('')}
+function insight(p){const s=stats(period(p).cur);const r=s.pv.map((q,i)=>[i,pct(q.v,q.v+q.k+q.x)]).filter(x=>!isNaN(x[1]));if(!r.length)return '';
+  r.sort((a,b)=>a[1]-b[1]);const w=r[0],bst=r[r.length-1];const acc=['Sabahı','Öğleyi','İkindiyi','Akşamı','Yatsıyı'];
+  return `<div class="insight"><b>${VAK[bst[0]]}</b> en istikrarlı vaktin (%${bst[1]} vaktinde). <b>${acc[w[0]]}</b> en çok geciktiriyorsun; vakti girince ilk ${w[0]===2?'yarım saat':'çeyrek saat'} içinde kılmayı dene.</div>`}
+function spark(vals,color,w=90,h=26){if(vals.length<2)return '';const mx=Math.max(...vals,1);const pts=vals.map((v,i)=>`${(i/(vals.length-1)*w).toFixed(1)},${(h-v/mx*h).toFixed(1)}`).join(' ');return `<svg width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/></svg>`}
+function other(p){const {cur}=period(p);const s=stats(cur);const g=cur.length>14?Math.ceil(cur.length/14):1;const grp=[];for(let i=0;i<cur.length;i+=g)grp.push(cur.slice(i,i+g));
+  return `<div class="cap">DİĞER İBADETLER</div><div class="other"><div><b>${s.pages}</b><span>sayfa okundu</span>${spark(grp.map(x=>x.reduce((a,b)=>a+b.pages,0)),'#E8BE74')}</div><div><b>${s.kaza}</b><span>kaza kılındı</span>${spark(grp.map(x=>x.reduce((a,b)=>a+b.kaza,0)),'#F4B08F')}</div><div><b>%${Math.round(s.zikir*100)}</b><span>zikir hedefi</span>${spark(grp.map(x=>x.reduce((a,b)=>a+b.zikir,0)/x.length),'#C9B48A')}</div></div>`}
+const head=p=>`<div class="ttl">Defter</div><div class="tabs"><span>Özet</span><span class="on">İstikrar</span><span>Kaza</span></div><div class="pill">${['Hafta','Ay','Yıl','Tümü'].map((x,i)=>`<span class="${i===p?'on':''}">${x}</span>`).join('')}</div>`;
+const dock='<div class="dock"><span>Namaz</span><span>Zikir</span><span>Okuma</span><span class="on">Defter</span></div>';
+
+// ---------------------------------------------------------------- D1 gül
+function rose(v,size,o={}){ // v = 5 cells; petal i = vakit i
+  let s=`<svg width="${size}" height="${size}" viewBox="-50 -50 100 100">`;
+  if(o.ring)s+=`<circle r="47" fill="none" stroke="#E8BE74" stroke-width="2.5"/>`;
+  const PET='M0,-8 C-17,-20 -16,-42 0,-44 C16,-42 17,-20 0,-8Z';
+  // with an opacity the gold sits on a night-blue petal, so a weak vakit reads as "dimmer", not as brown
+  v.forEach((c,i)=>{const a=i*72;const col=c.col||C[c.s]||C.n;s+=(c.op!=null?`<path d="${PET}" transform="rotate(${a})" fill="#1C2943" stroke="#0B1322" stroke-width="1.5"/>`:'')+`<path d="${PET}" transform="rotate(${a})" fill="${col}" opacity="${c.op??1}" stroke="#0B1322" stroke-width="1.5"/>`});
+  return s+`<circle r="6" fill="${o.bud||'#D49E48'}"/></svg>`}
+const dayRose=(day,size)=>rose(day.v,size,{ring:day.v.every(c=>c.s==='v')});
+function D1(p){const {cur}=period(p);let m='';
+  if(p===0){m=`<div class="cap">BU HAFTA · HER GÜN BİR GÜL</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">${cur.map(d=>`<div>${dayRose(d,42)}<div style="font-size:10px;color:var(--muted)">${GUN[(d.d.getDay()+6)%7]}<br><span style="color:#F3EEE3">${d.d.getDate()}</span></div></div>`).join('')}</div><div style="font-size:11px;color:var(--muted);margin-top:8px">Yaprak = vakit (üstte sabah, saat yönünde). Halka = beşi de vaktinde.</div>`}
+  else if(p===1){const off=(cur[0].d.getDay()+6)%7;m=`<div class="cap">SON 30 GÜN</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px 2px;text-align:center">${GUN.map(g=>`<div style="font-size:9.5px;color:var(--muted)">${g}</div>`).join('')}${'<div></div>'.repeat(off)}${cur.map(d=>`<div style="position:relative">${dayRose(d,40)}<span style="position:absolute;left:0;right:0;top:14px;font-size:8.5px;color:#0B1322;font-weight:700">${d.d.getDate()}</span></div>`).join('')}</div>`}
+  else if(p===2){const months=[];for(let mm=0;mm<12;mm++){const md=cur.filter(d=>d.d.getMonth()===mm&&d.d.getFullYear()===2026);months.push(md)}
+    m=`<div class="cap">2026 · HER AY BİR GÜL</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px 4px;text-align:center">${months.map((md,i)=>{if(!md.length)return `<div>${rose([0,1,2,3,4].map(()=>({s:'n'})),56,{bud:'#2A3550'})}<div style="font-size:10px;color:#5A6582">${AYLAR[i]}</div></div>`;
+      const st=stats(md);return `<div>${rose(st.pv.map(q=>{const t=q.v+q.k+q.x;return {col:'#E8BE74',op:.18+.82*(t?q.v/t:0)}}),56)}<div style="font-size:10px;color:#F3EEE3">${AYLAR[i]} <span style="color:var(--gold)">%${pct(st.v,st.due)}</span></div></div>`}).join('')}</div><div style="font-size:11px;color:var(--muted);margin-top:8px">Yaprak ne kadar parlaksa o vakit o ay o kadar vaktinde.</div>`}
+  else{const st=stats(cur);const big=rose(st.pv.map(q=>{const t=q.v+q.k+q.x;return {col:'#E8BE74',op:.15+.85*(t?q.v/t:0)}}),190);
+    const ms=[];cur.forEach(d=>{const k=d.d.getFullYear()*12+d.d.getMonth();if(!ms.length||ms[ms.length-1].k!==k)ms.push({k,d:[]});ms[ms.length-1].d.push(d)});
+    m=`<div class="cap">İLK GÜNDEN BERİ · SENİN GÜLÜN</div><div style="text-align:center;position:relative">${big}${st.pv.map((q,i)=>{const a=(i*72-90)*Math.PI/180;const t=q.v+q.k+q.x;return `<span style="position:absolute;left:${50+44*Math.cos(a)}%;top:${48+46*Math.sin(a)}%;transform:translate(-50%,-50%);font-size:10px;color:var(--muted);white-space:nowrap">${VAK[i]} <b style="color:var(--gold)">%${pct(q.v,t)}</b></span>`}).join('')}</div>
+      <div class="cap">AY AY</div><div style="display:flex;gap:10px;overflow-x:auto">${ms.map(x=>{const s2=stats(x.d);return `<div style="text-align:center">${rose(s2.pv.map(q=>{const t=q.v+q.k+q.x;return {col:'#E8BE74',op:.18+.82*(t?q.v/t:0)}}),46)}<div style="font-size:10px;color:var(--muted)">${AYLAR[x.k%12]}</div></div>`}).join('')}</div>`}
+  return m}
+
+// ---------------------------------------------------------------- D2 tesbih
+const bead=(c,r=6,glow)=>`<circle r="${r}" fill="${C[c.s]||C.n}" ${glow?'stroke="#FFF4D6" stroke-width="1"':''}/>`;
+function D2(p){const {cur}=period(p);let m='';
+  if(p===0||p===1){const n=cur.length,W=318,step=W/n,r=Math.min(9,step*.42);
+    m=`<div class="cap">${p===0?'BU HAFTA':'SON 30 GÜN'} · HER VAKİT BİR SIRA TESBİH</div><svg width="100%" viewBox="0 0 330 ${5*30+24}">${VAK.map((vn,i)=>`<text x="0" y="${i*30+19}" font-size="10.5" fill="#A9B2C3">${vn}</text><line x1="50" x2="326" y1="${i*30+15}" y2="${i*30+15}" stroke="#2A3550"/>${cur.map((d,j)=>`<g transform="translate(${50+step*.5*(276/W)+j*step*(276/W)},${i*30+15})">${bead(d.v[i],r*(276/W)*1.05)}</g>`).join('')}`).join('')}
+      ${p===0?cur.map((d,j)=>`<text x="${50+(j+.5)*step*(276/W)}" y="166" font-size="9.5" fill="#A9B2C3" text-anchor="middle">${GUN[(d.d.getDay()+6)%7]}</text>`).join(''):`<text x="50" y="168" font-size="9.5" fill="#A9B2C3">${cur[0].d.getDate()} ${AYLAR[cur[0].d.getMonth()]}</text><text x="326" y="168" font-size="9.5" fill="#A9B2C3" text-anchor="end">bugün</text>`}</svg>`}
+  else if(p===2){const start=new Date(2026,0,1);const off=(start.getDay()+6)%7;const map={};cur.forEach(d=>map[d.d.toDateString()]=d);
+    let s=`<svg width="100%" viewBox="0 0 330 112">`;for(let i=0;i<365;i++){const d=new Date(2026,0,1+i);const w=Math.floor((i+off)/7),dw=(i+off)%7;const day=map[d.toDateString()];
+      let col='#16203A';if(day){const v=day.v.filter(c=>c.s==='v').length,x=day.v.some(c=>c.s==='x');col=x?'#F4B08F':['#3A3424','#5E5136','#8C7A5A','#B79A5E','#D4AE68','#E8BE74'][v]}
+      s+=`<circle cx="${w*6.2+4}" cy="${dw*12+16}" r="2.6" fill="${col}"/>`}
+    AYLAR.forEach((a,i)=>s+=`<text x="${i*27.5+4}" y="8" font-size="8.5" fill="#A9B2C3">${a}</text>`);
+    m=`<div class="cap">2026 · HER GÜN BİR BONCUK</div>${s}</svg><div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)">vaktinde: 0 ${['#3A3424','#5E5136','#8C7A5A','#B79A5E','#D4AE68','#E8BE74'].map(c=>`<i style="width:9px;height:9px;border-radius:50%;background:${c}"></i>`).join('')} 5 · <i style="width:9px;height:9px;border-radius:50%;background:#F4B08F"></i> kaza vardı</div>`}
+  else{let best=0,run=0,bs=0,be=0,st0=0;cur.forEach((d,i)=>{const ok=d.v.every(c=>c.s==='v'||c.s==='k'||c.s==='n');if(ok){if(!run)st0=i;run++;if(run>best){best=run;bs=st0;be=i}}else run=0});
+    const cols=14;let s=`<svg width="100%" viewBox="0 0 330 ${Math.ceil(cur.length/cols)*23+6}">`;cur.forEach((d,j)=>{const v=d.v.filter(c=>c.s==='v').length,x=d.v.some(c=>c.s==='x');const x0=(j%cols)*23.5+12,y0=Math.floor(j/cols)*23+12;
+      const col=x?'#F4B08F':v===5?'#E8BE74':v>=3?'#C9A766':'#8C7A5A';s+=`${j>=bs&&j<=be?`<circle cx="${x0}" cy="${y0}" r="10.5" fill="none" stroke="#E8BE74" stroke-opacity=".5"/>`:''}<circle cx="${x0}" cy="${y0}" r="8" fill="${col}"/>${v===5?`<circle cx="${x0}" cy="${y0}" r="2.6" fill="#FFF4D6"/>`:''}`});
+    m=`<div class="cap">İLK GÜNDEN BERİ · ${cur.length} GÜN, ${cur.length} BONCUK</div>${s}</svg><div style="font-size:11px;color:var(--muted);margin-top:6px">Çerçeveli boncuklar en uzun serin: <b style="color:var(--gold)">${best} gün</b> hiç kaza yok.</div>`}
+  return m}
+
+// ---------------------------------------------------------------- D3 saat (analitik)
+const FZ=[[3/7,6/7],[0,2/7],[1/7,5/7],[0,2/7],[0,3/7]];
+function whenStrip(days){return `<div class="cap">VAKTİN NERESİNDE KILDIN</div><svg width="100%" viewBox="0 0 330 ${5*28+18}">${VAK.map((n,i)=>{const y=i*28+14;return `<text x="0" y="${y+4}" font-size="10.5" fill="#F3EEE3">${n}</text><rect x="50" y="${y-8}" width="276" height="16" rx="8" fill="#121D33"/><rect x="${50+FZ[i][0]*276}" y="${y-8}" width="${(FZ[i][1]-FZ[i][0])*276}" height="16" rx="8" fill="rgba(232,190,116,.16)"/>`+days.map(d=>{const c=d.v[i];return c.t!=null?`<circle cx="${50+c.t*276}" cy="${y}" r="3.4" fill="${c.s==='v'?'#E8BE74':'#C9B48A'}" opacity=".85"/>`:''}).join('')}).join('')}<text x="50" y="${5*28+14}" font-size="9" fill="#A9B2C3">vakit girdi</text><text x="326" y="${5*28+14}" font-size="9" fill="#A9B2C3" text-anchor="end">çıktı</text></svg><div style="font-size:11px;color:var(--muted)">Altın bölge faziletli dilim. Noktalar sola toplandıkça erken kılıyorsun.</div>`}
+function stacks(groups,labels,h=120){const W=318,n=groups.length,w=W/n;let s=`<svg width="100%" viewBox="0 0 330 ${h+22}"><line x1="6" x2="326" y1="${h}" y2="${h}" stroke="#1E2940"/>`;
+  groups.forEach((g,i)=>{const st=stats(g);const tot=Math.max(st.due,1);let y=h;['v','k','x'].forEach(t=>{const hh=st[t]/tot*(h-8);if(hh>0){s+=`<rect x="${8+i*w+w*.14}" y="${y-hh}" width="${w*.72}" height="${Math.max(hh-1.5,1)}" rx="${Math.min(4,w*.2)}" fill="${C[t]}"/>`;y-=hh}})});
+  labels.forEach(([i,l])=>s+=`<text x="${8+(i+.5)*w}" y="${h+15}" font-size="9.5" fill="#A9B2C3" text-anchor="middle">${l}</text>`);return s+'</svg>'}
+function trend(cur){const ms=[];cur.forEach(d=>{const k=d.d.getFullYear()*12+d.d.getMonth();if(!ms.length||ms[ms.length-1].k!==k)ms.push({k,d:[]});ms[ms.length-1].d.push(d)});
+  const vals=ms.map(m=>{const s=stats(m.d);return pct(s.v,s.due)});const W=290,H=110;const pts=vals.map((v,i)=>[20+(vals.length<2?W/2:i/(vals.length-1)*W),H-v/100*(H-10)]);
+  let s=`<svg width="100%" viewBox="0 0 330 ${H+24}">${[25,50,75,100].map(g=>`<line x1="20" x2="310" y1="${H-g/100*(H-10)}" y2="${H-g/100*(H-10)}" stroke="#1A2338"/><text x="0" y="${H-g/100*(H-10)+3}" font-size="8.5" fill="#5A6582">%${g}</text>`).join('')}`;
+  s+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#E8BE74" stroke-width="2.2"/>`+pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#E8BE74"/><text x="${p[0]}" y="${p[1]-9}" font-size="10" fill="#F3EEE3" text-anchor="middle">%${vals[i]}</text><text x="${p[0]}" y="${H+16}" font-size="9.5" fill="#A9B2C3" text-anchor="middle">${AYLAR[ms[i].k%12]}</text>`).join('');return s+'</svg>'}
+function D3(p){const {cur}=period(p);let m='';
+  if(p===0)m=`<div class="cap">BU HAFTA · GÜN GÜN</div>${stacks(cur.map(d=>[d]),cur.map((d,i)=>[i,GUN[(d.d.getDay()+6)%7]]),100)}${whenStrip(cur)}`;
+  else if(p===1)m=`<div class="cap">SON 30 GÜN · GÜN GÜN</div>${stacks(cur.map(d=>[d]),[[0,cur[0].d.getDate()+' '+AYLAR[cur[0].d.getMonth()]],[cur.length-1,'bugün']])}${whenStrip(cur)}`;
+  else if(p===2){const g=[];for(let mm=0;mm<12;mm++)g.push(cur.filter(d=>d.d.getMonth()===mm&&d.d.getFullYear()===2026));m=`<div class="cap">2026 · AY AY</div>${stacks(g,AYLAR.map((a,i)=>[i,a[0]]))}`}
+  else m=`<div class="cap">VAKTİNDE ORANI · AY AY</div>${trend(cur)}${whenStrip(cur)}`;
+  return m}
+
+// ---------------------------------------------------------------- render
+const DIRS=[
+ {n:'D1 · Gül defteri',d:'Uygulamanın gülü her yerde: <b>her gün bir gül</b> (beş yaprak = beş vakit). Hafta 7 gül, Ay bir takvim dolusu gül, Yıl <b>her ay bir gül</b> (yaprak ne kadar parlaksa o vakit o ay o kadar vaktinde), Tümü <b>senin gülün</b>: beş vaktin ilk günden beri vaktinde payı. En duygusal ve en "Namazım" olanı.',f:D1},
+ {n:'D2 · Tesbih',d:'Her vakit bir <b>boncuk</b>: Hafta ve Ay\'da beş vakit beş sıra tesbih, Yıl\'da yılın her günü bir boncuk (ne kadar altınsa o kadar vaktinde), Tümü\'de ilk günden bugüne <b>bir tesbih zinciri</b>, en uzun seri çerçeveli. Sakin, sayması kolay, zikirle aynı dil.',f:D2},
+ {n:'D3 · Saat ve sütun',d:'En bilgilendirici olanı: her dönemde <b>gün gün ya da ay ay renkli sütunlar</b> (vaktinde / sonra / kaza) ve <b>"vaktin neresinde kıldın"</b> şeridi: her namaz vaktin hangi anında kılındıysa orada bir nokta. Tümü\'de vaktinde oranının <b>ay ay gidişat çizgisi</b>.',f:D3},
+];
+function draw(){build();
+  document.getElementById('dirs').innerHTML=DIRS.map(D=>`<div class="dir"><h2>${D.n}</h2><div class="d">${D.d}</div><div class="phones">${[0,1,2,3].map(p=>`<div class="ph"><div class="lbl">${['Hafta','Ay','Yıl','Tümü'][p]}</div><div class="phone"><div class="scr">${head(p)}<div class="sec">${kpis(p)}${insight(p)}${D.f(p)}${vakitBars(p)}${other(p)}</div></div>${dock}</div></div>`).join('')}</div></div>`).join('');}
+document.querySelectorAll('#mode span').forEach(s=>s.onclick=()=>{mode=s.dataset.m;document.querySelectorAll('#mode span').forEach(x=>x.classList.toggle('on',x===s));draw()});
+draw();
+</script>
+</body>
+</html>
