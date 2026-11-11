@@ -387,6 +387,9 @@ fun NurYazi(ar: String, f: Float, flash: Float, hedef: NurHedef) {
                 drawImage(parilti, Offset(-pay.toFloat(), -pay.toFloat()), alpha = (shown * shown * .5f + flash * .45f).coerceIn(0f, 1f))
                 val maske = androidx.compose.ui.graphics.Path().apply { for (i in 0 until n) addOval(androidx.compose.ui.geometry.Rect(hucre[i], yaricap)) }
                 clipPath(maske) { drawText(yerlesim, brush = altin, alpha = .55f + .45f * shown) }
+                // over the last tenth the whole word fades in clean, so 33 ends in smooth letters, not the dots' nicked edges
+                val tam = ((shown - .9f) / .1f).coerceIn(0f, 1f)
+                if (tam > 0f) drawText(yerlesim, brush = altin, alpha = tam)
                 val taze = ((shown - .025f) * hucre.size).toInt().coerceAtLeast(0)
                 kivilcim.color = android.graphics.Color.argb(150, 255, 244, 220)
                 for (i in taze until n) nc.drawCircle(hucre[i].x, hucre[i].y, adim * .8f, kivilcim)
