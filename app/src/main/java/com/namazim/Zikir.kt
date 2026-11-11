@@ -244,7 +244,6 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
     val hedef = remember { NurHedef() }   // where in the letters the motes land
     // the word on screen stays, full, for a moment before the next one (owner, 2026-11-12: "33'ü görelim, 1-2 sn sonra geçsin")
     var yazilan by remember(key) { mutableIntStateOf(shown) }
-    val bekliyor = yazilan != shown && step >= 0
     LaunchedEffect(shown) { if (shown != yazilan) { delay(2600); yazilan = shown } }
     Box(Modifier.fillMaxSize().onGloballyPositioned { root = it.positionInRoot() }) {
     Column(Modifier.fillMaxSize()) {
@@ -272,7 +271,10 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
         }
         var alan by remember { mutableStateOf(Offset.Zero) }
         fun say(at: Offset?) {
-            if (step < 0 || bekliyor) return
+            // read the state now, not from the composition this closure was made in (the demo loop and the tap
+            // handler outlive it: a stale step counted past 33, a stale "waiting" blocked taps after the pause)
+            val step = tesbihStep(counts)
+            if (step < 0 || yazilan != step) return
             // six motes from the touch into the letters, onto the points this count lights up
             val from = at?.let { it + alan - root }
             val pts = hedef.noktalar
@@ -315,7 +317,7 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
                 if (ar != null) Text(cumle(ar.second), color = Pal.Muted, fontSize = Type.label)
                 Spacer(Modifier.height(Space.xl))
                 Text(if (step < 0) "99" else "${counts[yazilan]}", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
-                Text(if (step < 0) "Allah kabul etsin" else "/ ${DEFAULT_ZIKIRS[yazilan].target}", color = Pal.Muted, fontSize = Type.body)
+                if (step < 0) Text("Allah kabul etsin", color = Pal.Muted, fontSize = Type.body)   // the target shows on the chips above
                 Spacer(Modifier.height(Space.l))
                 Text(if (step < 0) "ana sayfaya dönülüyor" else "her yere dokun", color = Pal.Muted.copy(alpha = .6f), fontSize = Type.label)
             }

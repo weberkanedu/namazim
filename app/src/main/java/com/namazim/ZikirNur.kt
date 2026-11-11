@@ -1,5 +1,7 @@
 package com.namazim
 
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -348,37 +350,46 @@ fun NurYazi(ar: String, f: Float, flash: Float, hedef: NurHedef) {
         val w = yerlesim.size.width; val h = yerlesim.size.height
         val adim = with(density) { 3.dp.toPx() }
         // the ink cells of the glyphs, shuffled once per word
-        val hucre = remember(yerlesim) {
-            val yol = yerlesim.getPathForRange(0, ar.length).asAndroidPath()
-            val bolge = android.graphics.Region().apply { setPath(yol, android.graphics.Region(0, 0, w, h)) }
+        // the letters as pixels (getPathForRange gives the selection boxes, not the glyphs): the ink cells and the glow come from them
+        val harf = remember(yerlesim) {
+            val ib = androidx.compose.ui.graphics.ImageBitmap(w, h)
+            yerlesim.multiParagraph.paint(androidx.compose.ui.graphics.Canvas(ib), color = Color.White)
+            ib.asAndroidBitmap()
+        }
+        val hucre = remember(harf) {
             buildList {
                 var y = adim / 2
-                while (y < h) { var x = adim / 2; while (x < w) { if (bolge.contains(x.toInt(), y.toInt())) add(Offset(x, y)); x += adim }; y += adim }
+                while (y < h) { var x = adim / 2; while (x < w) { if (android.graphics.Color.alpha(harf.getPixel(x.toInt(), y.toInt())) > 60) add(Offset(x, y)); x += adim }; y += adim }
             }.shuffled(kotlin.random.Random(ar.hashCode()))
+        }
+        // a soft warm light in the shape of the letters, made once (software canvas, where BlurMaskFilter always works)
+        val pay = (adim * 6).toInt()
+        val parilti = remember(harf) {
+            val g = android.graphics.Bitmap.createBitmap(w + 2 * pay, h + 2 * pay, android.graphics.Bitmap.Config.ARGB_8888)
+            android.graphics.Canvas(g).drawBitmap(harf.extractAlpha(), pay.toFloat(), pay.toFloat(), android.graphics.Paint().apply {
+                color = android.graphics.Color.rgb(255, 214, 140)
+                maskFilter = android.graphics.BlurMaskFilter(adim * 3f, android.graphics.BlurMaskFilter.Blur.NORMAL)
+            })
+            g.asImageBitmap()
         }
         val altin = Brush.verticalGradient(listOf(Color(0xFFFFF1C9), Color(0xFFE2A64E)))
         val yaricap = adim * .8f
-        val isik = remember(adim) { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            maskFilter = android.graphics.BlurMaskFilter(adim * 2.5f, android.graphics.BlurMaskFilter.Blur.NORMAL) } }
         val kivilcim = remember(adim) { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             maskFilter = android.graphics.BlurMaskFilter(adim * .8f, android.graphics.BlurMaskFilter.Blur.NORMAL) } }
         val boy = with(density) { androidx.compose.ui.unit.DpSize(w.toDp(), h.toDp()) }
         Canvas(Modifier.size(boy).onGloballyPositioned { c -> val o = c.positionInRoot(); hedef.noktalar = hucre.map { it + o } }) {
-            if (flash > 0f) drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE9B0).copy(alpha = .45f * flash), Color.Transparent)),
-                radius = size.maxDimension * .75f, center = center)
             drawText(yerlesim, color = Pal.Text.copy(alpha = .03f))   // barely there until it is counted
             val n = (shown * hucre.size).toInt()
             if (n > 0) {
-                // a warm blurred light under the lit points (a BlurMaskFilter, so it glows instead of greying the navy),
-                // the points that just lit brighter, then the gold letters only where they are lit
+                // the glow is the letters' own shape, growing with the fill and peaking at the full word (owner, 2026-11-12:
+                // no light around the word like a frame); then the gold where it is lit, brighter as it fills; sparks where it just lit
                 val nc = drawContext.canvas.nativeCanvas
-                isik.color = android.graphics.Color.argb(26, 255, 214, 140)
-                for (i in 0 until n step 6) nc.drawCircle(hucre[i].x, hucre[i].y, adim * 1.6f, isik)
-                val taze = ((shown - .025f) * hucre.size).toInt().coerceAtLeast(0)
-                kivilcim.color = android.graphics.Color.argb(170, 255, 244, 220)
-                for (i in taze until n) nc.drawCircle(hucre[i].x, hucre[i].y, adim * .9f, kivilcim)
+                drawImage(parilti, Offset(-pay.toFloat(), -pay.toFloat()), alpha = (shown * shown * .5f + flash * .45f).coerceIn(0f, 1f))
                 val maske = androidx.compose.ui.graphics.Path().apply { for (i in 0 until n) addOval(androidx.compose.ui.geometry.Rect(hucre[i], yaricap)) }
-                clipPath(maske) { drawText(yerlesim, brush = altin, alpha = 1f) }
+                clipPath(maske) { drawText(yerlesim, brush = altin, alpha = .55f + .45f * shown) }
+                val taze = ((shown - .025f) * hucre.size).toInt().coerceAtLeast(0)
+                kivilcim.color = android.graphics.Color.argb(150, 255, 244, 220)
+                for (i in taze until n) nc.drawCircle(hucre[i].x, hucre[i].y, adim * .8f, kivilcim)
             }
         }
     }
