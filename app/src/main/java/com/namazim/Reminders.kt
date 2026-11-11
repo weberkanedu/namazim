@@ -19,11 +19,15 @@ enum class Ses { HAZIR, GIRDI, FAZILET, ISRAR }
 data class Reminder(val at: Long, val slot: Slot, val prep: Boolean, val kind: Ses = if (prep) Ses.HAZIR else Ses.ISRAR)
 
 /** User-tunable cadence (Ayarlar). Minutes. */
+/** The first "kıldın mı?" after the time enters (the entering notice asks nothing). */
+const val ILK_SORU = 20 * MIN
+
 data class ReminderCfg(val prep: List<Long> = listOf(30, 15, 5), val every: Long = 15, val burst: Boolean = true)
 
 /**
  * "Hazırlan" at each prep offset; then "kıl" every [ReminderCfg.every] min, every 5 min in the last half hour if [ReminderCfg.burst].
- * The first "kıl" is the time entering. [fz] = start of the faziletli time (design A, bildirim-sesleri-secenekler.html):
+ * The first one is the time entering, a notice only; the first "kıldın mı?" comes [ILK_SORU] later (owner, 2026-11-12,
+ * design `bildirim-akis-secenekler.html`). [fz] = start of the faziletli time (design A, bildirim-sesleri-secenekler.html):
  * at the start it replaces the entering one, later it is its own reminder and a nag closer than 5 min to it is dropped.
  */
 fun reminders(slot: Slot, cfg: ReminderCfg = ReminderCfg(), fz: Long? = null): List<Reminder> {
@@ -35,6 +39,7 @@ fun reminders(slot: Slot, cfg: ReminderCfg = ReminderCfg(), fz: Long? = null): L
     while (t < slot.nagEnd) {
         val kind = when { t != slot.start -> Ses.ISRAR; fz == slot.start -> Ses.FAZILET; else -> Ses.GIRDI }
         if (!(kind == Ses.ISRAR && later && kotlin.math.abs(t - fz!!) < 5 * MIN)) list += Reminder(t, slot, false, kind)
+        if (t == slot.start) { t += minOf(ILK_SORU, maxOf(slot.nagEnd - slot.start - 30 * MIN, 5 * MIN)); continue }
         val step = when {
             slot.nagEnd - t <= 30 * MIN && cfg.burst -> 5 * MIN
             t >= night -> 60 * MIN
@@ -51,7 +56,7 @@ fun remindersFor(s: Store, slot: Slot): List<Reminder> {
     if (!s.tracked(slot)) return emptyList()   // a prayer from before tracking started (or in an özel gün) is neither nagged nor kaza
     if (s.ozelGunNow != null) return emptyList()   // nothing can be prayed while an özel gün lasts, even a prayer that became owed
     val fz = if (!s.faziletSes) null else s.dilimler(slot).indexOf(Dilim.FAZILET).takeIf { it >= 0 }?.let { dilimStart(slot, it) }
-    val all = reminders(slot, s.reminderCfg(), fz)
+    val all = reminders(slot, s.reminderCfg(), fz).filterNot { it.prep && s.abdestli(slot.key) }
     val until = s.snoozedUntil(slot.key)
     if (until == 0L) return all
     return all.filter { it.at >= until } + Reminder(until, slot, false)
@@ -154,6 +159,13 @@ object Reminders {
         scheduleNext(ctx)
     }
 
+    /** "Abdestim var" on a prep notice: the prep notices left for this vakit are not shown. */
+    fun abdestli(ctx: Context, key: String, vakit: Vakit) {
+        Store(ctx).setAbdestli(key)
+        ctx.getSystemService(NotificationManager::class.java).cancel(vakit.ordinal + 1)
+        scheduleNext(ctx)
+    }
+
     fun snooze(ctx: Context, key: String, vakit: Vakit) {
         val s = Store(ctx)
         s.snooze(key, System.currentTimeMillis() + s.snoozeMin * MIN)
@@ -235,8 +247,9 @@ object Reminders {
             Triple("ses_fazilet", if (r.at == r.slot.start) "$ad vakti girdi · en faziletli vakit" else "$ad: en faziletli vakit",
                 "Şimdi kılmanın tam vakti.")
         } else if (r.kind == Ses.GIRDI) {
+            // a notice only (owner, 2026-11-12): the question comes later
             val o = nextOgut(Store(ctx))
-            Triple(if (Store(ctx).girdiSes) "ses_girdi" else channelFor("israr", ctx), "$ad vakti girdi — kıldın mı?", "${o.text}\n— ${o.source}")
+            Triple(if (Store(ctx).girdiSes) "ses_girdi" else channelFor("israr", ctx), "$ad vakti girdi", "${o.text}\n— ${o.source}")
         } else if (r.slot.nagEnd - now <= 30 * MIN) {
             Triple(channelFor("israr", ctx), "$ad vakti çıkıyor!", "Son $left dakika. Kazaya bırakma, hemen kıl.")
         } else {
@@ -253,16 +266,23 @@ object Reminders {
             Intent(ctx, SnoozeReceiver::class.java).putExtra("key", r.slot.key).putExtra("vakit", v.name),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        val abdest = PendingIntent.getBroadcast(
+            ctx, 20 + v.ordinal,
+            Intent(ctx, AbdestReceiver::class.java).putExtra("key", r.slot.key).putExtra("vakit", v.name),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val soru = !r.prep && r.kind == Ses.ISRAR
         val n = Notification.Builder(ctx, channel)
             .setSmallIcon(R.drawable.ic_notif)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))   // the öğüt is longer than one line
-            .setContentIntent(if (r.prep) openApp(ctx) else openReminder(ctx, r.slot))
-            .setCategory(if (r.prep) Notification.CATEGORY_REMINDER else Notification.CATEGORY_ALARM)
-            .setAutoCancel(false)
+            .setContentIntent(openApp(ctx))   // home, where "…kıldım" is (the full-screen "Kıldın mı?" page was removed 2026-11-12)
+            .setCategory(if (soru) Notification.CATEGORY_ALARM else Notification.CATEGORY_REMINDER)
+            .setAutoCancel(!soru)
             .apply {
-                if (!r.prep) {
+                if (r.prep) addAction(Notification.Action.Builder(null, "Abdestim var", abdest).build())
+                if (soru) {
                     addAction(Notification.Action.Builder(null, "Kıldım ✓", done).build())
                     addAction(Notification.Action.Builder(null, "${Store(ctx).snoozeMin} dk sonra", later).build())
                 }
@@ -272,16 +292,18 @@ object Reminders {
         ctx.getSystemService(NotificationManager::class.java).notify(v.ordinal + 1, n)
     }
 
+    /** Opens the app on home. */
     private fun openApp(ctx: Context) = PendingIntent.getActivity(
-        ctx, 100, Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE,
-    )
-
-    /** Opens the full-screen "Kıldın mı?" page for this prayer. */
-    private fun openReminder(ctx: Context, slot: Slot) = PendingIntent.getActivity(
-        ctx, 200 + slot.vakit.ordinal,
-        Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(MainActivity.EXTRA_SLOT, slot.key),
+        ctx, 100, Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("tab", 0),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
+}
+
+class AbdestReceiver : BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        val key = intent.getStringExtra("key") ?: return
+        Reminders.abdestli(ctx, key, Vakit.valueOf(intent.getStringExtra("vakit") ?: return))
+    }
 }
 
 class SnoozeReceiver : BroadcastReceiver() {

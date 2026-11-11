@@ -81,9 +81,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class MainActivity : ComponentActivity() {
-    companion object { const val EXTRA_SLOT = "slot" }
-
-    private var reminderKey by mutableStateOf<String?>(null)
     private var startTab by mutableIntStateOf(0)
     private var navN by mutableIntStateOf(0)   // bumps on every tab request, so asking for the same tab again still moves there
 
@@ -97,7 +94,6 @@ class MainActivity : ComponentActivity() {
         runCatching { Store(this).migrateTesbihatLog() }
         runCatching { Reminders.scheduleNext(this) }
     }.apply { isDaemon = true }.start()
-        reminderKey = intent.getStringExtra(EXTRA_SLOT)
         startTab = intent.getIntExtra("tab", 0) // lets `adb shell am start -e tab N` open a tab for testing
         SkyDebug.offsetMs = intent.getLongExtra("skytime", 0L) // `--el skytime` previews another hour of the sky
         if (intent.hasExtra("kible")) SkyDebug.kible = intent.getFloatExtra("kible", 0f) // `--ef kible 160` fakes the compass
@@ -140,7 +136,7 @@ class MainActivity : ComponentActivity() {
             setContent { AppTheme { WidgetPreview() } }
             return
         }
-        setContent { AppTheme { App(reminderKey, startTab, navN) { reminderKey = null } } }
+        setContent { AppTheme { App(startTab, navN) } }
     }
 
     /**
@@ -164,7 +160,6 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         acKisayol(intent)
-        intent.getStringExtra(EXTRA_SLOT)?.let { reminderKey = it }
         if (intent.hasExtra("tab")) { startTab = intent.getIntExtra("tab", startTab); navN++ }
     }
 
@@ -207,7 +202,7 @@ fun HolyTicker(days: List<Pair<HolyDay, String>>) {
 val LocalDockPad = compositionLocalOf { 0.dp }
 
 @Composable
-fun App(reminderKey: String?, startTab: Int, navN: Int = 0, onReminderClosed: () -> Unit) {
+fun App(startTab: Int, navN: Int = 0) {
     val ctx = LocalContext.current
     val store = remember { Store(ctx) }
     // first run: the setup screens instead of the app (Kurulum.kt), then the tour once
@@ -221,7 +216,7 @@ fun App(reminderKey: String?, startTab: Int, navN: Int = 0, onReminderClosed: ()
         }
         return
     }
-    LaunchedEffect(Unit) { if (!store.turDone && Tur.adim < 0 && reminderKey == null) Tur.adim = 0 }
+    LaunchedEffect(Unit) { if (!store.turDone && Tur.adim < 0) Tur.adim = 0 }
     var tab by remember { mutableIntStateOf(startTab) }
     // `am start --ei tab N` on a running instance moves to that tab (useful for screenshots)
     LaunchedEffect(startTab, navN) { tab = startTab }
@@ -257,7 +252,6 @@ fun App(reminderKey: String?, startTab: Int, navN: Int = 0, onReminderClosed: ()
         if (!subPage) Box(Modifier.align(Alignment.BottomCenter).turHedef("dock")) { SeherNav(tab) { tab = it } }
         GeriAlBandi(Modifier.align(Alignment.BottomCenter).padding(bottom = dockPad + Space.s))
         if (Tur.adim >= 0) TurOverlay(onTab = { tab = it }) { Tur.adim = -1; store.turDone = true; tab = 0 }
-        if (reminderKey != null) ReminderScreen(reminderKey, onReminderClosed)
     }
 }
 
@@ -659,63 +653,6 @@ fun NamazScreen(onOpenKible: () -> Unit, onOpenSettings: () -> Unit, onTesbihat:
             }
         }
         }
-    }
-}
-
-// ---------------------------------------------------------------- "Kıldın mı?" full screen
-
-@Composable
-fun ReminderScreen(key: String, onClose: () -> Unit) {
-    val ctx = LocalContext.current
-    val store = remember { Store(ctx) }
-    val now = rememberNow()
-    val slot = remember(key) {
-        val today = LocalDate.now()
-        (-1L..1L).flatMap { slots(store.lat, store.lng, today.plusDays(it)) }.firstOrNull { it.key == key }
-    }
-    if (slot == null || store.isPrayed(key) || now >= slot.end) { LaunchedEffect(Unit) { onClose() }; return }
-    val progress = ((now - slot.start).toFloat() / (slot.end - slot.start)).coerceIn(0f, 1f)
-
-    Column(
-        Modifier.fillMaxSize().background(Pal.Ground).statusBarsPadding().navigationBarsPadding().padding(horizontal = Space.xl),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Kapat", tint = Pal.Muted) }
-        }
-        Spacer(Modifier.height(Space.xl))
-        Box(Modifier.size(200.dp), contentAlignment = Alignment.Center) {
-        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-            val r = size.minDimension / 2
-            drawCircle(Pal.Track, r - 2, style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
-            drawArc(Pal.Gold, -90f, 360f * progress, false, topLeft = androidx.compose.ui.geometry.Offset(2f, 2f),
-                size = androidx.compose.ui.geometry.Size(size.width - 4, size.height - 4),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(4f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-        }
-        Image(painterResource(R.drawable.ic_logo_mono), null, Modifier.size(150.dp))   // the "Beş vakit gülü"
-        }
-        Spacer(Modifier.height(Space.xxl))
-        Text("${slot.ad(store.kadin)} vakti girdi".uppercase(Locale("tr")), color = Pal.Gold, fontSize = Type.label, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
-        Text("Kıldın mı?", style = NumStyle, fontSize = 60.sp, color = Pal.Text)
-        // one öğüt per opening of this page, the next in turn
-        val ogut = remember(key) { nextOgut(store) }
-        Text(ogut.text, color = Pal.Text.copy(alpha = .85f), fontSize = Type.body, lineHeight = 24.sp, textAlign = TextAlign.Center)
-        Text(ogut.source, Modifier.padding(top = Space.xs), color = Pal.Gold.copy(alpha = .8f), fontSize = Type.label, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(Space.xl))
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(countdown(slot.end - now), style = NumStyle, fontSize = Type.title, color = Pal.Text)
-            Spacer(Modifier.width(Space.s))
-            Text("vaktin çıkmasına", color = Pal.Muted, fontSize = Type.body, modifier = Modifier.padding(bottom = Space.xs))
-        }
-        Spacer(Modifier.weight(1f))
-        GoldButton("Kıldım", Modifier.fillMaxWidth().height(60.dp), Icons.Default.Check) {
-            Reminders.markPrayed(ctx, slot.key, slot.vakit); onClose()
-        }
-        Spacer(Modifier.height(Space.s))
-        GhostButton("${store.snoozeMin} dk sonra hatırlat", Modifier.fillMaxWidth()) {
-            Reminders.snooze(ctx, slot.key, slot.vakit); onClose()
-        }
-        Text("Kılana kadar hatırlatmaya devam edeceğim.", Modifier.padding(vertical = Space.m), color = Pal.Muted, fontSize = Type.label)
     }
 }
 

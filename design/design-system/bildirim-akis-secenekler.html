@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bildirim Akışı</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1180px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1000px}.lede b{color:#F3EEE3}
+.cols{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px}
+.col{flex:1;min-width:340px}
+.col h3{font:600 26px Cormorant,serif;margin:0 0 4px;color:var(--gold)}
+.col .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:14px}
+.ev{display:flex;gap:12px;margin-bottom:10px}
+.t{width:46px;flex:none;font:600 13px Inter;color:var(--muted);padding-top:12px;text-align:right}
+.n{flex:1;background:#1E2433;border-radius:18px;padding:11px 14px}
+.n.off{opacity:.32;text-decoration:line-through}
+.h{display:flex;align-items:center;gap:7px;font-size:11px;color:#9AA3B5}
+.h i{width:16px;height:16px;border-radius:50%;background:#E8BE74;display:inline-block}
+.ti{font-weight:600;font-size:14px;margin-top:4px}
+.tx{font-size:12.5px;color:#C9D0DD;margin-top:2px;line-height:1.45}
+.ac{display:flex;gap:18px;margin-top:8px;font-size:12.5px;font-weight:600;color:#9EC3FF}
+.tag{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.new{background:#E8BE7426;color:var(--gold)}.gone{background:#F4B08F22;color:var(--warn)}
+.sep{font-size:11px;color:#5A6582;letter-spacing:.12em;margin:16px 0 8px 58px}
+.q{margin-top:26px;background:#121D33;border-radius:18px;padding:16px 18px;font-size:13.5px;line-height:1.65;color:#C9D0DD;max-width:1000px}.q b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Bildirimler · bir vaktin akışı</div>
+  <h1>Hazırlık, vakit girdi, sonra soru</h1>
+  <p class="lede">Örnek: <b>Öğle 12:37</b> girer, 15:19'da çıkar; ayarlar bugünkü gibi (30 · 15 · 5 dk önce hazırlık, sonra 15 dakikada bir). Solda bugün olan, sağda önerilen. Kişi 12:10'da “Abdestim var” diyor, namazı da 13:05'te kılıyor.</p>
+  <div class="cols">
+    <div class="col">
+      <h3>Bugün</h3>
+      <div class="d">Üç hazırlık bildirimi de gelir; vakit girer girmez “kıldın mı?” diye sorar; bildirime basınca tam ekran “Kıldın mı?” sayfası açılır.</div>
+      <div class="ev"><div class="t">12:07</div><div class="n"><div class="h"><i></i>Namazım · Namaza hazırlık</div><div class="ti">Öğle vaktine 30 dk</div><div class="tx">Abdestini al, namaza hazırlan.</div></div></div>
+      <div class="ev"><div class="t">12:22</div><div class="n"><div class="h"><i></i>Namazım · Namaza hazırlık</div><div class="ti">Öğle vaktine 15 dk</div><div class="tx">Abdestini al, namaza hazırlan.</div></div></div>
+      <div class="ev"><div class="t">12:32</div><div class="n"><div class="h"><i></i>Namazım · Namaza hazırlık</div><div class="ti">Öğle vaktine 5 dk</div><div class="tx">Abdestini al, namaza hazırlan.</div></div></div>
+      <div class="ev"><div class="t">12:37</div><div class="n"><div class="h"><i></i>Namazım · Vakit girdi</div><div class="ti">Öğle vakti girdi — kıldın mı?</div><div class="tx">“Namazı dosdoğru kılın…” — Bakara 43</div><div class="ac"><span>KILDIM ✓</span><span>15 DK SONRA</span></div></div></div>
+      <div class="ev"><div class="t">12:52</div><div class="n"><div class="h"><i></i>Namazım · Kıldın mı?</div><div class="ti">Öğle vakti — kıldın mı?</div><div class="tx">bir ayet / hadis</div><div class="ac"><span>KILDIM ✓</span><span>15 DK SONRA</span></div></div></div>
+      <div class="ev"><div class="t">13:05</div><div class="n" style="background:#121D33"><div class="tx">Bildirime basınca: tam ekran <b>“Kıldın mı?”</b> sayfası (ayet, Kıldım, Sonra).</div></div></div>
+    </div>
+    <div class="col">
+      <h3>Önerilen</h3>
+      <div class="d">Hazırlıkta <b>“Abdestim var”</b>: kalan hazırlıklar gelmez. Vakit girince <b>yalnızca haber</b> verilir. “Kıldın mı?” ilk kez <b>20 dk sonra</b> sorulur. Bildirime basınca ana sayfa açılır; ayrı sayfa yok.</div>
+      <div class="ev"><div class="t">12:07</div><div class="n"><div class="h"><i></i>Namazım · Namaza hazırlık</div><div class="ti">Öğle vaktine 30 dk</div><div class="tx">Abdestini al, namaza hazırlan.</div><div class="ac"><span>ABDESTİM VAR</span></div></div></div>
+      <div class="sep">12:10 · “ABDESTİM VAR”A BASILDI</div>
+      <div class="ev"><div class="t">12:22</div><div class="n off"><div class="ti">Öğle vaktine 15 dk</div></div></div>
+      <div class="ev"><div class="t">12:32</div><div class="n off"><div class="ti">Öğle vaktine 5 dk</div></div></div>
+      <div class="ev"><div class="t">12:37</div><div class="n"><div class="h"><i></i>Namazım · Vakit girdi</div><div class="ti">Öğle vakti girdi<span class="tag new">soru yok</span></div><div class="tx">“Namazı dosdoğru kılın…” — Bakara 43</div><div class="ac"><span>KILDIM ✓</span></div></div></div>
+      <div class="ev"><div class="t">12:52</div><div class="n off"><div class="ti">Öğle vakti — kıldın mı?</div></div></div>
+      <div class="ev"><div class="t">12:57</div><div class="n"><div class="h"><i></i>Namazım · Kıldın mı?</div><div class="ti">Öğle vakti — kıldın mı?<span class="tag new">20 dk sonra</span></div><div class="tx">bir ayet / hadis</div><div class="ac"><span>KILDIM ✓</span><span>15 DK SONRA</span></div></div></div>
+      <div class="ev"><div class="t">13:05</div><div class="n" style="background:#121D33"><div class="tx">Bildirime basınca <b>ana sayfa</b> açılır (gül, “Öğleyi kıldım”). Tam ekran sayfa <span class="tag gone">kalkar</span></div></div></div>
+      <div class="ev"><div class="t">13:12</div><div class="n off"><div class="ti">sonraki sorular (15 dk'da bir, son yarım saatte 5 dk'da bir)</div></div></div>
+    </div>
+  </div>
+  <div class="q"><b>Ayrıntılar:</b> “Abdestim var” yalnızca o vaktin kalan hazırlık bildirimlerini susturur; vakit girdi haberi ve sonraki sorular yine gelir. Vakit girdi bildiriminde soru yok ama yine de bir “Kıldım ✓” düğmesi duruyor, ilk vakitte kılan biri uygulamayı açmadan işaretleyebilsin diye (istersen o da kalkar). Faziletli vakit vaktin ortasında başlıyorsa (ör. Hanefî'de sabah) onun haberi yine gelir. “20 dk” sabit; Ayarlar'da değiştirilebilir de yapılabilir.</div>
+</div>
+</body>
+</html>

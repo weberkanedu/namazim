@@ -72,6 +72,7 @@
         <receiver android:name=".IkonReceiver" android:exported="false" />
         <receiver android:name=".PrayedReceiver" android:exported="false" />
         <receiver android:name=".SnoozeReceiver" android:exported="false" />
+        <receiver android:name=".AbdestReceiver" android:exported="false" />
         <receiver android:name=".NamazimWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

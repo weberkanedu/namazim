@@ -166,6 +166,9 @@ class Store(context: Context) {
     /** settleKaza has already passed this vakit: unprayed, it is counted as kaza. */
     private fun kazaSayildi(s: Slot) = s.end <= maxOf(settledUntil, since) && s.end > since && !exempt(s)
     private fun kazaDuzelt(s: Slot, n: Int) { addKaza(s.vakit, n); if (s.vakit == Vakit.YATSI) addKaza("VITIR", n) }
+    /** "Abdestim var" was tapped on this vakit's prep notice: the prep notices left are skipped. */
+    fun abdestli(key: String) = p.getBoolean("abdest_$key", false)
+    fun setAbdestli(key: String) { p.edit().putBoolean("abdest_$key", true).apply() }
     /** Marked after its vakit, without a time: counted as prayed, not on time. */
     fun saatsiz(key: String) = p.getBoolean("saatsiz_$key", false)
     /** When home was last opened, for the "while you were away" card (Gecmis.kt). */

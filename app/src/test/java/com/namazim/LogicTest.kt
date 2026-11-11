@@ -8,12 +8,16 @@ class LogicTest {
     private val min = 60_000L
 
     @Test fun remindersCadence() {
-        // 2-hour window: 3 prep, every 15 min for the first 90 min, every 5 min in the last 30.
+        // 2-hour window: 3 prep, the entering notice, the first question 20 min later, then every 15 min, every 5 in the last 30.
         val s = Slot(Vakit.OGLE, LocalDate.of(2026, 11, 1), 0, 120 * min, 120 * min)
         val r = reminders(s)
         assertEquals(listOf(-30L, -15L, -5L), r.filter { it.prep }.map { it.at / min })
         val nags = r.filterNot { it.prep }.map { it.at / min }
-        assertEquals((0L..90L step 15).toList() + (95L..115L step 5).toList(), nags)
+        assertEquals(listOf(0L) + (20L..80L step 15).toList() + (95L..115L step 5).toList(), nags)
+        assertEquals(Ses.GIRDI, r.first { !it.prep }.kind)
+        // a short window (40 min): the first question still comes before the last half hour's burst
+        val k = reminders(Slot(Vakit.OGLE, LocalDate.of(2026, 11, 1), 0, 40 * min, 40 * min)).filterNot { it.prep }.map { it.at / min }
+        assertEquals(listOf(0L, 10L, 15L, 20L, 25L, 30L, 35L), k)
     }
 
     @Test fun faziletReminder() {
@@ -21,10 +25,10 @@ class LogicTest {
         // faziletli time at the start: one reminder there, the fazilet one (no separate "girdi")
         val same = reminders(s, fz = 0).filterNot { it.prep }
         assertEquals(Ses.FAZILET, same.first().kind); assertEquals(1, same.count { it.at == 0L })
-        // later (at 32 min): girdi at 0, fazilet at 32, the nag at 30 (2 min before) is dropped, 45 stays
+        // later (at 32 min): girdi at 0, the first question at 20, fazilet at 32, the nag at 35 (3 min after) is dropped, 50 stays
         val later = reminders(s, fz = 32 * min).filterNot { it.prep }
         assertEquals(Ses.GIRDI, later.first().kind)
-        assertEquals(listOf(0L, 15L, 32L, 45L), later.filter { it.at <= 45 * min }.map { it.at / min })
+        assertEquals(listOf(0L, 20L, 32L, 50L), later.filter { it.at <= 50 * min }.map { it.at / min })
         assertEquals(Ses.FAZILET, later.first { it.at == 32 * min }.kind)
     }
 
