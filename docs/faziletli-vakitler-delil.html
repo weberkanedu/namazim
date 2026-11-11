@@ -1,0 +1,208 @@
+<title>Faziletli Vakitlerin Delilleri</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Amiri:wght@400;700&display=swap">
+<style>
+/* Layout: one reading column; per vakit a block of hüküm / delil / ölçü / soru, status chips say how firm each step is */
+:root{
+  --bg:#FBF8F1; --surface:#FFFFFF; --fg:#1C2333; --muted:#5E6676; --line:#E4DED0;
+  --gold:#9A6B1E; --gold-soft:#F4E7CC; --ok:#2F6B4F; --ok-soft:#DDEFE5; --ask:#A2501F; --ask-soft:#F8E3D6;
+  --display:"Cormorant Garamond", Georgia, serif; --body:Inter, system-ui, sans-serif; --ar:Amiri, "Traditional Arabic", serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1322; --surface:#121D33; --fg:#EEE8DA; --muted:#A3ABBC; --line:#24314D;
+  --gold:#E8BE74; --gold-soft:#2C2A22; --ok:#8FD1AE; --ok-soft:#173326; --ask:#F4B08F; --ask-soft:#3A2418; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1322; --surface:#121D33; --fg:#EEE8DA; --muted:#A3ABBC; --line:#24314D;
+  --gold:#E8BE74; --gold-soft:#2C2A22; --ok:#8FD1AE; --ok-soft:#173326; --ask:#F4B08F; --ask-soft:#3A2418; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.7 var(--body)}
+.wrap{max-width:760px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.eyebrow{font:600 11px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 clamp(34px,6vw,50px)/1.05 var(--display);margin:6px 0 10px;text-wrap:balance}
+h2{font:600 30px/1.15 var(--display);margin:46px 0 6px;text-wrap:balance}
+h3{font:600 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 4px}
+p{margin:8px 0}
+.lede{color:var(--muted);font-size:16px}
+.vakit{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 20px 14px;margin-top:14px}
+.vakit h2{margin-top:14px}
+.chip{display:inline-block;font:600 11px var(--body);padding:2px 9px;border-radius:999px;margin-right:6px;vertical-align:2px;white-space:nowrap}
+.ok{background:var(--ok-soft);color:var(--ok)}
+.ask{background:var(--ask-soft);color:var(--ask)}
+.ours{background:var(--gold-soft);color:var(--gold)}
+.ar{font-family:var(--ar);font-size:20px;direction:rtl;text-align:right;color:var(--fg);margin:6px 0 2px;line-height:1.8}
+.src{font-size:12.5px;color:var(--muted)}
+ul{padding-left:20px;margin:6px 0}
+li{margin:4px 0}
+.olcu{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:8px 0}
+.olcu dt{color:var(--muted);white-space:nowrap}.olcu dd{margin:0;font-variant-numeric:tabular-nums;min-width:0}
+.q{border-left:3px solid var(--ask);padding:4px 0 4px 12px;margin:10px 0;color:var(--fg)}
+.itiraz{margin:14px 0}
+.itiraz b{display:block;font-family:var(--display);font-size:20px;font-weight:600}
+ol.sorular{padding-left:22px}
+ol.sorular li{margin:10px 0}
+.key{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:13px;color:var(--muted);margin:12px 0 0}
+a{color:var(--gold)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Namazım · fıkhî dayanak dosyası · Kasım 2026</div>
+  <h1>Faziletli Vakitlerin Delilleri</h1>
+  <p class="lede">Namazım uygulaması, her vaktin içinde hangi kısmın <b>faziletli</b> (müstehap) ve hangi kısmın <b>kerahat</b> olduğunu gösteriyor. Bu dosya her sınırın hangi ayete, hadise ve fıkıh kitabına dayandığını, nerede kitaptaki tarifi dakikaya kendimizin çevirdiğini ve bir hocaya neyi sormamız gerektiğini topluyor. Varsayılan mezhep Hanefî; Şâfiî ayrıca seçilebiliyor.</p>
+  <div class="key"><span><span class="chip ok">Kaynakta açık</span>hüküm kitapta açıkça var</span><span><span class="chip ours">Bizim çevirimiz</span>tarifi saate biz çevirdik</span><span><span class="chip ask">Hocaya sorulacak</span>netleşmesi gereken yer</span></div>
+
+  <h2>Önce sınırlar: uygulama neyi iddia ediyor, neyi etmiyor</h2>
+  <ul>
+    <li><b>Vaktin kendisi Diyanet'in vaktidir.</b> Girişler ve çıkışlar Diyanet takvimine birer dakika içinde uyar. Faziletli kısım bu vaktin <i>içinde</i> bir bölümdür; vakti daraltmaz, genişletmez.</li>
+    <li><b>Namaz vaktin her yerinde geçerlidir.</b> Uygulama “faziletli değil” dediği yerde kılınan namazı geçersiz saymaz; kazaya da yazmaz. Yalnızca “vaktinde” istatistiğinde ayırır.</li>
+    <li><b>Fetva değil, gösterimdir.</b> Hükümler mezhebin muteber kitaplarından alınır; uygulama yalnızca bunları güneşin konumuna göre saate çevirir.</li>
+  </ul>
+
+  <h2>Genel ilke: ilk vakit</h2>
+  <p><span class="chip ok">Kaynakta açık</span>Bütün mezheplerde asıl olan namazı vaktinin başında kılmaktır; Hanefîler bazı namazlarda delile dayanarak istisna yapar.</p>
+  <ul>
+    <li>İbn Mes'ûd: “Allah'a en sevimli amel hangisidir?” “<b>Vaktinde kılınan namaz.</b>” <span class="src">Buhârî, Mevâkît 5 (527); Müslim, Îmân 137–139 (85).</span> Sahih.</li>
+    <li>“Vaktin evveli Allah'ın rızası, sonu affıdır.” <span class="src">Tirmizî, Mevâkît 13 (172).</span> <b>Dikkat:</b> senedinde zayıf ravi var; tek başına delil gösterilmemeli, İbn Mes'ûd hadisiyle birlikte anılmalı.</li>
+  </ul>
+
+  <section class="vakit">
+    <h2>Sabah</h2>
+    <h3>Hüküm</h3>
+    <p><span class="chip ok">Kaynakta açık</span>Hanefî'de erkek için sabaha <b>isfârda</b> (ortalık aydınlanınca) başlamak müstehaptır; ölçüsü, tertil ile yaklaşık kırk ayet okunabilecek ve namaz bozulursa abdest alınıp güneş doğmadan tekrar kılınabilecek kadar vakit bırakmaktır. İbn Âbidîn bu payın gerekirse gusül alacak kadar olmasını ekler.</p>
+    <p class="ar">وَالْمُسْتَحَبُّ لِلرَّجُلِ الِابْتِدَاءُ فِي الْفَجْرِ بِإِسْفَارٍ … بِحَيْثُ يُرَتِّلُ أَرْبَعِينَ آيَةً ثُمَّ يُعِيدُهُ بِطَهَارَةٍ لَوْ فَسَدَ</p>
+    <p class="src">ed-Dürrü'l-Muhtâr ve Reddü'l-Muhtâr, Bâbu'l-evkât (Zekeriyyâ bs. 2/24; başka baskıda 1/366). Fetvalardaki aktarımdan okundu; baskıdan sayfa kontrolü gerekir.</p>
+    <p><span class="chip ok">Kaynakta açık</span><b>Kadın için isfâr müstehap değildir;</b> vakit girince (tağlîs) kılması efdaldir. <span class="src">Dürr'ün aynı yeri; Banuri fetvası 144307101501.</span></p>
+    <h3>Delil</h3>
+    <ul>
+      <li>Râfi' b. Hadîc: “<b>Sabahı aydınlıkta kılın, ecri daha büyüktür.</b>” <span class="src">Tirmizî, Mevâkît 3 (154, “hasen sahih”); Ebû Dâvûd 424; Nesâî 548; İbn Mâce 672.</span></li>
+      <li>Tahâvî, sahabenin sabahı aydınlıkta kılmakta birleştiğini nakleder. <span class="src">Şerhu Meâni'l-Âsâr (aktaran: Câmia Fârûkıyye fetvası).</span></li>
+      <li>Karşı delil (Şâfiî ve kadınlar için): Âişe, kadınların sabahtan karanlıkta döndüklerini, tanınmadıklarını anlatır. <span class="src">Buhârî 578; Müslim 645.</span></li>
+    </ul>
+    <h3>Uygulamadaki ölçü</h3>
+    <dl class="olcu">
+      <dt>Başlangıç</dt><dd>Güneş ufkun 12° altına çıkınca (ufuk seçilir hale gelir). <span class="chip ours">Bizim çevirimiz</span></dd>
+      <dt>Bitiş</dt><dd>Güneş doğmadan 30 dk önce başlamış olmak: namaz ~10 dk + abdest/gusül ~10 dk + iade ~10 dk. <span class="chip ours">Bizim çevirimiz</span></dd>
+      <dt>Kadın</dt><dd>Vaktin ilk ~15 dakikası.</dd>
+      <dt>Ankara, 12 Kasım</dt><dd>06:27 – 06:54 (vakit 05:58 – 07:24)</dd>
+    </dl>
+    <p class="q"><span class="chip ask">Hocaya sorulacak</span>Isfârın başı için 12° uygun mu? Kırk ayet + gusül + iade için 30 dakika yeterli mi, fazla mı? Evde tek başına kılan erkek için de isfâr mı efdal?</p>
+  </section>
+
+  <section class="vakit">
+    <h2>Öğle</h2>
+    <h3>Hüküm</h3>
+    <p><span class="chip ok">Kaynakta açık</span>Kışın erken kılmak (ta'cîl), yazın sıcak kırılıncaya kadar geciktirmek (ibrâd) müstehaptır. Hanefîler ibrâdda sıcak ülke ayrımı yapmaz, cemaatle de tek başına da geçerli sayar. el-Bahr: kış soğuğun, yaz sıcağın sürekli olduğu zamandır; Hanefî şerhlere göre kıştaki ta'cîl ilkbahara, yazdaki ibrâd sonbahara uzanır.</p>
+    <p><span class="chip ok">Kaynakta açık</span>İbrâd, gölge boy kadar olmadan (asr-ı evvelden önce) kılmakla sınırlıdır. Diyanet'in ikindi vakti asr-ı evvelden başladığı için bu sınır zaten öğle vaktinin sonudur.</p>
+    <h3>Delil</h3>
+    <ul>
+      <li>“<b>Sıcak şiddetlenince namazı serinliğe bırakın; sıcağın şiddeti cehennemin kaynamasındandır.</b>” <span class="src">Buhârî, Mevâkît 9 (533–536); Müslim, Mesâcid 180 (615).</span></li>
+      <li>Enes: Peygamber soğuk şiddetlenince namazı erken kılar, sıcak şiddetlenince serinliğe bırakırdı. <span class="src">Buhârî, Cum'a 17 (906).</span></li>
+    </ul>
+    <h3>Uygulamadaki ölçü</h3>
+    <dl class="olcu">
+      <dt>Haziran – Ekim</dt><dd>Öğle vaktinin ikinci yarısı, ikindiye kadar. <span class="chip ours">Bizim çevirimiz</span></dd>
+      <dt>Kasım – Mayıs</dt><dd>Vaktin ilk çeyreği. <span class="chip ours">Bizim çevirimiz</span></dd>
+      <dt>Zeval kerahati</dt><dd>Öğleden 20 dk önce başlar (Türkiye Takvimi'nin ölçüsü).</dd>
+      <dt>Ankara, 12 Kasım</dt><dd>12:38 – 13:18 (vakit 12:38 – 15:17)</dd>
+    </dl>
+    <p class="q"><span class="chip ask">Hocaya sorulacak</span>Türkiye için ay sınırları doğru mu (Haziran–Ekim ibrâd)? Kışın “erken” kaç dakika, ilk çeyrek uygun mu? İbrâdın başı için “ikinci yarı” makul mü?</p>
+  </section>
+
+  <section class="vakit">
+    <h2>İkindi</h2>
+    <h3>Hüküm</h3>
+    <p><span class="chip ok">Kaynakta açık</span>Hanefî'de ikindiyi biraz geciktirmek müstehaptır, ama güneşin rengi değişinceye (sararıncaya) kadar geciktirmek tahrîmen mekruhtur; değişme, güneşe bakınca gözün kamaşmamasıyla anlaşılır. Bulutlu günde vaktin girdiği kesinleşince erken kılınır.</p>
+    <p class="ar">وَالتَّأْخِيرُ إِلَى التَّغَيُّرِ مَكْرُوهٌ تَحْرِيمًا</p>
+    <p class="src">Tahtâvî, Hâşiye alâ Merâki'l-Felâh, s. 183.</p>
+    <h3>Delil</h3>
+    <ul>
+      <li>Enes: “<b>Bu münafığın namazıdır:</b> oturup güneşi gözler, güneş şeytanın iki boynuzu arasına girince kalkar, dört kere gagalar.” <span class="src">Müslim, Mesâcid 195 (622).</span></li>
+      <li>Güneş batmaya meylettiğinde namaz kılmanın yasaklandığı üç vakit hadisi. <span class="src">Ukbe b. Âmir, Müslim 831.</span></li>
+      <li>Asr-ı sânî (gölgenin boyun iki katı) Ebû Hanîfe'nin ikindi başlangıcıdır; Cibrîl'in imamlık hadisi gölge ölçüsünün aslıdır. <span class="src">Ebû Dâvûd 393; Tirmizî 149; TDV İslâm Ansiklopedisi, “Vakit”.</span></li>
+    </ul>
+    <h3>Uygulamadaki ölçü</h3>
+    <dl class="olcu">
+      <dt>Faziletli</dt><dd>Asr-ı sânîden (gölge 2 kat + zeval gölgesi) isfirara kadar.</dd>
+      <dt>Kerahat</dt><dd>İsfirar-ı şems: güneş ufkun 5° üstüne inince (Türkiye Takvimi'nin ölçüsü).</dd>
+      <dt>Ankara, 12 Kasım</dt><dd>Faziletli 15:57 – 17:01; kerahat 17:01 – 17:42</dd>
+    </dl>
+    <p class="q"><span class="chip ask">Hocaya sorulacak</span>Faziletin başı için asr-ı sânî uygun mu, yoksa asr-ı evvelden sonrası da mı faziletli? (Diyanet ikindiyi asr-ı evvelden başlatıyor.)</p>
+  </section>
+
+  <section class="vakit">
+    <h2>Akşam</h2>
+    <h3>Hüküm</h3>
+    <p><span class="chip ok">Kaynakta açık</span>Akşamı acele kılmak yazın da kışın da müstehaptır; ezanla kamet arasında üç ayet kadar ya da kısa bir oturuş kadar ara verilir. Az geciktirmek tenzîhen mekruh, iki rekât kadar geciktirmek mekruh, yıldızlar çoğalıncaya (iştibâk-ı nücûm) kadar geciktirmek tahrîmen mekruhtur; yolculuk, hastalık, yemek ve bulutlu gün özürdür.</p>
+    <p class="ar">وَأُخِّرَ الْمَغْرِبُ إِلَى اشْتِبَاكِ النُّجُومِ … كُرِهَ … تَحْرِيمًا إِلَّا بِعُذْرٍ</p>
+    <p class="src">ed-Dürrü'l-Muhtâr; Tahtâvî, Hâşiye alâ Merâki'l-Felâh, s. 183 (en-Nehr'in el-Fetih'ten aktarımıyla).</p>
+    <h3>Delil</h3>
+    <ul>
+      <li>“<b>Ümmetim akşamı yıldızlar çoğalıncaya kadar geciktirmedikçe hayır (fıtrat) üzeredir.</b>” <span class="src">Ebû Dâvûd 418 (Ebû Eyyûb); Ahmed.</span> Tirmizî, sahabeden itibaren âlimlerin akşamı geciktirmeyi mekruh gördüğünü nakleder (Nevevî, el-Mecmû').</li>
+      <li>Râfi' b. Hadîc: akşamı kılıp ayrıldığımızda attığımız okun düştüğü yeri görebilirdik. <span class="src">Buhârî 559; Müslim 637.</span></li>
+    </ul>
+    <h3>Uygulamadaki ölçü</h3>
+    <dl class="olcu">
+      <dt>Faziletli</dt><dd>Vaktin ilk ~10 dakikası: ezan, kısa ara, üç rekât. <span class="chip ours">Bizim çevirimiz</span></dd>
+      <dt>Sonrası</dt><dd>Caiz, tenzîhen mekruh; çizgide sade gösterilir.</dd>
+      <dt>Kerahat</dt><dd>İştibâk-ı nücûm: güneş ufkun 10° altında (Türkiye Takvimi'nin ölçüsü).</dd>
+      <dt>Ankara, 12 Kasım</dt><dd>Faziletli 17:42 – 17:52; kerahat 18:26'dan</dd>
+    </dl>
+    <p class="q"><span class="chip ask">Hocaya sorulacak</span>“Vaktin başı” için 10 dakika doğru mu? İştibâk için 10° uygun mu?</p>
+  </section>
+
+  <section class="vakit">
+    <h2>Yatsı</h2>
+    <h3>Hüküm</h3>
+    <p><span class="chip ok">Kaynakta açık</span>Hanefî'de yatsıyı gecenin üçte birine kadar geciktirmek müstehap, gece yarısından sonraya bırakmak mekruhtur. Gece, akşamdan sabah vaktinin girişine kadar sayılır. Diyanet de vaktin imsake kadar sürdüğünü, bazı âlimlerin ilk vakti, bazılarının geciktirmeyi faziletli gördüğünü kaydeder.</p>
+    <h3>Delil</h3>
+    <ul>
+      <li>“<b>Ümmetime zor gelmeseydi yatsıyı gecenin üçte birine veya yarısına kadar geciktirmelerini emrederdim.</b>” <span class="src">Tirmizî, Mevâkît 10 (167, “hasen sahih”); İbn Mâce 691.</span></li>
+      <li>Ebû Berze: Peygamber yatsıyı geciktirmeyi sever, ondan önce uyumayı ve sonra konuşmayı hoş görmezdi. <span class="src">Buhârî 547; Müslim 647.</span></li>
+    </ul>
+    <h3>Uygulamadaki ölçü</h3>
+    <dl class="olcu">
+      <dt>Faziletli</dt><dd>Vakit girişinden gecenin üçte birine kadar.</dd>
+      <dt>Kerahat</dt><dd>Gece yarısından (akşamla imsakin tam ortası) imsake kadar.</dd>
+      <dt>Ankara, 12 Kasım</dt><dd>Faziletli 19:03 – 21:48; kerahat 23:50'den</dd>
+    </dl>
+    <p class="q"><span class="chip ask">Hocaya sorulacak</span>Yazın vakit girince kılmak mı efdal (bazı Hanefî metinlerinde geçiyor)? Gece yarısı akşam–imsak ortası mı, akşam–güneş doğuşu ortası mı alınmalı?</p>
+  </section>
+
+  <section class="vakit">
+    <h2>Şâfiî ayarı</h2>
+    <p><span class="chip ok">Kaynakta açık</span>Şâfiî'de her namazın faziletli vakti başıdır; sabah karanlıkta (tağlîs) kılınır. Diyanet'in yatsı fetvasına göre Şâfiî'de belli bir noktadan fecre kadarki vakit cevaz vaktidir; kılınırsa geçerli, ama mekruhtur.</p>
+    <p class="q"><span class="chip ask">Hocaya sorulacak</span>Şâfiî'de yatsının ihtiyar vakti gecenin üçte biri mi, yarısı mı? Sabahta isfârdan sonrası da kerahat mi sayılmalı?</p>
+  </section>
+
+  <h2>Gelebilecek itirazlar</h2>
+  <div class="itiraz"><b>“Namaz vakit girer girmez kılınır, siz sabahı geç gösteriyorsunuz.”</b>Hanefî mezhebinde sabahta isfâr müstehaptır; delili Râfi' b. Hadîc hadisi (Tirmizî 154, hasen sahih) ve Tahâvî'nin naklettiği sahabe uygulamasıdır. Ayarlardan Şâfiî seçen için sabahın başı faziletli gösterilir. Kadınlar için Hanefî'de de vaktin başı gösterilir.</div>
+  <div class="itiraz"><b>“Akşamı biraz geciktirmenin ne sakıncası var?”</b>Namaz geçerlidir, kaza sayılmaz. Ama fıkıh kitapları az geciktirmeyi tenzîhen, yıldızlar çoğalıncaya kadar geciktirmeyi tahrîmen mekruh sayar (Dürr, Tahtâvî); delili Ebû Dâvûd 418'deki “ümmetim hayır üzeredir” hadisidir.</div>
+  <div class="itiraz"><b>“Bu dakikaları nereden çıkardınız?”</b>Hüküm kitaplardadır, dakikalar onların tarifinin güneşe uygulanmasıdır. İşrak, isfirar, iştibâk gibi anlar Türkiye Takvimi'nin de kullandığı güneş açılarıdır. Kitapta açıkça dakikası olmayan yerler bu dosyada “bizim çevirimiz” diye işaretli ve hocaya sorulmuştur.</div>
+  <div class="itiraz"><b>“Diyanet takvimiyle çelişiyor mu?”</b>Hayır. Vaktin girişi ve çıkışı Diyanet'inkiyle aynıdır. Uygulama yalnızca o vaktin içinde müstehap ve mekruh kısımları ayırır; Diyanet fetvaları da bu ayrımı yapar (sabahta isfâr, yatsıda ilk vakit / tehir).</div>
+  <div class="itiraz"><b>“Uygulama fetva mı veriyor?”</b>Hayır. Gösterdiği hükümler mezhebin muteber kitaplarındandır; vaktinde kılınan her namaz geçerlidir. Uygulamanın amacı kişinin kendi düzenini görmesidir.</div>
+  <div class="itiraz"><b>“‘Vaktin evveli rıza, sonu af’ hadisi zayıf.”</b>Doğru; bu yüzden dayanak olarak tek başına kullanılmıyor. İlk vaktin fazileti Buhârî ve Müslim'deki İbn Mes'ûd hadisine dayanır.</div>
+
+  <h2>Hocaya sorulacakların listesi</h2>
+  <ol class="sorular">
+    <li><b>Sabah:</b> isfârın başı için güneşin 12° altı uygun mu; iade payı 30 dakika yeterli mi; evde tek başına kılan erkek için de isfâr mı efdal?</li>
+    <li><b>Öğle:</b> ibrâd için Haziran–Ekim, ta'cîl için Kasım–Mayıs doğru mu; kışın “erken” ilk çeyrek mi?</li>
+    <li><b>İkindi:</b> faziletin başı asr-ı sânî mi?</li>
+    <li><b>Akşam:</b> faziletli kısım ilk 10 dakika mı; iştibâk için 10° uygun mu?</li>
+    <li><b>Yatsı:</b> yazın ilk vakit mi efdal; gece yarısı hangi iki an arasında ölçülmeli?</li>
+    <li><b>Şâfiî:</b> yatsıda ihtiyar vaktinin sonu; sabahta isfârdan sonrası.</li>
+    <li><b>Kaynak kontrolü:</b> Dürr ve Reddü'l-Muhtâr'daki isfâr ifadesinin ve Tahtâvî s. 183'ün baskıdaki yeri.</li>
+  </ol>
+
+  <h2>Kaynaklar</h2>
+  <ul class="src">
+    <li>Diyanet, Din İşleri Yüksek Kurulu: <a href="https://kurul.diyanet.gov.tr/tr/fetva/sabah-namazi-imsak-vaktinin-girmesiyle-kilinabilir-mi/0193c42d-4d4a-71dc-1298-7a265eeddb83">Sabah namazı imsak vaktinin girmesiyle kılınabilir mi?</a>; <a href="https://kurul.diyanet.gov.tr/Cevap-Ara/135/yatsi-namazi-ne-zamana-kadar-kilinabilir">Yatsı namazı ne zamana kadar kılınabilir?</a></li>
+    <li>İbn Âbidîn, Reddü'l-Muhtâr, Bâbu'l-evkât: <a href="https://archive.org/stream/13_20200513/06%20-%20%D8%AD%D8%A7%D8%B4%D9%8A%D8%A9%20%D8%A7%D8%A8%D9%86%20%D8%B9%D8%A7%D8%A8%D8%AF%D9%8A%D9%86%20-%20%D9%81%D8%B1%D9%81%D9%88%D8%B1_djvu.txt">archive.org metni</a></li>
+    <li>Tahtâvî, Hâşiye alâ Merâki'l-Felâh, s. 183: <a href="https://lib.efatwa.ir/43807/1/183">metin</a></li>
+    <li>Banuri fetvası (Dürr, Âlemgîrî, Tahtâvî, Ahsenü'l-Fetâvâ'ya atıfla): <a href="https://www.banuri.edu.pk/readquestion/fajar-ki-nmaz-ka-waqt-144307101501/21-02-2022">sabah vakti</a></li>
+    <li>Câmia Fârûkıyye: <a href="https://farooqia.com/course/%D9%81%D8%AC%D8%B1-%DA%A9%DB%8C-%D9%86%D9%85%D8%A7%D8%B2-%DA%A9%D8%A7-%D8%A7%D9%81%D8%B6%D9%84-%D9%88%D9%82%D8%AA-%DA%A9%D9%88%D9%86-%D8%B3%D8%A7-%DB%81%DB%92%D8%9F/">sabahın efdal vakti</a></li>
+    <li>Muftionline (Dürr ve Redd'e atıfla): <a href="https://islamqa.org/hanafi/muftionline/127811/the-mustahab-times-for-performing-the-five-daily-salaah/">müstehap vakitler</a></li>
+    <li>Türkiye Takvimi: <a href="https://www.namazvakti.com/">namazvakti.com</a> (işrak, isfirar, iştibâk, asr-ı sânî, gece yarısı ölçüleri)</li>
+    <li>TDV İslâm Ansiklopedisi: <a href="https://islamansiklopedisi.org.tr/vakit">Vakit</a>; <a href="https://islamansiklopedisi.org.tr/namaz">Namaz</a></li>
+    <li>Hadis metinleri: <a href="https://hadeethenc.com/tr/browse/hadith/10612">isfâr hadisi</a>; <a href="https://hadithunlocked.com/muslim:622">Müslim 622</a>; <a href="https://surahquran.com/Hadith-42121.html">akşamı geciktirme (Nevevî, el-Mecmû')</a></li>
+  </ul>
+  <p class="src">Not: Fıkıh kitaplarının ifadeleri, onları aktaran fetvalar ve çevrimiçi metinler üzerinden okundu; hadis numaraları yaygın numaralandırmaya göredir. Baskı ve sayfa kontrolü hocayla birlikte yapılmalıdır.</p>
+</div>
