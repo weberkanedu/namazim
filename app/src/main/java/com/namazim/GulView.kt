@@ -1,5 +1,7 @@
 package com.namazim
 
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import android.annotation.SuppressLint
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
@@ -108,15 +110,18 @@ fun GulCard(petals: List<Petal>, modifier: Modifier = Modifier) {
             if (e == Lifecycle.Event.ON_RESUME) web.onResume()
         }
         owner.lifecycle.addObserver(obs)
-        onDispose { owner.lifecycle.removeObserver(obs); web.destroy() }
+        onDispose { owner.lifecycle.removeObserver(obs); web.destroy(); GulAlan.rect = null }
     }
 
     Box(modifier) {
         key(web) { AndroidView(factory = { web }, modifier = Modifier.fillMaxSize()) }
         if (problem.isNotEmpty()) Text(problem.take(600), Modifier.padding(Space.s), color = Pal.Warn, fontSize = Type.micro)
-        Box(Modifier.fillMaxSize().pointerInput(web) {
+        Box(Modifier.fillMaxSize().onGloballyPositioned { GulAlan.rect = it.boundsInRoot() }.pointerInput(web) {
             // the page works in CSS px
             detectHorizontalDragGestures { _, dx -> web.evaluateJavascript("window.gul && gul.spin(${dx / density})", null) }
         })
     }
 }
+
+/** Where the rose is on screen: a sideways drag there turns the rose instead of moving Defter to the next page. */
+object GulAlan { var rect: androidx.compose.ui.geometry.Rect? = null }

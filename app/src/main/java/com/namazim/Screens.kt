@@ -1,5 +1,7 @@
 package com.namazim
 
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.toArgb
@@ -1138,6 +1140,14 @@ object DefterYer {
         section = sec; store.defterSection = sec
         if (per != null) { period = per; store.defterPeriod = per }
     }
+    /** One sideways step along Özet · Hafta · Ay · Yıl · Tümü · Kaza (owner, 2026-11-12): [dir] +1 = to the right. */
+    fun kaydir(store: Store, dir: Int): Boolean {
+        val cur = when (section) { 0 -> 0; 1 -> 1 + period; else -> 5 }
+        val to = (cur + dir).coerceIn(0, 5)
+        if (to == cur) return false
+        when (to) { 0 -> git(store, 0); 5 -> git(store, 2); else -> git(store, 1, to - 1) }
+        return true
+    }
 }
 
 /** Muhasebe holds the overview (like Vakit's "Özet"), the history and the kaza list. */
@@ -1148,7 +1158,32 @@ fun MuhasebeScreen() {
     val section = DefterYer.section
     Column(Modifier.fillMaxSize()) {
         Box(Modifier.statusBarsPadding().padding(top = Space.s).turHedef("deftersekme")) { PageTabs(listOf("Özet", "İstikrar", "Kaza"), section) { DefterYer.git(store, it) } }
-        Box(Modifier.weight(1f).clipToBounds()) {
+        val haptic = LocalHapticFeedback.current
+        var koken by remember { mutableStateOf(Offset.Zero) }
+        Box(Modifier.weight(1f).clipToBounds().onGloballyPositioned { koken = it.positionInRoot() }
+            .pointerInput(Unit) {
+                // a sideways swipe anywhere moves one step along Özet · Hafta · Ay · Yıl · Tümü · Kaza. Watched in the Initial
+                // pass and never consumed, so vertical scrolling keeps working; on release a mostly sideways move (long enough,
+                // or short and quick) counts. A drag that starts on the Özet rose only turns the rose.
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                    val gulde = DefterYer.section == 0 && GulAlan.rect?.contains(down.position + koken) == true
+                    var last = down.position; var lastT = down.uptimeMillis
+                    while (true) {
+                        val e = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                        val c = e.changes.firstOrNull { it.id == down.id } ?: break
+                        last = c.position; lastT = c.uptimeMillis
+                        if (!c.pressed) break
+                    }
+                    val dx = last.x - down.position.x; val dy = last.y - down.position.y
+                    val ms = (lastT - down.uptimeMillis).coerceAtLeast(1)
+                    val sideways = kotlin.math.abs(dx) > 1.6f * kotlin.math.abs(dy)
+                    val far = kotlin.math.abs(dx) > 64.dp.toPx()
+                    val flick = kotlin.math.abs(dx) > 32.dp.toPx() && kotlin.math.abs(dx) / ms > .6f
+                    if (!gulde && sideways && (far || flick) && DefterYer.kaydir(store, if (dx < 0) 1 else -1))
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
+            }) {
             when (section) {
                 0 -> MuhasebeOzet()
                 1 -> MuhasebeGidisat()
@@ -1415,36 +1450,10 @@ private fun MuhasebeGidisat() {
     val rate = if (data.due == 0) 0f else data.kept.toFloat() / data.due
     fun pct(f: Float) = "%${(f * 100).roundToInt()}"
 
-    // a sideways swipe anywhere on the page moves to the next / previous period (design A, defter-donem-secenekler.html)
-    val haptic = LocalHapticFeedback.current
     val scroll = rememberScrollState()
     // `--ez asagi true` (debug): open scrolled to the bottom, for screenshots of the lower cards
     LaunchedEffect(data) { if (SkyDebug.asagi) { kotlinx.coroutines.delay(300); scroll.scrollTo(scroll.maxValue) } }
     Column(Modifier.fillMaxSize()
-        .pointerInput(Unit) {
-            // watched in the Initial pass and never consumed, so the vertical scroll keeps working; on release a
-            // mostly sideways move (long enough, or short and quick) changes the period (owner, 2026-11-11: the old
-            // drag detector lost swipes that started a little diagonal)
-            awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false, pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
-                var last = down.position; var lastT = down.uptimeMillis
-                while (true) {
-                    val e = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
-                    val c = e.changes.firstOrNull { it.id == down.id } ?: break
-                    last = c.position; lastT = c.uptimeMillis
-                    if (!c.pressed) break
-                }
-                val dx = last.x - down.position.x; val dy = last.y - down.position.y
-                val ms = (lastT - down.uptimeMillis).coerceAtLeast(1)
-                val sideways = kotlin.math.abs(dx) > 1.6f * kotlin.math.abs(dy)
-                val far = kotlin.math.abs(dx) > 64.dp.toPx()
-                val flick = kotlin.math.abs(dx) > 32.dp.toPx() && kotlin.math.abs(dx) / ms > .6f
-                if (sideways && (far || flick)) {
-                    val to = (DefterYer.period + if (dx < 0) 1 else -1).coerceIn(0, 3)
-                    if (to != DefterYer.period) { setPeriod(to); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
-                }
-            }
-        }
         .verticalScroll(scroll).padding(bottom = LocalDockPad.current)) {
         SubTabs(listOf("Hafta", "Ay", "Yıl", "Tümü"), period) { setPeriod(it) }
 
