@@ -82,6 +82,22 @@ Tests: `app/src/test/.../LogicTest.kt` (reminder cadence, cüz), `DiyanetMatchTe
 
 ## Open work (in rough priority)
 
+00. **Next session: faziletli / kerahat borders from the sun** (owner, 2026-11-12; mockup `design/design-system/fazilet-gunes-taslak.html`,
+   sources in that session: Dürrü'l-Muhtâr + İbn Âbidîn, Tahtâvî on Merâki'l-Felâh, el-Bahr, Türkiye Takvimi's anchors). Replace the
+   seven-equal-slice guess in `Fazilet.kt` (Hanefî) with times computed each day from the sun, like the prayer times:
+   - Sabah (men): faziletli from first light (sun 12° below the horizon) to 30 min before sunrise (40 ayet + abdest/gusül + repeat);
+     women: the first ~15 min (Hanefî: tağlis for women).
+   - Öğle: Haziran–Ekim (summer + autumn) the second half of the vakit (ibrâd, before asr-ı evvel); Kasım–Mayıs the first quarter.
+     İstiva kerahati 20 min before öğle (not 10).
+   - İkindi: faziletli from asr-ı sânî (shadow 2× + noon shadow) to isfirar; kerahat from isfirar (sun 5° above the horizon), not akşam−45.
+   - Akşam: faziletli the first ~10 min; then plain (tenzîhen mekruh); kerahat from iştibak-ı nücum (sun 10° below the horizon).
+   - Yatsı: faziletli to a third of the night (akşam→imsak), kerahat from the exact midnight (no slice rounding).
+   - Şâfiî: the beginning of every vakit stays faziletli; add yatsı kerahat after midnight.
+   - İşrak = sun 5° above the horizon (not güneş+45).
+   Decision: way 1 — past prayers are re-judged with the new borders (onTime is recomputed from prayedAt; no stored verdicts).
+   Then: the Kadran's gold line and kerahat hatch are drawn by time (they no longer fall on slice borders); the seven slices,
+   their counts and "çoğunlukla …" stay. Before shipping, show the owner "şimdi %x → yeni %y" per vakit from the phone's data.
+   The minute values (12°, 30 min, 10 min, months) are the books' rules turned into numbers; a hoca may still fine-tune them.
 0a. **Kaza takvimi: mark özel gün days from it, and fasting (oruç) tracking** — owner asked to keep in mind (2026-11-11), not started.
 0. **Özet rose not visible on the phone** (owner, 2026-11-11: it shows now; left here for the history). WebGL draws (pixel readback confirms), but the WebView does not show the canvas. Full investigation log and next steps are in `docs/superpowers/notes/2026-11-04-devir.md`. After that: rose left with vertical Hatim / 30-day bars on the right, the Muhasebe top menu redesign, the "%200" rate bug. Zikir module landed 2026-11-04; Takip rows reorder by long press + drag since 2026-11-11 (`sirala`, test in `ZikirNurTest`).
 1. **Live icon widget**: built in `NamazimWidget.kt` (1×1, sky colour for the time of day, hand to the next prayer, dots fill,

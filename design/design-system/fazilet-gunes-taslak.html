@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faziletli Vakit Sınırları</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--warn:#F4B08F;--muted:#A9B2C3;--ground:#0B1322}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1100px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1000px}.lede b{color:#F3EEE3}
+.v{background:var(--ground);border:1px solid #1A2540;border-radius:22px;padding:18px 20px;margin-top:18px}
+.v h3{font:600 26px Cormorant,serif;margin:0;color:#F3EEE3}.v h3 span{font:500 13px Inter;color:var(--muted);margin-left:10px}
+.lab{font:600 10px Inter;letter-spacing:.14em;color:#5A6582;margin:14px 0 2px}
+.lab.n{color:var(--gold)}
+.why{font-size:12.5px;color:#C9D0DD;line-height:1.6;margin-top:10px}.why b{color:var(--gold)}.why i{color:var(--warn);font-style:normal}
+.same{font-size:12px;color:#5A6582;margin-top:6px}
+svg text{font-family:Inter}
+.note{margin-top:22px;background:#121D33;border-radius:18px;padding:16px 18px;font-size:13.5px;line-height:1.65;color:#C9D0DD}.note b{color:#F3EEE3}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Hanefî · Ankara, 12 Kasım · bugünkü değerlerle</div>
+  <h1>Faziletli kısım güneşe bağlansın</h1>
+  <p class="lede">Her vakit için iki çizgi: <b>şimdi</b> (vakti yedi eşit dilime bölen tahmin) ve <b>taslak</b> (sınırlar güneşin konumundan; Türkiye Takvimi'nin kullandığı anlar). Altın faziletli, soluk altın “güzel”, turuncu kerahat. Saatler bugünün Ankara değerleri.</p>
+  <div id="list"></div>
+  <div class="note"><b>Hocaya sorulacak üç yer:</b> sabahta isfârın başı (burada “vaktin ikinci yarısı, iade payı 15 dk”), akşamda “vaktin başı” kaç dakika (burada 15), öğlede kış/yaz ayrımı. Kadınlar için sabah vaktin başı faziletli olur (Hanefî fetvası); taslakta kadın ayarında sabah ilk 15 dk altın. Şâfiî ayarında her vaktin başı faziletli kalır; yatsıda gecenin yarısından sonrası kerahat eklenir.</div>
+</div>
+<script>
+const W=1000;
+const m=t=>{const[h,mi]=t.split(':').map(Number);return h*60+mi};
+function bar(s,e,parts,labels){const len=((m(e)-m(s))+1440)%1440;const x=t=>(((m(t)-m(s))+1440)%1440)/len*W;
+  let g=`<svg width="100%" viewBox="-30 0 ${W+60} 62"><defs><pattern id="h" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.4" height="6" fill="#F4B08F" opacity=".7"/></pattern></defs>`;
+  g+=`<rect x="0" y="26" width="${W}" height="4" rx="2" fill="#2A3755"/>`;
+  parts.forEach(([a,b,k,ad])=>{const x0=x(a),x1=b===e?W:x(b);const c=k==='F'?'#E8BE74':k==='G'?'#E8BE7466':'#F4B08F';
+    g+=`<rect x="${x0}" y="${k==='K'?24:25}" width="${x1-x0}" height="${k==='K'?8:6}" fill="${k==='K'?'url(#h)':c}"/>`;if(k==='K')g+=`<rect x="${x0}" y="27" width="${x1-x0}" height="2" fill="#F4B08F"/>`;
+    if(ad)g+=`<path d="M${x0} 20 v-6 h${x1-x0} v6" stroke="${k==='K'?'#F4B08F':'#E8BE74'}" fill="none" opacity=".6"/><text x="${(x0+x1)/2}" y="10" font-size="13" fill="${k==='K'?'#F4B08F':'#E8BE74'}" text-anchor="middle" font-weight="600">${ad}</text>`});
+  const all=[[s,'#A9B2C3','start'],...labels,[e,'#A9B2C3','end']];
+  all.forEach(([t,c,an])=>{g+=`<text x="${t===e?W:x(t)}" y="54" font-size="13" fill="${c}" text-anchor="${an||'middle'}" font-weight="600">${t}</text>`});
+  return g+'</svg>'}
+const V=[
+ {ad:'Sabah',s:'05:58',e:'07:24',
+  now:[['06:34','07:11','F','faziletli']],nowL:[['06:34','#E8BE74'],['07:11','#E8BE74']],
+  yeni:[['06:41','07:09','F','faziletli (isfâr)']],yeniL:[['06:41','#E8BE74'],['07:09','#E8BE74']],
+  why:'Isfâr = ortalık aydınlanınca, ama namaz bozulursa güneş doğmadan iade edecek kadar vakit bırakarak. Taslak: <b>vaktin ikinci yarısı, güneşten 15 dk öncesine kadar</b>. Astronomik kesin bir tanımı yok; hocaya sorulacak.'},
+ {ad:'Öğle',s:'12:38',e:'15:17',
+  now:[['12:38','13:23','F','faziletli'],['13:23','13:45','G','']],nowL:[['13:23','#E8BE74']],
+  yeni:[['12:38','13:23','F','faziletli'],['13:23','13:45','G','']],yeniL:[['13:23','#E8BE74']],
+  why:'Kışın erken, yazın sıcak geçince (ibrâd). Güneşte buna karşılık gelen bir an yok; <b>aynı kalıyor</b>. Değişen tek şey öncesi: zeval kerahati Türkiye Takvimi gibi öğleden <i>20 dk</i> önce başlar (bizde 10 dk).'},
+ {ad:'İkindi',s:'15:17',e:'17:42',
+  now:[['15:37','17:00','F','faziletli'],['15:17','15:37','G',''],['17:00','17:42','K','kerahat']],nowL:[['15:37','#E8BE74'],['17:00','#F4B08F']],
+  yeni:[['15:57','17:01','F','faziletli'],['15:17','15:57','G',''],['17:01','17:42','K','kerahat']],yeniL:[['15:57','#E8BE74'],['17:01','#F4B08F']],
+  why:'Hanefî: biraz geciktir, güneş sararmadan kıl. Taslak: faziletli <b>asr-ı sânîden</b> (gölge boyun iki katı, İmam-ı Âzam’a göre ikindinin başı, 15:57) <b>isfirara</b> kadar; kerahat <i>isfirar-ı şems</i>ten (güneş ufkun 5° üstüne inince, 17:01). Bugün sabit “akşamdan 45 dk önce”; mevsimle kayıyordu.'},
+ {ad:'Akşam',s:'17:42',e:'19:03',
+  now:[['17:42','18:05','F','faziletli']],nowL:[['18:05','#E8BE74']],
+  yeni:[['17:42','17:57','F','faziletli'],['18:26','19:03','K','kerahat']],yeniL:[['17:57','#E8BE74'],['18:26','#F4B08F']],
+  why:'Akşam vakit girer girmez kılınır; geciktirmek mekruh, yıldızlar çoğalıncaya kadar bırakmak tahrîmen mekruh. Taslak: faziletli <b>ilk 15 dk</b>; <i>iştibak-ı nücum</i>dan (güneş ufkun 10° altında, 18:26) sonrası kerahat. Bugün akşamda hiç kerahat yok.'},
+ {ad:'Yatsı',s:'19:03',e:'05:59',
+  now:[['19:03','22:10','F','faziletli'],['22:10','23:44','G',''],['23:44','05:59','K','kerahat']],nowL:[['22:10','#E8BE74'],['23:44','#F4B08F']],
+  yeni:[['19:03','21:48','F','faziletli'],['21:48','23:50','G',''],['23:50','05:59','K','kerahat']],yeniL:[['21:48','#E8BE74'],['23:50','#F4B08F']],
+  why:'Gecenin ilk üçte biri faziletli, gece yarısından sonra mekruh. Gece = akşamdan imsake (12 sa 17 dk). Taslak: üçte bir <b>21:48</b>, gece yarısı <i>23:50</i>, dilim yuvarlaması olmadan tam an.'},
+];
+document.getElementById('list').innerHTML=V.map(v=>`<div class="v"><h3>${v.ad}<span>${v.s} – ${v.e}</span></h3>
+ <div class="lab">ŞİMDİ · YEDİ EŞİT DİLİM</div>${bar(v.s,v.e,v.now,v.nowL)}
+ <div class="lab n">TASLAK · GÜNEŞE GÖRE</div>${bar(v.s,v.e,v.yeni,v.yeniL)}
+ <div class="why">${v.why}</div></div>`).join('');
+</script>
+</body>
+</html>
