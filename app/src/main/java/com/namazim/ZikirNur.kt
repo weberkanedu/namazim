@@ -1,5 +1,13 @@
 package com.namazim
 
+import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.mutableStateOf
@@ -317,35 +325,62 @@ fun NurBursts(bursts: SnapshotStateList<Burst>, modifier: Modifier) {
 /** A mote of light flying from [from] to [to] (page coordinates), leaving at [t0] for [ms]. */
 class Mote(val from: Offset, val to: Offset, val t0: Long, val ms: Int)
 
-/** Tesbihat: the zikir's Arabic, big and faint, writing itself in gold from right to left as [f] goes 0 → 1.
- *  [onKalem] gets the pen tip (root coordinates) so the motes know where to fly. [flash] = the glow at a full word. */
+/** Where the motes may land: points inside the letters (root coordinates), in the order they light up. */
+class NurHedef { var noktalar: List<Offset> = emptyList() }
+
+/** Tesbihat, design D1 "Zerre zerre" (design/design-system/tesbihat-dolum-secenekler.html, 2026-11-12): the zikir's Arabic
+ *  barely there, and every count lights the next share of points inside the letters (never the gaps between words) in gold,
+ *  in a random order, where the motes land. [f] 0 → 1 = how much of the word is lit, [flash] = the glow at a full word. */
 @Composable
-fun NurYazi(ar: String, f: Float, flash: Float, onKalem: (Offset) -> Unit) {
-    // the gold follows the motes: it moves once they are mostly there
-    val shown by androidx.compose.animation.core.animateFloatAsState(f.coerceIn(0f, 1f), tween(700, delayMillis = 350), label = "yazi")
-    val style = androidx.compose.ui.text.TextStyle(fontSize = 54.sp, lineHeight = 70.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-    var w by remember { mutableStateOf(0f) }
-    var pos by remember { mutableStateOf(Offset.Zero) }
-    var h by remember { mutableStateOf(0f) }
-    LaunchedEffect(f, w, pos) { if (w > 0f) onKalem(Offset(pos.x + w * (1 - f.coerceIn(0f, 1f)), pos.y + h / 2)) }
-    Box(
-        Modifier.padding(horizontal = Space.l).onGloballyPositioned { w = it.size.width.toFloat(); h = it.size.height.toFloat(); pos = it.positionInRoot() }
-            .drawBehind {
-                if (flash > 0f) drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE9B0).copy(alpha = .45f * flash), Color.Transparent)),
-                    radius = size.maxDimension * .75f, center = center)
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(ar, style = style.copy(color = Pal.Text.copy(alpha = .13f)))
-        Text(ar, Modifier.drawWithContent {
-            // only the left edge cuts: the glow above, below and to the right must not be clipped into a box
-            clipRect(left = size.width * (1 - shown), top = -size.height, right = size.width * 2, bottom = size.height * 2) { this@drawWithContent.drawContent() }
-            // the pen tip, a small light where the writing is
-            if (shown in .001f..0.999f) drawCircle(Color(0xFFFFF0C8).copy(alpha = .9f), 3.dp.toPx(), Offset(size.width * (1 - shown), size.height / 2))
-        }, style = style.copy(
-            brush = Brush.verticalGradient(listOf(Color(0xFFFFF1C9), Color(0xFFE2A64E))),
-            shadow = androidx.compose.ui.graphics.Shadow(Pal.Gold.copy(alpha = .75f), blurRadius = 22f),
-        ))
+fun NurYazi(ar: String, f: Float, flash: Float, hedef: NurHedef) {
+    // the gold follows the motes: each count lights its share as they land (~0.7 s later). Not a delayed animation:
+    // quick taps kept restarting the delay, and nothing lit until the counting stopped (owner, 2026-11-12)
+    var goal by remember(ar) { mutableStateOf(f.coerceIn(0f, 1f)) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    LaunchedEffect(ar, f) { val v = f.coerceIn(0f, 1f); if (v < goal) goal = v else scope.launch { kotlinx.coroutines.delay(700); if (v > goal) goal = v } }
+    val shown by androidx.compose.animation.core.animateFloatAsState(goal, tween(380), label = "yazi")
+    val style = TextStyle(fontSize = 54.sp, lineHeight = 70.sp, textAlign = TextAlign.Center)
+    val olcer = androidx.compose.ui.text.rememberTextMeasurer()
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.padding(horizontal = Space.l), contentAlignment = Alignment.Center) {
+        val maxW = constraints.maxWidth
+        val yerlesim = remember(ar, maxW) { olcer.measure(ar, style, constraints = androidx.compose.ui.unit.Constraints(maxWidth = maxW)) }
+        val w = yerlesim.size.width; val h = yerlesim.size.height
+        val adim = with(density) { 3.dp.toPx() }
+        // the ink cells of the glyphs, shuffled once per word
+        val hucre = remember(yerlesim) {
+            val yol = yerlesim.getPathForRange(0, ar.length).asAndroidPath()
+            val bolge = android.graphics.Region().apply { setPath(yol, android.graphics.Region(0, 0, w, h)) }
+            buildList {
+                var y = adim / 2
+                while (y < h) { var x = adim / 2; while (x < w) { if (bolge.contains(x.toInt(), y.toInt())) add(Offset(x, y)); x += adim }; y += adim }
+            }.shuffled(kotlin.random.Random(ar.hashCode()))
+        }
+        val altin = Brush.verticalGradient(listOf(Color(0xFFFFF1C9), Color(0xFFE2A64E)))
+        val yaricap = adim * .8f
+        val isik = remember(adim) { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            maskFilter = android.graphics.BlurMaskFilter(adim * 2.5f, android.graphics.BlurMaskFilter.Blur.NORMAL) } }
+        val kivilcim = remember(adim) { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            maskFilter = android.graphics.BlurMaskFilter(adim * .8f, android.graphics.BlurMaskFilter.Blur.NORMAL) } }
+        val boy = with(density) { androidx.compose.ui.unit.DpSize(w.toDp(), h.toDp()) }
+        Canvas(Modifier.size(boy).onGloballyPositioned { c -> val o = c.positionInRoot(); hedef.noktalar = hucre.map { it + o } }) {
+            if (flash > 0f) drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE9B0).copy(alpha = .45f * flash), Color.Transparent)),
+                radius = size.maxDimension * .75f, center = center)
+            drawText(yerlesim, color = Pal.Text.copy(alpha = .03f))   // barely there until it is counted
+            val n = (shown * hucre.size).toInt()
+            if (n > 0) {
+                // a warm blurred light under the lit points (a BlurMaskFilter, so it glows instead of greying the navy),
+                // the points that just lit brighter, then the gold letters only where they are lit
+                val nc = drawContext.canvas.nativeCanvas
+                isik.color = android.graphics.Color.argb(26, 255, 214, 140)
+                for (i in 0 until n step 6) nc.drawCircle(hucre[i].x, hucre[i].y, adim * 1.6f, isik)
+                val taze = ((shown - .025f) * hucre.size).toInt().coerceAtLeast(0)
+                kivilcim.color = android.graphics.Color.argb(170, 255, 244, 220)
+                for (i in taze until n) nc.drawCircle(hucre[i].x, hucre[i].y, adim * .9f, kivilcim)
+                val maske = androidx.compose.ui.graphics.Path().apply { for (i in 0 until n) addOval(androidx.compose.ui.geometry.Rect(hucre[i], yaricap)) }
+                clipPath(maske) { drawText(yerlesim, brush = altin, alpha = 1f) }
+            }
+        }
     }
 }
 

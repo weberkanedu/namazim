@@ -113,7 +113,11 @@ class MainActivity : ComponentActivity() {
             Reminders.scheduleNext(this)
         }
         // `--es tesbihat "2026-11-05|SABAH" --ei tab 5` (debug builds): Zikirhane opens on that vakit's tesbihat
-        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) intent.getStringExtra("tesbihat")?.let { TesbihatNav.key = it }
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            intent.getStringExtra("tesbihat")?.let { TesbihatNav.key = it }
+            // `--ez tesbihdemo true` (with --es tesbihat): the page counts by itself from zero and saves nothing, to watch the fill
+            SkyDebug.tesbihDemo = intent.getBooleanExtra("tesbihdemo", false)
+        }
         // `--ez testnotif true` (debug builds): the same sample "Kıldın mı?" as Ayarlar › Deneme bildirimi
         if (intent.getBooleanExtra("testnotif", false) && applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) Reminders.test(this)
         // `--ez backuptest true` (debug builds): export → parse → compare with the live prefs, log only, writes nothing

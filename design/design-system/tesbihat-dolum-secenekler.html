@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tesbihat Dolumu</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600&family=Inter:wght@400;500;600&family=Amiri:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#E8BE74;--muted:#A9B2C3;--ground:#0B1322}
+*{box-sizing:border-box}
+body{margin:0;background:#06080D;color:#F3EEE3;font-family:Inter,sans-serif;padding:36px 20px 80px}
+.wrap{max-width:1200px;margin:0 auto}
+.kicker{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 46px/1.05 Cormorant,serif;margin:6px 0 0}
+.lede{color:var(--muted);font-size:15px;line-height:1.7;max-width:1000px}.lede b{color:#F3EEE3}
+.row{display:flex;gap:24px;flex-wrap:wrap;margin-top:22px}
+.opt{width:360px}
+.opt h3{font:600 24px Cormorant,serif;margin:0;color:var(--gold)}
+.opt .d{font-size:12.5px;color:var(--muted);line-height:1.55;margin:4px 0 12px;min-height:88px}.opt .d b{color:#F3EEE3}
+.ph{position:relative;width:360px;height:520px;background:var(--ground);border-radius:34px;border:1px solid #1A2540;overflow:hidden;cursor:pointer;user-select:none}
+.ph canvas{position:absolute;inset:0}
+.lbl{position:absolute;left:0;right:0;text-align:center;pointer-events:none}
+.ad{top:236px;font:500 26px Cormorant,serif}
+.mn{top:272px;font-size:12.5px;color:#C9D0DD}
+.n{top:330px;font:500 64px/1 Cormorant,serif}
+.t{top:400px;font-size:13px;color:var(--muted)}
+.hint{top:470px;font-size:12px;color:#5A6582}
+.btns{display:flex;gap:8px;margin-top:10px}
+.btns button{background:#121D33;color:#A9B2C3;border:1px solid #2A3755;border-radius:999px;padding:7px 12px;font:600 12px Inter;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Namaz sonrası tesbihat · yazı nasıl dolsun</div>
+  <h1>Perde değil, nur dolsun</h1>
+  <p class="lede">Bugün altın yazı sağdan sola <b>bir perde açılır gibi</b> görünüyor: kelimeler arasındaki boşlukta çeksen de ışık ilerliyor ama harf dolmuyor. Burada Arapça çok daha silik, her dokunuşta nurlar uçup <b>harflerin içine konuyor</b>; yalnızca harfler doluyor, boşluk asla. Telefonun üstüne dokun ya da “Kendiliğinden çek”e bas.</p>
+  <div class="row" id="row"></div>
+</div>
+<script>
+const AR='ٱللَّٰهُ أَكْبَرُ', TARGET=33;
+function make(host, opt){
+  const W=360,H=520,dpr=window.devicePixelRatio||1;
+  host.innerHTML=`<h3>${opt.n}</h3><div class="d">${opt.d}</div><div class="ph"><canvas></canvas><div class="lbl ad">Allâhu ekber</div><div class="lbl mn">Allah en büyüktür.</div><div class="lbl n">0</div><div class="lbl t">/ 33</div><div class="lbl hint">her yere dokun</div></div><div class="btns"><button data-a="auto">Kendiliğinden çek</button><button data-a="reset">Baştan</button></div>`;
+  const ph=host.querySelector('.ph'),cv=host.querySelector('canvas'),nEl=host.querySelector('.n');
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const font='700 62px Amiri, "Segoe UI", serif',TY=150;
+  // the glyph mask: which cells of the text box are ink
+  const off=document.createElement('canvas');off.width=W;off.height=H;const o=off.getContext('2d');
+  o.font=font;o.textAlign='center';o.textBaseline='middle';o.direction='rtl';o.fillStyle='#fff';o.fillText(AR,W/2,TY);
+  const data=o.getImageData(0,0,W,H).data,CELL=opt.cell;let cells=[];
+  for(let y=0;y<H;y+=CELL)for(let x=0;x<W;x+=CELL){let s=0,k=0;for(let dy=0;dy<CELL;dy++)for(let dx=0;dx<CELL;dx++){s+=data[((y+dy)*W+(x+dx))*4+3];k++}if(s/k>40)cells.push({x:x+CELL/2,y:y+CELL/2})}
+  // order: grain = random; öbek = by a smooth noise so the light gathers in clusters
+  const seeds=Array.from({length:9},()=>({x:Math.random()*W,y:TY+(Math.random()-.5)*60}));
+  cells.forEach(c=>{c.k=opt.mode==='grain'?Math.random():Math.min(...seeds.map(s=>Math.hypot(s.x-c.x,(s.y-c.y)*1.4)))+Math.random()*10});
+  cells.sort((a,b)=>a.k-b.k);
+  // gold text, drawn once
+  const gold=document.createElement('canvas');gold.width=W*dpr;gold.height=H*dpr;const gg=gold.getContext('2d');gg.scale(dpr,dpr);
+  gg.font=font;gg.textAlign='center';gg.textBaseline='middle';gg.direction='rtl';const gr=gg.createLinearGradient(0,TY-35,0,TY+35);gr.addColorStop(0,'#FFF1C9');gr.addColorStop(1,'#E2A64E');gg.fillStyle=gr;gg.fillText(AR,W/2,TY);
+  const mask=document.createElement('canvas');mask.width=W*dpr;mask.height=H*dpr;const mg=mask.getContext('2d');mg.scale(dpr,dpr);
+  let count=0,lit=0,landed=0,motes=[],flash=0,timer=null;
+  function tap(px,py){if(count>=TARGET){count=0;lit=0;landed=0;}count++;nEl.textContent=count;
+    const goal=Math.round(cells.length*count/TARGET);const per=goal-lit;const now=performance.now();
+    // each mote carries a share of the cells and lands on one of them
+    const k=6;for(let i=0;i<k;i++){const a=lit+Math.floor(per*i/k),b=lit+Math.floor(per*(i+1)/k);const c=cells[Math.min(a+Math.floor((b-a)/2),cells.length-1)];motes.push({fx:px,fy:py,c,a,b,t0:now+i*30,ms:600+Math.random()*300})}
+    lit=goal;if(count===TARGET)setTimeout(()=>flash=1,950)}
+  ph.addEventListener('pointerdown',e=>{const r=ph.getBoundingClientRect();tap(e.clientX-r.left,e.clientY-r.top)});
+  host.querySelector('[data-a=auto]').onclick=()=>{if(timer){clearInterval(timer);timer=null;return}timer=setInterval(()=>{tap(W/2+(Math.random()-.5)*120,400+Math.random()*60);if(count>=TARGET){clearInterval(timer);timer=null}},420)};
+  host.querySelector('[data-a=reset]').onclick=()=>{count=0;lit=0;landed=0;motes=[];nEl.textContent=0};
+  const done=new Uint8Array(cells.length);
+  function frame(now){
+    g.clearRect(0,0,W,H);
+    if(flash>0){const r=g.createRadialGradient(W/2,TY,0,W/2,TY,200);r.addColorStop(0,`rgba(255,233,176,${.35*flash})`);r.addColorStop(1,'rgba(255,233,176,0)');g.fillStyle=r;g.fillRect(0,0,W,H);flash=Math.max(0,flash-.012)}
+    // the faint text
+    g.font=font;g.textAlign='center';g.textBaseline='middle';g.direction='rtl';g.fillStyle=`rgba(243,238,227,${opt.faint})`;g.fillText(AR,W/2,TY);
+    // motes: when one lands its share of cells lights up
+    motes=motes.filter(m=>{const t=(now-m.t0)/m.ms;if(t<0)return true;
+      if(t>=1){for(let j=m.a;j<m.b;j++)done[j]=1;return false}
+      const e=t*t*(3-2*t),cx=(m.fx+m.c.x)/2+(m.fx<m.c.x?-60:60),cy=Math.min(m.fy,m.c.y)+40;
+      const x=(1-e)*(1-e)*m.fx+2*(1-e)*e*cx+e*e*m.c.x,y=(1-e)*(1-e)*m.fy+2*(1-e)*e*cy+e*e*m.c.y;
+      g.fillStyle=`rgba(255,231,176,${.35*(1-.5*t)})`;g.beginPath();g.arc(x,y,6,0,7);g.fill();
+      g.fillStyle=`rgba(255,244,220,${1-.3*t})`;g.beginPath();g.arc(x,y,2.6-1.2*t,0,7);g.fill();return true});
+    if(count===0)done.fill(0);
+    // the lit cells as a soft mask over the gold text
+    mg.clearRect(0,0,W,H);mg.fillStyle='#fff';for(let j=0;j<cells.length;j++)if(done[j]){mg.beginPath();mg.arc(cells[j].x,cells[j].y,CELL*opt.blob,0,7);mg.fill()}
+    mg.globalCompositeOperation='source-in';mg.drawImage(gold,0,0,W,H);mg.globalCompositeOperation='source-over';
+    g.save();g.shadowColor='rgba(232,190,116,.75)';g.shadowBlur=14;g.drawImage(mask,0,0,W,H);g.restore();
+    requestAnimationFrame(frame)}
+  requestAnimationFrame(frame);
+}
+const O=[
+ {n:'D1 · Zerre zerre',d:'Arapça <b>çok silik</b>. Her dokunuşta nurlar uçar ve harflerin içinde <b>rastgele noktalara</b> konar; konduğu yerde altın zerreler belirir. Yazı her yerinden aynı anda, yıldız tozu gibi yavaş yavaş dolar.',mode:'grain',cell:3,blob:.8,faint:.05},
+ {n:'D2 · Öbek öbek',d:'Yine çok silik. Nurlar harflerin üstünde <b>birkaç noktaya</b> konar ve ışık oradan <b>damla gibi yayılarak</b> harfi doldurur; öbekler büyüyüp birleşir. Daha “mürekkep emiyor” gibi.',mode:'blob',cell:3,blob:.9,faint:.05},
+];
+const row=document.getElementById('row');document.fonts.load('700 62px Amiri','ٱللَّٰهُ').catch(()=>{}).then(()=>O.forEach(o=>{const d=document.createElement('div');d.className='opt';row.appendChild(d);make(d,o)}));
+</script>
+</body>
+</html>

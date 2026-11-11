@@ -230,7 +230,8 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
     val scope = rememberCoroutineScope()
     val glow = remember { Animatable(0f) }
     val vakit = runCatching { Vakit.valueOf(key.substringAfter('|')).ad }.getOrDefault("")
-    var counts by remember(key) { mutableStateOf(if (store.tesbihat(key) != null) DEFAULT_ZIKIRS.map { it.target } else store.tesbihProgress(key)) }
+    val demo = SkyDebug.tesbihDemo
+    var counts by remember(key) { mutableStateOf(if (demo) DEFAULT_ZIKIRS.map { 0 } else if (store.tesbihat(key) != null) DEFAULT_ZIKIRS.map { it.target } else store.tesbihProgress(key)) }
     val step = tesbihStep(counts)
     val shown = if (step < 0) DEFAULT_ZIKIRS.lastIndex else step
     fun buzz(ms: Long) {
@@ -240,9 +241,11 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
     // design V2 "Sağdan sola yazılış" (design/design-system/tesbihat-nur-secenekler.html, 2026-11-11)
     val motes = remember { mutableStateListOf<Mote>() }
     var root by remember { mutableStateOf(Offset.Zero) }
-    var kalem by remember { mutableStateOf<Offset?>(null) }   // the pen tip of the word, in this page's coordinates
-    var yazilan by remember(key) { mutableIntStateOf(shown) }   // the word on screen lingers a moment once it is full
-    LaunchedEffect(shown) { if (shown != yazilan) { delay(1100); yazilan = shown } }
+    val hedef = remember { NurHedef() }   // where in the letters the motes land
+    // the word on screen stays, full, for a moment before the next one (owner, 2026-11-12: "33'ü görelim, 1-2 sn sonra geçsin")
+    var yazilan by remember(key) { mutableIntStateOf(shown) }
+    val bekliyor = yazilan != shown && step >= 0
+    LaunchedEffect(shown) { if (shown != yazilan) { delay(2600); yazilan = shown } }
     Box(Modifier.fillMaxSize().onGloballyPositioned { root = it.positionInRoot() }) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = Space.xl, end = Space.s, top = Space.l), verticalAlignment = Alignment.CenterVertically) {
@@ -255,7 +258,7 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
         Row(Modifier.fillMaxWidth().padding(horizontal = Space.xl, vertical = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
             DEFAULT_ZIKIRS.forEachIndexed { i, z ->
                 val done = counts[i] >= z.target
-                val on = i == step
+                val on = i == (if (step < 0) -1 else yazilan)
                 Column(
                     Modifier.weight(1f).clip(RoundedCornerShape(Radius.s))
                         .background(if (on) Pal.Gold.copy(alpha = .14f) else Color.Transparent)
@@ -269,26 +272,36 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
         }
         var alan by remember { mutableStateOf(Offset.Zero) }
         fun say(at: Offset?) {
-            if (step < 0) return
-            // six motes from the touch to where the pen is now; the gold follows as they land
+            if (step < 0 || bekliyor) return
+            // six motes from the touch into the letters, onto the points this count lights up
             val from = at?.let { it + alan - root }
-            val to = kalem
-            if (from != null && to != null) repeat(6) { motes += Mote(from, to, frameClock() + it * 25L, 650 + (0..350).random()) }
+            val pts = hedef.noktalar
+            val tgt = DEFAULT_ZIKIRS[step].target
+            if (from != null && pts.isNotEmpty()) {
+                val a = pts.size * counts[step] / tgt; val b = (pts.size * (counts[step] + 1) / tgt).coerceAtMost(pts.size)
+                repeat(6) { i -> val j = (a + (b - a) * (2 * i + 1) / 12).coerceIn(0, pts.lastIndex)
+                    motes += Mote(from, pts[j] - root, frameClock() + i * 25L, 650 + (0..350).random()) }
+            }
             val n = counts.toMutableList().also { it[step]++ }
                     counts = n
-                    store.setTesbihProgress(key, n)
+                    if (!demo) store.setTesbihProgress(key, n)
                     StoreRev.n++   // the progress counts toward today's zikir on read
                     if (n[step] == DEFAULT_ZIKIRS[step].target) {
                         buzz(320)
-                        if (tesbihStep(n) < 0) {
+                        if (tesbihStep(n) < 0 && !demo) {
                             store.setTesbihat(key, "app")
-                            scope.launch { delay(1400); onDone() }
+                            scope.launch { delay(2600); onDone() }
                         }
                     } else vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
         }
+        var alanBoy by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+        if (demo) LaunchedEffect(Unit) {
+            delay(1500)
+            while (true) { delay(420); if (alanBoy.width > 0) say(Offset(alanBoy.width * (.3f + .4f * Math.random().toFloat()), alanBoy.height * .85f)) }
+        }
         Box(
             Modifier.weight(1f).fillMaxWidth()
-                .onGloballyPositioned { alan = it.positionInRoot() }
+                .onGloballyPositioned { alan = it.positionInRoot(); alanBoy = it.size }
                 .semantics { contentDescription = "$vakit tesbihatı, ${DEFAULT_ZIKIRS[shown].name} ${counts[shown]}. Saymak için dokun." }
                 .clickable(remember { MutableInteractionSource() }, indication = null, enabled = step >= 0) { say(null) }
                 .pointerInput(step) { detectTapGestures { if (step >= 0) say(it) } },
@@ -297,12 +310,12 @@ private fun TesbihatMode(store: Store, key: String, onClose: () -> Unit, onDone:
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 val z = DEFAULT_ZIKIRS[yazilan]
                 val ar = zikirArabic(z.name)
-                NurYazi(ar?.first ?: z.name, counts[yazilan].toFloat() / z.target, glow.value) { kalem = it - root }
+                NurYazi(ar?.first ?: z.name, counts[yazilan].toFloat() / z.target, glow.value, hedef)
                 Text(z.name, Modifier.padding(top = Space.s), style = NumStyle, fontSize = Type.h2, color = Pal.Text)
                 if (ar != null) Text(cumle(ar.second), color = Pal.Muted, fontSize = Type.label)
                 Spacer(Modifier.height(Space.xl))
-                Text(if (step < 0) "99" else "${counts[shown]}", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
-                Text(if (step < 0) "Allah kabul etsin" else "/ ${DEFAULT_ZIKIRS[shown].target}", color = Pal.Muted, fontSize = Type.body)
+                Text(if (step < 0) "99" else "${counts[yazilan]}", style = NumStyle, fontSize = 84.sp, lineHeight = 84.sp, color = Pal.Text)
+                Text(if (step < 0) "Allah kabul etsin" else "/ ${DEFAULT_ZIKIRS[yazilan].target}", color = Pal.Muted, fontSize = Type.body)
                 Spacer(Modifier.height(Space.l))
                 Text(if (step < 0) "ana sayfaya dönülüyor" else "her yere dokun", color = Pal.Muted.copy(alpha = .6f), fontSize = Type.label)
             }
